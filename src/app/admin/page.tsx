@@ -68,7 +68,31 @@ export default async function AdminPage() {
   ].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()).slice(0, 8)
 
   return (
-    <main className="space-y-8 p-6 md:p-8 max-w-7xl mx-auto">     
+    <main className="space-y-8 p-6 md:p-8 max-w-7xl mx-auto">
+      <section className="bg-linear-to-r from-blue-900 to-blue-700 text-white rounded-xl p-5 md:p-6 flex flex-col gap-6 md:flex-row md:items-center md:justify-between">
+        <div>
+          <p className="text-blue-200 text-sm font-medium">Today&apos;s queue</p>
+          <h2 className="text-2xl md:text-3xl font-bold mt-1">
+            {totalQueue} pending workflow item{totalQueue === 1 ? '' : 's'}
+          </h2>
+          <p className="text-blue-100 text-sm mt-2">
+            Review members, payments, loans, capital requests, and reports.
+          </p>
+        </div>
+        <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
+          {[
+            { label: 'Active Members', value: activeMembers.count ?? 0 },
+            { label: 'Payments', value: pendingPayments },
+            { label: 'Loans', value: reviewLoans.length },
+          ].map((item) => (
+            <div key={item.label} className="rounded-lg bg-white/20 px-4 py-3 text-center">
+              <p className="text-2xl font-bold">{item.value}</p>
+              <p className="text-xs text-blue-100">{item.label}</p>
+            </div>
+          ))}
+        </div>
+      </section>
+
       <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-5">
         {queueCards.map((item) => {
           const Icon = item.icon

@@ -35,7 +35,7 @@ export async function requireActiveMember(): Promise<Member> {
   const member = await requireMember()
 
   if (member.status !== 'active') {
-    redirect('/dashboard')
+    redirect('/pending-approval')
   }
 
   return member
@@ -45,7 +45,7 @@ export async function requireAdmin(): Promise<Member> {
   const member = await requireMember()
 
   if (!member.is_admin || member.status !== 'active') {
-    redirect('/dashboard')
+    redirect('/pending-approval')
   }
 
   return member
