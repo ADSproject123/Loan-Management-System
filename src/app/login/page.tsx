@@ -4,8 +4,8 @@ import React, { useState } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { Building2, Mail, Lock, Eye, EyeOff, AlertCircle } from 'lucide-react'
-import { createClient } from '@/lib/supabase/client'
 import { Button } from '@/components/ui/Button'
+import { signInMember } from '@/app/actions/auth'
 
 export default function LoginPage() {
   const router = useRouter()
@@ -20,20 +20,21 @@ export default function LoginPage() {
     setLoading(true)
     setError(null)
 
-    const supabase = createClient()
-    const { error: signInError } = await supabase.auth.signInWithPassword({
-      email,
-      password,
-    })
+    try {
+      const result = await signInMember(email, password)
 
-    if (signInError) {
-      setError(signInError.message)
+      if (!result.success) {
+        setError(result.error ?? 'Unable to sign in right now. Please try again.')
+        return
+      }
+
+      router.push('/dashboard')
+      router.refresh()
+    } catch {
+      setError('Unable to sign in right now. Please try again.')
+    } finally {
       setLoading(false)
-      return
     }
-
-    router.push('/dashboard')
-    router.refresh()
   }
 
   return (

@@ -5,6 +5,7 @@ import Link from 'next/link'
 import { Steps } from '@/components/ui/Steps'
 import { Button } from '@/components/ui/Button'
 import { Card } from '@/components/ui/Card'
+import { repayLoan } from '@/app/actions/member'
 import { ArrowLeft, CreditCard, QrCode, Upload, CheckCircle, AlertCircle, Info } from 'lucide-react'
 
 const STEPS = [
@@ -52,8 +53,19 @@ export default function LoanRepayPage() {
     }
     setLoading(true)
     setError(null)
-    await new Promise((resolve) => setTimeout(resolve, 1500))
+
+    const payload = new FormData()
+    payload.append('amount', payAmount)
+    payload.append('evidence', evidence)
+
+    const result = await repayLoan(payload)
     setLoading(false)
+
+    if (!result.success) {
+      setError(result.error ?? 'Unable to submit repayment.')
+      return
+    }
+
     setStep(4)
   }
 

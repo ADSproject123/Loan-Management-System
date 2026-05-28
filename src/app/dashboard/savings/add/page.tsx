@@ -5,6 +5,7 @@ import Link from 'next/link'
 import { Steps } from '@/components/ui/Steps'
 import { Button } from '@/components/ui/Button'
 import { Card } from '@/components/ui/Card'
+import { addSaving } from '@/app/actions/member'
 import {
   PiggyBank,
   QrCode,
@@ -51,9 +52,20 @@ export default function AddSavingPage() {
     }
     setLoading(true)
     setError(null)
-    // Simulate API call
-    await new Promise((resolve) => setTimeout(resolve, 1500))
+
+    const payload = new FormData()
+    payload.append('amount', amount)
+    payload.append('notes', notes)
+    payload.append('evidence', evidence)
+
+    const result = await addSaving(payload)
     setLoading(false)
+
+    if (!result.success) {
+      setError(result.error ?? 'Unable to submit saving.')
+      return
+    }
+
     setStep(4)
   }
 

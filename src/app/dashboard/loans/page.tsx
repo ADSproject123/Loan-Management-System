@@ -1,38 +1,47 @@
 import Link from 'next/link'
 import { Card } from '@/components/ui/Card'
 import { LoanStatusBadge } from '@/components/ui/Badge'
+import { requireMember } from '@/lib/auth/member'
+import { createAdminClient } from '@/lib/supabase/admin'
 import { CreditCard, Plus, FileText, ArrowRight, AlertTriangle } from 'lucide-react'
 
-// Mock loan data
-const mockLoans = [
-  {
-    id: '1',
-    amount: 50000,
-    purpose: 'Business expansion',
-    term_months: 12,
-    interest_rate: 2,
-    status: 'active' as const,
-    disbursed_at: '2025-02-01',
-    due_date: '2026-01-01',
-    paid: 20000,
-  },
-  {
-    id: '2',
-    amount: 20000,
-    purpose: 'Medical expenses',
-    term_months: 6,
-    interest_rate: 1.5,
-    status: 'completed' as const,
-    disbursed_at: '2024-06-01',
-    due_date: '2024-11-30',
-    paid: 20000,
-  },
-]
+function toNumber(value: unknown) {
+  const numberValue = Number(value ?? 0)
+  return Number.isFinite(numberValue) ? numberValue : 0
+}
 
-const activeLoan = mockLoans.find((l) => l.status === 'active')
-const remaining = activeLoan ? activeLoan.amount - activeLoan.paid : 0
+export default async function LoansPage() {
+  const member = await requireMember()
+  const admin = createAdminClient()
+  const [loansResult, repaymentsResult] = await Promise.all([
+    admin
+      .from('loans')
+      .select('id, amount, purpose, term_months, interest_rate, status, disbursed_at, due_date, created_at')
+      .eq('member_id', member.id)
+      .order('created_at', { ascending: false }),
+    admin
+      .from('loan_repayments')
+      .select('loan_id, amount, status')
+      .eq('member_id', member.id),
+  ])
 
-export default function LoansPage() {
+  const loans = loansResult.data ?? []
+  const repayments = repaymentsResult.data ?? []
+  const paidByLoan = new Map<string, number>()
+
+  repayments
+    .filter((repayment) => repayment.status === 'verified' || repayment.status === 'completed')
+    .forEach((repayment) => {
+      paidByLoan.set(
+        repayment.loan_id,
+        (paidByLoan.get(repayment.loan_id) ?? 0) + toNumber(repayment.amount)
+      )
+    })
+
+  const activeLoan = loans.find((loan) => loan.status === 'active')
+  const activeLoanPaid = activeLoan ? paidByLoan.get(activeLoan.id) ?? 0 : 0
+  const remaining = activeLoan ? Math.max(toNumber(activeLoan.amount) - activeLoanPaid, 0) : 0
+
   return (
     <div className="p-6 md:p-8 max-w-7xl mx-auto">
       {/* Header */}
@@ -65,7 +74,7 @@ export default function LoansPage() {
           <div className="flex items-start justify-between mb-4">
             <div>
               <p className="text-blue-200 text-sm mb-1">Active Loan</p>
-              <p className="text-3xl font-bold">฿{activeLoan.amount.toLocaleString()}</p>
+              <p className="text-3xl font-bold">฿{toNumber(activeLoan.amount).toLocaleString()}</p>
               <p className="text-blue-200 text-sm mt-1">{activeLoan.purpose}</p>
             </div>
             <div className="text-right">
@@ -76,12 +85,12 @@ export default function LoansPage() {
           <div className="bg-white/20 rounded-full h-2 mb-4">
             <div
               className="bg-white rounded-full h-2 transition-all"
-              style={{ width: `${(activeLoan.paid / activeLoan.amount) * 100}%` }}
+              style={{ width: `${(activeLoanPaid / toNumber(activeLoan.amount)) * 100}%` }}
             />
           </div>
           <div className="flex items-center justify-between text-sm">
-            <span className="text-blue-200">Paid: ฿{activeLoan.paid.toLocaleString()} ({Math.round((activeLoan.paid / activeLoan.amount) * 100)}%)</span>
-            <span className="text-blue-200">Due: {new Date(activeLoan.due_date).toLocaleDateString('en-US', { month: 'long', year: 'numeric' })}</span>
+            <span className="text-blue-200">Paid: ฿{activeLoanPaid.toLocaleString()} ({Math.round((activeLoanPaid / toNumber(activeLoan.amount)) * 100)}%)</span>
+            <span className="text-blue-200">Due: {activeLoan.due_date ? new Date(activeLoan.due_date).toLocaleDateString('en-US', { month: 'long', year: 'numeric' }) : 'Not set'}</span>
           </div>
           <div className="mt-4 pt-4 border-t border-white/20 flex gap-3">
             <Link
@@ -106,14 +115,14 @@ export default function LoansPage() {
           <div className="p-2.5 bg-blue-100 rounded-lg inline-flex mb-3">
             <CreditCard className="w-5 h-5 text-blue-700" />
           </div>
-          <p className="text-2xl font-bold text-gray-900">{mockLoans.filter(l => l.status === 'active').length}</p>
+          <p className="text-2xl font-bold text-gray-900">{loans.filter(l => l.status === 'active').length}</p>
           <p className="text-gray-500 text-sm mt-1">Active Loans</p>
         </Card>
         <Card>
           <div className="p-2.5 bg-green-100 rounded-lg inline-flex mb-3">
             <FileText className="w-5 h-5 text-green-700" />
           </div>
-          <p className="text-2xl font-bold text-gray-900">{mockLoans.filter(l => l.status === 'completed').length}</p>
+          <p className="text-2xl font-bold text-gray-900">{loans.filter(l => l.status === 'completed').length}</p>
           <p className="text-gray-500 text-sm mt-1">Completed Loans</p>
         </Card>
         <Card>
@@ -144,14 +153,21 @@ export default function LoansPage() {
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-100">
-              {mockLoans.map((loan) => (
+              {loans.length === 0 && (
+                <tr>
+                  <td colSpan={7} className="px-6 py-8 text-center text-sm text-gray-500">
+                    No loans submitted yet.
+                  </td>
+                </tr>
+              )}
+              {loans.map((loan) => (
                 <tr key={loan.id} className="hover:bg-gray-50 transition-colors">
                   <td className="px-6 py-4 text-sm text-gray-900 font-medium">{loan.purpose}</td>
-                  <td className="px-6 py-4 text-sm font-semibold text-gray-900">฿{loan.amount.toLocaleString()}</td>
+                  <td className="px-6 py-4 text-sm font-semibold text-gray-900">฿{toNumber(loan.amount).toLocaleString()}</td>
                   <td className="px-6 py-4 text-sm text-gray-500">{loan.interest_rate}%/mo</td>
                   <td className="px-6 py-4 text-sm text-gray-500">{loan.term_months} months</td>
                   <td className="px-6 py-4 text-sm text-gray-500">
-                    {new Date(loan.disbursed_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
+                    {loan.disbursed_at ? new Date(loan.disbursed_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : 'Pending'}
                   </td>
                   <td className="px-6 py-4">
                     <LoanStatusBadge status={loan.status} />

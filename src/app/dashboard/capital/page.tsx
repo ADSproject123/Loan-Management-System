@@ -5,6 +5,7 @@ import Link from 'next/link'
 import { Button } from '@/components/ui/Button'
 import { Card } from '@/components/ui/Card'
 import { Steps } from '@/components/ui/Steps'
+import { requestCapitalWithdrawal } from '@/app/actions/member'
 import {
   ArrowLeft,
   Wallet,
@@ -73,8 +74,20 @@ export default function CapitalRequestPage() {
   const handleSubmit = async () => {
     setLoading(true)
     setError(null)
-    await new Promise((resolve) => setTimeout(resolve, 2000))
+
+    const payload = new FormData()
+    payload.append('amount', amount)
+    payload.append('reason', reason)
+    payload.append('after_decision', afterDecision ?? '')
+
+    const result = await requestCapitalWithdrawal(payload)
     setLoading(false)
+
+    if (!result.success) {
+      setError(result.error ?? 'Unable to submit capital request.')
+      return
+    }
+
     setStep(4)
   }
 

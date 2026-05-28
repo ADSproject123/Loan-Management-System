@@ -1,22 +1,29 @@
 import Link from 'next/link'
 import { Card } from '@/components/ui/Card'
 import { SavingStatusBadge } from '@/components/ui/Badge'
+import { requireMember } from '@/lib/auth/member'
+import { createAdminClient } from '@/lib/supabase/admin'
 import { PiggyBank, Plus, FileText, TrendingUp, ChevronRight } from 'lucide-react'
 
-// Mock savings data
-const mockSavings = [
-  { id: '1', amount: 3000, saving_date: '2025-05-01', status: 'completed' as const, notes: 'May saving' },
-  { id: '2', amount: 3000, saving_date: '2025-04-01', status: 'completed' as const, notes: 'April saving' },
-  { id: '3', amount: 2500, saving_date: '2025-03-01', status: 'completed' as const, notes: 'March saving' },
-  { id: '4', amount: 3000, saving_date: '2025-02-01', status: 'completed' as const, notes: 'February saving' },
-  { id: '5', amount: 3000, saving_date: '2025-01-01', status: 'completed' as const, notes: 'January saving' },
-  { id: '6', amount: 3000, saving_date: '2024-12-01', status: 'completed' as const, notes: 'December saving' },
-]
+function toNumber(value: unknown) {
+  const numberValue = Number(value ?? 0)
+  return Number.isFinite(numberValue) ? numberValue : 0
+}
 
-const totalSavings = mockSavings.reduce((sum, s) => sum + s.amount, 0)
-const monthlyInterest = totalSavings * 0.03
+export default async function SavingsPage() {
+  const member = await requireMember()
+  const admin = createAdminClient()
+  const { data } = await admin
+    .from('savings')
+    .select('id, amount, saving_date, status, notes')
+    .eq('member_id', member.id)
+    .order('saving_date', { ascending: false })
 
-export default function SavingsPage() {
+  const savings = data ?? []
+  const verifiedSavings = savings.filter((saving) => saving.status === 'verified' || saving.status === 'completed')
+  const totalSavings = verifiedSavings.reduce((sum, saving) => sum + toNumber(saving.amount), 0)
+  const monthlyInterest = totalSavings * 0.03
+
   return (
     <div className="p-6 md:p-8 max-w-7xl mx-auto">
       {/* Header */}
@@ -63,7 +70,7 @@ export default function SavingsPage() {
           <div className="p-2.5 bg-purple-100 rounded-lg inline-flex mb-3">
             <ChevronRight className="w-5 h-5 text-purple-700" />
           </div>
-          <p className="text-2xl font-bold text-gray-900">{mockSavings.length}</p>
+          <p className="text-2xl font-bold text-gray-900">{savings.length}</p>
           <p className="text-gray-500 text-sm mt-1">Total Contributions</p>
         </Card>
       </div>
@@ -84,7 +91,14 @@ export default function SavingsPage() {
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-100">
-              {mockSavings.map((saving) => (
+              {savings.length === 0 && (
+                <tr>
+                  <td colSpan={4} className="px-6 py-8 text-center text-sm text-gray-500">
+                    No savings submitted yet.
+                  </td>
+                </tr>
+              )}
+              {savings.map((saving) => (
                 <tr key={saving.id} className="hover:bg-gray-50 transition-colors">
                   <td className="px-6 py-4 text-sm text-gray-900">
                     {new Date(saving.saving_date).toLocaleDateString('en-US', { day: 'numeric', month: 'long', year: 'numeric' })}

@@ -17,6 +17,8 @@ export interface Member {
   referee_verified: boolean
   id_document_url?: string
   resident_book_url?: string
+  is_admin: boolean
+  telegram_chat_id?: string
   joined_at: string
   created_at: string
   updated_at: string
@@ -78,6 +80,7 @@ export interface CapitalRequest {
   member_id: string
   amount: number
   reason?: string
+  action_after?: CapitalRequestStatus
   continue_saving?: boolean
   remove_membership: boolean
   status: CapitalRequestStatus
@@ -105,6 +108,7 @@ export interface ReportRequest {
   period_from: string
   period_to: string
   sent_to_telegram: boolean
+  status: 'pending' | 'sent' | 'failed'
   telegram_sent_at?: string
   created_at: string
 }
