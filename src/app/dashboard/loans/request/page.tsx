@@ -5,6 +5,7 @@ import Link from 'next/link'
 import { Steps } from '@/components/ui/Steps'
 import { Button } from '@/components/ui/Button'
 import { Card } from '@/components/ui/Card'
+import { requestLoan } from '@/app/actions/member'
 import {
   ArrowLeft,
   CreditCard,
@@ -77,8 +78,24 @@ export default function LoanRequestPage() {
   const handleSubmit = async () => {
     setLoading(true)
     setError(null)
-    await new Promise((resolve) => setTimeout(resolve, 2000))
+
+    const payload = new FormData()
+    payload.append('amount', formData.amount)
+    payload.append('purpose', formData.purpose)
+    payload.append('term_months', formData.term_months)
+    payload.append('referee_email', formData.referee_email)
+    if (formData.support_document) {
+      payload.append('support_document', formData.support_document)
+    }
+
+    const result = await requestLoan(payload)
     setLoading(false)
+
+    if (!result.success) {
+      setError(result.error ?? 'Unable to submit loan request.')
+      return
+    }
+
     setStep(5)
   }
 

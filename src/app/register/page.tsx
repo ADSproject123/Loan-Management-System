@@ -2,12 +2,11 @@
 
 import React, { useState } from 'react'
 import Link from 'next/link'
-import { useRouter } from 'next/navigation'
 import { Building2, AlertCircle, CheckCircle, Upload, User, Phone, MapPin, Mail, Lock, FileText, CreditCard } from 'lucide-react'
-import { createClient } from '@/lib/supabase/client'
 import { Button } from '@/components/ui/Button'
 import { Steps } from '@/components/ui/Steps'
 import { Card } from '@/components/ui/Card'
+import { registerMember } from '@/app/actions/member'
 
 const STEPS = [
   { id: 1, label: 'Account', description: 'Create credentials' },
@@ -32,7 +31,6 @@ interface FormData {
 }
 
 export default function RegisterPage() {
-  const router = useRouter()
   const [step, setStep] = useState(1)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -91,37 +89,25 @@ export default function RegisterPage() {
   }
 
   const handleSubmit = async () => {
+    if (formData.password !== formData.confirmPassword) {
+      setError('Passwords do not match.')
+      return
+    }
+
     setLoading(true)
     setError(null)
 
-    const supabase = createClient()
-
     try {
-      // 1. Create auth user
-      const { data: authData, error: authError } = await supabase.auth.signUp({
-        email: formData.email,
-        password: formData.password,
-        options: {
-          data: { full_name: formData.full_name },
-        },
+      const payload = new FormData()
+      Object.entries(formData).forEach(([key, value]) => {
+        if (value) payload.append(key, value)
       })
 
-      if (authError) throw authError
-      if (!authData.user) throw new Error('Failed to create account.')
-
-      // 2. Insert member record
-      const { error: memberError } = await supabase.from('members').insert({
-        auth_user_id: authData.user.id,
-        full_name: formData.full_name,
-        email: formData.email,
-        phone: formData.phone,
-        address: formData.address,
-        id_number: formData.id_number,
-        resident_book_number: formData.resident_book_number,
-        status: 'pending',
-      })
-
-      if (memberError) throw memberError
+      const result = await registerMember(payload)
+      if (!result.success) {
+        setError(result.error ?? 'Registration failed. Please try again.')
+        return
+      }
 
       setStep(5)
     } catch (err: unknown) {

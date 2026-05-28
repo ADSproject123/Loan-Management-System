@@ -8,6 +8,7 @@ import {
   PiggyBank,
   CreditCard,
   Wallet,
+  ShieldCheck,
   ChevronDown,
   ChevronRight,
   Building2,
@@ -54,9 +55,24 @@ const navItems: NavItem[] = [
   },
 ]
 
-export function Sidebar() {
+interface SidebarProps {
+  memberName?: string
+  isAdmin?: boolean
+}
+
+export function Sidebar({ memberName = 'Member', isAdmin = false }: SidebarProps) {
   const pathname = usePathname()
   const [expandedItems, setExpandedItems] = useState<string[]>(['Savings', 'Loans'])
+  const items: NavItem[] = isAdmin
+    ? [
+        ...navItems,
+        {
+          label: 'Admin',
+          href: '/admin',
+          icon: ShieldCheck,
+        },
+      ]
+    : navItems
 
   const toggleExpand = (label: string) => {
     setExpandedItems((prev) =>
@@ -77,12 +93,12 @@ export function Sidebar() {
           <Building2 className="w-7 h-7" />
           <span>SanSam</span>
         </Link>
-        <p className="text-blue-300 text-xs mt-1">Member Portal</p>
+        <p className="text-blue-300 text-xs mt-1 truncate">{memberName}</p>
       </div>
 
       {/* Navigation */}
       <nav className="flex-1 p-4 space-y-1">
-        {navItems.map((item) => {
+        {items.map((item) => {
           const Icon = item.icon
           const isActive = isActiveParent(item)
           const isExpanded = expandedItems.includes(item.label)

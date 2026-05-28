@@ -4,6 +4,7 @@ import React, { useState } from 'react'
 import Link from 'next/link'
 import { Button } from '@/components/ui/Button'
 import { Card } from '@/components/ui/Card'
+import { requestReport } from '@/app/actions/member'
 import { ArrowLeft, FileText, CheckCircle, AlertCircle, Send, Calendar } from 'lucide-react'
 
 export default function SavingReportPage() {
@@ -24,8 +25,20 @@ export default function SavingReportPage() {
     }
     setError(null)
     setLoading(true)
-    await new Promise((resolve) => setTimeout(resolve, 1500))
+
+    const payload = new FormData()
+    payload.append('report_type', 'saving')
+    payload.append('period_from', periodFrom)
+    payload.append('period_to', periodTo)
+
+    const result = await requestReport(payload)
     setLoading(false)
+
+    if (!result.success) {
+      setError(result.error ?? 'Unable to request report.')
+      return
+    }
+
     setSubmitted(true)
   }
 

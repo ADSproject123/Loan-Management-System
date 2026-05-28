@@ -6,7 +6,6 @@ import {
   CreditCard,
   Users,
   TrendingUp,
-  Shield,
   CheckCircle,
   Building2,
 } from 'lucide-react'
