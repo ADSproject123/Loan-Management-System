@@ -1,5 +1,6 @@
 import { Sidebar } from '@/components/layout/Sidebar'
 import { requireMember } from '@/lib/auth/member'
+import { redirect } from 'next/navigation'
 
 export default async function DashboardLayout({
   children,
@@ -8,15 +9,14 @@ export default async function DashboardLayout({
 }) {
   const member = await requireMember()
 
+  if (member.status !== 'active') {
+    redirect('/pending-approval')
+  }
+
   return (
     <div className="flex min-h-screen">
       <Sidebar memberName={member.full_name} isAdmin={member.is_admin} />
       <main className="flex-1 overflow-auto bg-gray-50">
-        {member.status !== 'active' && (
-          <div className="border-b border-yellow-200 bg-yellow-50 px-6 py-3 text-sm text-yellow-800">
-            Your account is currently <strong>{member.status}</strong>. Transaction requests are available after admin approval.
-          </div>
-        )}
         {children}
       </main>
     </div>

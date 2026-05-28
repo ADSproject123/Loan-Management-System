@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useState } from 'react'
+import React, { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { Menu, X, ChevronDown, Building2 } from 'lucide-react'
@@ -22,10 +22,27 @@ const navLinks = [
 export function Navbar() {
   const [mobileOpen, setMobileOpen] = useState(false)
   const [dropdownOpen, setDropdownOpen] = useState(false)
+  const [scrolled, setScrolled] = useState(false)
   const pathname = usePathname()
 
+  useEffect(() => {
+    const updateScrolled = () => setScrolled(window.scrollY > 12)
+    updateScrolled()
+    window.addEventListener('scroll', updateScrolled, { passive: true })
+
+    return () => window.removeEventListener('scroll', updateScrolled)
+  }, [])
+
+  const solidNav = scrolled || mobileOpen
+
   return (
-    <nav className="bg-blue-900 text-white shadow-lg sticky top-0 z-50">
+    <nav
+      className={`fixed top-0 left-0 right-0 z-50 text-white transition-all duration-300 ${
+        solidNav
+          ? 'bg-blue-900 shadow-lg'
+          : 'bg-transparent'
+      }`}
+    >
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16">
           {/* Logo */}
@@ -41,7 +58,9 @@ export function Navbar() {
                 <div key={link.label} className="relative">
                   <button
                     onClick={() => setDropdownOpen(!dropdownOpen)}
-                    className="flex items-center gap-1 hover:text-blue-200 transition-colors py-2 text-sm font-medium"
+                    className={`flex items-center gap-1 transition-colors py-2 text-sm font-medium ${
+                      solidNav ? 'hover:text-blue-200' : 'text-white hover:text-blue-100'
+                    }`}
                   >
                     {link.label}
                     <ChevronDown className={`w-4 h-4 transition-transform ${dropdownOpen ? 'rotate-180' : ''}`} />
@@ -66,7 +85,9 @@ export function Navbar() {
                   key={link.href}
                   href={link.href}
                   className={`text-sm font-medium transition-colors py-2 ${
-                    pathname === link.href ? 'text-blue-200 border-b-2 border-blue-200' : 'hover:text-blue-200'
+                    pathname === link.href
+                      ? 'text-blue-200 border-b-2 border-blue-200'
+                      : solidNav ? 'hover:text-blue-200' : 'text-white hover:text-blue-100'
                   }`}
                 >
                   {link.label}
@@ -75,7 +96,11 @@ export function Navbar() {
             )}
             <Link
               href="/dashboard"
-              className="bg-white text-blue-900 px-4 py-2 rounded-lg text-sm font-semibold hover:bg-blue-50 transition-colors"
+              className={`px-4 py-2 rounded-lg text-sm font-semibold transition-colors ${
+                solidNav
+                  ? 'bg-white text-blue-900 hover:bg-blue-50'
+                  : 'bg-white/15 text-white ring-1 ring-white/30 hover:bg-white/25 backdrop-blur'
+              }`}
             >
               My Account
             </Link>
@@ -83,7 +108,9 @@ export function Navbar() {
 
           {/* Mobile menu button */}
           <button
-            className="md:hidden p-2 rounded-md hover:bg-blue-800 transition-colors"
+            className={`md:hidden p-2 rounded-md transition-colors ${
+              solidNav ? 'hover:bg-blue-800' : 'hover:bg-white/15'
+            }`}
             onClick={() => setMobileOpen(!mobileOpen)}
             aria-label="Toggle menu"
           >
