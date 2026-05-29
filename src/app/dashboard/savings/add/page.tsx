@@ -17,10 +17,10 @@ import {
 } from 'lucide-react'
 
 const STEPS = [
-  { id: 1, label: 'Amount', description: 'Enter amount' },
-  { id: 2, label: 'QR Code', description: 'Scan & pay' },
-  { id: 3, label: 'Evidence', description: 'Upload proof' },
-  { id: 4, label: 'Done', description: 'Confirmed' },
+  { id: 1, label: 'ចំនួនទឹកប្រាក់', description: 'បញ្ចូលចំនួន' },
+  { id: 2, label: 'QR Code', description: 'ស្កេន និង បង់' },
+  { id: 3, label: 'ភស្តុតាង', description: 'ផ្ទុកភស្តុតាង' },
+  { id: 4, label: 'រួចរាល់', description: 'បានបញ្ជាក់' },
 ]
 
 export default function AddSavingPage() {
@@ -34,11 +34,11 @@ export default function AddSavingPage() {
   const handleAmountNext = () => {
     const num = parseFloat(amount)
     if (!amount || isNaN(num) || num <= 0) {
-      setError('Please enter a valid saving amount.')
+      setError('សូមបញ្ចូលចំនួនទឹកប្រាក់សន្សំត្រឹមត្រូវ។')
       return
     }
     if (num < 100) {
-      setError('Minimum saving amount is ฿100.')
+      setError('ចំនួនទឹកប្រាក់សន្សំអប្បបរមាគឺ ฿១០០។')
       return
     }
     setError(null)
@@ -47,7 +47,7 @@ export default function AddSavingPage() {
 
   const handleSubmitEvidence = async () => {
     if (!evidence) {
-      setError('Please upload payment evidence.')
+      setError('សូមផ្ទុកភស្តុតាងបង់ប្រាក់។')
       return
     }
     setLoading(true)
@@ -62,7 +62,7 @@ export default function AddSavingPage() {
     setLoading(false)
 
     if (!result.success) {
-      setError(result.error ?? 'Unable to submit saving.')
+      setError(result.error ?? 'មិនអាចដាក់ស្នើការសន្សំបានទេ។')
       return
     }
 
@@ -80,10 +80,10 @@ export default function AddSavingPage() {
           className="inline-flex items-center gap-2 text-gray-500 hover:text-gray-700 text-sm mb-4 transition-colors"
         >
           <ArrowLeft className="w-4 h-4" />
-          Back to Savings
+          ត្រឡប់ទៅការសន្សំ
         </Link>
-        <h1 className="text-2xl font-bold text-gray-900">Add Monthly Saving</h1>
-        <p className="text-gray-500 text-sm mt-1">Add your monthly saving contribution</p>
+        <h1 className="text-2xl font-bold text-gray-900">បន្ថែមការសន្សំប្រចាំខែ</h1>
+        <p className="text-gray-500 text-sm mt-1">បន្ថែមការបរិច្ចាគសន្សំប្រចាំខែរបស់អ្នក</p>
       </div>
 
       {/* Steps */}
@@ -107,13 +107,13 @@ export default function AddSavingPage() {
               <PiggyBank className="w-6 h-6 text-green-700" />
             </div>
             <div>
-              <h2 className="font-semibold text-gray-900">Enter Saving Amount</h2>
-              <p className="text-gray-500 text-sm">How much would you like to save this month?</p>
+              <h2 className="font-semibold text-gray-900">បញ្ចូលចំនួនទឹកប្រាក់សន្សំ</h2>
+              <p className="text-gray-500 text-sm">តើអ្នកចង់សន្សំប៉ុន្មានក្នុងខែនេះ?</p>
             </div>
           </div>
 
           <div className="mb-5">
-            <label className="block text-sm font-medium text-gray-700 mb-2">Amount (฿)</label>
+            <label className="block text-sm font-medium text-gray-700 mb-2">ចំនួនទឹកប្រាក់ (฿)</label>
             <div className="relative">
               <span className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500 font-medium">฿</span>
               <input
@@ -129,7 +129,7 @@ export default function AddSavingPage() {
           </div>
 
           <div className="mb-5">
-            <p className="text-sm text-gray-500 mb-2">Quick amounts:</p>
+            <p className="text-sm text-gray-500 mb-2">ចំនួនរហ័ស៖</p>
             <div className="flex flex-wrap gap-2">
               {suggestedAmounts.map((amt) => (
                 <button
@@ -148,12 +148,12 @@ export default function AddSavingPage() {
           </div>
 
           <div className="mb-6">
-            <label className="block text-sm font-medium text-gray-700 mb-2">Notes (optional)</label>
+            <label className="block text-sm font-medium text-gray-700 mb-2">កំណត់ចំណាំ (ស្រេចចិត្ត)</label>
             <input
               type="text"
               value={notes}
               onChange={(e) => setNotes(e.target.value)}
-              placeholder="e.g. May monthly saving"
+              placeholder="ឧ. ការសន្សំប្រចាំខែឧសភា"
               className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
             />
           </div>
@@ -161,18 +161,18 @@ export default function AddSavingPage() {
           {amount && parseFloat(amount) > 0 && (
             <div className="bg-blue-50 rounded-lg p-4 mb-5">
               <div className="flex justify-between items-center">
-                <span className="text-blue-700 text-sm">Saving amount</span>
+                <span className="text-blue-700 text-sm">ចំនួនទឹកប្រាក់សន្សំ</span>
                 <span className="text-blue-900 font-semibold">฿{parseFloat(amount).toLocaleString()}</span>
               </div>
               <div className="flex justify-between items-center mt-1">
-                <span className="text-blue-700 text-sm">Monthly interest (3%)</span>
+                <span className="text-blue-700 text-sm">ការប្រាក់ប្រចាំខែ (៣%)</span>
                 <span className="text-green-600 font-semibold">+฿{(parseFloat(amount) * 0.03).toFixed(2)}</span>
               </div>
             </div>
           )}
 
           <Button onClick={handleAmountNext} className="w-full" size="lg">
-            Continue to Payment
+            បន្តទៅការបង់ប្រាក់
           </Button>
         </Card>
       )}
@@ -185,8 +185,8 @@ export default function AddSavingPage() {
               <QrCode className="w-6 h-6 text-blue-700" />
             </div>
             <div>
-              <h2 className="font-semibold text-gray-900">Scan & Pay</h2>
-              <p className="text-gray-500 text-sm">Scan the QR code to transfer your saving amount</p>
+              <h2 className="font-semibold text-gray-900">ស្កេន និង បង់ប្រាក់</h2>
+              <p className="text-gray-500 text-sm">ស្កេន QR code ដើម្បីផ្ទេរចំនួនទឹកប្រាក់សន្សំ</p>
             </div>
           </div>
 
@@ -197,18 +197,18 @@ export default function AddSavingPage() {
               </div>
             </div>
             <p className="font-semibold text-gray-900 text-lg">฿{parseFloat(amount).toLocaleString()}</p>
-            <p className="text-gray-500 text-sm mt-1">Transfer exactly this amount</p>
+            <p className="text-gray-500 text-sm mt-1">ផ្ទេរចំនួនពិតប្រាកដនេះ</p>
           </div>
 
           <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 mb-6">
             <div className="flex items-start gap-2">
               <Info className="w-4 h-4 text-yellow-600 flex-shrink-0 mt-0.5" />
               <div className="text-sm text-yellow-700">
-                <p className="font-medium mb-1">Important:</p>
+                <p className="font-medium mb-1">សំខាន់៖</p>
                 <ul className="space-y-1 list-disc list-inside text-xs">
-                  <li>Transfer exactly <strong>฿{parseFloat(amount).toLocaleString()}</strong></li>
-                  <li>Take a screenshot of the transfer confirmation</li>
-                  <li>Do not close this page until you have the screenshot</li>
+                  <li>ផ្ទេរចំនួនពិតប្រាកដ <strong>฿{parseFloat(amount).toLocaleString()}</strong></li>
+                  <li>ថតរូបអេក្រង់នៃការបញ្ជាក់ការផ្ទេរ</li>
+                  <li>កុំបិទទំព័រនេះរហូតដល់អ្នកមានរូបអេក្រង់</li>
                 </ul>
               </div>
             </div>
@@ -216,10 +216,10 @@ export default function AddSavingPage() {
 
           <div className="flex gap-3">
             <Button variant="outline" onClick={() => setStep(1)} className="flex-1">
-              Back
+              ត្រឡប់ក្រោយ
             </Button>
             <Button onClick={() => setStep(3)} className="flex-1">
-              I&apos;ve Made the Transfer
+              ខ្ញុំបានផ្ទេររួចហើយ
             </Button>
           </div>
         </Card>
@@ -233,8 +233,8 @@ export default function AddSavingPage() {
               <Upload className="w-6 h-6 text-orange-700" />
             </div>
             <div>
-              <h2 className="font-semibold text-gray-900">Submit Payment Evidence</h2>
-              <p className="text-gray-500 text-sm">Upload a screenshot of your transfer confirmation</p>
+              <h2 className="font-semibold text-gray-900">ដាក់ស្នើភស្តុតាងបង់ប្រាក់</h2>
+              <p className="text-gray-500 text-sm">ផ្ទុករូបអេក្រង់នៃការបញ្ជាក់ការផ្ទេររបស់អ្នក</p>
             </div>
           </div>
 
@@ -244,12 +244,12 @@ export default function AddSavingPage() {
               {evidence ? (
                 <div className="text-center">
                   <p className="text-sm font-medium text-blue-700">{evidence.name}</p>
-                  <p className="text-xs text-gray-400 mt-1">Click to change file</p>
+                  <p className="text-xs text-gray-400 mt-1">ចុចដើម្បីប្តូរឯកសារ</p>
                 </div>
               ) : (
                 <>
-                  <p className="text-sm font-medium text-gray-600">Click to upload evidence</p>
-                  <p className="text-xs text-gray-400 mt-1">JPG, PNG or PDF, max 10MB</p>
+                  <p className="text-sm font-medium text-gray-600">ចុចដើម្បីផ្ទុកភស្តុតាង</p>
+                  <p className="text-xs text-gray-400 mt-1">JPG, PNG ឬ PDF អតិបរមា ១០ មេកាបៃ</p>
                 </>
               )}
               <input
@@ -263,12 +263,12 @@ export default function AddSavingPage() {
 
           <div className="bg-gray-50 rounded-lg p-4 mb-6">
             <div className="flex justify-between items-center text-sm">
-              <span className="text-gray-500">Saving amount</span>
+              <span className="text-gray-500">ចំនួនទឹកប្រាក់សន្សំ</span>
               <span className="font-semibold text-gray-900">฿{parseFloat(amount).toLocaleString()}</span>
             </div>
             {notes && (
               <div className="flex justify-between items-center text-sm mt-1">
-                <span className="text-gray-500">Notes</span>
+                <span className="text-gray-500">កំណត់ចំណាំ</span>
                 <span className="text-gray-700">{notes}</span>
               </div>
             )}
@@ -276,10 +276,10 @@ export default function AddSavingPage() {
 
           <div className="flex gap-3">
             <Button variant="outline" onClick={() => setStep(2)} className="flex-1" disabled={loading}>
-              Back
+              ត្រឡប់ក្រោយ
             </Button>
             <Button onClick={handleSubmitEvidence} loading={loading} className="flex-1">
-              Submit Evidence
+              ដាក់ស្នើភស្តុតាង
             </Button>
           </div>
         </Card>
@@ -292,29 +292,29 @@ export default function AddSavingPage() {
             <div className="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-5">
               <CheckCircle className="w-10 h-10 text-green-500" />
             </div>
-            <h2 className="text-2xl font-bold text-gray-900 mb-2">Saving Submitted!</h2>
+            <h2 className="text-2xl font-bold text-gray-900 mb-2">ការសន្សំបានដាក់ស្នើ!</h2>
             <p className="text-gray-600 mb-2">
-              Your saving of <strong>฿{parseFloat(amount).toLocaleString()}</strong> has been submitted successfully.
+              ការសន្សំរបស់អ្នកចំនួន <strong>฿{parseFloat(amount).toLocaleString()}</strong> ត្រូវបានដាក់ស្នើដោយជោគជ័យ។
             </p>
             <p className="text-gray-500 text-sm mb-6">
-              An admin will verify your payment evidence within 24 hours.
-              Your balance will be updated upon verification.
+              អ្នកគ្រប់គ្រងនឹងផ្ទៀងផ្ទាត់ភស្តុតាងបង់ប្រាក់របស់អ្នកក្នុងរយៈពេល ២៤ ម៉ោង។
+              សមតុល្យរបស់អ្នកនឹងត្រូវបានធ្វើបច្ចុប្បន្នភាពនៅពេលផ្ទៀងផ្ទាត់។
             </p>
 
             <div className="bg-green-50 rounded-xl p-4 mb-6 text-left">
-              <p className="text-green-900 font-semibold text-sm mb-2">Submission Summary</p>
+              <p className="text-green-900 font-semibold text-sm mb-2">សង្ខេបការដាក់ស្នើ</p>
               <div className="space-y-1">
                 <div className="flex justify-between text-sm">
-                  <span className="text-green-700">Amount</span>
+                  <span className="text-green-700">ចំនួនទឹកប្រាក់</span>
                   <span className="font-medium text-green-900">฿{parseFloat(amount).toLocaleString()}</span>
                 </div>
                 <div className="flex justify-between text-sm">
-                  <span className="text-green-700">Status</span>
-                  <span className="font-medium text-green-900">Pending Verification</span>
+                  <span className="text-green-700">ស្ថានភាព</span>
+                  <span className="font-medium text-green-900">កំពុងរង់ចាំការផ្ទៀងផ្ទាត់</span>
                 </div>
                 <div className="flex justify-between text-sm">
-                  <span className="text-green-700">Expected Verification</span>
-                  <span className="font-medium text-green-900">Within 24 hours</span>
+                  <span className="text-green-700">ការផ្ទៀងផ្ទាត់ដែលរំពឹងទុក</span>
+                  <span className="font-medium text-green-900">ក្នុងរយៈពេល ២៤ ម៉ោង</span>
                 </div>
               </div>
             </div>
@@ -324,13 +324,13 @@ export default function AddSavingPage() {
                 href="/dashboard/savings"
                 className="flex-1 inline-flex items-center justify-center gap-2 bg-blue-900 text-white py-2.5 rounded-lg font-semibold hover:bg-blue-800 transition-colors text-sm"
               >
-                View Savings
+                មើលការសន្សំ
               </Link>
               <Link
                 href="/dashboard"
                 className="flex-1 inline-flex items-center justify-center gap-2 border border-gray-300 text-gray-700 py-2.5 rounded-lg font-semibold hover:bg-gray-50 transition-colors text-sm"
               >
-                Dashboard
+                ផ្ទាំងគ្រប់គ្រង
               </Link>
             </div>
           </div>

@@ -9,10 +9,10 @@ import { repayLoan } from '@/app/actions/member'
 import { ArrowLeft, CreditCard, QrCode, Upload, CheckCircle, AlertCircle, Info } from 'lucide-react'
 
 const STEPS = [
-  { id: 1, label: 'Confirm Amount', description: 'Set amount' },
-  { id: 2, label: 'QR Code', description: 'Scan & pay' },
-  { id: 3, label: 'Evidence', description: 'Upload proof' },
-  { id: 4, label: 'Done', description: 'Submitted' },
+  { id: 1, label: 'បញ្ជាក់ចំនួន', description: 'កំណត់ចំនួន' },
+  { id: 2, label: 'QR Code', description: 'ស្កេន និង បង់' },
+  { id: 3, label: 'ភស្តុតាង', description: 'ផ្ទុកភស្តុតាង' },
+  { id: 4, label: 'រួចរាល់', description: 'បានដាក់ស្នើ' },
 ]
 
 // Mock active loan data
@@ -21,7 +21,7 @@ const activeLoan = {
   amount: 50000,
   remaining: 30000,
   monthly_payment: 5000,
-  purpose: 'Business expansion',
+  purpose: 'ការពង្រីកអាជីវកម្ម',
   due_date: '2025-06-01',
 }
 
@@ -35,11 +35,11 @@ export default function LoanRepayPage() {
   const handleConfirmAmount = () => {
     const amt = parseFloat(payAmount)
     if (!payAmount || isNaN(amt) || amt <= 0) {
-      setError('Please enter a valid payment amount.')
+      setError('សូមបញ្ចូលចំនួនទឹកប្រាក់បង់ត្រឹមត្រូវ។')
       return
     }
     if (amt > activeLoan.remaining) {
-      setError(`Amount cannot exceed remaining loan balance of ฿${activeLoan.remaining.toLocaleString()}.`)
+      setError(`ចំនួនទឹកប្រាក់មិនអាចលើសសមតុល្យឥណទាននៅសល់ ฿${activeLoan.remaining.toLocaleString()} ។`)
       return
     }
     setError(null)
@@ -48,7 +48,7 @@ export default function LoanRepayPage() {
 
   const handleSubmit = async () => {
     if (!evidence) {
-      setError('Please upload payment evidence.')
+      setError('សូមផ្ទុកភស្តុតាងបង់ប្រាក់។')
       return
     }
     setLoading(true)
@@ -62,7 +62,7 @@ export default function LoanRepayPage() {
     setLoading(false)
 
     if (!result.success) {
-      setError(result.error ?? 'Unable to submit repayment.')
+      setError(result.error ?? 'មិនអាចដាក់ស្នើការសងបានទេ។')
       return
     }
 
@@ -80,10 +80,10 @@ export default function LoanRepayPage() {
           className="inline-flex items-center gap-2 text-gray-500 hover:text-gray-700 text-sm mb-4 transition-colors"
         >
           <ArrowLeft className="w-4 h-4" />
-          Back to Loans
+          ត្រឡប់ទៅឥណទាន
         </Link>
-        <h1 className="text-2xl font-bold text-gray-900">Loan Repayment</h1>
-        <p className="text-gray-500 text-sm mt-1">Make a payment toward your active loan</p>
+        <h1 className="text-2xl font-bold text-gray-900">សងឥណទាន</h1>
+        <p className="text-gray-500 text-sm mt-1">បង់ប្រាក់សម្រាប់ឥណទានសកម្មរបស់អ្នក</p>
       </div>
 
       {step < 4 && (
@@ -102,20 +102,20 @@ export default function LoanRepayPage() {
       {/* Active Loan Summary */}
       {step < 4 && (
         <div className="bg-gradient-to-r from-blue-900 to-blue-700 text-white rounded-xl p-5 mb-6">
-          <p className="text-blue-200 text-xs uppercase tracking-wider font-semibold mb-2">Active Loan</p>
+          <p className="text-blue-200 text-xs uppercase tracking-wider font-semibold mb-2">ឥណទានសកម្ម</p>
           <div className="flex justify-between items-start">
             <div>
               <p className="text-2xl font-bold">฿{activeLoan.remaining.toLocaleString()}</p>
-              <p className="text-blue-200 text-sm mt-1">Remaining balance</p>
+              <p className="text-blue-200 text-sm mt-1">សមតុល្យនៅសល់</p>
             </div>
             <div className="text-right">
               <p className="text-lg font-semibold">฿{activeLoan.monthly_payment.toLocaleString()}</p>
-              <p className="text-blue-200 text-sm mt-1">Monthly payment</p>
+              <p className="text-blue-200 text-sm mt-1">បង់ប្រចាំខែ</p>
             </div>
           </div>
           <div className="mt-3 pt-3 border-t border-white/20">
             <p className="text-blue-200 text-xs">
-              {activeLoan.purpose} &bull; Due {new Date(activeLoan.due_date).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}
+              {activeLoan.purpose} &bull; ផុតកំណត់ {new Date(activeLoan.due_date).toLocaleDateString('km-KH', { month: 'long', day: 'numeric', year: 'numeric' })}
             </p>
           </div>
         </div>
@@ -129,13 +129,13 @@ export default function LoanRepayPage() {
               <CreditCard className="w-6 h-6 text-blue-700" />
             </div>
             <div>
-              <h2 className="font-semibold text-gray-900">Confirm Repayment Amount</h2>
-              <p className="text-gray-500 text-sm">How much would you like to pay?</p>
+              <h2 className="font-semibold text-gray-900">បញ្ជាក់ចំនួនទឹកប្រាក់សង</h2>
+              <p className="text-gray-500 text-sm">តើអ្នកចង់បង់ប៉ុន្មាន?</p>
             </div>
           </div>
 
           <div className="mb-5">
-            <label className="block text-sm font-medium text-gray-700 mb-1.5">Payment Amount (฿)</label>
+            <label className="block text-sm font-medium text-gray-700 mb-1.5">ចំនួនទឹកប្រាក់បង់ (฿)</label>
             <div className="relative">
               <span className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500 font-medium">฿</span>
               <input
@@ -161,7 +161,7 @@ export default function LoanRepayPage() {
                     : 'border-gray-300 text-gray-700 hover:border-blue-400 hover:text-blue-700'
                 }`}
               >
-                {i === 0 ? 'Monthly' : i === 1 ? 'Double' : 'Full'}
+                {i === 0 ? 'ប្រចាំខែ' : i === 1 ? 'ទ្វេដង' : 'ទាំងអស់'}
                 <br />
                 ฿{amt.toLocaleString()}
               </button>
@@ -172,17 +172,17 @@ export default function LoanRepayPage() {
             <div className="bg-blue-50 rounded-lg p-4 mb-5">
               <div className="space-y-2 text-sm">
                 <div className="flex justify-between">
-                  <span className="text-blue-700">Payment amount</span>
+                  <span className="text-blue-700">ចំនួនទឹកប្រាក់បង់</span>
                   <span className="font-semibold text-blue-900">฿{amount.toLocaleString()}</span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-blue-700">Current remaining</span>
+                  <span className="text-blue-700">នៅសល់បច្ចុប្បន្ន</span>
                   <span className="font-semibold text-blue-900">฿{activeLoan.remaining.toLocaleString()}</span>
                 </div>
                 <div className="flex justify-between border-t border-blue-200 pt-2">
-                  <span className="text-blue-700 font-medium">New remaining</span>
+                  <span className="text-blue-700 font-medium">នៅសល់ថ្មី</span>
                   <span className={`font-bold ${newRemaining <= 0 ? 'text-green-700' : 'text-blue-900'}`}>
-                    {newRemaining <= 0 ? 'Fully Paid!' : `฿${newRemaining.toLocaleString()}`}
+                    {newRemaining <= 0 ? 'បានបង់ពេញ!' : `฿${newRemaining.toLocaleString()}`}
                   </span>
                 </div>
               </div>
@@ -190,7 +190,7 @@ export default function LoanRepayPage() {
           )}
 
           <Button onClick={handleConfirmAmount} className="w-full" size="lg">
-            Proceed to Payment
+            បន្តទៅការបង់ប្រាក់
           </Button>
         </Card>
       )}
@@ -203,8 +203,8 @@ export default function LoanRepayPage() {
               <QrCode className="w-6 h-6 text-blue-700" />
             </div>
             <div>
-              <h2 className="font-semibold text-gray-900">Scan QR Code to Pay</h2>
-              <p className="text-gray-500 text-sm">Transfer exactly ฿{amount.toLocaleString()}</p>
+              <h2 className="font-semibold text-gray-900">ស្កេន QR Code ដើម្បីបង់ប្រាក់</h2>
+              <p className="text-gray-500 text-sm">ផ្ទេរចំនួនពិតប្រាកដ ฿{amount.toLocaleString()}</p>
             </div>
           </div>
 
@@ -215,23 +215,23 @@ export default function LoanRepayPage() {
               </div>
             </div>
             <p className="font-bold text-2xl text-gray-900">฿{amount.toLocaleString()}</p>
-            <p className="text-gray-500 text-sm mt-1">Loan Repayment</p>
+            <p className="text-gray-500 text-sm mt-1">ការសងឥណទាន</p>
           </div>
 
           <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 mb-6">
             <div className="flex items-start gap-2">
               <Info className="w-4 h-4 text-yellow-600 flex-shrink-0 mt-0.5" />
               <div className="text-xs text-yellow-700 space-y-1">
-                <p>Transfer exactly <strong>฿{amount.toLocaleString()}</strong> — partial amounts cause verification delays.</p>
-                <p>Screenshot the confirmation before closing this page.</p>
+                <p>ផ្ទេរចំនួនពិតប្រាកដ <strong>฿{amount.toLocaleString()}</strong> — ចំនួនមួយផ្នែកនឹងបណ្តាលឱ្យពន្យារពេលផ្ទៀងផ្ទាត់។</p>
+                <p>ថតរូបអេក្រង់នៃការបញ្ជាក់មុនបិទទំព័រនេះ។</p>
               </div>
             </div>
           </div>
 
           <div className="flex gap-3">
-            <Button variant="outline" onClick={() => setStep(1)} className="flex-1">Back</Button>
+            <Button variant="outline" onClick={() => setStep(1)} className="flex-1">ត្រឡប់ក្រោយ</Button>
             <Button onClick={() => { setError(null); setStep(3) }} className="flex-1">
-              I&apos;ve Paid
+              ខ្ញុំបានបង់ហើយ
             </Button>
           </div>
         </Card>
@@ -245,8 +245,8 @@ export default function LoanRepayPage() {
               <Upload className="w-6 h-6 text-orange-700" />
             </div>
             <div>
-              <h2 className="font-semibold text-gray-900">Upload Payment Evidence</h2>
-              <p className="text-gray-500 text-sm">Submit your transfer screenshot</p>
+              <h2 className="font-semibold text-gray-900">ផ្ទុកភស្តុតាងបង់ប្រាក់</h2>
+              <p className="text-gray-500 text-sm">ដាក់ស្នើរូបអេក្រង់នៃការផ្ទេររបស់អ្នក</p>
             </div>
           </div>
 
@@ -255,12 +255,12 @@ export default function LoanRepayPage() {
             {evidence ? (
               <div className="text-center">
                 <p className="text-sm font-medium text-blue-700">{evidence.name}</p>
-                <p className="text-xs text-gray-400 mt-1">Click to change</p>
+                <p className="text-xs text-gray-400 mt-1">ចុចដើម្បីប្តូរ</p>
               </div>
             ) : (
               <>
-                <p className="text-sm font-medium text-gray-600">Click to upload evidence</p>
-                <p className="text-xs text-gray-400 mt-1">JPG, PNG or PDF, max 10MB</p>
+                <p className="text-sm font-medium text-gray-600">ចុចដើម្បីផ្ទុកភស្តុតាង</p>
+                <p className="text-xs text-gray-400 mt-1">JPG, PNG ឬ PDF អតិបរមា ១០ មេកាបៃ</p>
               </>
             )}
             <input
@@ -273,19 +273,19 @@ export default function LoanRepayPage() {
 
           <div className="bg-gray-50 rounded-lg p-4 mb-5 text-sm">
             <div className="flex justify-between text-sm mb-1">
-              <span className="text-gray-500">Payment amount</span>
+              <span className="text-gray-500">ចំនួនទឹកប្រាក់បង់</span>
               <span className="font-semibold text-gray-900">฿{amount.toLocaleString()}</span>
             </div>
             <div className="flex justify-between text-sm">
-              <span className="text-gray-500">New remaining balance</span>
-              <span className="font-semibold text-gray-900">{newRemaining <= 0 ? 'Fully Paid' : `฿${newRemaining.toLocaleString()}`}</span>
+              <span className="text-gray-500">សមតុល្យនៅសល់ថ្មី</span>
+              <span className="font-semibold text-gray-900">{newRemaining <= 0 ? 'បានបង់ពេញ' : `฿${newRemaining.toLocaleString()}`}</span>
             </div>
           </div>
 
           <div className="flex gap-3">
-            <Button variant="outline" onClick={() => setStep(2)} disabled={loading} className="flex-1">Back</Button>
+            <Button variant="outline" onClick={() => setStep(2)} disabled={loading} className="flex-1">ត្រឡប់ក្រោយ</Button>
             <Button onClick={handleSubmit} loading={loading} className="flex-1">
-              Submit Repayment
+              ដាក់ស្នើការសង
             </Button>
           </div>
         </Card>
@@ -298,28 +298,28 @@ export default function LoanRepayPage() {
             <div className="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-5">
               <CheckCircle className="w-10 h-10 text-green-500" />
             </div>
-            <h2 className="text-2xl font-bold text-gray-900 mb-2">Repayment Submitted!</h2>
+            <h2 className="text-2xl font-bold text-gray-900 mb-2">ការសងត្រូវបានដាក់ស្នើ!</h2>
             <p className="text-gray-600 mb-2">
-              Your repayment of <strong>฿{amount.toLocaleString()}</strong> has been received.
+              ការសងរបស់អ្នកចំនួន <strong>฿{amount.toLocaleString()}</strong> ត្រូវបានទទួល។
             </p>
             <p className="text-gray-500 text-sm mb-6">
-              Admin will verify your payment within 24 hours and update your loan balance.
+              អ្នកគ្រប់គ្រងនឹងផ្ទៀងផ្ទាត់ការបង់ប្រាក់របស់អ្នកក្នុងរយៈពេល ២៤ ម៉ោង និង ធ្វើបច្ចុប្បន្នភាពសមតុល្យឥណទានរបស់អ្នក។
             </p>
 
             <div className="bg-green-50 rounded-xl p-4 mb-6 text-left">
-              <p className="text-green-900 font-semibold text-sm mb-2">Repayment Summary</p>
+              <p className="text-green-900 font-semibold text-sm mb-2">សង្ខេបការសង</p>
               <div className="space-y-2 text-sm">
                 <div className="flex justify-between">
-                  <span className="text-green-700">Amount Paid</span>
+                  <span className="text-green-700">ចំនួនបានបង់</span>
                   <span className="font-medium text-green-900">฿{amount.toLocaleString()}</span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-green-700">Status</span>
-                  <span className="font-medium text-green-900">Pending Verification</span>
+                  <span className="text-green-700">ស្ថានភាព</span>
+                  <span className="font-medium text-green-900">កំពុងរង់ចាំការផ្ទៀងផ្ទាត់</span>
                 </div>
                 {newRemaining > 0 && (
                   <div className="flex justify-between">
-                    <span className="text-green-700">New Remaining</span>
+                    <span className="text-green-700">នៅសល់ថ្មី</span>
                     <span className="font-medium text-green-900">฿{newRemaining.toLocaleString()}</span>
                   </div>
                 )}
@@ -331,13 +331,13 @@ export default function LoanRepayPage() {
                 href="/dashboard/loans"
                 className="inline-flex items-center gap-2 bg-blue-900 text-white px-5 py-2.5 rounded-lg text-sm font-semibold hover:bg-blue-800 transition-colors"
               >
-                View My Loans
+                មើលឥណទានរបស់ខ្ញុំ
               </Link>
               <Link
                 href="/dashboard"
                 className="inline-flex items-center gap-2 border border-gray-300 text-gray-700 px-5 py-2.5 rounded-lg text-sm font-semibold hover:bg-gray-50 transition-colors"
               >
-                Dashboard
+                ផ្ទាំងគ្រប់គ្រង
               </Link>
             </div>
           </div>

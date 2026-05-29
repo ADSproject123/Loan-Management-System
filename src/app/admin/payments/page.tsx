@@ -25,28 +25,28 @@ export default async function AdminPaymentsPage() {
   return (
     <main className="space-y-6 p-6 md:p-8 max-w-7xl mx-auto">
       <div>
-        <p className="text-sm font-semibold uppercase tracking-wide text-blue-700">Admin</p>
-        <h2 className="text-2xl font-bold text-gray-900">Payment Verification</h2>
-        <p className="text-sm text-gray-500">Verify saving evidence and loan repayment screenshots.</p>
+        <p className="text-sm font-semibold uppercase tracking-wide text-blue-700">អ្នកគ្រប់គ្រង</p>
+        <h2 className="text-2xl font-bold text-gray-900">ការផ្ទៀងផ្ទាត់ការបង់ប្រាក់</h2>
+        <p className="text-sm text-gray-500">ផ្ទៀងផ្ទាត់ភស្តុតាងសន្សំ និង រូបអេក្រង់ការសងឥណទាន។</p>
       </div>
 
       <div className="grid gap-6 xl:grid-cols-2">
         <Card>
-          <h3 className="mb-4 text-lg font-semibold text-gray-900">Savings</h3>
+          <h3 className="mb-4 text-lg font-semibold text-gray-900">ការសន្សំ</h3>
           <div className="space-y-3">
-            {savingRows.length === 0 && <p className="text-sm text-gray-500">No savings submitted.</p>}
+            {savingRows.length === 0 && <p className="text-sm text-gray-500">មិនមានការសន្សំដែលបានដាក់ស្នើទេ។</p>}
             {savingRows.map((saving) => (
               <div key={saving.id} className="rounded-2xl border border-gray-100 p-4">
                 <div className="flex flex-wrap items-start justify-between gap-3">
                   <div>
                     <p className="font-semibold text-gray-900">{money(saving.amount)}</p>
                     <p className="text-sm text-gray-500">{relatedMemberName(saving)} • {relatedMemberEmail(saving)}</p>
-                    <p className="mt-1 text-xs text-gray-400">Saving date: {formatDate(saving.saving_date)}</p>
-                    <p className="mt-1 truncate text-xs text-gray-400">Evidence: {saving.evidence_url ?? 'Missing'}</p>
+                    <p className="mt-1 text-xs text-gray-400">ថ្ងៃសន្សំ៖ {formatDate(saving.saving_date)}</p>
+                    <p className="mt-1 truncate text-xs text-gray-400">ភស្តុតាង៖ {saving.evidence_url ?? 'បាត់'}</p>
                   </div>
                   <div className="flex flex-wrap items-center gap-2">
                     <SavingStatusBadge status={saving.status as SavingStatus} />
-                    {saving.status === 'pending' && <AdminActionButton action={verifySaving} id={saving.id}>Verify</AdminActionButton>}
+                    {saving.status === 'pending' && <AdminActionButton action={verifySaving} id={saving.id}>ផ្ទៀងផ្ទាត់</AdminActionButton>}
                   </div>
                 </div>
               </div>
@@ -55,21 +55,21 @@ export default async function AdminPaymentsPage() {
         </Card>
 
         <Card>
-          <h3 className="mb-4 text-lg font-semibold text-gray-900">Loan Repayments</h3>
+          <h3 className="mb-4 text-lg font-semibold text-gray-900">ការសងឥណទាន</h3>
           <div className="space-y-3">
-            {repaymentRows.length === 0 && <p className="text-sm text-gray-500">No repayments submitted.</p>}
+            {repaymentRows.length === 0 && <p className="text-sm text-gray-500">មិនមានការសងដែលបានដាក់ស្នើទេ។</p>}
             {repaymentRows.map((repayment) => (
               <div key={repayment.id} className="rounded-2xl border border-gray-100 p-4">
                 <div className="flex flex-wrap items-start justify-between gap-3">
                   <div>
                     <p className="font-semibold text-gray-900">{money(repayment.amount)}</p>
                     <p className="text-sm text-gray-500">{relatedMemberName(repayment)} • {relatedMemberEmail(repayment)}</p>
-                    <p className="mt-1 text-xs text-gray-400">Payment date: {formatDate(repayment.payment_date)}</p>
-                    <p className="mt-1 truncate text-xs text-gray-400">Evidence: {repayment.evidence_url ?? 'Missing'}</p>
+                    <p className="mt-1 text-xs text-gray-400">ថ្ងៃបង់៖ {formatDate(repayment.payment_date)}</p>
+                    <p className="mt-1 truncate text-xs text-gray-400">ភស្តុតាង៖ {repayment.evidence_url ?? 'បាត់'}</p>
                   </div>
                   <div className="flex flex-wrap items-center gap-2">
                     <SavingStatusBadge status={repayment.status as SavingStatus} />
-                    {repayment.status === 'pending' && <AdminActionButton action={verifyRepayment} id={repayment.id}>Verify</AdminActionButton>}
+                    {repayment.status === 'pending' && <AdminActionButton action={verifyRepayment} id={repayment.id}>ផ្ទៀងផ្ទាត់</AdminActionButton>}
                   </div>
                 </div>
               </div>

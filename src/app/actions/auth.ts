@@ -12,11 +12,11 @@ export async function signInMember(email: string, password: string): Promise<Act
     })
 
     if (error) {
-      return { success: false, error: error.message }
+      return { success: false, error: 'អ៊ីមែល ឬ ពាក្យសម្ងាត់មិនត្រឹមត្រូវ។' }
     }
 
     if (!data.user) {
-      return { success: false, error: 'Unable to sign in right now. Please try again.' }
+      return { success: false, error: 'មិនអាចចូលគណនីបានទេនៅពេលនេះ។ សូមព្យាយាមម្តងទៀត។' }
     }
 
     const { data: member, error: memberError } = await supabase
@@ -27,20 +27,20 @@ export async function signInMember(email: string, password: string): Promise<Act
 
     if (memberError) {
       await supabase.auth.signOut()
-      return { success: false, error: memberError.message }
+      return { success: false, error: 'មានបញ្ហាក្នុងការទាញយកព័ត៌មានសមាជិក។' }
     }
 
     if (!member) {
       await supabase.auth.signOut()
       return {
         success: false,
-        error: 'Your login exists, but no member profile was found. Please register again or ask an admin to link your account.',
+        error: 'គណនីចូលរបស់អ្នកមាន ប៉ុន្តែរកមិនឃើញប្រវត្តិរូបសមាជិក។ សូមចុះឈ្មោះម្តងទៀត ឬ ស្នើសុំឱ្យអ្នកគ្រប់គ្រងភ្ជាប់គណនីរបស់អ្នក។',
       }
     }
 
     return { success: true }
   } catch (error) {
-    const message = error instanceof Error ? error.message : 'Unable to sign in right now. Please try again.'
+    const message = error instanceof Error ? error.message : 'មិនអាចចូលគណនីបានទេនៅពេលនេះ។ សូមព្យាយាមម្តងទៀត។'
     return { success: false, error: message }
   }
 }

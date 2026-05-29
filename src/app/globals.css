@@ -8,18 +8,20 @@
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-inter);
+  --font-sans: var(--font-khmer), var(--font-geist-sans);
   --font-mono: var(--font-inter);
+  --font-khmer: var(--font-khmer);
 }
 
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: var(--font-inter), Arial, Helvetica, sans-serif;
+  font-family: var(--font-khmer), var(--font-geist-sans), system-ui, -apple-system, sans-serif;
 }
 
-.font-times {
-  font-family: "Times New Roman", Times, serif;
+.font-times,
+.font-khmer {
+  font-family: var(--font-khmer), var(--font-geist-sans), system-ui, -apple-system, sans-serif;
 }
 
 /* Custom scrollbar */

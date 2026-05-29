@@ -23,7 +23,25 @@ function toNumber(value: unknown) {
 }
 
 function formatDate(value: string) {
-  return new Date(value).toLocaleDateString('en-US', { day: 'numeric', month: 'short', year: 'numeric' })
+  return new Date(value).toLocaleDateString('km-KH', { day: 'numeric', month: 'short', year: 'numeric' })
+}
+
+const STATUS_LABELS: Record<string, string> = {
+  pending: 'រង់ចាំ',
+  verified: 'បានផ្ទៀងផ្ទាត់',
+  completed: 'បានបញ្ចប់',
+  active: 'សកម្ម',
+  approved: 'បានអនុម័ត',
+  rejected: 'បានបដិសេធ',
+  suspended: 'ផ្អាក',
+  withdrawn: 'បានដក',
+  under_review: 'កំពុងពិនិត្យ',
+  sent: 'បានផ្ញើ',
+  failed: 'បរាជ័យ',
+}
+
+function translateStatus(status: string) {
+  return STATUS_LABELS[status] ?? status
 }
 
 export default async function DashboardPage() {
@@ -71,7 +89,7 @@ export default async function DashboardPage() {
     ...savings.map((saving) => ({
       id: `saving-${saving.id}`,
       type: 'saving',
-      description: 'Saving submitted',
+      description: 'បានដាក់ស្នើការសន្សំ',
       amount: toNumber(saving.amount),
       date: saving.saving_date,
       status: saving.status,
@@ -79,7 +97,7 @@ export default async function DashboardPage() {
     ...repayments.map((repayment) => ({
       id: `repayment-${repayment.id}`,
       type: 'loan_repay',
-      description: 'Loan repayment submitted',
+      description: 'បានដាក់ស្នើការសងឥណទាន',
       amount: toNumber(repayment.amount),
       date: repayment.payment_date,
       status: repayment.status,
@@ -92,10 +110,10 @@ export default async function DashboardPage() {
       <div className="flex items-start justify-between mb-8">
         <div>
           <h1 className="text-2xl md:text-3xl font-bold text-gray-900">
-            Welcome back, {member.full_name.split(' ')[0]}!
+            សូមស្វាគមន៍ការត្រឡប់មកវិញ, {member.full_name.split(' ')[0]}!
           </h1>
           <div className="flex items-center gap-2 mt-1">
-            <p className="text-gray-500 text-sm">Member since {new Date(member.joined_at).toLocaleDateString('en-US', { month: 'long', year: 'numeric' })}</p>
+            <p className="text-gray-500 text-sm">សមាជិកតាំងពី {new Date(member.joined_at).toLocaleDateString('km-KH', { month: 'long', year: 'numeric' })}</p>
             <span className="text-gray-300">•</span>
             <MemberStatusBadge status={member.status} />
           </div>
@@ -115,15 +133,15 @@ export default async function DashboardPage() {
         <div className="flex items-center gap-3">
           <Calendar className="w-6 h-6 text-blue-200 flex-shrink-0" />
           <div>
-            <p className="font-semibold">May Saving Due</p>
-            <p className="text-blue-200 text-sm">Add your monthly saving before end of month</p>
+            <p className="font-semibold">ដល់ពេលសន្សំខែឧសភា</p>
+            <p className="text-blue-200 text-sm">បន្ថែមការសន្សំប្រចាំខែរបស់អ្នកមុនចុងខែ</p>
           </div>
         </div>
         <Link
           href="/dashboard/savings/add"
           className="flex items-center gap-1 bg-white text-blue-900 px-4 py-2 rounded-lg text-sm font-semibold hover:bg-blue-50 transition-colors flex-shrink-0"
         >
-          Add Now <ArrowRight className="w-4 h-4" />
+          បន្ថែមឥឡូវនេះ <ArrowRight className="w-4 h-4" />
         </Link>
       </div>
 
@@ -137,8 +155,8 @@ export default async function DashboardPage() {
             <TrendingUp className="w-4 h-4 text-green-500" />
           </div>
           <p className="text-2xl font-bold text-gray-900">฿{totalSavings.toLocaleString()}</p>
-          <p className="text-gray-500 text-sm mt-1">Total Savings</p>
-          <p className="text-green-600 text-xs mt-2 font-medium">+฿{monthlyInterest.toLocaleString()} this month</p>
+          <p className="text-gray-500 text-sm mt-1">ការសន្សំសរុប</p>
+          <p className="text-green-600 text-xs mt-2 font-medium">+฿{monthlyInterest.toLocaleString()} ខែនេះ</p>
         </Card>
 
         <Card>
@@ -146,8 +164,8 @@ export default async function DashboardPage() {
             <TrendingUp className="w-5 h-5 text-blue-700" />
           </div>
           <p className="text-2xl font-bold text-gray-900">฿{monthlyInterest.toLocaleString()}</p>
-          <p className="text-gray-500 text-sm mt-1">Monthly Interest</p>
-          <p className="text-blue-600 text-xs mt-2 font-medium">3% per month</p>
+          <p className="text-gray-500 text-sm mt-1">ការប្រាក់ប្រចាំខែ</p>
+          <p className="text-blue-600 text-xs mt-2 font-medium">៣% ក្នុងមួយខែ</p>
         </Card>
 
         <Card>
@@ -155,9 +173,9 @@ export default async function DashboardPage() {
             <CreditCard className="w-5 h-5 text-orange-700" />
           </div>
           <p className="text-2xl font-bold text-gray-900">฿{activeLoanAmount.toLocaleString()}</p>
-          <p className="text-gray-500 text-sm mt-1">Active Loan</p>
+          <p className="text-gray-500 text-sm mt-1">ឥណទានសកម្ម</p>
           <Link href="/dashboard/loans" className="text-orange-600 text-xs mt-2 font-medium hover:text-orange-700 inline-flex items-center gap-1">
-            View details <ChevronRight className="w-3 h-3" />
+            មើលលម្អិត <ChevronRight className="w-3 h-3" />
           </Link>
         </Card>
 
@@ -166,9 +184,9 @@ export default async function DashboardPage() {
             <Wallet className="w-5 h-5 text-purple-700" />
           </div>
           <p className="text-2xl font-bold text-gray-900">฿{availableCredit.toLocaleString()}</p>
-          <p className="text-gray-500 text-sm mt-1">Available Credit</p>
+          <p className="text-gray-500 text-sm mt-1">ឥណទានដែលអាចទទួលបាន</p>
           <Link href="/dashboard/loans/request" className="text-purple-600 text-xs mt-2 font-medium hover:text-purple-700 inline-flex items-center gap-1">
-            Request loan <ChevronRight className="w-3 h-3" />
+            ស្នើសុំឥណទាន <ChevronRight className="w-3 h-3" />
           </Link>
         </Card>
       </div>
@@ -177,35 +195,35 @@ export default async function DashboardPage() {
       <div className="grid lg:grid-cols-3 gap-6">
         {/* Quick Actions */}
         <div className="lg:col-span-1">
-          <h2 className="text-lg font-semibold text-gray-900 mb-4">Quick Actions</h2>
+          <h2 className="text-lg font-semibold text-gray-900 mb-4">សកម្មភាពរហ័ស</h2>
           <div className="space-y-3">
             {[
               {
                 href: '/dashboard/savings/add',
                 icon: PiggyBank,
-                label: 'Add Monthly Saving',
-                description: 'Record your monthly contribution',
+                label: 'បន្ថែមការសន្សំប្រចាំខែ',
+                description: 'កត់ត្រាការបរិច្ចាគប្រចាំខែរបស់អ្នក',
                 color: 'bg-green-50 text-green-700',
               },
               {
                 href: '/dashboard/loans/request',
                 icon: CreditCard,
-                label: 'Request a Loan',
-                description: 'Apply for a member loan',
+                label: 'ស្នើសុំឥណទាន',
+                description: 'ដាក់ពាក្យសុំឥណទានសមាជិក',
                 color: 'bg-blue-50 text-blue-700',
               },
               {
                 href: '/dashboard/loans/repay',
                 icon: ArrowRight,
-                label: 'Make Repayment',
-                description: 'Pay loan installment',
+                label: 'សងឥណទាន',
+                description: 'បង់ប្រាក់ឥណទានបន្តិចម្តងៗ',
                 color: 'bg-orange-50 text-orange-700',
               },
               {
                 href: '/dashboard/capital',
                 icon: Wallet,
-                label: 'Capital Request',
-                description: 'Request savings withdrawal',
+                label: 'ស្នើសុំដើមទុន',
+                description: 'ស្នើសុំដកការសន្សំ',
                 color: 'bg-purple-50 text-purple-700',
               },
             ].map((action) => {
@@ -235,15 +253,15 @@ export default async function DashboardPage() {
           {/* Recent Activity */}
           <div>
             <div className="flex items-center justify-between mb-4">
-              <h2 className="text-lg font-semibold text-gray-900">Recent Activity</h2>
+              <h2 className="text-lg font-semibold text-gray-900">សកម្មភាពថ្មីៗ</h2>
               <Link href="/dashboard/savings" className="text-blue-700 text-sm hover:text-blue-900 transition-colors">
-                View all
+                មើលទាំងអស់
               </Link>
             </div>
             <Card padding="none">
               <div className="divide-y divide-gray-100">
                 {activity.length === 0 && (
-                  <div className="p-4 text-sm text-gray-500">No activity yet.</div>
+                  <div className="p-4 text-sm text-gray-500">មិនទាន់មានសកម្មភាពនៅឡើយ។</div>
                 )}
                 {activity.map((item) => (
                   <div key={item.id} className="flex items-center gap-4 p-4">
@@ -270,7 +288,7 @@ export default async function DashboardPage() {
                       </p>
                       <div className="flex items-center gap-1 justify-end mt-0.5">
                         <CheckCircle className="w-3 h-3 text-green-500" />
-                        <span className="text-xs text-gray-400">{item.status}</span>
+                        <span className="text-xs text-gray-400">{translateStatus(item.status)}</span>
                       </div>
                     </div>
                   </div>
@@ -282,15 +300,15 @@ export default async function DashboardPage() {
           {/* Notifications */}
           <div>
             <div className="flex items-center justify-between mb-4">
-              <h2 className="text-lg font-semibold text-gray-900">Notifications</h2>
+              <h2 className="text-lg font-semibold text-gray-900">ការជូនដំណឹង</h2>
               <button className="text-blue-700 text-sm hover:text-blue-900 transition-colors">
-                Mark all read
+                សម្គាល់ថាអានទាំងអស់
               </button>
             </div>
             <div className="space-y-3">
               {notifications.length === 0 && (
                 <div className="p-4 rounded-xl border bg-white border-gray-200 text-sm text-gray-500">
-                  No notifications yet.
+                  មិនទាន់មានការជូនដំណឹងនៅឡើយ។
                 </div>
               )}
               {notifications.map((notif) => (
@@ -325,13 +343,13 @@ export default async function DashboardPage() {
       <div className="mt-8 bg-yellow-50 border border-yellow-200 rounded-xl p-5 flex items-start gap-3">
         <AlertTriangle className="w-5 h-5 text-yellow-600 flex-shrink-0 mt-0.5" />
         <div>
-          <p className="text-yellow-900 font-semibold text-sm">Capital Withdrawal Window</p>
+          <p className="text-yellow-900 font-semibold text-sm">អំឡុងពេលដកដើមទុន</p>
           <p className="text-yellow-700 text-sm mt-1">
-            Capital withdrawal requests are accepted only during January 20-25 each year.
-            If you plan to withdraw your savings capital, please submit your request during this period.
+            ការស្នើសុំដកដើមទុនត្រូវបានទទួលយកតែក្នុងអំឡុង ថ្ងៃទី ២០-២៥ មករា ប្រចាំឆ្នាំ។
+            ប្រសិនបើអ្នកមានគម្រោងដកដើមទុនសន្សំរបស់អ្នក សូមដាក់ស្នើពាក្យសុំក្នុងអំឡុងពេលនេះ។
           </p>
           <Link href="/dashboard/capital" className="inline-flex items-center gap-1 text-yellow-800 text-sm font-medium mt-2 hover:text-yellow-900 transition-colors">
-            Learn about capital requests <ArrowRight className="w-4 h-4" />
+            ស្វែងយល់អំពីការស្នើសុំដើមទុន <ArrowRight className="w-4 h-4" />
           </Link>
         </div>
       </div>

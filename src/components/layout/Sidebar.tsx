@@ -25,31 +25,31 @@ interface NavItem {
 
 const navItems: NavItem[] = [
   {
-    label: 'Dashboard',
+    label: 'ផ្ទាំងគ្រប់គ្រង',
     href: '/dashboard',
     icon: LayoutDashboard,
   },
   {
-    label: 'Savings',
+    label: 'ការសន្សំ',
     icon: PiggyBank,
     children: [
-      { label: 'Overview', href: '/dashboard/savings' },
-      { label: 'Add Monthly Saving', href: '/dashboard/savings/add' },
-      { label: 'Saving Report', href: '/dashboard/savings/report' },
+      { label: 'ទិដ្ឋភាពទូទៅ', href: '/dashboard/savings' },
+      { label: 'បន្ថែមការសន្សំប្រចាំខែ', href: '/dashboard/savings/add' },
+      { label: 'របាយការណ៍សន្សំ', href: '/dashboard/savings/report' },
     ],
   },
   {
-    label: 'Loans',
+    label: 'ឥណទាន',
     icon: CreditCard,
     children: [
-      { label: 'Overview', href: '/dashboard/loans' },
-      { label: 'Request Loan', href: '/dashboard/loans/request' },
-      { label: 'Loan Repayment', href: '/dashboard/loans/repay' },
-      { label: 'Loan Report', href: '/dashboard/loans/report' },
+      { label: 'ទិដ្ឋភាពទូទៅ', href: '/dashboard/loans' },
+      { label: 'ស្នើសុំឥណទាន', href: '/dashboard/loans/request' },
+      { label: 'សងឥណទាន', href: '/dashboard/loans/repay' },
+      { label: 'របាយការណ៍ឥណទាន', href: '/dashboard/loans/report' },
     ],
   },
   {
-    label: 'Capital Request',
+    label: 'ស្នើសុំដើមទុន',
     href: '/dashboard/capital',
     icon: Wallet,
   },
@@ -60,14 +60,14 @@ interface SidebarProps {
   isAdmin?: boolean
 }
 
-export function Sidebar({ memberName = 'Member', isAdmin = false }: SidebarProps) {
+export function Sidebar({ memberName = 'សមាជិក', isAdmin = false }: SidebarProps) {
   const pathname = usePathname()
-  const [expandedItems, setExpandedItems] = useState<string[]>(['Savings', 'Loans'])
+  const [expandedItems, setExpandedItems] = useState<string[]>(['ការសន្សំ', 'ឥណទាន'])
   const items: NavItem[] = isAdmin
     ? [
         ...navItems,
         {
-          label: 'Admin',
+          label: 'អ្នកគ្រប់គ្រង',
           href: '/admin',
           icon: ShieldCheck,
         },
@@ -91,7 +91,7 @@ export function Sidebar({ memberName = 'Member', isAdmin = false }: SidebarProps
       <div className="p-6 border-b border-blue-800">
         <Link href="/" className="flex items-center gap-2 font-bold text-xl hover:text-blue-200 transition-colors">
           <Building2 className="w-7 h-7" />
-          <span>SanSam</span>
+          <span>សន្សំ</span>
         </Link>
         <p className="text-blue-300 text-xs mt-1 truncate">{memberName}</p>
       </div>
@@ -165,7 +165,7 @@ export function Sidebar({ memberName = 'Member', isAdmin = false }: SidebarProps
           className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-blue-100 hover:bg-blue-800 hover:text-white transition-colors"
         >
           <Bell className="w-5 h-5" />
-          Notifications
+          ការជូនដំណឹង
         </Link>
         <form action="/api/auth/signout" method="POST">
           <button
@@ -173,7 +173,7 @@ export function Sidebar({ memberName = 'Member', isAdmin = false }: SidebarProps
             className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-blue-100 hover:bg-blue-800 hover:text-white transition-colors"
           >
             <LogOut className="w-5 h-5" />
-            Sign Out
+            ចាកចេញ
           </button>
         </form>
       </div>
