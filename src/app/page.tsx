@@ -19,28 +19,28 @@ export default function HomePage() {
   const aboutItems = [
     {
       icon: Eye,
-      title: 'Vision & Mission',
-      description: 'Build a trusted member-owned cooperative that helps families save, borrow fairly, and grow together.',
+      title: 'ចក្ខុវិស័យ និង បេសកកម្ម',
+      description: 'កសាងសហករណ៍ដែលជឿទុកចិត្តបាន គ្រប់គ្រងដោយសមាជិក ដើម្បីជួយគ្រួសារសន្សំ ខ្ចីដោយយុត្តិធម៌ និង រីកចម្រើនទៅជាមួយគ្នា។',
     },
     {
       icon: Users,
-      title: 'Membership',
-      description: 'Join with a verified referee, submit your documents, and access the SanSam member portal after approval.',
+      title: 'សមាជិកភាព',
+      description: 'ចូលរួមជាមួយអ្នកធានាដែលបានផ្ទៀងផ្ទាត់ ដាក់ឯកសារ ហើយចូលប្រើវិបផតថលសមាជិកសន្សំបន្ទាប់ពីការអនុម័ត។',
     },
     {
       icon: PiggyBank,
-      title: 'Saving Benefits',
-      description: 'Make regular contributions, earn cooperative returns, and request savings reports when you need them.',
+      title: 'អត្ថប្រយោជន៍នៃការសន្សំ',
+      description: 'បរិច្ចាគទៀងទាត់ទទួលបានចំណូលពីសហករណ៍ និង សុំរបាយការណ៍សន្សំនៅពេលអ្នកត្រូវការ។',
     },
     {
       icon: CreditCard,
-      title: 'Loan Rates',
-      description: 'Apply for fair member loans with transparent rates, referee verification, and committee approval.',
+      title: 'អត្រាការប្រាក់ឥណទាន',
+      description: 'ដាក់ពាក្យសុំឥណទានជាសមាជិកដោយយុត្តិធម៌ មានអត្រាការប្រាក់តម្លាភាព ការផ្ទៀងផ្ទាត់អ្នកធានា និង ការអនុម័តពីគណៈកម្មាធិការ។',
     },
   ]
 
   return (
-    <div className="font-times min-h-screen flex flex-col bg-slate-50">
+    <div className="font-khmer min-h-screen flex flex-col bg-slate-50">
       <Navbar />
 
       <section className="relative min-h-screen overflow-hidden bg-blue-950 text-white flex items-center">
@@ -54,25 +54,25 @@ export default function HomePage() {
           <div className="grid lg:grid-cols-[1.05fr_0.95fr] gap-12 items-center">
             <div>
               <h1 className="text-4xl md:text-6xl font-extrabold tracking-tight leading-[1.05] mb-6">
-                Better savings, fair loans, and a trusted member community.
+                ចូលសហគមន៍សន្សំដើម្បីទទួលបានការសន្សំ និង ឥណទានដែលមានតម្លាភាព 
               </h1>
               <p className="text-blue-100 text-lg md:text-xl leading-8 max-w-2xl mb-8">
-                SanSam helps members save regularly, request transparent loans, and manage every step
-                online with document verification, payment evidence, and admin approval.
+                សន្សំជួយសមាជិកសន្សំទៀងទាត់ ស្នើសុំឥណទានដោយតម្លាភាព និង គ្រប់គ្រងគ្រប់ជំហានតាមអនឡាញ
+                ជាមួយការផ្ទៀងផ្ទាត់ឯកសារ ភស្តុតាងបង់ប្រាក់ និង ការអនុម័តពីអ្នកគ្រប់គ្រង។
               </p>
               <div className="flex flex-wrap gap-3">
                 <Link
                   href="/register"
                   className="inline-flex items-center gap-2 bg-blue-900 text-white px-6 py-3 rounded-xl font-semibold shadow-sm hover:bg-blue-800 transition-colors"
                 >
-                  Become a Member
+                  ក្លាយជាសមាជិក
                   <ArrowRight className="w-4 h-4" />
                 </Link>
                 <Link
                   href="#about-sansam"
                   className="inline-flex items-center gap-2 border border-white/30 bg-white/10 text-white px-6 py-3 rounded-xl font-semibold hover:bg-white/20 transition-colors backdrop-blur"
                 >
-                  Explore Benefits
+                  ស្វែងយល់អត្ថប្រយោជន៍
                 </Link>
               </div>
             </div>
@@ -81,8 +81,8 @@ export default function HomePage() {
               <div className="rounded-4xl bg-white/10 p-6 md:p-8 text-white shadow-2xl shadow-blue-950/30 ring-1 ring-white/15 backdrop-blur-md">
                 <div className="flex items-center justify-between border-b border-white/15 pb-5 mb-6">
                   <div>
-                    <p className="text-blue-200 text-sm">Member Portal</p>
-                    <p className="text-2xl font-bold mt-1">Financial Dashboard</p>
+                    <p className="text-blue-200 text-sm">វិបផតថលសមាជិក</p>
+                    <p className="text-2xl font-bold mt-1">ផ្ទាំងគ្រប់គ្រងហិរញ្ញវត្ថុ</p>
                   </div>
                   <div className="rounded-2xl bg-white/10 p-3">
                     <Landmark className="w-7 h-7 text-blue-100" />
@@ -90,10 +90,10 @@ export default function HomePage() {
                 </div>
                 <div className="grid grid-cols-2 gap-4">
                   {[
-                    { label: 'Saving Return', value: '3%', icon: TrendingUp },
-                    { label: 'Loan Approval', value: '1-3d', icon: CreditCard },
-                    { label: 'Reports', value: 'Telegram', icon: CheckCircle },
-                    { label: 'Withdrawal', value: 'Jan 20-25', icon: Wallet },
+                    { label: 'ការប្រាក់សន្សំ', value: '៣%', icon: TrendingUp },
+                    { label: 'ការអនុម័តឥណទាន', value: '១-៣ថ្ងៃ', icon: CreditCard },
+                    { label: 'របាយការណ៍', value: 'តេឡេក្រាម', icon: CheckCircle },
+                    { label: 'ការដកដើមទុន', value: '២០-២៥ មករា', icon: Wallet },
                   ].map((item) => {
                     const Icon = item.icon
                     return (
@@ -114,13 +114,13 @@ export default function HomePage() {
       <section id="about-sansam" className="min-h-screen flex items-center py-16 md:py-20 bg-white border-y border-gray-100">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="max-w-2xl mb-12">
-            <p className="text-blue-700 text-sm font-bold uppercase tracking-wide mb-3">About SanSam</p>
+            <p className="text-blue-700 text-sm font-bold uppercase tracking-wide mb-3">អំពីសន្សំ</p>
             <h2 className="text-3xl md:text-4xl font-extrabold tracking-tight text-gray-950">
-              Everything members need to understand before joining.
+              អ្វីៗដែលសមាជិកត្រូវយល់ដឹងមុនពេលចូលរួម។
             </h2>
             <p className="text-gray-600 mt-4 leading-7">
-              Learn the mission, membership choices, saving benefits, loan rates, and withdrawal
-              options before opening your member account.
+              ស្វែងយល់អំពីបេសកកម្ម ជម្រើសសមាជិកភាព អត្ថប្រយោជន៍សន្សំ អត្រាការប្រាក់ឥណទាន និង
+              ជម្រើសដកដើមទុនមុនបើកគណនីសមាជិករបស់អ្នក។
             </p>
           </div>
 
@@ -131,9 +131,9 @@ export default function HomePage() {
             >
               <div className="absolute inset-0 bg-linear-to-br from-blue-950/80 via-blue-900/45 to-transparent" />
               <div className="absolute bottom-0 left-0 right-0 p-6 text-white">
-                <p className="text-sm font-semibold text-blue-100">Community-first finance</p>
+                <p className="text-sm font-semibold text-blue-100">ហិរញ្ញវត្ថុដែលផ្តោតលើសហគមន៍</p>
                 <p className="mt-2 text-2xl font-extrabold leading-tight">
-                  Members save, borrow, and grow with transparent support.
+                  សមាជិកសន្សំ ខ្ចី និង រីកចម្រើនជាមួយការគាំទ្រដ៏តម្លាភាព។
                 </p>
               </div>
             </div>
@@ -163,15 +163,15 @@ export default function HomePage() {
               <div className="inline-flex rounded-xl bg-blue-50 p-3 text-blue-800 mb-5">
                 <HeartHandshake className="w-7 h-7" />
               </div>
-              <h2 className="text-3xl font-extrabold tracking-tight text-gray-950 mb-4">Membership</h2>
+              <h2 className="text-3xl font-extrabold tracking-tight text-gray-950 mb-4">សមាជិកភាព</h2>
               <p className="text-gray-600 leading-7 mb-6">
-                Become a member by submitting your information, adding a referee if available,
-                and uploading your ID card and resident book for review.
+                ក្លាយជាសមាជិកដោយដាក់ព័ត៌មានរបស់អ្នក បន្ថែមអ្នកធានាប្រសិនបើមាន
+                ហើយផ្ទុកឯកសារអត្តសញ្ញាណប័ណ្ណ និង សៀវភៅគ្រួសារសម្រាប់ការត្រួតពិនិត្យ។
               </p>
               <div className="grid sm:grid-cols-2 gap-4 mb-7">
                 {[
-                  { title: 'Become a member', text: 'Register online and wait for account approval.' },
-                  { title: 'Membership withdrawal', text: 'Request capital withdrawal during the annual window.' },
+                  { title: 'ក្លាយជាសមាជិក', text: 'ចុះឈ្មោះតាមអនឡាញ និង រង់ចាំការអនុម័តគណនី។' },
+                  { title: 'ដកសមាជិកភាព', text: 'ស្នើសុំដកដើមទុនក្នុងអំឡុងពេលប្រចាំឆ្នាំ។' },
                 ].map((item) => (
                   <div key={item.title} className="rounded-2xl bg-blue-50 p-5">
                     <p className="font-bold text-blue-950">{item.title}</p>
@@ -180,7 +180,7 @@ export default function HomePage() {
                 ))}
               </div>
               <Link href="/register" className="inline-flex items-center gap-2 text-blue-900 font-bold hover:text-blue-700">
-                Start membership request <ArrowRight className="w-4 h-4" />
+                ចាប់ផ្តើមចុះឈ្មោះសមាជិក <ArrowRight className="w-4 h-4" />
               </Link>
             </div>
 
@@ -188,17 +188,17 @@ export default function HomePage() {
               <div className="inline-flex rounded-xl bg-white/10 p-3 text-blue-100 mb-5">
                 <ShieldCheck className="w-7 h-7" />
               </div>
-              <h2 className="text-3xl font-extrabold tracking-tight mb-4">Saving & Loan Benefits</h2>
+              <h2 className="text-3xl font-extrabold tracking-tight mb-4">អត្ថប្រយោជន៍សន្សំ និង ឥណទាន</h2>
               <p className="text-blue-100 leading-7 mb-6">
-                Members can add savings, submit payment evidence, request loans, repay by QR,
-                and ask for instant reports through the portal.
+                សមាជិកអាចបន្ថែមការសន្សំ ដាក់ភស្តុតាងបង់ប្រាក់ ស្នើសុំឥណទាន
+                សងវិញតាម QR និង សុំរបាយការណ៍ភ្លាមៗតាមរយៈវិបផតថល។
               </p>
               <div className="space-y-3">
                 {[
-                  { label: 'Saving benefit', value: '3% monthly return' },
-                  { label: 'Loan rates', value: 'From 1-2% per month' },
-                  { label: 'Reports', value: 'Saving and loan reports' },
-                  { label: 'Approval', value: 'Admin reviewed workflow' },
+                  { label: 'អត្ថប្រយោជន៍សន្សំ', value: 'ការប្រាក់ ៣% ក្នុងមួយខែ' },
+                  { label: 'អត្រាការប្រាក់ឥណទាន', value: 'ចាប់ពី ១-២% ក្នុងមួយខែ' },
+                  { label: 'របាយការណ៍', value: 'របាយការណ៍សន្សំ និង ឥណទាន' },
+                  { label: 'ការអនុម័ត', value: 'ដំណើរការត្រួតពិនិត្យដោយអ្នកគ្រប់គ្រង' },
                 ].map((item) => (
                   <div key={item.label} className="flex items-center justify-between gap-4 border-b border-white/10 py-3">
                     <span className="text-blue-200 text-sm">{item.label}</span>
@@ -214,11 +214,10 @@ export default function HomePage() {
       <section className="py-16 bg-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid md:grid-cols-4 gap-4">
-            {[
-              { value: '500+', label: 'Active Members' },
-              { value: '฿2M+', label: 'Total Savings' },
-              { value: '3%', label: 'Monthly Saving Return' },
-              { value: '1-3 Days', label: 'Approval Review' },
+            {[             
+              { value: '฿២លាន+', label: 'ការសន្សំសរុប' },
+              { value: '៣%', label: 'ការប្រាក់សន្សំប្រចាំខែ' },
+              { value: '១-៣ ថ្ងៃ', label: 'ការត្រួតពិនិត្យអនុម័ត' },
             ].map((stat) => (
               <div key={stat.label} className="rounded-2xl border border-gray-200 bg-slate-50 p-6 text-center">
                 <p className="text-3xl md:text-4xl font-extrabold text-blue-900">{stat.value}</p>
@@ -238,18 +237,18 @@ export default function HomePage() {
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(96,165,250,0.28),transparent_42%)]" />
         <div className="relative max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
           <h2 className="text-3xl md:text-4xl font-extrabold tracking-tight mb-4">
-            Ready to join SanSam?
+            ត្រៀមរួចហើយដើម្បីចូលរួមជាមួយសន្សំ?
           </h2>
           <p className="text-blue-100 leading-7 mb-8">
-            Create your membership request, upload your documents, and our admin team will review
-            your account before you begin saving or applying for loans.
+            បង្កើតពាក្យសុំសមាជិកភាពរបស់អ្នក ផ្ទុកឯកសារ ហើយក្រុមការងាររបស់យើងនឹងពិនិត្យ
+            គណនីរបស់អ្នកមុនពេលអ្នកចាប់ផ្តើមសន្សំ ឬ ដាក់ពាក្យសុំឥណទាន។
           </p>
           <div className="flex justify-center gap-3 flex-wrap">
             <Link href="/register" className="inline-flex items-center gap-2 bg-blue-900 text-white px-7 py-3 rounded-xl font-semibold hover:bg-blue-800 transition-colors">
-              Become a Member <ArrowRight className="w-4 h-4" />
+              ក្លាយជាសមាជិក <ArrowRight className="w-4 h-4" />
             </Link>
             <Link href="/login" className="inline-flex items-center gap-2 bg-white border border-gray-300 text-gray-800 px-7 py-3 rounded-xl font-semibold hover:border-blue-300 hover:text-blue-900 transition-colors">
-              Member Login
+              ចូលគណនីសមាជិក
             </Link>
           </div>
         </div>
@@ -260,14 +259,14 @@ export default function HomePage() {
           <div className="flex flex-col md:flex-row justify-between items-center gap-4">
             <div className="flex items-center gap-2 font-bold text-xl">
               <Building2 className="w-6 h-6" />
-              SanSam Cooperative
+              សហករណ៍សន្សំ
             </div>
             <div className="flex gap-6 text-sm text-blue-200">
-              <Link href="/about" className="hover:text-white transition-colors">About</Link>
-              <Link href="/register" className="hover:text-white transition-colors">Join Us</Link>
-              <Link href="/login" className="hover:text-white transition-colors">Member Login</Link>
+              <Link href="/about" className="hover:text-white transition-colors">អំពីយើង</Link>
+              <Link href="/register" className="hover:text-white transition-colors">ចូលរួមជាមួយយើង</Link>
+              <Link href="/login" className="hover:text-white transition-colors">ចូលគណនីសមាជិក</Link>
             </div>
-            <p className="text-blue-300 text-sm">&copy; 2025 SanSam. All rights reserved.</p>
+            <p className="text-blue-300 text-sm">&copy; ២០២៥ សន្សំ។ រក្សាសិទ្ធិគ្រប់យ៉ាង។</p>
           </div>
         </div>
       </footer>

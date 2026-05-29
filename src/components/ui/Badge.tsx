@@ -27,10 +27,10 @@ export function Badge({ children, variant = 'default', className = '' }: BadgePr
 
 export function MemberStatusBadge({ status }: { status: MemberStatus }) {
   const config: Record<MemberStatus, { label: string; variant: BadgeVariant }> = {
-    pending: { label: 'Pending', variant: 'warning' },
-    active: { label: 'Active', variant: 'success' },
-    suspended: { label: 'Suspended', variant: 'error' },
-    withdrawn: { label: 'Withdrawn', variant: 'default' },
+    pending: { label: 'រង់ចាំ', variant: 'warning' },
+    active: { label: 'សកម្ម', variant: 'success' },
+    suspended: { label: 'ផ្អាក', variant: 'error' },
+    withdrawn: { label: 'បានដក', variant: 'default' },
   }
   const { label, variant } = config[status]
   return <Badge variant={variant}>{label}</Badge>
@@ -38,12 +38,12 @@ export function MemberStatusBadge({ status }: { status: MemberStatus }) {
 
 export function LoanStatusBadge({ status }: { status: LoanStatus }) {
   const config: Record<LoanStatus, { label: string; variant: BadgeVariant }> = {
-    pending: { label: 'Pending', variant: 'warning' },
-    under_review: { label: 'Under Review', variant: 'info' },
-    approved: { label: 'Approved', variant: 'success' },
-    active: { label: 'Active', variant: 'success' },
-    completed: { label: 'Completed', variant: 'default' },
-    rejected: { label: 'Rejected', variant: 'error' },
+    pending: { label: 'រង់ចាំ', variant: 'warning' },
+    under_review: { label: 'កំពុងពិនិត្យ', variant: 'info' },
+    approved: { label: 'បានអនុម័ត', variant: 'success' },
+    active: { label: 'សកម្ម', variant: 'success' },
+    completed: { label: 'បានបញ្ចប់', variant: 'default' },
+    rejected: { label: 'បានបដិសេធ', variant: 'error' },
   }
   const { label, variant } = config[status]
   return <Badge variant={variant}>{label}</Badge>
@@ -51,9 +51,9 @@ export function LoanStatusBadge({ status }: { status: LoanStatus }) {
 
 export function SavingStatusBadge({ status }: { status: SavingStatus }) {
   const config: Record<SavingStatus, { label: string; variant: BadgeVariant }> = {
-    pending: { label: 'Pending', variant: 'warning' },
-    verified: { label: 'Verified', variant: 'info' },
-    completed: { label: 'Completed', variant: 'success' },
+    pending: { label: 'រង់ចាំ', variant: 'warning' },
+    verified: { label: 'បានផ្ទៀងផ្ទាត់', variant: 'info' },
+    completed: { label: 'បានបញ្ចប់', variant: 'success' },
   }
   const { label, variant } = config[status]
   return <Badge variant={variant}>{label}</Badge>
@@ -61,9 +61,9 @@ export function SavingStatusBadge({ status }: { status: SavingStatus }) {
 
 export function CapitalRequestStatusBadge({ status }: { status: CapitalRequestStatus }) {
   const config: Record<CapitalRequestStatus, { label: string; variant: BadgeVariant }> = {
-    pending: { label: 'Pending', variant: 'warning' },
-    approved: { label: 'Approved', variant: 'success' },
-    rejected: { label: 'Rejected', variant: 'error' },
+    pending: { label: 'រង់ចាំ', variant: 'warning' },
+    approved: { label: 'បានអនុម័ត', variant: 'success' },
+    rejected: { label: 'បានបដិសេធ', variant: 'error' },
   }
   const { label, variant } = config[status]
   return <Badge variant={variant}>{label}</Badge>

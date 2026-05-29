@@ -16,11 +16,11 @@ export default function SavingReportPage() {
 
   const handleSubmit = async () => {
     if (!periodFrom || !periodTo) {
-      setError('Please select both start and end dates.')
+      setError('សូមជ្រើសរើសកាលបរិច្ឆេទចាប់ផ្តើម និង បញ្ចប់។')
       return
     }
     if (new Date(periodFrom) > new Date(periodTo)) {
-      setError('Start date must be before end date.')
+      setError('កាលបរិច្ឆេទចាប់ផ្តើមត្រូវនៅមុនកាលបរិច្ឆេទបញ្ចប់។')
       return
     }
     setError(null)
@@ -35,7 +35,7 @@ export default function SavingReportPage() {
     setLoading(false)
 
     if (!result.success) {
-      setError(result.error ?? 'Unable to request report.')
+      setError(result.error ?? 'មិនអាចស្នើសុំរបាយការណ៍បានទេ។')
       return
     }
 
@@ -43,10 +43,10 @@ export default function SavingReportPage() {
   }
 
   const quickPeriods = [
-    { label: 'Last Month', from: '2025-04-01', to: '2025-04-30' },
-    { label: 'Last 3 Months', from: '2025-02-01', to: '2025-04-30' },
-    { label: 'This Year', from: '2025-01-01', to: '2025-12-31' },
-    { label: 'Last Year', from: '2024-01-01', to: '2024-12-31' },
+    { label: 'ខែមុន', from: '2025-04-01', to: '2025-04-30' },
+    { label: '៣ ខែចុងក្រោយ', from: '2025-02-01', to: '2025-04-30' },
+    { label: 'ឆ្នាំនេះ', from: '2025-01-01', to: '2025-12-31' },
+    { label: 'ឆ្នាំមុន', from: '2024-01-01', to: '2024-12-31' },
   ]
 
   return (
@@ -57,11 +57,11 @@ export default function SavingReportPage() {
           className="inline-flex items-center gap-2 text-gray-500 hover:text-gray-700 text-sm mb-4 transition-colors"
         >
           <ArrowLeft className="w-4 h-4" />
-          Back to Savings
+          ត្រឡប់ទៅការសន្សំ
         </Link>
-        <h1 className="text-2xl font-bold text-gray-900">Request Saving Report</h1>
+        <h1 className="text-2xl font-bold text-gray-900">ស្នើសុំរបាយការណ៍សន្សំ</h1>
         <p className="text-gray-500 text-sm mt-1">
-          Get a detailed report of your savings sent to your Telegram account
+          ទទួលរបាយការណ៍លម្អិតនៃការសន្សំរបស់អ្នកដែលផ្ញើទៅគណនី Telegram របស់អ្នក
         </p>
       </div>
 
@@ -72,8 +72,8 @@ export default function SavingReportPage() {
               <FileText className="w-6 h-6 text-blue-700" />
             </div>
             <div>
-              <h2 className="font-semibold text-gray-900">Select Report Period</h2>
-              <p className="text-gray-500 text-sm">Choose the date range for your report</p>
+              <h2 className="font-semibold text-gray-900">ជ្រើសរើសរយៈពេលរបាយការណ៍</h2>
+              <p className="text-gray-500 text-sm">ជ្រើសរើសរយៈពេលកាលបរិច្ឆេទសម្រាប់របាយការណ៍របស់អ្នក</p>
             </div>
           </div>
 
@@ -86,7 +86,7 @@ export default function SavingReportPage() {
 
           {/* Quick periods */}
           <div className="mb-5">
-            <p className="text-sm text-gray-500 mb-2">Quick select:</p>
+            <p className="text-sm text-gray-500 mb-2">ជ្រើសរើសរហ័ស៖</p>
             <div className="grid grid-cols-2 gap-2">
               {quickPeriods.map((period) => (
                 <button
@@ -111,7 +111,7 @@ export default function SavingReportPage() {
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1.5">
                 <Calendar className="w-4 h-4 inline mr-1" />
-                From Date
+                ពីកាលបរិច្ឆេទ
               </label>
               <input
                 type="date"
@@ -123,7 +123,7 @@ export default function SavingReportPage() {
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1.5">
                 <Calendar className="w-4 h-4 inline mr-1" />
-                To Date
+                ដល់កាលបរិច្ឆេទ
               </label>
               <input
                 type="date"
@@ -136,12 +136,12 @@ export default function SavingReportPage() {
 
           {periodFrom && periodTo && (
             <div className="bg-blue-50 rounded-lg p-4 mb-5">
-              <p className="text-blue-900 text-sm font-medium mb-1">Report will include:</p>
+              <p className="text-blue-900 text-sm font-medium mb-1">របាយការណ៍នឹងរួមមាន៖</p>
               <ul className="text-blue-700 text-sm space-y-1">
-                <li>• All saving contributions from {new Date(periodFrom).toLocaleDateString('en-US', { day: 'numeric', month: 'long', year: 'numeric' })}</li>
-                <li>• To {new Date(periodTo).toLocaleDateString('en-US', { day: 'numeric', month: 'long', year: 'numeric' })}</li>
-                <li>• Total amount saved, interest earned, and running balance</li>
-                <li>• Report sent to your registered Telegram account</li>
+                <li>• ការបរិច្ចាគសន្សំទាំងអស់ចាប់ពី {new Date(periodFrom).toLocaleDateString('km-KH', { day: 'numeric', month: 'long', year: 'numeric' })}</li>
+                <li>• ដល់ {new Date(periodTo).toLocaleDateString('km-KH', { day: 'numeric', month: 'long', year: 'numeric' })}</li>
+                <li>• ចំនួនទឹកប្រាក់សន្សំសរុប ការប្រាក់ដែលរកបាន និង សមតុល្យបច្ចុប្បន្ន</li>
+                <li>• របាយការណ៍ផ្ញើទៅគណនី Telegram ដែលបានចុះឈ្មោះ</li>
               </ul>
             </div>
           )}
@@ -149,14 +149,14 @@ export default function SavingReportPage() {
           <div className="bg-gray-50 rounded-lg p-4 mb-5 flex items-start gap-2">
             <Send className="w-4 h-4 text-gray-500 flex-shrink-0 mt-0.5" />
             <p className="text-gray-600 text-sm">
-              Reports are sent instantly to your Telegram account. Make sure you have linked your
-              Telegram to your SanSam account.
+              របាយការណ៍ផ្ញើភ្លាមៗទៅគណនី Telegram របស់អ្នក។ សូមប្រាកដថាអ្នកបានភ្ជាប់
+              Telegram របស់អ្នកជាមួយគណនីសន្សំ។
             </p>
           </div>
 
           <Button onClick={handleSubmit} loading={loading} className="w-full" size="lg">
             <Send className="w-4 h-4" />
-            Request Report
+            ស្នើសុំរបាយការណ៍
           </Button>
         </Card>
       ) : (
@@ -165,16 +165,16 @@ export default function SavingReportPage() {
             <div className="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-5">
               <CheckCircle className="w-10 h-10 text-green-500" />
             </div>
-            <h2 className="text-2xl font-bold text-gray-900 mb-2">Report Sent!</h2>
+            <h2 className="text-2xl font-bold text-gray-900 mb-2">របាយការណ៍បានផ្ញើ!</h2>
             <p className="text-gray-600 mb-2">
-              Your saving report has been generated and sent to your Telegram account.
+              របាយការណ៍សន្សំរបស់អ្នកត្រូវបានបង្កើត និង ផ្ញើទៅគណនី Telegram របស់អ្នក។
             </p>
             <p className="text-gray-500 text-sm mb-6">
-              Period:{' '}
+              រយៈពេល៖{' '}
               <strong>
-                {new Date(periodFrom).toLocaleDateString('en-US', { day: 'numeric', month: 'short', year: 'numeric' })}
+                {new Date(periodFrom).toLocaleDateString('km-KH', { day: 'numeric', month: 'short', year: 'numeric' })}
                 {' - '}
-                {new Date(periodTo).toLocaleDateString('en-US', { day: 'numeric', month: 'short', year: 'numeric' })}
+                {new Date(periodTo).toLocaleDateString('km-KH', { day: 'numeric', month: 'short', year: 'numeric' })}
               </strong>
             </p>
 
@@ -183,13 +183,13 @@ export default function SavingReportPage() {
                 onClick={() => { setSubmitted(false); setPeriodFrom(''); setPeriodTo('') }}
                 className="inline-flex items-center gap-2 border border-gray-300 text-gray-700 px-5 py-2.5 rounded-lg text-sm font-semibold hover:bg-gray-50 transition-colors"
               >
-                Request Another
+                ស្នើសុំម្តងទៀត
               </button>
               <Link
                 href="/dashboard/savings"
                 className="inline-flex items-center gap-2 bg-blue-900 text-white px-5 py-2.5 rounded-lg text-sm font-semibold hover:bg-blue-800 transition-colors"
               >
-                Back to Savings
+                ត្រឡប់ទៅការសន្សំ
               </Link>
             </div>
           </div>

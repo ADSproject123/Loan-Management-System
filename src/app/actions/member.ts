@@ -26,7 +26,7 @@ function asFile(formData: FormData, key: string) {
 }
 
 function getAuthUserId(member: { auth_user_id?: string }) {
-  if (!member.auth_user_id) throw new Error('Member is not linked to an auth account.')
+  if (!member.auth_user_id) throw new Error('សមាជិកមិនត្រូវបានភ្ជាប់ជាមួយគណនីចូល។')
   return member.auth_user_id
 }
 
@@ -44,11 +44,11 @@ export async function registerMember(formData: FormData): Promise<ActionResult> 
     const refereeEmail = asString(formData, 'referee_email').toLowerCase()
 
     if (!email || !password || !fullName || !phone || !idNumber) {
-      return { success: false, error: 'Please fill in all required fields.' }
+      return { success: false, error: 'សូមបំពេញគ្រប់វាលទាំងអស់ដែលត្រូវការ។' }
     }
 
     if (password.length < 8) {
-      return { success: false, error: 'Password must be at least 8 characters long.' }
+      return { success: false, error: 'ពាក្យសម្ងាត់ត្រូវមានយ៉ាងតិច ៨ តួអក្សរ។' }
     }
 
     const { data: authData, error: authError } = await admin.auth.admin.createUser({
@@ -59,7 +59,7 @@ export async function registerMember(formData: FormData): Promise<ActionResult> 
     })
 
     if (authError) throw authError
-    if (!authData.user) throw new Error('Failed to create account.')
+    if (!authData.user) throw new Error('បង្កើតគណនីបរាជ័យ។')
 
     let refereeId: string | null = null
     if (refereeEmail) {
@@ -105,7 +105,7 @@ export async function registerMember(formData: FormData): Promise<ActionResult> 
 
     return { success: true }
   } catch (error) {
-    const message = error instanceof Error ? error.message : 'Registration failed. Please try again.'
+    const message = error instanceof Error ? error.message : 'ការចុះឈ្មោះបរាជ័យ។ សូមព្យាយាមម្តងទៀត។'
     return { success: false, error: message }
   }
 }
@@ -117,7 +117,7 @@ export async function addSaving(formData: FormData): Promise<ActionResult> {
     const notes = asString(formData, 'notes')
 
     if (amount <= 0) {
-      return { success: false, error: 'Please enter a valid saving amount.' }
+      return { success: false, error: 'សូមបញ្ចូលចំនួនទឹកប្រាក់សន្សំត្រឹមត្រូវ។' }
     }
 
     const evidenceUrl = await uploadPrivateFile(
@@ -128,7 +128,7 @@ export async function addSaving(formData: FormData): Promise<ActionResult> {
     )
 
     if (!evidenceUrl) {
-      return { success: false, error: 'Please upload payment evidence.' }
+      return { success: false, error: 'សូមផ្ទុកភស្តុតាងបង់ប្រាក់។' }
     }
 
     const admin = createAdminClient()
@@ -147,7 +147,7 @@ export async function addSaving(formData: FormData): Promise<ActionResult> {
     revalidatePath('/dashboard/savings')
     return { success: true }
   } catch (error) {
-    const message = error instanceof Error ? error.message : 'Unable to submit saving.'
+    const message = error instanceof Error ? error.message : 'មិនអាចដាក់ស្នើការសន្សំបានទេ។'
     return { success: false, error: message }
   }
 }
@@ -161,7 +161,7 @@ export async function requestLoan(formData: FormData): Promise<ActionResult> {
     const refereeEmail = asString(formData, 'referee_email').toLowerCase()
 
     if (amount <= 0 || !purpose) {
-      return { success: false, error: 'Please enter a valid loan amount and purpose.' }
+      return { success: false, error: 'សូមបញ្ចូលចំនួនទឹកប្រាក់ឥណទាន និង គោលបំណងត្រឹមត្រូវ។' }
     }
 
     const admin = createAdminClient()
@@ -201,7 +201,7 @@ export async function requestLoan(formData: FormData): Promise<ActionResult> {
     revalidatePath('/dashboard/loans')
     return { success: true }
   } catch (error) {
-    const message = error instanceof Error ? error.message : 'Unable to submit loan request.'
+    const message = error instanceof Error ? error.message : 'មិនអាចដាក់ស្នើពាក្យសុំឥណទានបានទេ។'
     return { success: false, error: message }
   }
 }
@@ -212,7 +212,7 @@ export async function repayLoan(formData: FormData): Promise<ActionResult> {
     const amount = asNumber(formData, 'amount')
 
     if (amount <= 0) {
-      return { success: false, error: 'Please enter a valid repayment amount.' }
+      return { success: false, error: 'សូមបញ្ចូលចំនួនទឹកប្រាក់សងត្រឹមត្រូវ។' }
     }
 
     const admin = createAdminClient()
@@ -227,7 +227,7 @@ export async function repayLoan(formData: FormData): Promise<ActionResult> {
 
     if (loanError) throw loanError
     if (!activeLoan) {
-      return { success: false, error: 'No active loan found for repayment.' }
+      return { success: false, error: 'រកមិនឃើញឥណទានសកម្មសម្រាប់ការសង។' }
     }
 
     const evidenceUrl = await uploadPrivateFile(
@@ -238,7 +238,7 @@ export async function repayLoan(formData: FormData): Promise<ActionResult> {
     )
 
     if (!evidenceUrl) {
-      return { success: false, error: 'Please upload payment evidence.' }
+      return { success: false, error: 'សូមផ្ទុកភស្តុតាងបង់ប្រាក់។' }
     }
 
     const { error } = await admin.from('loan_repayments').insert({
@@ -256,7 +256,7 @@ export async function repayLoan(formData: FormData): Promise<ActionResult> {
     revalidatePath('/dashboard/loans')
     return { success: true }
   } catch (error) {
-    const message = error instanceof Error ? error.message : 'Unable to submit repayment.'
+    const message = error instanceof Error ? error.message : 'មិនអាចដាក់ស្នើការសងបានទេ។'
     return { success: false, error: message }
   }
 }
@@ -269,7 +269,7 @@ export async function requestReport(formData: FormData): Promise<ActionResult> {
     const periodTo = asString(formData, 'period_to')
 
     if ((reportType !== 'saving' && reportType !== 'loan') || !periodFrom || !periodTo) {
-      return { success: false, error: 'Please select a valid report period.' }
+      return { success: false, error: 'សូមជ្រើសរើសរយៈពេលរបាយការណ៍ត្រឹមត្រូវ។' }
     }
 
     const admin = createAdminClient()
@@ -287,7 +287,7 @@ export async function requestReport(formData: FormData): Promise<ActionResult> {
     revalidatePath('/dashboard')
     return { success: true }
   } catch (error) {
-    const message = error instanceof Error ? error.message : 'Unable to request report.'
+    const message = error instanceof Error ? error.message : 'មិនអាចស្នើសុំរបាយការណ៍បានទេ។'
     return { success: false, error: message }
   }
 }
@@ -300,7 +300,7 @@ export async function requestCapitalWithdrawal(formData: FormData): Promise<Acti
     const afterDecision = asString(formData, 'after_decision')
 
     if (amount <= 0 || !reason || (afterDecision !== 'continue' && afterDecision !== 'withdraw')) {
-      return { success: false, error: 'Please complete the capital request form.' }
+      return { success: false, error: 'សូមបំពេញបែបបទស្នើសុំដើមទុនឱ្យបានពេញលេញ។' }
     }
 
     const admin = createAdminClient()
@@ -318,7 +318,7 @@ export async function requestCapitalWithdrawal(formData: FormData): Promise<Acti
     revalidatePath('/dashboard')
     return { success: true }
   } catch (error) {
-    const message = error instanceof Error ? error.message : 'Unable to submit capital request.'
+    const message = error instanceof Error ? error.message : 'មិនអាចដាក់ស្នើពាក្យសុំដើមទុនបានទេ។'
     return { success: false, error: message }
   }
 }

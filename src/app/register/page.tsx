@@ -38,33 +38,33 @@ interface StepDefinition {
 const STEPS: StepDefinition[] = [
   {
     id: 1,
-    label: 'Account',
-    description: 'Email & password',
-    hint: 'Set the credentials you will use to sign in to your member portal.',
+    label: 'គណនី',
+    description: 'អ៊ីមែល និង ពាក្យសម្ងាត់',
+    hint: 'កំណត់ព័ត៌មានបញ្ជាក់ដែលអ្នកនឹងប្រើដើម្បីចូលវិបផតថលសមាជិករបស់អ្នក។',
   },
   {
     id: 2,
-    label: 'Personal',
-    description: 'Identity details',
-    hint: 'We verify your identity to keep cooperative funds and members safe.',
+    label: 'ព័ត៌មានផ្ទាល់ខ្លួន',
+    description: 'ព័ត៌មានអត្តសញ្ញាណ',
+    hint: 'យើងផ្ទៀងផ្ទាត់អត្តសញ្ញាណរបស់អ្នកដើម្បីរក្សាសុវត្ថិភាពនៃមូលនិធិសហករណ៍ និង សមាជិក។',
   },
   {
     id: 3,
-    label: 'Referee',
-    description: 'Vouching member',
-    hint: 'An existing member can vouch for you to speed up approval.',
+    label: 'អ្នកធានា',
+    description: 'សមាជិកធានា',
+    hint: 'សមាជិកដែលមានស្រាប់អាចធានាជូនអ្នកដើម្បីបង្កើនល្បឿនការអនុម័ត។',
   },
   {
     id: 4,
-    label: 'Documents',
-    description: 'ID & resident book',
-    hint: 'Clear photos help us approve your application faster.',
+    label: 'ឯកសារ',
+    description: 'អត្តសញ្ញាណប័ណ្ណ និង សៀវភៅគ្រួសារ',
+    hint: 'រូបថតច្បាស់ៗជួយយើងអនុម័តពាក្យសុំរបស់អ្នកលឿនជាងមុន។',
   },
   {
     id: 5,
-    label: 'Done',
-    description: 'Submitted',
-    hint: 'Your application is in. We will notify you when it is reviewed.',
+    label: 'រួចរាល់',
+    description: 'បានដាក់ស្នើរួចហើយ',
+    hint: 'ពាក្យសុំរបស់អ្នកត្រូវបានដាក់ស្នើ។ យើងនឹងជូនដំណឹងអ្នកនៅពេលដែលត្រូវបានត្រួតពិនិត្យ។',
   },
 ]
 
@@ -121,30 +121,30 @@ export default function RegisterPage() {
     if (/[0-9]/.test(pwd)) score += 1
     if (/[^A-Za-z0-9]/.test(pwd)) score += 1
     const map = [
-      { label: 'Too weak', tone: 'bg-rose-500' },
-      { label: 'Weak', tone: 'bg-orange-500' },
-      { label: 'Fair', tone: 'bg-amber-500' },
-      { label: 'Strong', tone: 'bg-emerald-500' },
-      { label: 'Excellent', tone: 'bg-emerald-600' },
+      { label: 'ខ្សោយណាស់', tone: 'bg-rose-500' },
+      { label: 'ខ្សោយ', tone: 'bg-orange-500' },
+      { label: 'មធ្យម', tone: 'bg-amber-500' },
+      { label: 'រឹងមាំ', tone: 'bg-emerald-500' },
+      { label: 'ល្អបំផុត', tone: 'bg-emerald-600' },
     ]
     return { score, ...map[score] }
   }, [formData.password])
 
   const validateStep1 = () => {
     if (!formData.email || !formData.password || !formData.confirmPassword) {
-      setError('Please fill in your email and password.')
+      setError('សូមបំពេញអ៊ីមែល និង ពាក្យសម្ងាត់របស់អ្នក។')
       return false
     }
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
-      setError('Please enter a valid email address.')
+      setError('សូមបញ្ចូលអាសយដ្ឋានអ៊ីមែលត្រឹមត្រូវ។')
       return false
     }
     if (formData.password.length < 8) {
-      setError('Password must be at least 8 characters long.')
+      setError('ពាក្យសម្ងាត់ត្រូវមានយ៉ាងតិច ៨ តួអក្សរ។')
       return false
     }
     if (formData.password !== formData.confirmPassword) {
-      setError('Passwords do not match.')
+      setError('ពាក្យសម្ងាត់មិនត្រូវគ្នាទេ។')
       return false
     }
     return true
@@ -152,7 +152,7 @@ export default function RegisterPage() {
 
   const validateStep2 = () => {
     if (!formData.full_name || !formData.phone || !formData.id_number) {
-      setError('Please fill in your full name, phone number, and ID number.')
+      setError('សូមបំពេញឈ្មោះពេញ លេខទូរស័ព្ទ និង លេខអត្តសញ្ញាណប័ណ្ណ។')
       return false
     }
     return true
@@ -172,7 +172,7 @@ export default function RegisterPage() {
 
   const handleSubmit = async () => {
     if (formData.password !== formData.confirmPassword) {
-      setError('Passwords do not match.')
+      setError('ពាក្យសម្ងាត់មិនត្រូវគ្នាទេ។')
       return
     }
 
@@ -187,13 +187,13 @@ export default function RegisterPage() {
 
       const result = await registerMember(payload)
       if (!result.success) {
-        setError(result.error ?? 'Registration failed. Please try again.')
+        setError(result.error ?? 'ការចុះឈ្មោះបរាជ័យ។ សូមព្យាយាមម្តងទៀត។')
         return
       }
 
       setStep(5)
     } catch (err: unknown) {
-      const message = err instanceof Error ? err.message : 'Registration failed. Please try again.'
+      const message = err instanceof Error ? err.message : 'ការចុះឈ្មោះបរាជ័យ។ សូមព្យាយាមម្តងទៀត។'
       setError(message)
     } finally {
       setLoading(false)
@@ -214,23 +214,23 @@ export default function RegisterPage() {
               <span className="grid h-9 w-9 place-items-center rounded-xl bg-blue-950 text-white">
                 <Building2 className="h-5 w-5" />
               </span>
-              SanSam
+              សន្សំ
             </Link>
             <Link
               href="/login"
               className="text-sm font-semibold text-blue-900 hover:text-blue-700"
             >
-              Sign in
+              ចូលគណនី
             </Link>
           </header>
 
           <div className="hidden items-center justify-end border-b border-slate-200 bg-white/60 px-8 py-5 backdrop-blur-sm lg:flex">
-            <span className="mr-4 text-sm text-slate-500">Already a member?</span>
+            <span className="mr-4 text-sm text-slate-500">ជាសមាជិករួចហើយ?</span>
             <Link
               href="/login"
               className="inline-flex items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-blue-900 transition hover:border-blue-200 hover:text-blue-700"
             >
-              Sign in
+              ចូលគណនី
             </Link>
           </div>
 
@@ -240,10 +240,10 @@ export default function RegisterPage() {
 
               <div className="mb-7">
                 <p className="text-xs font-semibold uppercase tracking-[0.18em] text-blue-700">
-                  {step === 5 ? 'Complete' : `Step ${step} of ${totalSteps}`}
+                  {step === 5 ? 'រួចរាល់' : `ជំហានទី ${step} នៃ ${totalSteps}`}
                 </p>
                 <h1 className="mt-2 text-3xl font-bold tracking-tight text-slate-950 sm:text-[34px]">
-                  {step === 5 ? 'Application submitted' : currentStep.label}
+                  {step === 5 ? 'ពាក្យសុំត្រូវបានដាក់ស្នើ' : currentStep.label}
                 </h1>
                 <p className="mt-2 text-[15px] leading-6 text-slate-600">{currentStep.hint}</p>
               </div>
@@ -296,7 +296,7 @@ export default function RegisterPage() {
                     className="inline-flex items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white px-5 py-3 text-sm font-semibold text-slate-700 transition hover:border-slate-300 hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50"
                   >
                     <ArrowLeft className="h-4 w-4" />
-                    Back
+                    ត្រឡប់ក្រោយ
                   </button>
 
                   {step < totalSteps ? (
@@ -306,7 +306,7 @@ export default function RegisterPage() {
                       disabled={loading}
                       className="inline-flex items-center justify-center gap-2 rounded-xl bg-blue-950 px-6 py-3 text-sm font-semibold text-white shadow-sm shadow-blue-950/10 transition hover:bg-blue-900 disabled:cursor-not-allowed disabled:opacity-60"
                     >
-                      Continue
+                      បន្ត
                       <ArrowRight className="h-4 w-4" />
                     </button>
                   ) : (
@@ -338,11 +338,11 @@ export default function RegisterPage() {
                               d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
                             />
                           </svg>
-                          Submitting...
+                          កំពុងដាក់ស្នើ...
                         </>
                       ) : (
                         <>
-                          Submit application
+                          ដាក់ស្នើពាក្យសុំ
                           <ArrowRight className="h-4 w-4" />
                         </>
                       )}
@@ -352,8 +352,8 @@ export default function RegisterPage() {
               )}
 
               <p className="mt-8 text-center text-xs text-slate-400 sm:text-left">
-                By continuing, you agree that the information you provide is accurate and consent
-                to SanSam reviewing your documents for membership approval.
+                ដោយការបន្ត អ្នកយល់ព្រមថាព័ត៌មានដែលអ្នកផ្តល់គឺត្រឹមត្រូវ និង យល់ព្រមឱ្យសន្សំ
+                ត្រួតពិនិត្យឯកសាររបស់អ្នកសម្រាប់ការអនុម័តសមាជិកភាព។
               </p>
             </div>
           </div>
@@ -374,20 +374,20 @@ function BrandPanel({ currentStep }: { currentStep: StepId }) {
           <span className="grid h-10 w-10 place-items-center rounded-xl bg-white/10 ring-1 ring-white/15 transition group-hover:bg-white/15">
             <Building2 className="h-5 w-5 text-white" />
           </span>
-          <span className="text-lg font-bold tracking-tight">SanSam Cooperative</span>
+          <span className="text-lg font-bold tracking-tight">សហករណ៍សន្សំ</span>
         </Link>
 
         <div className="mt-14">
           <span className="inline-flex items-center gap-1.5 rounded-full bg-white/10 px-3 py-1 text-xs font-semibold uppercase tracking-wide text-blue-100 ring-1 ring-white/15">
             <Sparkles className="h-3.5 w-3.5" />
-            New member onboarding
+            ការចុះឈ្មោះសមាជិកថ្មី
           </span>
           <h2 className="mt-5 text-[28px] font-bold leading-[1.2]">
-            Join a trusted member-owned community.
+            ចូលរួមសហគមន៍ដែលគ្រប់គ្រងដោយសមាជិកដែលអាចទុកចិត្តបាន។
           </h2>
           <p className="mt-3 text-[15px] leading-7 text-blue-100/85">
-            Complete four short steps to open your account, then save fairly,
-            request transparent loans, and grow with members like you.
+            បំពេញជំហានខ្លីៗបួនដើម្បីបើកគណនី បន្ទាប់មកសន្សំដោយយុត្តិធម៌
+            ស្នើសុំឥណទានដោយតម្លាភាព និង រីកចម្រើនជាមួយសមាជិកដូចអ្នក។
           </p>
         </div>
 
@@ -436,11 +436,11 @@ function BrandPanel({ currentStep }: { currentStep: StepId }) {
           <div className="rounded-2xl border border-white/10 bg-white/5 p-5 backdrop-blur-sm">
             <div className="flex items-center gap-2 text-blue-100">
               <ShieldCheck className="h-5 w-5" />
-              <p className="text-sm font-semibold">Your data is protected</p>
+              <p className="text-sm font-semibold">ទិន្នន័យរបស់អ្នកត្រូវបានការពារ</p>
             </div>
             <p className="mt-2 text-xs leading-5 text-blue-200/85">
-              Documents are stored privately and only reviewed by approved SanSam admins.
-              Approval typically takes 1-3 business days.
+              ឯកសារត្រូវបានរក្សាទុកដោយឯកជន និង ត្រួតពិនិត្យតែដោយអ្នកគ្រប់គ្រងសន្សំដែលបានអនុម័ត។
+              ការអនុម័តជាធម្មតាចំណាយពេល ១-៣ ថ្ងៃធ្វើការ។
             </p>
           </div>
         </div>
@@ -483,7 +483,7 @@ function Field({ label, htmlFor, hint, optional, children }: FieldShellProps) {
         <label htmlFor={htmlFor} className="text-sm font-semibold text-slate-800">
           {label}
           {optional && (
-            <span className="ml-1.5 text-xs font-normal text-slate-400">(optional)</span>
+            <span className="ml-1.5 text-xs font-normal text-slate-400">(ស្រេចចិត្ត)</span>
           )}
         </label>
         {hint && <span className="text-xs text-slate-400">{hint}</span>}
@@ -542,7 +542,7 @@ function StepAccount({
 }: StepAccountProps) {
   return (
     <div className="space-y-6">
-      <Field label="Email address" htmlFor="email">
+      <Field label="អាសយដ្ឋានអ៊ីមែល" htmlFor="email">
         <IconInput
           id="email"
           icon={<Mail className="h-4.5 w-4.5" />}
@@ -555,7 +555,7 @@ function StepAccount({
       </Field>
 
       <div className="grid gap-5 sm:grid-cols-2">
-        <Field label="Password" htmlFor="password" hint="Min 8 characters">
+        <Field label="ពាក្យសម្ងាត់" htmlFor="password" hint="យ៉ាងតិច ៨ តួអក្សរ">
           <IconInput
             id="password"
             icon={<Lock className="h-4.5 w-4.5" />}
@@ -563,11 +563,11 @@ function StepAccount({
             autoComplete="new-password"
             value={formData.password}
             onChange={(e) => updateField('password', e.target.value)}
-            placeholder="Create a password"
+            placeholder="បង្កើតពាក្យសម្ងាត់"
             trailing={
               <button
                 type="button"
-                aria-label={showPassword ? 'Hide password' : 'Show password'}
+                aria-label={showPassword ? 'លាក់ពាក្យសម្ងាត់' : 'បង្ហាញពាក្យសម្ងាត់'}
                 onClick={() => setShowPassword(!showPassword)}
                 className="rounded-lg p-2 text-slate-400 transition hover:bg-slate-100 hover:text-slate-600"
               >
@@ -577,7 +577,7 @@ function StepAccount({
           />
         </Field>
 
-        <Field label="Confirm password" htmlFor="confirmPassword">
+        <Field label="បញ្ជាក់ពាក្យសម្ងាត់" htmlFor="confirmPassword">
           <IconInput
             id="confirmPassword"
             icon={<Lock className="h-4.5 w-4.5" />}
@@ -585,11 +585,11 @@ function StepAccount({
             autoComplete="new-password"
             value={formData.confirmPassword}
             onChange={(e) => updateField('confirmPassword', e.target.value)}
-            placeholder="Re-enter password"
+            placeholder="បញ្ចូលពាក្យសម្ងាត់ម្តងទៀត"
             trailing={
               <button
                 type="button"
-                aria-label={showConfirmPassword ? 'Hide password' : 'Show password'}
+                aria-label={showConfirmPassword ? 'លាក់ពាក្យសម្ងាត់' : 'បង្ហាញពាក្យសម្ងាត់'}
                 onClick={() => setShowConfirmPassword(!showConfirmPassword)}
                 className="rounded-lg p-2 text-slate-400 transition hover:bg-slate-100 hover:text-slate-600"
               >
@@ -617,7 +617,7 @@ function StepAccount({
             ))}
           </div>
           <div className="flex items-center justify-between text-xs">
-            <span className="text-slate-500">Password strength</span>
+            <span className="text-slate-500">កម្លាំងពាក្យសម្ងាត់</span>
             <span className="font-semibold text-slate-700">{strength.label}</span>
           </div>
         </div>
@@ -626,8 +626,8 @@ function StepAccount({
       <div className="flex items-start gap-3 rounded-2xl border border-blue-100 bg-blue-50/60 p-4 text-sm leading-6 text-blue-900">
         <ShieldCheck className="mt-0.5 h-5 w-5 shrink-0 text-blue-700" />
         <p>
-          Use a strong, unique password. Your account secures your savings, loan requests,
-          repayments, and reports.
+          ប្រើប្រាស់ពាក្យសម្ងាត់ដែលរឹងមាំ និង មានតែមួយ។ គណនីរបស់អ្នកការពារការសន្សំ
+          ការស្នើសុំឥណទាន ការសងវិញ និង របាយការណ៍របស់អ្នក។
         </p>
       </div>
     </div>
@@ -638,7 +638,7 @@ function StepPersonal({ formData, updateField }: StepProps) {
   return (
     <div className="space-y-5">
       <div className="grid gap-5 sm:grid-cols-2">
-        <Field label="Full name" htmlFor="full_name" hint="As shown on ID">
+        <Field label="ឈ្មោះពេញ" htmlFor="full_name" hint="ដូចនៅលើអត្តសញ្ញាណប័ណ្ណ">
           <IconInput
             id="full_name"
             icon={<User className="h-4.5 w-4.5" />}
@@ -646,10 +646,10 @@ function StepPersonal({ formData, updateField }: StepProps) {
             autoComplete="name"
             value={formData.full_name}
             onChange={(e) => updateField('full_name', e.target.value)}
-            placeholder="Your full legal name"
+            placeholder="ឈ្មោះពេញច្បាប់របស់អ្នក"
           />
         </Field>
-        <Field label="Phone number" htmlFor="phone">
+        <Field label="លេខទូរស័ព្ទ" htmlFor="phone">
           <IconInput
             id="phone"
             icon={<Phone className="h-4.5 w-4.5" />}
@@ -663,7 +663,7 @@ function StepPersonal({ formData, updateField }: StepProps) {
       </div>
 
       <div className="grid gap-5 sm:grid-cols-2">
-        <Field label="ID card number" htmlFor="id_number">
+        <Field label="លេខអត្តសញ្ញាណប័ណ្ណ" htmlFor="id_number">
           <IconInput
             id="id_number"
             icon={<CreditCard className="h-4.5 w-4.5" />}
@@ -671,29 +671,29 @@ function StepPersonal({ formData, updateField }: StepProps) {
             inputMode="numeric"
             value={formData.id_number}
             onChange={(e) => updateField('id_number', e.target.value)}
-            placeholder="13-digit ID number"
+            placeholder="លេខអត្តសញ្ញាណប័ណ្ណ ១៣ ខ្ទង់"
           />
         </Field>
-        <Field label="Resident book number" htmlFor="resident_book_number" optional>
+        <Field label="លេខសៀវភៅគ្រួសារ" htmlFor="resident_book_number" optional>
           <IconInput
             id="resident_book_number"
             icon={<FileText className="h-4.5 w-4.5" />}
             type="text"
             value={formData.resident_book_number}
             onChange={(e) => updateField('resident_book_number', e.target.value)}
-            placeholder="Book number"
+            placeholder="លេខសៀវភៅ"
           />
         </Field>
       </div>
 
-      <Field label="Address" htmlFor="address" optional>
+      <Field label="អាសយដ្ឋាន" htmlFor="address" optional>
         <div className="relative">
           <MapPin className="pointer-events-none absolute left-3.5 top-3.5 h-4.5 w-4.5 text-slate-400" />
           <textarea
             id="address"
             value={formData.address}
             onChange={(e) => updateField('address', e.target.value)}
-            placeholder="Your current address"
+            placeholder="អាសយដ្ឋានបច្ចុប្បន្នរបស់អ្នក"
             rows={3}
             className={`${inputBase} resize-none pl-11`}
           />
@@ -712,21 +712,21 @@ function StepReferee({ formData, updateField }: StepProps) {
             <UserCheck className="h-5 w-5" />
           </span>
           <div>
-            <p className="text-sm font-semibold text-blue-950">Why we ask for a referee</p>
+            <p className="text-sm font-semibold text-blue-950">ហេតុអ្វីបានជាយើងសុំអ្នកធានា</p>
             <p className="mt-1 text-[13px] leading-6 text-blue-900/80">
-              A referee is an existing SanSam member who vouches for your application. They
-              receive a verification request by email and confirm that they know you. You can
-              skip this step and add one later.
+              អ្នកធានាគឺជាសមាជិកសន្សំដែលមានស្រាប់ដែលធានាជូនពាក្យសុំរបស់អ្នក។ ពួកគេនឹង
+              ទទួលបានសំណើផ្ទៀងផ្ទាត់តាមអ៊ីមែល និង បញ្ជាក់ថាពួកគេស្គាល់អ្នក។ អ្នកអាច
+              រំលងជំហាននេះ និង បន្ថែមក្រោយ។
             </p>
           </div>
         </div>
       </div>
 
       <Field
-        label="Referee email address"
+        label="អាសយដ្ឋានអ៊ីមែលអ្នកធានា"
         htmlFor="referee_email"
         optional
-        hint="Must be an active member"
+        hint="ត្រូវជាសមាជិកសកម្ម"
       >
         <IconInput
           id="referee_email"
@@ -740,8 +740,8 @@ function StepReferee({ formData, updateField }: StepProps) {
       </Field>
 
       <p className="text-xs leading-5 text-slate-500">
-        Tip: Ask a colleague, family member, or friend who is already a SanSam member. If you do
-        not have a referee yet, contact a SanSam administrator after registering.
+        គន្លឹះ៖ សុំសហការី សមាជិកគ្រួសារ ឬ មិត្តភក្តិដែលជាសមាជិកសន្សំរួចហើយ។ ប្រសិនបើ
+        អ្នកមិនមានអ្នកធានា សូមទាក់ទងអ្នកគ្រប់គ្រងសន្សំបន្ទាប់ពីការចុះឈ្មោះ។
       </p>
     </div>
   )
@@ -752,15 +752,15 @@ function StepDocuments({ formData, updateField }: StepProps) {
     <div className="space-y-5">
       <div className="grid gap-5 sm:grid-cols-2">
         <FileUpload
-          label="ID card"
-          subtitle="Front & back side"
+          label="អត្តសញ្ញាណប័ណ្ណ"
+          subtitle="ផ្នែកមុខ និង ផ្នែកក្រោយ"
           file={formData.id_document}
           onChange={(file) => updateField('id_document', file)}
           accept="image/*,.pdf"
         />
         <FileUpload
-          label="Resident book"
-          subtitle="Tabien Baan"
+          label="សៀវភៅគ្រួសារ"
+          subtitle="សៀវភៅស្នាក់នៅ"
           file={formData.resident_book}
           onChange={(file) => updateField('resident_book', file)}
           accept="image/*,.pdf"
@@ -768,13 +768,13 @@ function StepDocuments({ formData, updateField }: StepProps) {
       </div>
 
       <div className="rounded-2xl border border-amber-200 bg-amber-50/70 p-5 text-sm text-amber-900">
-        <p className="font-semibold">Before submitting</p>
+        <p className="font-semibold">មុនពេលដាក់ស្នើ</p>
         <ul className="mt-2.5 space-y-1.5 text-[13px] leading-6 text-amber-800">
           {[
-            'Photos must be clear, well-lit, and readable',
-            'Documents must be valid and not expired',
-            'Accepted formats: JPG, PNG, or PDF (max 10MB each)',
-            'Approval typically takes 1-3 business days',
+            'រូបថតត្រូវច្បាស់ មានពន្លឺល្អ និង អានបាន',
+            'ឯកសារត្រូវមានសុពលភាព និង មិនផុតកំណត់',
+            'ទម្រង់ទទួលយក៖ JPG, PNG ឬ PDF (អតិបរមា ១០ មេកាបៃក្នុងមួយឯកសារ)',
+            'ការអនុម័តជាធម្មតាចំណាយពេល ១-៣ ថ្ងៃធ្វើការ',
           ].map((item) => (
             <li key={item} className="flex items-start gap-2">
               <span className="mt-2 inline-block h-1.5 w-1.5 shrink-0 rounded-full bg-amber-500" />
@@ -814,7 +814,7 @@ function FileUpload({ label, subtitle, file, onChange, accept }: FileUploadProps
           </div>
           <button
             type="button"
-            aria-label="Remove file"
+            aria-label="លុបឯកសារ"
             onClick={() => onChange(null)}
             className="grid h-8 w-8 shrink-0 place-items-center rounded-lg text-slate-500 transition hover:bg-white hover:text-rose-600"
           >
@@ -826,8 +826,8 @@ function FileUpload({ label, subtitle, file, onChange, accept }: FileUploadProps
           <span className="grid h-10 w-10 place-items-center rounded-xl bg-white text-slate-500 ring-1 ring-slate-200 transition group-hover:text-blue-700 group-hover:ring-blue-200">
             <Upload className="h-5 w-5" />
           </span>
-          <span className="text-sm font-semibold text-slate-700">Click to upload</span>
-          <span className="text-xs text-slate-500">JPG, PNG or PDF · up to 10MB</span>
+          <span className="text-sm font-semibold text-slate-700">ចុចដើម្បីផ្ទុក</span>
+          <span className="text-xs text-slate-500">JPG, PNG ឬ PDF · រហូតដល់ ១០ មេកាបៃ</span>
           <input
             type="file"
             accept={accept}
@@ -846,21 +846,21 @@ function StepSuccess() {
       <div className="mx-auto grid h-20 w-20 place-items-center rounded-full bg-emerald-100 ring-8 ring-emerald-50">
         <CheckCircle2 className="h-10 w-10 text-emerald-600" />
       </div>
-      <h2 className="mt-6 text-2xl font-bold text-slate-950">Thanks — we have your application</h2>
+      <h2 className="mt-6 text-2xl font-bold text-slate-950">អរគុណ — យើងបានទទួលពាក្យសុំរបស់អ្នក</h2>
       <p className="mx-auto mt-3 max-w-md text-[15px] leading-7 text-slate-600">
-        Our team will review your documents within{' '}
-        <strong className="text-slate-900">1-3 business days</strong>. You will receive a
-        notification as soon as your account is approved.
+        ក្រុមការងាររបស់យើងនឹងពិនិត្យឯកសាររបស់អ្នកក្នុងរយៈពេល{' '}
+        <strong className="text-slate-900">១-៣ ថ្ងៃធ្វើការ</strong>។ អ្នកនឹងទទួលបាន
+        ការជូនដំណឹងភ្លាមៗនៅពេលគណនីរបស់អ្នកត្រូវបានអនុម័ត។
       </p>
 
       <div className="mt-8 rounded-2xl border border-slate-200 bg-slate-50/70 p-5 text-left">
-        <p className="text-sm font-semibold text-slate-900">What happens next</p>
+        <p className="text-sm font-semibold text-slate-900">តើនឹងមានអ្វីកើតឡើងបន្ទាប់?</p>
         <ol className="mt-3 space-y-3">
           {[
-            'Admin reviews your ID and resident book documents',
-            'Referee receives a verification request (if provided)',
-            'Account is approved and activated',
-            'Sign in and start saving with SanSam',
+            'អ្នកគ្រប់គ្រងពិនិត្យអត្តសញ្ញាណប័ណ្ណ និង សៀវភៅគ្រួសាររបស់អ្នក',
+            'អ្នកធានាទទួលបានសំណើផ្ទៀងផ្ទាត់ (ប្រសិនបើបានផ្តល់)',
+            'គណនីត្រូវបានអនុម័ត និង ដំណើរការ',
+            'ចូលគណនី និង ចាប់ផ្តើមសន្សំជាមួយសន្សំ',
           ].map((item, i) => (
             <li key={item} className="flex items-start gap-3">
               <span className="grid h-6 w-6 shrink-0 place-items-center rounded-full bg-blue-950 text-xs font-semibold text-white">
@@ -877,13 +877,13 @@ function StepSuccess() {
           href="/login"
           className="inline-flex items-center justify-center gap-2 rounded-xl bg-blue-950 px-6 py-3 text-sm font-semibold text-white transition hover:bg-blue-900"
         >
-          Go to sign in
+          ចូលគណនី
         </Link>
         <Link
           href="/"
           className="inline-flex items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white px-6 py-3 text-sm font-semibold text-slate-700 transition hover:border-slate-300 hover:bg-slate-50"
         >
-          Back to home
+          ត្រឡប់ទៅទំព័រដើម
         </Link>
       </div>
     </div>

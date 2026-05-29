@@ -3,8 +3,21 @@
 import React, { useState } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
-import { Building2, Mail, Lock, Eye, EyeOff, AlertCircle } from 'lucide-react'
-import { Button } from '@/components/ui/Button'
+import {
+  AlertCircle,
+  ArrowRight,
+  Building2,
+  CheckCircle2,
+  CreditCard,
+  Eye,
+  EyeOff,
+  Lock,
+  Mail,
+  PiggyBank,
+  ShieldCheck,
+  Sparkles,
+  TrendingUp,
+} from 'lucide-react'
 import { signInMember } from '@/app/actions/auth'
 
 export default function LoginPage() {
@@ -24,115 +37,324 @@ export default function LoginPage() {
       const result = await signInMember(email, password)
 
       if (!result.success) {
-        setError(result.error ?? 'Unable to sign in right now. Please try again.')
+        setError(result.error ?? 'មិនអាចចូលគណនីបានទេនៅពេលនេះ។ សូមព្យាយាមម្តងទៀត។')
         return
       }
 
       router.push('/dashboard')
       router.refresh()
     } catch {
-      setError('Unable to sign in right now. Please try again.')
+      setError('មិនអាចចូលគណនីបានទេនៅពេលនេះ។ សូមព្យាយាមម្តងទៀត។')
     } finally {
       setLoading(false)
     }
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-900 via-blue-800 to-blue-700 flex items-center justify-center p-4">
-      <div className="w-full max-w-md">
-        {/* Logo */}
-        <div className="text-center mb-8">
-          <Link href="/" className="inline-flex items-center gap-2 text-white font-bold text-2xl hover:text-blue-200 transition-colors">
-            <Building2 className="w-8 h-8" />
-            SanSam
-          </Link>
-          <p className="text-blue-200 mt-2 text-sm">Member Portal</p>
-        </div>
+    <div className="min-h-screen bg-slate-50">
+      <div className="mx-auto grid min-h-screen w-full max-w-[1400px] grid-cols-1 lg:grid-cols-[440px_1fr]">
+        <BrandPanel />
 
-        {/* Card */}
-        <div className="bg-white rounded-2xl shadow-xl p-8">
-          <div className="mb-6">
-            <h1 className="text-2xl font-bold text-gray-900">Welcome back</h1>
-            <p className="text-gray-500 text-sm mt-1">Sign in to access your account</p>
+        <main className="relative flex min-h-screen flex-col bg-slate-50">
+          {/* Mobile header */}
+          <header className="flex items-center justify-between border-b border-slate-200 bg-white/80 px-4 py-4 backdrop-blur-sm sm:px-8 lg:hidden">
+            <Link
+              href="/"
+              className="inline-flex items-center gap-2 text-lg font-bold text-blue-950"
+            >
+              <span className="grid h-9 w-9 place-items-center rounded-xl bg-blue-950 text-white">
+                <Building2 className="h-5 w-5" />
+              </span>
+              សន្សំ
+            </Link>
+            <Link
+              href="/register"
+              className="text-sm font-semibold text-blue-900 hover:text-blue-700"
+            >
+              ចុះឈ្មោះ
+            </Link>
+          </header>
+
+          {/* Desktop header */}
+          <div className="hidden items-center justify-end border-b border-slate-200 bg-white/60 px-8 py-5 backdrop-blur-sm lg:flex">
+            <span className="mr-4 text-sm text-slate-500">មិនទាន់មានគណនី?</span>
+            <Link
+              href="/register"
+              className="inline-flex items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-blue-900 transition hover:border-blue-200 hover:text-blue-700"
+            >
+              ចុះឈ្មោះឥឡូវនេះ
+            </Link>
           </div>
 
-          {error && (
-            <div className="mb-5 flex items-start gap-3 bg-red-50 border border-red-200 text-red-700 rounded-lg p-4">
-              <AlertCircle className="w-5 h-5 flex-shrink-0 mt-0.5" />
-              <p className="text-sm">{error}</p>
-            </div>
-          )}
-
-          <form onSubmit={handleLogin} className="space-y-5">
-            <div>
-              <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1.5">
-                Email Address
-              </label>
-              <div className="relative">
-                <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
-                <input
-                  id="email"
-                  type="email"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  placeholder="you@example.com"
-                  required
-                  className="w-full pl-10 pr-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm text-gray-900 placeholder-gray-400"
-                />
+          {/* Form area */}
+          <div className="flex flex-1 flex-col px-4 py-8 sm:px-8 lg:px-12 lg:py-12">
+            <div className="mx-auto w-full max-w-md">
+              <div className="mb-8">
+                <p className="text-xs font-semibold uppercase tracking-[0.18em] text-blue-700">
+                  វិបផតថលសមាជិក
+                </p>
+                <h1 className="mt-2 text-3xl font-bold tracking-tight text-slate-950 sm:text-[34px]">
+                  សូមស្វាគមន៍ការត្រឡប់មកវិញ
+                </h1>
+                <p className="mt-2 text-[15px] leading-6 text-slate-600">
+                  ចូលគណនីដើម្បីគ្រប់គ្រងការសន្សំ ឥណទាន និង សកម្មភាពសមាជិករបស់អ្នក។
+                </p>
               </div>
-            </div>
 
-            <div>
-              <div className="flex items-center justify-between mb-1.5">
-                <label htmlFor="password" className="block text-sm font-medium text-gray-700">
-                  Password
-                </label>
-                <Link href="/forgot-password" className="text-xs text-blue-700 hover:text-blue-900 transition-colors">
-                  Forgot password?
+              {error && (
+                <div
+                  role="alert"
+                  className="mb-6 flex items-start gap-3 rounded-2xl border border-rose-200 bg-rose-50 px-4 py-3 text-rose-800"
+                >
+                  <AlertCircle className="mt-0.5 h-5 w-5 shrink-0" />
+                  <p className="text-sm leading-6">{error}</p>
+                </div>
+              )}
+
+              <div className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm shadow-slate-200/40 sm:p-8">
+                <form onSubmit={handleLogin} className="space-y-5">
+                  <Field label="អាសយដ្ឋានអ៊ីមែល" htmlFor="email">
+                    <IconInput
+                      id="email"
+                      icon={<Mail className="h-4.5 w-4.5" />}
+                      type="email"
+                      autoComplete="email"
+                      value={email}
+                      onChange={(e) => setEmail(e.target.value)}
+                      placeholder="you@example.com"
+                      required
+                    />
+                  </Field>
+
+                  <Field
+                    label="ពាក្យសម្ងាត់"
+                    htmlFor="password"
+                    trailingLabel={
+                      <Link
+                        href="/forgot-password"
+                        className="text-xs font-semibold text-blue-700 transition hover:text-blue-900"
+                      >
+                        ភ្លេចពាក្យសម្ងាត់?
+                      </Link>
+                    }
+                  >
+                    <IconInput
+                      id="password"
+                      icon={<Lock className="h-4.5 w-4.5" />}
+                      type={showPassword ? 'text' : 'password'}
+                      autoComplete="current-password"
+                      value={password}
+                      onChange={(e) => setPassword(e.target.value)}
+                      placeholder="បញ្ចូលពាក្យសម្ងាត់របស់អ្នក"
+                      required
+                      trailing={
+                        <button
+                          type="button"
+                          aria-label={showPassword ? 'លាក់ពាក្យសម្ងាត់' : 'បង្ហាញពាក្យសម្ងាត់'}
+                          onClick={() => setShowPassword(!showPassword)}
+                          className="rounded-lg p-2 text-slate-400 transition hover:bg-slate-100 hover:text-slate-600"
+                        >
+                          {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                        </button>
+                      }
+                    />
+                  </Field>
+
+                  <button
+                    type="submit"
+                    disabled={loading}
+                    className="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-blue-950 px-6 py-3 text-sm font-semibold text-white shadow-sm shadow-blue-950/10 transition hover:bg-blue-900 disabled:cursor-not-allowed disabled:opacity-60"
+                  >
+                    {loading ? (
+                      <>
+                        <svg
+                          className="h-4 w-4 animate-spin"
+                          xmlns="http://www.w3.org/2000/svg"
+                          fill="none"
+                          viewBox="0 0 24 24"
+                        >
+                          <circle
+                            className="opacity-25"
+                            cx="12"
+                            cy="12"
+                            r="10"
+                            stroke="currentColor"
+                            strokeWidth="4"
+                          />
+                          <path
+                            className="opacity-75"
+                            fill="currentColor"
+                            d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                          />
+                        </svg>
+                        កំពុងចូលគណនី...
+                      </>
+                    ) : (
+                      <>
+                        ចូលគណនី
+                        <ArrowRight className="h-4 w-4" />
+                      </>
+                    )}
+                  </button>
+                </form>
+
+                <div className="relative my-7">
+                  <div className="absolute inset-0 flex items-center">
+                    <div className="w-full border-t border-slate-200" />
+                  </div>
+                  <div className="relative flex justify-center">
+                    <span className="bg-white px-3 text-xs text-slate-400">ឬ</span>
+                  </div>
+                </div>
+
+                <Link
+                  href="/register"
+                  className="inline-flex w-full items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white px-6 py-3 text-sm font-semibold text-slate-700 transition hover:border-slate-300 hover:bg-slate-50"
+                >
+                  បង្កើតគណនីសមាជិកថ្មី
                 </Link>
               </div>
-              <div className="relative">
-                <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
-                <input
-                  id="password"
-                  type={showPassword ? 'text' : 'password'}
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  placeholder="Enter your password"
-                  required
-                  className="w-full pl-10 pr-10 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm text-gray-900 placeholder-gray-400"
-                />
-                <button
-                  type="button"
-                  onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
-                >
-                  {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
-                </button>
-              </div>
+
+              <p className="mt-8 text-center text-xs text-slate-400 sm:text-left">
+                ដោយចូលគណនី អ្នកយល់ព្រមថាគណនីរបស់អ្នកត្រូវបានប្រើដោយខ្លួនអ្នកផ្ទាល់ និង
+                ការសម្ងាត់ត្រូវបានរក្សាដោយសុវត្ថិភាព។{' '}
+                <Link href="/" className="font-semibold text-blue-700 hover:text-blue-900">
+                  ត្រឡប់ទៅទំព័រដើម
+                </Link>
+              </p>
             </div>
-
-            <Button type="submit" loading={loading} className="w-full" size="lg">
-              Sign In
-            </Button>
-          </form>
-
-          <div className="mt-6 text-center">
-            <p className="text-sm text-gray-600">
-              Not a member yet?{' '}
-              <Link href="/register" className="text-blue-700 font-medium hover:text-blue-900 transition-colors">
-                Register now
-              </Link>
-            </p>
           </div>
+        </main>
+      </div>
+    </div>
+  )
+}
 
-          <div className="mt-4 pt-4 border-t border-gray-100 text-center">
-            <Link href="/" className="text-xs text-gray-400 hover:text-gray-600 transition-colors">
-              Back to homepage
-            </Link>
+function BrandPanel() {
+  const benefits = [
+    {
+      icon: PiggyBank,
+      title: 'សន្សំទទួលការប្រាក់ ៣%',
+      description: 'ការប្រាក់ប្រចាំខែលើសមតុល្យសន្សំសរុបរបស់អ្នក។',
+    },
+    {
+      icon: CreditCard,
+      title: 'ឥណទានសមាជិកដោយយុត្តិធម៌',
+      description: 'អត្រាការប្រាក់ចាប់ពី ១-២% ក្នុងមួយខែ ជាមួយដំណើរការតម្លាភាព។',
+    },
+    {
+      icon: TrendingUp,
+      title: 'របាយការណ៍ភ្លាមៗ',
+      description: 'ទទួលរបាយការណ៍សន្សំ និង ឥណទានតាមរយៈ Telegram។',
+    },
+  ]
+
+  return (
+    <aside className="relative hidden overflow-hidden bg-blue-950 text-white lg:flex lg:flex-col">
+      <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(96,165,250,0.25),transparent_45%)]" />
+      <div className="absolute inset-x-0 bottom-0 h-72 bg-[radial-gradient(circle_at_bottom_right,rgba(59,130,246,0.28),transparent_55%)]" />
+
+      <div className="relative flex h-full flex-col px-10 py-10">
+        <Link href="/" className="inline-flex w-fit items-center gap-2.5 group">
+          <span className="grid h-10 w-10 place-items-center rounded-xl bg-white/10 ring-1 ring-white/15 transition group-hover:bg-white/15">
+            <Building2 className="h-5 w-5 text-white" />
+          </span>
+          <span className="text-lg font-bold tracking-tight">សហករណ៍សន្សំ</span>
+        </Link>
+
+        <div className="mt-14">
+          <span className="inline-flex items-center gap-1.5 rounded-full bg-white/10 px-3 py-1 text-xs font-semibold uppercase tracking-wide text-blue-100 ring-1 ring-white/15">
+            <Sparkles className="h-3.5 w-3.5" />
+            វិបផតថលសមាជិក
+          </span>
+          <h2 className="mt-5 text-[28px] font-bold leading-[1.2]">
+            បន្តដំណើរហិរញ្ញវត្ថុរបស់អ្នកជាមួយសន្សំ។
+          </h2>
+          <p className="mt-3 text-[15px] leading-7 text-blue-100/85">
+            ចូលគណនីដើម្បីបន្ថែមការសន្សំ ស្នើសុំឥណទាន មើលរបាយការណ៍ និង
+            តាមដានគ្រប់សកម្មភាពសមាជិករបស់អ្នក។
+          </p>
+        </div>
+
+        <ul className="mt-10 space-y-4">
+          {benefits.map((benefit) => {
+            const Icon = benefit.icon
+            return (
+              <li
+                key={benefit.title}
+                className="flex items-start gap-4 rounded-2xl bg-white/5 px-4 py-3 ring-1 ring-white/10"
+              >
+                <span className="mt-0.5 grid h-9 w-9 shrink-0 place-items-center rounded-xl bg-white/10 ring-1 ring-white/15">
+                  <Icon className="h-4.5 w-4.5 text-blue-100" />
+                </span>
+                <div>
+                  <p className="text-sm font-semibold text-white">{benefit.title}</p>
+                  <p className="mt-0.5 text-xs leading-5 text-blue-200/80">{benefit.description}</p>
+                </div>
+              </li>
+            )
+          })}
+        </ul>
+
+        <div className="mt-auto pt-10">
+          <div className="rounded-2xl border border-white/10 bg-white/5 p-5 backdrop-blur-sm">
+            <div className="flex items-center gap-2 text-blue-100">
+              <ShieldCheck className="h-5 w-5" />
+              <p className="text-sm font-semibold">ការចូលគណនីដោយសុវត្ថិភាព</p>
+            </div>
+            <p className="mt-2 flex items-start gap-2 text-xs leading-5 text-blue-200/85">
+              <CheckCircle2 className="mt-0.5 h-3.5 w-3.5 shrink-0 text-emerald-300" />
+              ព័ត៌មានគណនី និង ឯកសាររបស់អ្នកត្រូវបានអ៊ិនគ្រីប និង រក្សាការសម្ងាត់។
+            </p>
           </div>
         </div>
       </div>
+    </aside>
+  )
+}
+
+interface FieldShellProps {
+  label: string
+  htmlFor: string
+  trailingLabel?: React.ReactNode
+  children: React.ReactNode
+}
+
+function Field({ label, htmlFor, trailingLabel, children }: FieldShellProps) {
+  return (
+    <div className="space-y-1.5">
+      <div className="flex items-baseline justify-between gap-2">
+        <label htmlFor={htmlFor} className="text-sm font-semibold text-slate-800">
+          {label}
+        </label>
+        {trailingLabel}
+      </div>
+      {children}
+    </div>
+  )
+}
+
+const inputBase =
+  'w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-[15px] text-slate-900 shadow-xs outline-none transition placeholder:text-slate-400 hover:border-slate-300 focus:border-blue-500 focus:ring-4 focus:ring-blue-500/15'
+
+interface IconInputProps extends React.InputHTMLAttributes<HTMLInputElement> {
+  icon: React.ReactNode
+  trailing?: React.ReactNode
+}
+
+function IconInput({ icon, trailing, className = '', ...rest }: IconInputProps) {
+  return (
+    <div className="relative">
+      <span className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400">
+        {icon}
+      </span>
+      <input
+        {...rest}
+        className={`${inputBase} pl-11 ${trailing ? 'pr-11' : ''} ${className}`}
+      />
+      {trailing && (
+        <div className="absolute right-2 top-1/2 -translate-y-1/2">{trailing}</div>
+      )}
     </div>
   )
 }

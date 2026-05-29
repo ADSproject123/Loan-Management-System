@@ -7,16 +7,16 @@ import { Menu, X, ChevronDown, Building2 } from 'lucide-react'
 
 const navLinks = [
   {
-    label: 'About SanSam',
+    label: 'អំពីសន្សំ',
     href: '/about',
     children: [
-      { label: 'Vision & Mission', href: '/about#vision' },
-      { label: 'Saving Benefits', href: '/about#saving-benefits' },
-      { label: 'Loan Rates', href: '/about#loan-rates' },
+      { label: 'ចក្ខុវិស័យ និង បេសកកម្ម', href: '/about#vision' },
+      { label: 'អត្ថប្រយោជន៍នៃការសន្សំ', href: '/about#saving-benefits' },
+      { label: 'អត្រាការប្រាក់ឥណទាន', href: '/about#loan-rates' },
     ],
   },
-  { label: 'Membership', href: '/register' },
-  { label: 'Login', href: '/login' },
+  { label: 'សមាជិកភាព', href: '/register' },
+  { label: 'ចូលគណនី', href: '/login' },
 ]
 
 export function Navbar() {
@@ -48,7 +48,7 @@ export function Navbar() {
           {/* Logo */}
           <Link href="/" className="flex items-center gap-2 font-bold text-xl hover:text-blue-200 transition-colors">
             <Building2 className="w-7 h-7" />
-            <span>SanSam</span>
+            <span>សន្សំ</span>
           </Link>
 
           {/* Desktop nav */}
@@ -66,7 +66,7 @@ export function Navbar() {
                     <ChevronDown className={`w-4 h-4 transition-transform ${dropdownOpen ? 'rotate-180' : ''}`} />
                   </button>
                   {dropdownOpen && (
-                    <div className="absolute top-full left-0 mt-1 w-52 bg-white rounded-lg shadow-xl py-1 z-50">
+                    <div className="absolute top-full left-0 mt-1 w-56 bg-white rounded-lg shadow-xl py-1 z-50">
                       {link.children.map((child) => (
                         <Link
                           key={child.href}
@@ -102,7 +102,7 @@ export function Navbar() {
                   : 'bg-white/15 text-white ring-1 ring-white/30 hover:bg-white/25 backdrop-blur'
               }`}
             >
-              My Account
+              គណនីរបស់ខ្ញុំ
             </Link>
           </div>
 
@@ -112,7 +112,7 @@ export function Navbar() {
               solidNav ? 'hover:bg-blue-800' : 'hover:bg-white/15'
             }`}
             onClick={() => setMobileOpen(!mobileOpen)}
-            aria-label="Toggle menu"
+            aria-label="បើក/បិទម៉ឺនុយ"
           >
             {mobileOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
           </button>
@@ -154,7 +154,7 @@ export function Navbar() {
               onClick={() => setMobileOpen(false)}
               className="block mt-2 bg-white text-blue-900 px-4 py-2 rounded-lg text-sm font-semibold text-center hover:bg-blue-50 transition-colors"
             >
-              My Account
+              គណនីរបស់ខ្ញុំ
             </Link>
           </div>
         </div>

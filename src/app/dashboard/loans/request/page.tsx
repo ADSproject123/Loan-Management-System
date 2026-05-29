@@ -19,11 +19,11 @@ import {
 } from 'lucide-react'
 
 const STEPS = [
-  { id: 1, label: 'Loan Details', description: 'Amount & purpose' },
-  { id: 2, label: 'Documents', description: 'Upload files' },
-  { id: 3, label: 'Referee', description: 'Verification' },
-  { id: 4, label: 'Review', description: 'Confirm & submit' },
-  { id: 5, label: 'Done', description: 'Submitted' },
+  { id: 1, label: 'ព័ត៌មានឥណទាន', description: 'ចំនួន និង គោលបំណង' },
+  { id: 2, label: 'ឯកសារ', description: 'ផ្ទុកឯកសារ' },
+  { id: 3, label: 'អ្នកធានា', description: 'ការផ្ទៀងផ្ទាត់' },
+  { id: 4, label: 'ត្រួតពិនិត្យ', description: 'បញ្ជាក់ និង ដាក់ស្នើ' },
+  { id: 5, label: 'រួចរាល់', description: 'បានដាក់ស្នើ' },
 ]
 
 interface LoanFormData {
@@ -54,16 +54,16 @@ export default function LoanRequestPage() {
     if (step === 1) {
       const amt = parseFloat(formData.amount)
       if (!formData.amount || isNaN(amt) || amt <= 0) {
-        setError('Please enter a valid loan amount.')
+        setError('សូមបញ្ចូលចំនួនទឹកប្រាក់ឥណទានត្រឹមត្រូវ។')
         return false
       }
       if (!formData.purpose.trim()) {
-        setError('Please describe the purpose of your loan.')
+        setError('សូមពិពណ៌នាគោលបំណងនៃឥណទានរបស់អ្នក។')
         return false
       }
     }
     if (step === 3 && !formData.referee_email.trim()) {
-      setError('Please enter your referee\'s email address.')
+      setError('សូមបញ្ចូលអាសយដ្ឋានអ៊ីមែលរបស់អ្នកធានា។')
       return false
     }
     return true
@@ -92,7 +92,7 @@ export default function LoanRequestPage() {
     setLoading(false)
 
     if (!result.success) {
-      setError(result.error ?? 'Unable to submit loan request.')
+      setError(result.error ?? 'មិនអាចដាក់ស្នើពាក្យសុំឥណទានបានទេ។')
       return
     }
 
@@ -112,10 +112,10 @@ export default function LoanRequestPage() {
           className="inline-flex items-center gap-2 text-gray-500 hover:text-gray-700 text-sm mb-4 transition-colors"
         >
           <ArrowLeft className="w-4 h-4" />
-          Back to Loans
+          ត្រឡប់ទៅឥណទាន
         </Link>
-        <h1 className="text-2xl font-bold text-gray-900">Request a Loan</h1>
-        <p className="text-gray-500 text-sm mt-1">Complete the form to submit your loan application</p>
+        <h1 className="text-2xl font-bold text-gray-900">ស្នើសុំឥណទាន</h1>
+        <p className="text-gray-500 text-sm mt-1">បំពេញបែបបទដើម្បីដាក់ស្នើពាក្យសុំឥណទានរបស់អ្នក</p>
       </div>
 
       {step < 5 && (
@@ -139,14 +139,14 @@ export default function LoanRequestPage() {
               <CreditCard className="w-6 h-6 text-blue-700" />
             </div>
             <div>
-              <h2 className="font-semibold text-gray-900">Loan Details</h2>
-              <p className="text-gray-500 text-sm">Tell us about your loan request</p>
+              <h2 className="font-semibold text-gray-900">ព័ត៌មានឥណទាន</h2>
+              <p className="text-gray-500 text-sm">ប្រាប់យើងអំពីការស្នើសុំឥណទានរបស់អ្នក</p>
             </div>
           </div>
 
           <div className="space-y-4 mb-5">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1.5">Loan Amount (฿)</label>
+              <label className="block text-sm font-medium text-gray-700 mb-1.5">ចំនួនទឹកប្រាក់ឥណទាន (฿)</label>
               <div className="relative">
                 <span className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500 font-medium">฿</span>
                 <input
@@ -159,22 +159,22 @@ export default function LoanRequestPage() {
                   className="w-full pl-8 pr-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-lg font-semibold text-gray-900"
                 />
               </div>
-              <p className="text-gray-400 text-xs mt-1">Maximum loan amount depends on your savings balance</p>
+              <p className="text-gray-400 text-xs mt-1">ចំនួនទឹកប្រាក់ឥណទានអតិបរមាអាស្រ័យលើសមតុល្យសន្សំរបស់អ្នក</p>
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1.5">Loan Purpose</label>
+              <label className="block text-sm font-medium text-gray-700 mb-1.5">គោលបំណងឥណទាន</label>
               <textarea
                 value={formData.purpose}
                 onChange={(e) => update('purpose', e.target.value)}
-                placeholder="Describe the reason for your loan request..."
+                placeholder="ពិពណ៌នាមូលហេតុនៃការស្នើសុំឥណទានរបស់អ្នក..."
                 rows={3}
                 className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm resize-none"
               />
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">Loan Term</label>
+              <label className="block text-sm font-medium text-gray-700 mb-2">រយៈពេលឥណទាន</label>
               <div className="grid grid-cols-4 gap-2">
                 {['6', '12', '18', '24'].map((months) => (
                   <button
@@ -186,7 +186,7 @@ export default function LoanRequestPage() {
                         : 'border-gray-300 text-gray-700 hover:border-blue-400 hover:text-blue-700'
                     }`}
                   >
-                    {months} mo
+                    {months} ខែ
                   </button>
                 ))}
               </div>
@@ -195,14 +195,14 @@ export default function LoanRequestPage() {
 
           {loanAmount > 0 && (
             <div className="bg-blue-50 rounded-xl p-4 mb-5">
-              <p className="text-blue-900 font-semibold text-sm mb-3">Loan Estimate</p>
+              <p className="text-blue-900 font-semibold text-sm mb-3">ការប៉ាន់ប្រមាណឥណទាន</p>
               <div className="space-y-2">
                 {[
-                  { label: 'Loan Amount', value: `฿${loanAmount.toLocaleString()}` },
-                  { label: 'Interest Rate', value: '2% per month' },
-                  { label: 'Monthly Interest', value: `฿${monthlyInterest.toLocaleString()}` },
-                  { label: 'Est. Monthly Payment', value: `฿${monthlyPayment.toFixed(0).replace(/\B(?=(\d{3})+(?!\d))/g, ',')}` },
-                  { label: 'Total Repayment', value: `฿${totalRepayment.toFixed(0).replace(/\B(?=(\d{3})+(?!\d))/g, ',')}` },
+                  { label: 'ចំនួនទឹកប្រាក់ឥណទាន', value: `฿${loanAmount.toLocaleString()}` },
+                  { label: 'អត្រាការប្រាក់', value: '២% ក្នុងមួយខែ' },
+                  { label: 'ការប្រាក់ប្រចាំខែ', value: `฿${monthlyInterest.toLocaleString()}` },
+                  { label: 'ប្រាក់សងប្រមាណប្រចាំខែ', value: `฿${monthlyPayment.toFixed(0).replace(/\B(?=(\d{3})+(?!\d))/g, ',')}` },
+                  { label: 'ការសងសរុប', value: `฿${totalRepayment.toFixed(0).replace(/\B(?=(\d{3})+(?!\d))/g, ',')}` },
                 ].map((item) => (
                   <div key={item.label} className="flex justify-between text-sm">
                     <span className="text-blue-700">{item.label}</span>
@@ -210,12 +210,12 @@ export default function LoanRequestPage() {
                   </div>
                 ))}
               </div>
-              <p className="text-blue-500 text-xs mt-3">* Estimates based on standard 2% monthly rate</p>
+              <p className="text-blue-500 text-xs mt-3">* ការប៉ាន់ប្រមាណផ្អែកលើអត្រាស្តង់ដារ ២% ក្នុងមួយខែ</p>
             </div>
           )}
 
           <Button onClick={handleNext} className="w-full" size="lg">
-            Continue
+            បន្ត
           </Button>
         </Card>
       )}
@@ -228,8 +228,8 @@ export default function LoanRequestPage() {
               <FileText className="w-6 h-6 text-orange-700" />
             </div>
             <div>
-              <h2 className="font-semibold text-gray-900">Supporting Documents</h2>
-              <p className="text-gray-500 text-sm">Upload documents to support your loan application</p>
+              <h2 className="font-semibold text-gray-900">ឯកសារគាំទ្រ</h2>
+              <p className="text-gray-500 text-sm">ផ្ទុកឯកសារដើម្បីគាំទ្រពាក្យសុំឥណទានរបស់អ្នក</p>
             </div>
           </div>
 
@@ -237,11 +237,11 @@ export default function LoanRequestPage() {
             <div className="flex items-start gap-2">
               <Info className="w-4 h-4 text-blue-600 flex-shrink-0 mt-0.5" />
               <div className="text-sm text-blue-700">
-                <p className="font-medium mb-1">Required Documents:</p>
+                <p className="font-medium mb-1">ឯកសារដែលត្រូវការ៖</p>
                 <ul className="space-y-1 list-disc list-inside text-xs">
-                  <li>Proof of income or employment</li>
-                  <li>Statement of purpose / business plan (for business loans)</li>
-                  <li>Any supporting financial documents</li>
+                  <li>ភស្តុតាងចំណូល ឬ ការងារ</li>
+                  <li>សេចក្តីបញ្ជាក់គោលបំណង / ផែនការអាជីវកម្ម (សម្រាប់ឥណទានអាជីវកម្ម)</li>
+                  <li>ឯកសារហិរញ្ញវត្ថុគាំទ្រណាមួយ</li>
                 </ul>
               </div>
             </div>
@@ -253,12 +253,12 @@ export default function LoanRequestPage() {
               {formData.support_document ? (
                 <div className="text-center">
                   <p className="text-sm font-medium text-blue-700">{formData.support_document.name}</p>
-                  <p className="text-xs text-gray-400 mt-1">Click to change file</p>
+                  <p className="text-xs text-gray-400 mt-1">ចុចដើម្បីប្តូរឯកសារ</p>
                 </div>
               ) : (
                 <>
-                  <p className="text-sm font-medium text-gray-600">Click to upload supporting document</p>
-                  <p className="text-xs text-gray-400 mt-1">JPG, PNG or PDF, max 10MB</p>
+                  <p className="text-sm font-medium text-gray-600">ចុចដើម្បីផ្ទុកឯកសារគាំទ្រ</p>
+                  <p className="text-xs text-gray-400 mt-1">JPG, PNG ឬ PDF អតិបរមា ១០ មេកាបៃ</p>
                 </>
               )}
               <input
@@ -272,14 +272,14 @@ export default function LoanRequestPage() {
 
           <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 mb-5">
             <p className="text-yellow-800 text-sm">
-              <strong>Note:</strong> Hard copy documents with thumbprints must be submitted to the SanSam
-              office after your loan is approved. This is required before disbursement.
+              <strong>ចំណាំ៖</strong> ឯកសារច្បាប់ដើមជាមួយការផ្តិតមេដៃត្រូវដាក់ស្នើទៅការិយាល័យសន្សំ
+              បន្ទាប់ពីឥណទានរបស់អ្នកត្រូវបានអនុម័ត។ នេះតម្រូវឱ្យធ្វើមុនការបើកប្រាក់ឥណទាន។
             </p>
           </div>
 
           <div className="flex gap-3">
-            <Button variant="outline" onClick={() => setStep(1)} className="flex-1">Back</Button>
-            <Button onClick={handleNext} className="flex-1">Continue</Button>
+            <Button variant="outline" onClick={() => setStep(1)} className="flex-1">ត្រឡប់ក្រោយ</Button>
+            <Button onClick={handleNext} className="flex-1">បន្ត</Button>
           </div>
         </Card>
       )}
@@ -292,22 +292,22 @@ export default function LoanRequestPage() {
               <Users className="w-6 h-6 text-purple-700" />
             </div>
             <div>
-              <h2 className="font-semibold text-gray-900">Referee Verification</h2>
-              <p className="text-gray-500 text-sm">A SanSam member must verify your loan request</p>
+              <h2 className="font-semibold text-gray-900">ការផ្ទៀងផ្ទាត់អ្នកធានា</h2>
+              <p className="text-gray-500 text-sm">សមាជិកសន្សំត្រូវផ្ទៀងផ្ទាត់ការស្នើសុំឥណទានរបស់អ្នក</p>
             </div>
           </div>
 
           <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-5">
-            <p className="text-blue-900 text-sm font-medium mb-1">Why a Referee?</p>
+            <p className="text-blue-900 text-sm font-medium mb-1">ហេតុអ្វីត្រូវការអ្នកធានា?</p>
             <p className="text-blue-700 text-sm">
-              Your referee is a trusted SanSam member who vouches for your loan application.
-              They will receive an email verification request and must approve before your
-              application proceeds to committee review.
+              អ្នកធានាគឺជាសមាជិកសន្សំដែលជឿទុកចិត្តបានដែលធានាជូនពាក្យសុំឥណទានរបស់អ្នក។
+              ពួកគេនឹងទទួលបានសំណើផ្ទៀងផ្ទាត់តាមអ៊ីមែល និង ត្រូវអនុម័តមុនពេលពាក្យសុំ
+              របស់អ្នកបន្តទៅការត្រួតពិនិត្យដោយគណៈកម្មាធិការ។
             </p>
           </div>
 
           <div className="mb-5">
-            <label className="block text-sm font-medium text-gray-700 mb-1.5">Referee&apos;s Email Address</label>
+            <label className="block text-sm font-medium text-gray-700 mb-1.5">អាសយដ្ឋានអ៊ីមែលរបស់អ្នកធានា</label>
             <div className="relative">
               <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
               <input
@@ -319,13 +319,13 @@ export default function LoanRequestPage() {
               />
             </div>
             <p className="text-gray-400 text-xs mt-2">
-              Your referee will receive an email notification with a verification link.
+              អ្នកធានារបស់អ្នកនឹងទទួលបានការជូនដំណឹងតាមអ៊ីមែលជាមួយតំណផ្ទៀងផ្ទាត់។
             </p>
           </div>
 
           <div className="flex gap-3">
-            <Button variant="outline" onClick={() => setStep(2)} className="flex-1">Back</Button>
-            <Button onClick={handleNext} className="flex-1">Continue</Button>
+            <Button variant="outline" onClick={() => setStep(2)} className="flex-1">ត្រឡប់ក្រោយ</Button>
+            <Button onClick={handleNext} className="flex-1">បន្ត</Button>
           </div>
         </Card>
       )}
@@ -338,19 +338,19 @@ export default function LoanRequestPage() {
               <CheckCircle className="w-6 h-6 text-green-700" />
             </div>
             <div>
-              <h2 className="font-semibold text-gray-900">Review & Submit</h2>
-              <p className="text-gray-500 text-sm">Please review your application before submitting</p>
+              <h2 className="font-semibold text-gray-900">ត្រួតពិនិត្យ និង ដាក់ស្នើ</h2>
+              <p className="text-gray-500 text-sm">សូមត្រួតពិនិត្យពាក្យសុំរបស់អ្នកមុនពេលដាក់ស្នើ</p>
             </div>
           </div>
 
           <div className="space-y-3 mb-6">
             {[
-              { label: 'Loan Amount', value: `฿${loanAmount.toLocaleString()}` },
-              { label: 'Purpose', value: formData.purpose },
-              { label: 'Term', value: `${formData.term_months} months` },
-              { label: 'Interest Rate', value: '2% per month' },
-              { label: 'Supporting Document', value: formData.support_document?.name || 'None uploaded' },
-              { label: 'Referee Email', value: formData.referee_email },
+              { label: 'ចំនួនទឹកប្រាក់ឥណទាន', value: `฿${loanAmount.toLocaleString()}` },
+              { label: 'គោលបំណង', value: formData.purpose },
+              { label: 'រយៈពេល', value: `${formData.term_months} ខែ` },
+              { label: 'អត្រាការប្រាក់', value: '២% ក្នុងមួយខែ' },
+              { label: 'ឯកសារគាំទ្រ', value: formData.support_document?.name || 'មិនបានផ្ទុក' },
+              { label: 'អ៊ីមែលអ្នកធានា', value: formData.referee_email },
             ].map((item) => (
               <div key={item.label} className="flex items-start justify-between py-2.5 border-b border-gray-100">
                 <span className="text-gray-500 text-sm">{item.label}</span>
@@ -360,15 +360,15 @@ export default function LoanRequestPage() {
           </div>
 
           <div className="bg-blue-50 rounded-xl p-4 mb-5">
-            <p className="text-blue-900 text-sm font-semibold mb-2">What happens next?</p>
+            <p className="text-blue-900 text-sm font-semibold mb-2">តើនឹងមានអ្វីកើតឡើងបន្ទាប់?</p>
             <div className="space-y-2">
               {[
-                'Referee receives verification email',
-                'Referee approves your application',
-                'Committee reviews within 1-3 business days',
-                'You receive approval notification',
-                'Submit hard copy documents with thumbprints to office',
-                'Loan is disbursed to your account',
+                'អ្នកធានាទទួលបានអ៊ីមែលផ្ទៀងផ្ទាត់',
+                'អ្នកធានាអនុម័តពាក្យសុំរបស់អ្នក',
+                'គណៈកម្មាធិការត្រួតពិនិត្យក្នុងរយៈពេល ១-៣ ថ្ងៃធ្វើការ',
+                'អ្នកទទួលបានការជូនដំណឹងពីការអនុម័ត',
+                'ដាក់ស្នើឯកសារច្បាប់ដើមជាមួយការផ្តិតមេដៃទៅការិយាល័យ',
+                'ឥណទានត្រូវបានបើកទៅគណនីរបស់អ្នក',
               ].map((item, i) => (
                 <div key={i} className="flex items-start gap-2 text-sm">
                   <span className="w-5 h-5 bg-blue-900 text-white rounded-full flex items-center justify-center text-xs flex-shrink-0 mt-0.5">{i + 1}</span>
@@ -379,9 +379,9 @@ export default function LoanRequestPage() {
           </div>
 
           <div className="flex gap-3">
-            <Button variant="outline" onClick={() => setStep(3)} className="flex-1" disabled={loading}>Back</Button>
+            <Button variant="outline" onClick={() => setStep(3)} className="flex-1" disabled={loading}>ត្រឡប់ក្រោយ</Button>
             <Button onClick={handleSubmit} loading={loading} className="flex-1">
-              Submit Application
+              ដាក់ស្នើពាក្យសុំ
             </Button>
           </div>
         </Card>
@@ -394,20 +394,20 @@ export default function LoanRequestPage() {
             <div className="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-5">
               <CheckCircle className="w-10 h-10 text-green-500" />
             </div>
-            <h2 className="text-2xl font-bold text-gray-900 mb-2">Application Submitted!</h2>
+            <h2 className="text-2xl font-bold text-gray-900 mb-2">ពាក្យសុំត្រូវបានដាក់ស្នើ!</h2>
             <p className="text-gray-600 mb-2">
-              Your loan application for <strong>฿{loanAmount.toLocaleString()}</strong> has been submitted.
+              ពាក្យសុំឥណទានរបស់អ្នកសម្រាប់ <strong>฿{loanAmount.toLocaleString()}</strong> ត្រូវបានដាក់ស្នើ។
             </p>
             <p className="text-gray-500 text-sm mb-6">
-              Your referee will receive a verification email. Once verified, the committee will review
-              your application within 1-3 business days.
+              អ្នកធានារបស់អ្នកនឹងទទួលបានអ៊ីមែលផ្ទៀងផ្ទាត់។ បន្ទាប់ពីបានផ្ទៀងផ្ទាត់ គណៈកម្មាធិការនឹង
+              ត្រួតពិនិត្យពាក្យសុំរបស់អ្នកក្នុងរយៈពេល ១-៣ ថ្ងៃធ្វើការ។
             </p>
 
             <div className="bg-yellow-50 border border-yellow-200 rounded-xl p-4 mb-6 text-left">
-              <p className="text-yellow-900 font-semibold text-sm mb-2">Important Reminder</p>
+              <p className="text-yellow-900 font-semibold text-sm mb-2">ការរំលឹកសំខាន់</p>
               <p className="text-yellow-700 text-sm">
-                Upon loan approval, you must submit hard copy documents with thumbprints to the
-                SanSam office. The loan will not be disbursed until hard copy documents are received.
+                នៅពេលអនុម័តឥណទាន អ្នកត្រូវដាក់ស្នើឯកសារច្បាប់ដើមជាមួយការផ្តិតមេដៃទៅ
+                ការិយាល័យសន្សំ។ ឥណទាននឹងមិនត្រូវបានបើកទេរហូតដល់ឯកសារច្បាប់ដើមត្រូវបានទទួល។
               </p>
             </div>
 
@@ -416,13 +416,13 @@ export default function LoanRequestPage() {
                 href="/dashboard/loans"
                 className="inline-flex items-center gap-2 bg-blue-900 text-white px-5 py-2.5 rounded-lg text-sm font-semibold hover:bg-blue-800 transition-colors"
               >
-                View My Loans
+                មើលឥណទានរបស់ខ្ញុំ
               </Link>
               <Link
                 href="/dashboard"
                 className="inline-flex items-center gap-2 border border-gray-300 text-gray-700 px-5 py-2.5 rounded-lg text-sm font-semibold hover:bg-gray-50 transition-colors"
               >
-                Dashboard
+                ផ្ទាំងគ្រប់គ្រង
               </Link>
             </div>
           </div>

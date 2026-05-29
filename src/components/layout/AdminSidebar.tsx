@@ -14,12 +14,12 @@ import {
 } from 'lucide-react'
 
 const adminNav = [
-  { label: 'Overview', href: '/admin', icon: LayoutDashboard },
-  { label: 'Members', href: '/admin/members', icon: Users },
-  { label: 'Payments', href: '/admin/payments', icon: PiggyBank },
-  { label: 'Loans', href: '/admin/loans', icon: CreditCard },
-  { label: 'Capital', href: '/admin/capital', icon: Wallet },
-  { label: 'Reports', href: '/admin/reports', icon: FileText },
+  { label: 'ទិដ្ឋភាពទូទៅ', href: '/admin', icon: LayoutDashboard },
+  { label: 'សមាជិក', href: '/admin/members', icon: Users },
+  { label: 'ការបង់ប្រាក់', href: '/admin/payments', icon: PiggyBank },
+  { label: 'ឥណទាន', href: '/admin/loans', icon: CreditCard },
+  { label: 'ដើមទុន', href: '/admin/capital', icon: Wallet },
+  { label: 'របាយការណ៍', href: '/admin/reports', icon: FileText },
 ]
 
 export function AdminSidebar({ adminName }: { adminName: string }) {
@@ -31,8 +31,8 @@ export function AdminSidebar({ adminName }: { adminName: string }) {
         <Link href="/admin" className="flex items-center gap-2 font-bold text-xl hover:text-blue-200 transition-colors">
           <Building2 className="w-7 h-7" />
           <div>
-            <p>SanSam</p>
-            <p className="text-blue-300 text-xs font-normal mt-1">Admin Console</p>
+            <p>សន្សំ</p>
+            <p className="text-blue-300 text-xs font-normal mt-1">កុងសូលអ្នកគ្រប់គ្រង</p>
           </div>
         </Link>
       </div>
@@ -63,11 +63,11 @@ export function AdminSidebar({ adminName }: { adminName: string }) {
         <div className="rounded-xl bg-blue-800 p-4">
           <div className="mb-3 flex items-center gap-2 text-blue-200">
             <BarChart3 className="w-4 h-4" />
-            <span className="text-xs font-semibold uppercase tracking-wide">Signed in as</span>
+            <span className="text-xs font-semibold uppercase tracking-wide">ចូលជា</span>
           </div>
           <p className="truncate text-sm font-semibold">{adminName}</p>
           <Link href="/dashboard" className="mt-3 inline-block text-xs font-medium text-blue-200 hover:text-white transition-colors">
-            Back to member portal
+            ត្រឡប់ទៅវិបផតថលសមាជិក
           </Link>
         </div>
       </div>

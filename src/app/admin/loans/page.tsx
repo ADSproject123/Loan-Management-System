@@ -18,15 +18,15 @@ export default async function AdminLoansPage() {
   return (
     <main className="space-y-6 p-6 md:p-8 max-w-7xl mx-auto">
       <div>
-        <p className="text-sm font-semibold uppercase tracking-wide text-blue-700">Admin</p>
-        <h2 className="text-2xl font-bold text-gray-900">Loan Review</h2>
-        <p className="text-sm text-gray-500">Approve, reject, and activate loan applications after document checks.</p>
+        <p className="text-sm font-semibold uppercase tracking-wide text-blue-700">អ្នកគ្រប់គ្រង</p>
+        <h2 className="text-2xl font-bold text-gray-900">ការត្រួតពិនិត្យឥណទាន</h2>
+        <p className="text-sm text-gray-500">អនុម័ត បដិសេធ និង ដំណើរការពាក្យសុំឥណទានបន្ទាប់ពីការត្រួតពិនិត្យឯកសារ។</p>
       </div>
 
       <div className="grid gap-4">
         {loans.length === 0 && (
           <Card>
-            <p className="text-sm text-gray-500">No loans found.</p>
+            <p className="text-sm text-gray-500">រកមិនឃើញឥណទាន។</p>
           </Card>
         )}
         {loans.map((loan) => (
@@ -40,19 +40,19 @@ export default async function AdminLoansPage() {
                 <p className="text-sm text-gray-700">{loan.purpose}</p>
                 <p className="mt-1 text-sm text-gray-500">{relatedMemberName(loan)} • {relatedMemberEmail(loan)}</p>
                 <div className="mt-4 grid gap-3 text-sm text-gray-500 sm:grid-cols-4">
-                  <p><span className="font-medium text-gray-700">Term:</span> {loan.term_months ?? 0} months</p>
-                  <p><span className="font-medium text-gray-700">Rate:</span> {loan.interest_rate ?? 0}%/mo</p>
-                  <p><span className="font-medium text-gray-700">Submitted:</span> {formatDate(loan.created_at)}</p>
-                  <p><span className="font-medium text-gray-700">Support doc:</span> {loan.support_document_url ? 'Uploaded' : 'Missing'}</p>
+                  <p><span className="font-medium text-gray-700">រយៈពេល៖</span> {loan.term_months ?? 0} ខែ</p>
+                  <p><span className="font-medium text-gray-700">អត្រា៖</span> {loan.interest_rate ?? 0}%/ខែ</p>
+                  <p><span className="font-medium text-gray-700">ដាក់ស្នើ៖</span> {formatDate(loan.created_at)}</p>
+                  <p><span className="font-medium text-gray-700">ឯកសារគាំទ្រ៖</span> {loan.support_document_url ? 'បានផ្ទុក' : 'បាត់'}</p>
                 </div>
                 <p className="mt-2 text-xs text-gray-400">
-                  Hard copy: {loan.hard_copy_submitted ? 'Received' : 'Pending'} • Thumbprint: {loan.thumbprint_submitted ? 'Received' : 'Pending'}
+                  ច្បាប់ដើម៖ {loan.hard_copy_submitted ? 'បានទទួល' : 'រង់ចាំ'} • ការផ្តិតមេដៃ៖ {loan.thumbprint_submitted ? 'បានទទួល' : 'រង់ចាំ'}
                 </p>
               </div>
               <div className="flex flex-wrap gap-2">
-                {loan.status === 'under_review' && <AdminActionButton action={approveLoan} id={loan.id}>Approve</AdminActionButton>}
-                {loan.status === 'approved' && <AdminActionButton action={activateLoan} id={loan.id}>Activate</AdminActionButton>}
-                {loan.status !== 'rejected' && loan.status !== 'completed' && <AdminActionButton action={rejectLoan} id={loan.id} danger>Reject</AdminActionButton>}
+                {loan.status === 'under_review' && <AdminActionButton action={approveLoan} id={loan.id}>អនុម័ត</AdminActionButton>}
+                {loan.status === 'approved' && <AdminActionButton action={activateLoan} id={loan.id}>ដំណើរការ</AdminActionButton>}
+                {loan.status !== 'rejected' && loan.status !== 'completed' && <AdminActionButton action={rejectLoan} id={loan.id} danger>បដិសេធ</AdminActionButton>}
               </div>
             </div>
           </Card>
