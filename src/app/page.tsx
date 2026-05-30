@@ -24,7 +24,7 @@ export default function HomePage() {
     },
     {
       icon: Users,
-      title: 'សមាជិកភាព',
+      title: 'ចូលជាសមាជិក',
       description: 'ចូលរួមជាមួយអ្នកធានាដែលបានផ្ទៀងផ្ទាត់ ដាក់ឯកសារ ហើយចូលប្រើវិបផតថលសមាជិកសន្សំបន្ទាប់ពីការអនុម័ត។',
     },
     {
@@ -114,12 +114,11 @@ export default function HomePage() {
       <section id="about-sansam" className="min-h-screen flex items-center py-16 md:py-20 bg-white border-y border-gray-100">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="max-w-2xl mb-12">
-            <p className="text-blue-700 text-sm font-bold uppercase tracking-wide mb-3">អំពីសន្សំ</p>
             <h2 className="text-3xl md:text-4xl font-extrabold tracking-tight text-gray-950">
               អ្វីៗដែលសមាជិកត្រូវយល់ដឹងមុនពេលចូលរួម។
             </h2>
             <p className="text-gray-600 mt-4 leading-7">
-              ស្វែងយល់អំពីបេសកកម្ម ជម្រើសសមាជិកភាព អត្ថប្រយោជន៍សន្សំ អត្រាការប្រាក់ឥណទាន និង
+              ស្វែងយល់អំពីបេសកកម្ម ជម្រើសចូលជាសមាជិក អត្ថប្រយោជន៍សន្សំ អត្រាការប្រាក់ឥណទាន និង
               ជម្រើសដកដើមទុនមុនបើកគណនីសមាជិករបស់អ្នក។
             </p>
           </div>
@@ -156,14 +155,14 @@ export default function HomePage() {
         </div>
       </section>
 
-      <section className="py-16 md:py-20 bg-slate-50">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <section className="min-h-screen flex items-center py-16 md:py-20 bg-slate-50">
+        <div className="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid lg:grid-cols-2 gap-8 items-stretch">
             <div className="rounded-3xl bg-white border border-gray-200 p-8 shadow-sm">
               <div className="inline-flex rounded-xl bg-blue-50 p-3 text-blue-800 mb-5">
                 <HeartHandshake className="w-7 h-7" />
               </div>
-              <h2 className="text-3xl font-extrabold tracking-tight text-gray-950 mb-4">សមាជិកភាព</h2>
+              <h2 className="text-3xl font-extrabold tracking-tight text-gray-950 mb-4">ចូលជាសមាជិក</h2>
               <p className="text-gray-600 leading-7 mb-6">
                 ក្លាយជាសមាជិកដោយដាក់ព័ត៌មានរបស់អ្នក បន្ថែមអ្នកធានាប្រសិនបើមាន
                 ហើយផ្ទុកឯកសារអត្តសញ្ញាណប័ណ្ណ និង សៀវភៅគ្រួសារសម្រាប់ការត្រួតពិនិត្យ។
@@ -171,7 +170,7 @@ export default function HomePage() {
               <div className="grid sm:grid-cols-2 gap-4 mb-7">
                 {[
                   { title: 'ក្លាយជាសមាជិក', text: 'ចុះឈ្មោះតាមអនឡាញ និង រង់ចាំការអនុម័តគណនី។' },
-                  { title: 'ដកសមាជិកភាព', text: 'ស្នើសុំដកដើមទុនក្នុងអំឡុងពេលប្រចាំឆ្នាំ។' },
+                  { title: 'ដកចូលជាសមាជិក', text: 'ស្នើសុំដកដើមទុនក្នុងអំឡុងពេលប្រចាំឆ្នាំ។' },
                 ].map((item) => (
                   <div key={item.title} className="rounded-2xl bg-blue-50 p-5">
                     <p className="font-bold text-blue-950">{item.title}</p>
@@ -209,38 +208,20 @@ export default function HomePage() {
             </div>
           </div>
         </div>
-      </section>
-
-      <section className="py-16 bg-white">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="grid md:grid-cols-4 gap-4">
-            {[             
-              { value: '฿២លាន+', label: 'ការសន្សំសរុប' },
-              { value: '៣%', label: 'ការប្រាក់សន្សំប្រចាំខែ' },
-              { value: '១-៣ ថ្ងៃ', label: 'ការត្រួតពិនិត្យអនុម័ត' },
-            ].map((stat) => (
-              <div key={stat.label} className="rounded-2xl border border-gray-200 bg-slate-50 p-6 text-center">
-                <p className="text-3xl md:text-4xl font-extrabold text-blue-900">{stat.value}</p>
-                <p className="text-gray-500 text-sm mt-2">{stat.label}</p>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      <section className="relative overflow-hidden py-20 bg-blue-950 text-white">
+      </section>     
+      <section className="relative min-h-screen flex items-center overflow-hidden py-20 bg-blue-950 text-white">
         <div
           className="absolute inset-0 bg-cover bg-center"
           style={{ backgroundImage: "url('/home-cta-finance.jpg')" }}
         />
         <div className="absolute inset-0 bg-blue-950/82" />
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(96,165,250,0.28),transparent_42%)]" />
-        <div className="relative max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+        <div className="relative w-full max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
           <h2 className="text-3xl md:text-4xl font-extrabold tracking-tight mb-4">
             ត្រៀមរួចហើយដើម្បីចូលរួមជាមួយសន្សំ?
           </h2>
           <p className="text-blue-100 leading-7 mb-8">
-            បង្កើតពាក្យសុំសមាជិកភាពរបស់អ្នក ផ្ទុកឯកសារ ហើយក្រុមការងាររបស់យើងនឹងពិនិត្យ
+            បង្កើតពាក្យសុំចូលជាសមាជិករបស់អ្នក ផ្ទុកឯកសារ ហើយក្រុមការងាររបស់យើងនឹងពិនិត្យ
             គណនីរបស់អ្នកមុនពេលអ្នកចាប់ផ្តើមសន្សំ ឬ ដាក់ពាក្យសុំឥណទាន។
           </p>
           <div className="flex justify-center gap-3 flex-wrap">
@@ -259,7 +240,7 @@ export default function HomePage() {
           <div className="flex flex-col md:flex-row justify-between items-center gap-4">
             <div className="flex items-center gap-2 font-bold text-xl">
               <Building2 className="w-6 h-6" />
-              សហករណ៍សន្សំ
+              សមាគមន៏សន្សំ
             </div>
             <div className="flex gap-6 text-sm text-blue-200">
               <Link href="/about" className="hover:text-white transition-colors">អំពីយើង</Link>

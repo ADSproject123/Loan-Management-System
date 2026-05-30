@@ -15,13 +15,12 @@ const navLinks = [
       { label: 'អត្រាការប្រាក់ឥណទាន', href: '/about#loan-rates' },
     ],
   },
-  { label: 'សមាជិកភាព', href: '/register' },
+  { label: 'ចូលជាសមាជិក', href: '/register' },
   { label: 'ចូលគណនី', href: '/login' },
 ]
 
 export function Navbar() {
   const [mobileOpen, setMobileOpen] = useState(false)
-  const [dropdownOpen, setDropdownOpen] = useState(false)
   const [scrolled, setScrolled] = useState(false)
   const pathname = usePathname()
 
@@ -55,30 +54,29 @@ export function Navbar() {
           <div className="hidden md:flex items-center gap-6">
             {navLinks.map((link) =>
               link.children ? (
-                <div key={link.label} className="relative">
+                <div key={link.label} className="group relative">
                   <button
-                    onClick={() => setDropdownOpen(!dropdownOpen)}
+                    type="button"
                     className={`flex items-center gap-1 transition-colors py-2 text-sm font-medium ${
                       solidNav ? 'hover:text-blue-200' : 'text-white hover:text-blue-100'
                     }`}
                   >
                     {link.label}
-                    <ChevronDown className={`w-4 h-4 transition-transform ${dropdownOpen ? 'rotate-180' : ''}`} />
+                    <ChevronDown className="w-4 h-4 transition-transform group-hover:rotate-180" />
                   </button>
-                  {dropdownOpen && (
-                    <div className="absolute top-full left-0 mt-1 w-56 bg-white rounded-lg shadow-xl py-1 z-50">
+                  <div className="invisible opacity-0 translate-y-1 group-hover:visible group-hover:opacity-100 group-hover:translate-y-0 transition-all duration-150 absolute top-full left-0 pt-2 w-56 z-50">
+                    <div className="bg-white rounded-lg shadow-xl py-1 ring-1 ring-black/5">
                       {link.children.map((child) => (
                         <Link
                           key={child.href}
                           href={child.href}
-                          onClick={() => setDropdownOpen(false)}
                           className="block px-4 py-2.5 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-900 transition-colors"
                         >
                           {child.label}
                         </Link>
                       ))}
                     </div>
-                  )}
+                  </div>
                 </div>
               ) : (
                 <Link
