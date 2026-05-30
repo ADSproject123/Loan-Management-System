@@ -353,7 +353,7 @@ export default function RegisterPage() {
 
               <p className="mt-8 text-center text-xs text-slate-400 sm:text-left">
                 ដោយការបន្ត អ្នកយល់ព្រមថាព័ត៌មានដែលអ្នកផ្តល់គឺត្រឹមត្រូវ និង យល់ព្រមឱ្យសន្សំ
-                ត្រួតពិនិត្យឯកសាររបស់អ្នកសម្រាប់ការអនុម័តសមាជិកភាព។
+                ត្រួតពិនិត្យឯកសាររបស់អ្នកសម្រាប់ការអនុម័តចូលជាសមាជិក។
               </p>
             </div>
           </div>
@@ -374,7 +374,7 @@ function BrandPanel({ currentStep }: { currentStep: StepId }) {
           <span className="grid h-10 w-10 place-items-center rounded-xl bg-white/10 ring-1 ring-white/15 transition group-hover:bg-white/15">
             <Building2 className="h-5 w-5 text-white" />
           </span>
-          <span className="text-lg font-bold tracking-tight">សហករណ៍សន្សំ</span>
+          <span className="text-lg font-bold tracking-tight">សមាគមន៏សន្សំ</span>
         </Link>
 
         <div className="mt-14">

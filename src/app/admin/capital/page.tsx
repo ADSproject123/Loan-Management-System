@@ -20,7 +20,7 @@ export default async function AdminCapitalPage() {
       <div>
         <p className="text-sm font-semibold uppercase tracking-wide text-blue-700">អ្នកគ្រប់គ្រង</p>
         <h2 className="text-2xl font-bold text-gray-900">ការស្នើសុំដើមទុន</h2>
-        <p className="text-sm text-gray-500">ត្រួតពិនិត្យការស្នើសុំដកដើមទុនសន្សំ និង ការដកសមាជិកភាព។</p>
+        <p className="text-sm text-gray-500">ត្រួតពិនិត្យការស្នើសុំដកដើមទុនសន្សំ និង ការដកចូលជាសមាជិក។</p>
       </div>
 
       <div className="grid gap-4">
@@ -40,7 +40,7 @@ export default async function AdminCapitalPage() {
                 <p className="text-sm text-gray-700">{request.reason}</p>
                 <p className="mt-1 text-sm text-gray-500">{relatedMemberName(request)} • {relatedMemberEmail(request)}</p>
                 <p className="mt-3 text-sm text-gray-500">
-                  បន្ទាប់ពីការដក៖ <span className="font-medium text-gray-800">{request.remove_membership ? 'ដកសមាជិកភាព' : 'បន្តសន្សំ'}</span>
+                  បន្ទាប់ពីការដក៖ <span className="font-medium text-gray-800">{request.remove_membership ? 'ដកចូលជាសមាជិក' : 'បន្តសន្សំ'}</span>
                 </p>
                 <p className="mt-1 text-xs text-gray-400">ដាក់ស្នើ {formatDate(request.created_at)}</p>
               </div>

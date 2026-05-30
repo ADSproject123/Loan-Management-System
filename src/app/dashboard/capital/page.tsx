@@ -307,10 +307,10 @@ export default function CapitalRequestPage() {
                 <div>
                   <div className="flex items-center gap-2 mb-1">
                     <XCircle className="w-4 h-4 text-red-600" />
-                    <p className="font-medium text-gray-900">ដកសមាជិកភាព</p>
+                    <p className="font-medium text-gray-900">ដកចូលជាសមាជិក</p>
                   </div>
                   <p className="text-gray-500 text-sm">
-                    ដកដើមទុន និង បញ្ចប់សមាជិកភាពសន្សំរបស់ខ្ញុំ។ សមតុល្យទាំងអស់នឹងត្រូវបានដោះស្រាយ។
+                    ដកដើមទុន និង បញ្ចប់ចូលជាសមាជិកសន្សំរបស់ខ្ញុំ។ សមតុល្យទាំងអស់នឹងត្រូវបានដោះស្រាយ។
                   </p>
                 </div>
               </button>
@@ -322,7 +322,7 @@ export default function CapitalRequestPage() {
               <div className="flex items-start gap-2">
                 <AlertTriangle className="w-4 h-4 text-red-600 flex-shrink-0 mt-0.5" />
                 <p className="text-red-700 text-sm">
-                  <strong>ការព្រមាន៖</strong> ការដកសមាជិកភាពគឺអចិន្ត្រៃយ៍។ អ្នកនឹងបាត់បង់ការចូលប្រើ
+                  <strong>ការព្រមាន៖</strong> ការដកចូលជាសមាជិកគឺអចិន្ត្រៃយ៍។ អ្នកនឹងបាត់បង់ការចូលប្រើ
                   សេវាសន្សំទាំងអស់រួមទាំងកម្មវិធីឥណទាន និង សន្សំ។ ដើម្បីចូលរួមឡើងវិញ អ្នកត្រូវ
                   ឆ្លងកាត់ដំណើរការចុះឈ្មោះពេញលេញម្តងទៀត។
                 </p>
@@ -356,7 +356,7 @@ export default function CapitalRequestPage() {
               { label: 'សមតុល្យបច្ចុប្បន្ន', value: `฿${memberSavings.totalBalance.toLocaleString()}` },
               { label: 'នៅសល់បន្ទាប់ពីដក', value: `฿${(memberSavings.totalBalance - withdrawAmount).toLocaleString()}` },
               { label: 'មូលហេតុ', value: reason },
-              { label: 'បន្ទាប់ពីការដក', value: afterDecision === 'continue' ? 'បន្តសន្សំ' : 'ដកសមាជិកភាព' },
+              { label: 'បន្ទាប់ពីការដក', value: afterDecision === 'continue' ? 'បន្តសន្សំ' : 'ដកចូលជាសមាជិក' },
             ].map((item) => (
               <div key={item.label} className="flex items-start justify-between py-2.5 border-b border-gray-100">
                 <span className="text-gray-500 text-sm">{item.label}</span>
@@ -382,9 +382,9 @@ export default function CapitalRequestPage() {
 
           {afterDecision === 'withdraw' && (
             <div className="bg-red-50 border border-red-200 rounded-lg p-4 mb-5">
-              <p className="text-red-800 text-sm font-medium mb-1">បញ្ជាក់ការបញ្ចប់សមាជិកភាព</p>
+              <p className="text-red-800 text-sm font-medium mb-1">បញ្ជាក់ការបញ្ចប់ចូលជាសមាជិក</p>
               <p className="text-red-700 text-sm">
-                ដោយដាក់ស្នើ អ្នកបញ្ជាក់ថាអ្នកចង់ដកសមាជិកភាពសន្សំរបស់អ្នកអចិន្ត្រៃយ៍
+                ដោយដាក់ស្នើ អ្នកបញ្ជាក់ថាអ្នកចង់ដកចូលជាសមាជិកសន្សំរបស់អ្នកអចិន្ត្រៃយ៍
                 បន្ទាប់ពីការដកដើមទុន។ សកម្មភាពនេះមិនអាចលុបបានទេ។
               </p>
             </div>
@@ -398,7 +398,7 @@ export default function CapitalRequestPage() {
               variant={afterDecision === 'withdraw' ? 'danger' : 'primary'}
               className="flex-1"
             >
-              {afterDecision === 'withdraw' ? 'ដាក់ស្នើ និង ដកសមាជិកភាព' : 'ដាក់ស្នើពាក្យសុំ'}
+              {afterDecision === 'withdraw' ? 'ដាក់ស្នើ និង ដកចូលជាសមាជិក' : 'ដាក់ស្នើពាក្យសុំ'}
             </Button>
           </div>
         </Card>
@@ -430,7 +430,7 @@ export default function CapitalRequestPage() {
                 <div className="flex justify-between">
                   <span className="text-blue-700">បន្ទាប់ពីការដក</span>
                   <span className={`font-medium ${afterDecision === 'withdraw' ? 'text-red-600' : 'text-blue-900'}`}>
-                    {afterDecision === 'continue' ? 'បន្តសន្សំ' : 'ដកសមាជិកភាព'}
+                    {afterDecision === 'continue' ? 'បន្តសន្សំ' : 'ដកចូលជាសមាជិក'}
                   </span>
                 </div>
                 <div className="flex justify-between">
