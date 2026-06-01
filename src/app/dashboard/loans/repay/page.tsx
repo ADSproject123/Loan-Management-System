@@ -158,7 +158,7 @@ export default function LoanRepayPage() {
                 className={`flex-1 px-3 py-2 rounded-lg text-xs font-medium transition-colors border ${
                   parseFloat(payAmount) === amt
                     ? 'bg-blue-900 text-white border-blue-900'
-                    : 'border-gray-300 text-gray-700 hover:border-blue-400 hover:text-blue-700'
+                    : 'bg-white border-gray-300 text-gray-700 hover:border-blue-400 hover:text-blue-700 hover:bg-blue-50'
                 }`}
               >
                 {i === 0 ? 'ប្រចាំខែ' : i === 1 ? 'ទ្វេដង' : 'ទាំងអស់'}
@@ -335,7 +335,7 @@ export default function LoanRepayPage() {
               </Link>
               <Link
                 href="/dashboard"
-                className="inline-flex items-center gap-2 border border-gray-300 text-gray-700 px-5 py-2.5 rounded-lg text-sm font-semibold hover:bg-gray-50 transition-colors"
+                className="inline-flex items-center gap-2 bg-white border border-gray-300 text-gray-700 px-5 py-2.5 rounded-lg text-sm font-semibold hover:bg-gray-50 transition-colors"
               >
                 ផ្ទាំងគ្រប់គ្រង
               </Link>

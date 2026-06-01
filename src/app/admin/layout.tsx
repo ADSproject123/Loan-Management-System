@@ -21,7 +21,10 @@ export default async function AdminLayout({
             </div>
             <div className="flex items-center gap-4 text-sm">
               <span className="hidden text-gray-500 sm:inline">{admin.full_name}</span>
-              <Link href="/dashboard" className="font-medium text-blue-700 hover:text-blue-900">
+              <Link
+                href="/dashboard"
+                className="rounded-lg bg-blue-50 px-3 py-1.5 font-medium text-blue-700 transition hover:bg-blue-100 hover:text-blue-900"
+              >
                 វិបផតថលសមាជិក
               </Link>
             </div>

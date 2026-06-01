@@ -30,7 +30,7 @@ export function AdminActionButton({
     <form action={submit}>
       <input type="hidden" name="id" value={id} />
       {decision && <input type="hidden" name="decision" value={decision} />}
-      <button type="submit" className={`rounded-lg px-3 py-1.5 text-xs font-semibold transition-colors ${classes}`}>
+      <button type="submit" className={`rounded-none px-3 py-1.5 text-xs font-semibold transition-colors ${classes}`}>
         {children}
       </button>
     </form>

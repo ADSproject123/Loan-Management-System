@@ -1,7 +1,8 @@
 import 'server-only'
 
 import { randomUUID } from 'crypto'
-import { createAdminClient } from '@/lib/supabase/admin'
+import { PutObjectCommand } from '@aws-sdk/client-s3'
+import { getR2BucketName, getR2Client, getR2SignedDownloadUrl } from '@/lib/r2'
 
 export type UploadBucket = 'member-documents' | 'payment-evidence' | 'loan-documents'
 
@@ -14,6 +15,10 @@ function extensionFor(file: File) {
   return 'bin'
 }
 
+function objectKey(bucket: UploadBucket, authUserId: string, folder: string, file: File) {
+  return `${bucket}/${authUserId}/${folder}/${randomUUID()}.${extensionFor(file)}`
+}
+
 export async function uploadPrivateFile(
   bucket: UploadBucket,
   authUserId: string,
@@ -22,17 +27,22 @@ export async function uploadPrivateFile(
 ) {
   if (!file || file.size === 0) return null
 
-  const admin = createAdminClient()
-  const path = `${authUserId}/${folder}/${randomUUID()}.${extensionFor(file)}`
+  const key = objectKey(bucket, authUserId, folder, file)
+  const body = Buffer.from(await file.arrayBuffer())
 
-  const { error } = await admin.storage
-    .from(bucket)
-    .upload(path, file, {
-      contentType: file.type || 'application/octet-stream',
-      upsert: false,
+  await getR2Client().send(
+    new PutObjectCommand({
+      Bucket: getR2BucketName(),
+      Key: key,
+      Body: body,
+      ContentType: file.type || 'application/octet-stream',
     })
+  )
 
-  if (error) throw error
+  return key
+}
 
-  return path
+export async function getPrivateFileUrl(key: string | null | undefined, expiresInSeconds = 3600) {
+  if (!key) return null
+  return getR2SignedDownloadUrl(key, expiresInSeconds)
 }

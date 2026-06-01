@@ -53,7 +53,7 @@ export default async function LoansPage() {
         <div className="flex gap-3">
           <Link
             href="/dashboard/loans/report"
-            className="inline-flex items-center gap-2 border border-gray-300 text-gray-700 px-4 py-2 rounded-lg text-sm font-medium hover:bg-gray-50 transition-colors"
+            className="inline-flex items-center gap-2 bg-white border border-gray-300 text-gray-700 px-4 py-2 rounded-lg text-sm font-medium hover:bg-gray-50 transition-colors"
           >
             <FileText className="w-4 h-4" />
             របាយការណ៍
@@ -101,7 +101,7 @@ export default async function LoansPage() {
             </Link>
             <Link
               href="/dashboard/loans/report"
-              className="inline-flex items-center gap-2 border border-white/40 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-white/10 transition-colors"
+              className="inline-flex items-center gap-2 rounded-lg border border-white/40 bg-white/15 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-white/25"
             >
               មើលរបាយការណ៍
             </Link>

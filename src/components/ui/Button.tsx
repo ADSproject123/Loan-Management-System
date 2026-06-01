@@ -23,8 +23,8 @@ export function Button({
   const variantClasses = {
     primary: 'bg-blue-900 text-white hover:bg-blue-800 focus:ring-blue-500 active:bg-blue-950',
     secondary: 'bg-blue-100 text-blue-900 hover:bg-blue-200 focus:ring-blue-500',
-    outline: 'border-2 border-blue-900 text-blue-900 hover:bg-blue-50 focus:ring-blue-500',
-    ghost: 'text-blue-900 hover:bg-blue-50 focus:ring-blue-500',
+    outline: 'bg-white border-2 border-blue-900 text-blue-900 hover:bg-blue-50 focus:ring-blue-500',
+    ghost: 'bg-slate-100 text-blue-900 hover:bg-blue-50 focus:ring-blue-500',
     danger: 'bg-red-600 text-white hover:bg-red-700 focus:ring-red-500',
   }
 

@@ -183,7 +183,7 @@ export default function LoanRequestPage() {
                     className={`py-2 rounded-lg text-sm font-medium transition-colors border ${
                       formData.term_months === months
                         ? 'bg-blue-900 text-white border-blue-900'
-                        : 'border-gray-300 text-gray-700 hover:border-blue-400 hover:text-blue-700'
+                        : 'bg-white border-gray-300 text-gray-700 hover:border-blue-400 hover:text-blue-700 hover:bg-blue-50'
                     }`}
                   >
                     {months} ខែ
@@ -273,7 +273,7 @@ export default function LoanRequestPage() {
           <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 mb-5">
             <p className="text-yellow-800 text-sm">
               <strong>ចំណាំ៖</strong> ឯកសារច្បាប់ដើមជាមួយការផ្តិតមេដៃត្រូវដាក់ស្នើទៅការិយាល័យសន្សំ
-              បន្ទាប់ពីឥណទានរបស់អ្នកត្រូវបានអនុម័ត។ នេះតម្រូវឱ្យធ្វើមុនការបើកប្រាក់ឥណទាន។
+              បន្ទាប់ពីឥណទានរបស់អ្នកត្រូវបានទទួលយក។ នេះតម្រូវឱ្យធ្វើមុនការបើកប្រាក់ឥណទាន។
             </p>
           </div>
 
@@ -301,7 +301,7 @@ export default function LoanRequestPage() {
             <p className="text-blue-900 text-sm font-medium mb-1">ហេតុអ្វីត្រូវការអ្នកធានា?</p>
             <p className="text-blue-700 text-sm">
               អ្នកធានាគឺជាសមាជិកសន្សំដែលជឿទុកចិត្តបានដែលធានាជូនពាក្យសុំឥណទានរបស់អ្នក។
-              ពួកគេនឹងទទួលបានសំណើផ្ទៀងផ្ទាត់តាមអ៊ីមែល និង ត្រូវអនុម័តមុនពេលពាក្យសុំ
+              ពួកគេនឹងទទួលបានសំណើផ្ទៀងផ្ទាត់តាមអ៊ីមែល និង ត្រូវទទួលយកមុនពេលពាក្យសុំ
               របស់អ្នកបន្តទៅការត្រួតពិនិត្យដោយគណៈកម្មាធិការ។
             </p>
           </div>
@@ -364,9 +364,9 @@ export default function LoanRequestPage() {
             <div className="space-y-2">
               {[
                 'អ្នកធានាទទួលបានអ៊ីមែលផ្ទៀងផ្ទាត់',
-                'អ្នកធានាអនុម័តពាក្យសុំរបស់អ្នក',
-                'គណៈកម្មាធិការត្រួតពិនិត្យក្នុងរយៈពេល ១-៣ ថ្ងៃធ្វើការ',
-                'អ្នកទទួលបានការជូនដំណឹងពីការអនុម័ត',
+                'អ្នកធានាទទួលយកពាក្យសុំរបស់អ្នក',
+                'គណៈកម្មាធិការត្រួតពិនិត្យក្នុងរយៈពេល ១-៣ ថ្ងៃ',
+                'អ្នកទទួលបានការជូនដំណឹងពីការទទួលយក',
                 'ដាក់ស្នើឯកសារច្បាប់ដើមជាមួយការផ្តិតមេដៃទៅការិយាល័យ',
                 'ឥណទានត្រូវបានបើកទៅគណនីរបស់អ្នក',
               ].map((item, i) => (
@@ -400,13 +400,13 @@ export default function LoanRequestPage() {
             </p>
             <p className="text-gray-500 text-sm mb-6">
               អ្នកធានារបស់អ្នកនឹងទទួលបានអ៊ីមែលផ្ទៀងផ្ទាត់។ បន្ទាប់ពីបានផ្ទៀងផ្ទាត់ គណៈកម្មាធិការនឹង
-              ត្រួតពិនិត្យពាក្យសុំរបស់អ្នកក្នុងរយៈពេល ១-៣ ថ្ងៃធ្វើការ។
+              ត្រួតពិនិត្យពាក្យសុំរបស់អ្នកក្នុងរយៈពេល ១-៣ ថ្ងៃ។
             </p>
 
             <div className="bg-yellow-50 border border-yellow-200 rounded-xl p-4 mb-6 text-left">
               <p className="text-yellow-900 font-semibold text-sm mb-2">ការរំលឹកសំខាន់</p>
               <p className="text-yellow-700 text-sm">
-                នៅពេលអនុម័តឥណទាន អ្នកត្រូវដាក់ស្នើឯកសារច្បាប់ដើមជាមួយការផ្តិតមេដៃទៅ
+                នៅពេលទទួលយកឥណទាន អ្នកត្រូវដាក់ស្នើឯកសារច្បាប់ដើមជាមួយការផ្តិតមេដៃទៅ
                 ការិយាល័យសន្សំ។ ឥណទាននឹងមិនត្រូវបានបើកទេរហូតដល់ឯកសារច្បាប់ដើមត្រូវបានទទួល។
               </p>
             </div>
@@ -420,7 +420,7 @@ export default function LoanRequestPage() {
               </Link>
               <Link
                 href="/dashboard"
-                className="inline-flex items-center gap-2 border border-gray-300 text-gray-700 px-5 py-2.5 rounded-lg text-sm font-semibold hover:bg-gray-50 transition-colors"
+                className="inline-flex items-center gap-2 bg-white border border-gray-300 text-gray-700 px-5 py-2.5 rounded-lg text-sm font-semibold hover:bg-gray-50 transition-colors"
               >
                 ផ្ទាំងគ្រប់គ្រង
               </Link>

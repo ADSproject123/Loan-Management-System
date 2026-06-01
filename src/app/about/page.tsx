@@ -120,7 +120,7 @@ function StatsStrip() {
     { value: '៥០០+', label: 'សមាជិកសកម្ម' },
     { value: '៣%', label: 'ការប្រាក់សន្សំប្រចាំខែ' },
     { value: '១-២%', label: 'អត្រាការប្រាក់ឥណទាន' },
-    { value: '១-៣ ថ្ងៃ', label: 'ការអនុម័តពាក្យសុំ' },
+    { value: '១-៣ ថ្ងៃ', label: 'ការទទួលយកពាក្យសុំ' },
   ]
   return (
     <section className="relative -mt-12 z-10">
@@ -162,10 +162,10 @@ function TabNav({
               <button
                 key={tab.id}
                 onClick={() => onChange(tab.id)}
-                className={`relative flex items-center gap-2 px-5 py-4 text-sm font-medium whitespace-nowrap transition-colors ${
+                className={`relative flex items-center gap-2 rounded-lg px-5 py-4 text-sm font-medium whitespace-nowrap transition-colors ${
                   active
-                    ? 'text-blue-900'
-                    : 'text-gray-500 hover:text-gray-700'
+                    ? 'bg-blue-50 text-blue-900'
+                    : 'bg-gray-50 text-gray-500 hover:bg-gray-100 hover:text-gray-700'
                 }`}
               >
                 <Icon className="w-4 h-4" />
@@ -560,7 +560,7 @@ function LoansSection() {
             <div className="absolute -top-5 -right-5 hidden md:block rounded-2xl bg-white p-4 shadow-xl shadow-blue-900/10 ring-1 ring-slate-200/60">
               <div className="flex items-center gap-2 text-emerald-700">
                 <CheckCircle className="h-4 w-4" />
-                <span className="text-xs font-bold uppercase tracking-wide">អនុម័ត</span>
+                <span className="text-xs font-bold uppercase tracking-wide">ទទួលយក</span>
               </div>
               <p className="mt-2 text-2xl font-extrabold text-gray-950">១-៣ ថ្ងៃ</p>
               <p className="text-xs text-gray-500">ដំណើរការត្រួតពិនិត្យ</p>
@@ -575,7 +575,7 @@ function LoansSection() {
             </h2>
             <p className="text-gray-600 leading-8 mt-5 text-lg">
               ទទួលបានឥណទានដែលរចនាឡើងសម្រាប់សេចក្តីត្រូវការសមាជិក។ អត្រាការប្រាក់ប្រកួតប្រជែង
-              ដំណើរការត្រង់ និង ការអនុម័តលឿន។
+              ដំណើរការត្រង់ និង ការទទួលយកលឿន។
             </p>
           </div>
         </div>
@@ -639,10 +639,10 @@ function LoansSection() {
           {[
             { step: '១', title: 'ដាក់ពាក្យសុំឥណទាន', description: 'បំពេញពាក្យសុំជាមួយចំនួន គោលបំណង និង រយៈពេល។' },
             { step: '២', title: 'ផ្ទុកឯកសារគាំទ្រ', description: 'ផ្តល់ឯកសារដែលត្រូវការដើម្បីគាំទ្រពាក្យសុំ។' },
-            { step: '៣', title: 'ការផ្ទៀងផ្ទាត់អ្នកធានា', description: 'អ្នកធានាដែលអ្នកកំណត់ត្រូវផ្ទៀងផ្ទាត់ និង អនុម័ត។' },
+            { step: '៣', title: 'ការផ្ទៀងផ្ទាត់អ្នកធានា', description: 'អ្នកធានាដែលអ្នកកំណត់ត្រូវផ្ទៀងផ្ទាត់ និង ទទួលយក។' },
             { step: '៤', title: 'ការត្រួតពិនិត្យ', description: 'គណៈកម្មាធិការសន្សំត្រួតពិនិត្យក្នុងរយៈពេល ១-៣ ថ្ងៃ។' },
             { step: '៥', title: 'ដាក់ឯកសារច្បាប់ដើម', description: 'ប្រគល់ឯកសារច្បាប់ដើមជាមួយការផ្តិតមេដៃទៅសហករណ៍។' },
-            { step: '៦', title: 'បើកប្រាក់ឥណទាន', description: 'ចំនួនឥណទានដែលអនុម័តត្រូវផ្ទេរទៅគណនីរបស់អ្នក។' },
+            { step: '៦', title: 'បើកប្រាក់ឥណទាន', description: 'ចំនួនឥណទានដែលទទួលយកត្រូវផ្ទេរទៅគណនីរបស់អ្នក។' },
           ].map((s) => (
             <div key={s.step} className="flex gap-5 rounded-2xl bg-white ring-1 ring-slate-200 p-5 hover:shadow-md transition-shadow">
               <div className="shrink-0">
@@ -739,7 +739,7 @@ function MembershipSection() {
             {
               step: 'ខ',
               title: 'ដាក់ពាក្យដោយផ្ទាល់',
-              desc: 'ដាក់ពាក្យសុំសមាជិក ផ្ទុកអត្តសញ្ញាណប័ណ្ណ និង សៀវភៅគ្រួសារ និង រង់ចាំការអនុម័ត។',
+              desc: 'ដាក់ពាក្យសុំសមាជិក ផ្ទុកអត្តសញ្ញាណប័ណ្ណ និង សៀវភៅគ្រួសារ និង រង់ចាំការទទួលយក។',
               icon: Sparkles,
               tone: 'bg-white ring-1 ring-slate-200',
               accent: 'text-gray-600',
@@ -795,7 +795,7 @@ function MembershipSection() {
                 {[
                   'ដាក់ពាក្យសុំដើមទុនតាមរយៈវិបផតថលសមាជិក',
                   'បំពេញបែបបទដកជាមួយចំនួនទឹកប្រាក់',
-                  'ទទួលការជូនដំណឹងពីការអនុម័ត (ថ្ងៃ ២០-២៥ មករា)',
+                  'ទទួលការជូនដំណឹងពីការទទួលយក (ថ្ងៃ ២០-២៥ មករា)',
                   'ជ្រើសរើសបន្តសន្សំ ឬ បញ្ចប់ចូលជាសមាជិក',
                 ].map((step, i) => (
                   <li key={step} className="flex items-start gap-3">

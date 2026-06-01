@@ -440,7 +440,7 @@ function BrandPanel({ currentStep }: { currentStep: StepId }) {
             </div>
             <p className="mt-2 text-xs leading-5 text-blue-200/85">
               ឯកសារត្រូវបានរក្សាទុកដោយឯកជន និង ត្រួតពិនិត្យតែដោយអ្នកគ្រប់គ្រងសន្សំដែលបានអនុម័ត។
-              ការអនុម័តជាធម្មតាចំណាយពេល ១-៣ ថ្ងៃធ្វើការ។
+              ការអនុម័តជាធម្មតាចំណាយពេល ១-៣ ថ្ងៃ។
             </p>
           </div>
         </div>
@@ -774,7 +774,7 @@ function StepDocuments({ formData, updateField }: StepProps) {
             'រូបថតត្រូវច្បាស់ មានពន្លឺល្អ និង អានបាន',
             'ឯកសារត្រូវមានសុពលភាព និង មិនផុតកំណត់',
             'ទម្រង់ទទួលយក៖ JPG, PNG ឬ PDF (អតិបរមា ១០ មេកាបៃក្នុងមួយឯកសារ)',
-            'ការអនុម័តជាធម្មតាចំណាយពេល ១-៣ ថ្ងៃធ្វើការ',
+            'ការអនុម័តជាធម្មតាចំណាយពេល ១-៣ ថ្ងៃ',
           ].map((item) => (
             <li key={item} className="flex items-start gap-2">
               <span className="mt-2 inline-block h-1.5 w-1.5 shrink-0 rounded-full bg-amber-500" />
@@ -849,7 +849,7 @@ function StepSuccess() {
       <h2 className="mt-6 text-2xl font-bold text-slate-950">អរគុណ — យើងបានទទួលពាក្យសុំរបស់អ្នក</h2>
       <p className="mx-auto mt-3 max-w-md text-[15px] leading-7 text-slate-600">
         ក្រុមការងាររបស់យើងនឹងពិនិត្យឯកសាររបស់អ្នកក្នុងរយៈពេល{' '}
-        <strong className="text-slate-900">១-៣ ថ្ងៃធ្វើការ</strong>។ អ្នកនឹងទទួលបាន
+        <strong className="text-slate-900">១-៣ ថ្ងៃ</strong>។ អ្នកនឹងទទួលបាន
         ការជូនដំណឹងភ្លាមៗនៅពេលគណនីរបស់អ្នកត្រូវបានអនុម័ត។
       </p>
 

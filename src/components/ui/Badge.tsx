@@ -40,7 +40,7 @@ export function LoanStatusBadge({ status }: { status: LoanStatus }) {
   const config: Record<LoanStatus, { label: string; variant: BadgeVariant }> = {
     pending: { label: 'រង់ចាំ', variant: 'warning' },
     under_review: { label: 'កំពុងពិនិត្យ', variant: 'info' },
-    approved: { label: 'បានអនុម័ត', variant: 'success' },
+    approved: { label: 'បានទទួលយក', variant: 'success' },
     active: { label: 'សកម្ម', variant: 'success' },
     completed: { label: 'បានបញ្ចប់', variant: 'default' },
     rejected: { label: 'បានបដិសេធ', variant: 'error' },
@@ -62,7 +62,7 @@ export function SavingStatusBadge({ status }: { status: SavingStatus }) {
 export function CapitalRequestStatusBadge({ status }: { status: CapitalRequestStatus }) {
   const config: Record<CapitalRequestStatus, { label: string; variant: BadgeVariant }> = {
     pending: { label: 'រង់ចាំ', variant: 'warning' },
-    approved: { label: 'បានអនុម័ត', variant: 'success' },
+    approved: { label: 'បានទទួលយក', variant: 'success' },
     rejected: { label: 'បានបដិសេធ', variant: 'error' },
   }
   const { label, variant } = config[status]

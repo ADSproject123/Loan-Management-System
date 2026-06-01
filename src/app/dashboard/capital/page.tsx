@@ -200,7 +200,7 @@ export default function CapitalRequestPage() {
                 className={`flex-1 px-2 py-2 rounded-lg text-xs font-medium transition-colors border ${
                   parseFloat(amount) === amt
                     ? 'bg-blue-900 text-white border-blue-900'
-                    : 'border-gray-300 text-gray-700 hover:border-blue-400 hover:text-blue-700'
+                    : 'bg-white border-gray-300 text-gray-700 hover:border-blue-400 hover:text-blue-700 hover:bg-blue-50'
                 }`}
               >
                 {i === 3 ? 'ទាំងអស់' : ''}
@@ -230,7 +230,7 @@ export default function CapitalRequestPage() {
           <div className="bg-blue-50 rounded-lg p-3 mb-5 flex items-start gap-2">
             <Info className="w-4 h-4 text-blue-600 flex-shrink-0 mt-0.5" />
             <p className="text-blue-700 text-xs">
-              ការដកគឺត្រូវការការអនុម័ត។ ចំនួនទឹកប្រាក់ដែលបានអនុម័តត្រូវបានដំណើរការក្នុងអំឡុង ២០-២៥ មករា។
+              ការដកគឺត្រូវការការទទួលយក។ ចំនួនទឹកប្រាក់ដែលបានទទួលយកត្រូវបានដំណើរការក្នុងអំឡុង ២០-២៥ មករា។
             </p>
           </div>
 
@@ -272,7 +272,7 @@ export default function CapitalRequestPage() {
                 className={`w-full flex items-start gap-3 p-4 rounded-xl border-2 text-left transition-colors ${
                   afterDecision === 'continue'
                     ? 'border-blue-900 bg-blue-50'
-                    : 'border-gray-200 hover:border-gray-300'
+                    : 'border-gray-200 bg-white hover:border-gray-300 hover:bg-gray-50'
                 }`}
               >
                 <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center flex-shrink-0 mt-0.5 ${
@@ -296,7 +296,7 @@ export default function CapitalRequestPage() {
                 className={`w-full flex items-start gap-3 p-4 rounded-xl border-2 text-left transition-colors ${
                   afterDecision === 'withdraw'
                     ? 'border-red-500 bg-red-50'
-                    : 'border-gray-200 hover:border-gray-300'
+                    : 'border-gray-200 bg-white hover:border-gray-300 hover:bg-gray-50'
                 }`}
               >
                 <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center flex-shrink-0 mt-0.5 ${
@@ -375,7 +375,7 @@ export default function CapitalRequestPage() {
               <Calendar className="w-4 h-4" />
               <p>
                 ពាក្យសុំត្រូវបានត្រួតពិនិត្យ និង ការជូនដំណឹងផ្ញើក្នុងអំឡុង <strong>ថ្ងៃ ២០-២៥ មករា</strong>។
-                ចំនួនទឹកប្រាក់ដែលអនុម័តត្រូវបានផ្ទេរនៅពេលនោះ។
+                ចំនួនទឹកប្រាក់ដែលទទួលយកត្រូវបានផ្ទេរនៅពេលនោះ។
               </p>
             </div>
           </div>
@@ -417,7 +417,7 @@ export default function CapitalRequestPage() {
             </p>
             <p className="text-gray-500 text-sm mb-6">
               អ្នកនឹងទទួលបានការជូនដំណឹងជាមួយការសម្រេចចិត្តក្នុងអំឡុង{' '}
-              <strong>ថ្ងៃ ២០-២៥ មករា</strong>។ ចំនួនទឹកប្រាក់ដែលអនុម័តនឹងត្រូវផ្ទេរនៅពេលនោះ។
+              <strong>ថ្ងៃ ២០-២៥ មករា</strong>។ ចំនួនទឹកប្រាក់ដែលទទួលយកនឹងត្រូវផ្ទេរនៅពេលនោះ។
             </p>
 
             <div className="bg-blue-50 rounded-xl p-5 mb-6 text-left">

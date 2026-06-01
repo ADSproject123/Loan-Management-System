@@ -31,7 +31,7 @@ const STATUS_LABELS: Record<string, string> = {
   verified: 'បានផ្ទៀងផ្ទាត់',
   completed: 'បានបញ្ចប់',
   active: 'សកម្ម',
-  approved: 'បានអនុម័ត',
+  approved: 'បានទទួលយក',
   rejected: 'បានបដិសេធ',
   suspended: 'ផ្អាក',
   withdrawn: 'បានដក',
@@ -301,7 +301,7 @@ export default async function DashboardPage() {
           <div>
             <div className="flex items-center justify-between mb-4">
               <h2 className="text-lg font-semibold text-gray-900">ការជូនដំណឹង</h2>
-              <button className="text-blue-700 text-sm hover:text-blue-900 transition-colors">
+              <button className="rounded-lg bg-blue-50 px-3 py-1.5 text-sm font-medium text-blue-700 transition hover:bg-blue-100 hover:text-blue-900">
                 សម្គាល់ថាអានទាំងអស់
               </button>
             </div>

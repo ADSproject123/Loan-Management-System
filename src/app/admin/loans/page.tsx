@@ -20,7 +20,7 @@ export default async function AdminLoansPage() {
       <div>
         <p className="text-sm font-semibold uppercase tracking-wide text-blue-700">អ្នកគ្រប់គ្រង</p>
         <h2 className="text-2xl font-bold text-gray-900">ការត្រួតពិនិត្យឥណទាន</h2>
-        <p className="text-sm text-gray-500">អនុម័ត បដិសេធ និង ដំណើរការពាក្យសុំឥណទានបន្ទាប់ពីការត្រួតពិនិត្យឯកសារ។</p>
+        <p className="text-sm text-gray-500">ទទួលយក បដិសេធ និង ដំណើរការពាក្យសុំឥណទានបន្ទាប់ពីការត្រួតពិនិត្យឯកសារ។</p>
       </div>
 
       <div className="grid gap-4">
@@ -50,7 +50,7 @@ export default async function AdminLoansPage() {
                 </p>
               </div>
               <div className="flex flex-wrap gap-2">
-                {loan.status === 'under_review' && <AdminActionButton action={approveLoan} id={loan.id}>អនុម័ត</AdminActionButton>}
+                {loan.status === 'under_review' && <AdminActionButton action={approveLoan} id={loan.id}>ទទួលយក</AdminActionButton>}
                 {loan.status === 'approved' && <AdminActionButton action={activateLoan} id={loan.id}>ដំណើរការ</AdminActionButton>}
                 {loan.status !== 'rejected' && loan.status !== 'completed' && <AdminActionButton action={rejectLoan} id={loan.id} danger>បដិសេធ</AdminActionButton>}
               </div>

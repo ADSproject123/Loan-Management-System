@@ -46,7 +46,7 @@ export default async function AdminCapitalPage() {
               </div>
               {request.status === 'pending' && (
                 <div className="flex flex-wrap gap-2">
-                  <AdminActionButton action={decideCapitalRequest} id={request.id} decision="approved">អនុម័ត</AdminActionButton>
+                  <AdminActionButton action={decideCapitalRequest} id={request.id} decision="approved">ទទួលយក</AdminActionButton>
                   <AdminActionButton action={decideCapitalRequest} id={request.id} decision="rejected" danger>បដិសេធ</AdminActionButton>
                 </div>
               )}

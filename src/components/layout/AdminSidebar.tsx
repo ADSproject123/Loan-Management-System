@@ -49,7 +49,7 @@ export function AdminSidebar({ adminName }: { adminName: string }) {
               className={`flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors ${
                 active
                   ? 'bg-white text-blue-900'
-                  : 'text-blue-100 hover:bg-blue-800 hover:text-white'
+                  : 'bg-blue-900/50 text-blue-100 hover:bg-blue-800 hover:text-white'
               }`}
             >
               <Icon className="w-5 h-5 flex-shrink-0" />
@@ -66,7 +66,10 @@ export function AdminSidebar({ adminName }: { adminName: string }) {
             <span className="text-xs font-semibold uppercase tracking-wide">ចូលជា</span>
           </div>
           <p className="truncate text-sm font-semibold">{adminName}</p>
-          <Link href="/dashboard" className="mt-3 inline-block text-xs font-medium text-blue-200 hover:text-white transition-colors">
+          <Link
+            href="/dashboard"
+            className="mt-3 inline-flex rounded-lg bg-blue-900/60 px-2.5 py-1.5 text-xs font-medium text-blue-100 transition-colors hover:bg-blue-950 hover:text-white"
+          >
             ត្រឡប់ទៅវិបផតថលសមាជិក
           </Link>
         </div>
