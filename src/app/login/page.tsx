@@ -152,7 +152,7 @@ export default function LoginPage() {
                           type="button"
                           aria-label={showPassword ? 'លាក់ពាក្យសម្ងាត់' : 'បង្ហាញពាក្យសម្ងាត់'}
                           onClick={() => setShowPassword(!showPassword)}
-                          className="rounded-lg p-2 text-slate-400 transition hover:bg-slate-100 hover:text-slate-600"
+                          className="rounded-lg bg-slate-100 p-2 text-slate-400 transition hover:bg-slate-200 hover:text-slate-600"
                         >
                           {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                         </button>

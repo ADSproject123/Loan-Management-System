@@ -109,7 +109,7 @@ export function Sidebar({ memberName = 'សមាជិក', isAdmin = false }: 
                 <button
                   onClick={() => toggleExpand(item.label)}
                   className={`w-full flex items-center justify-between px-3 py-2.5 rounded-lg text-sm font-medium transition-colors ${
-                    isActive ? 'bg-blue-800 text-white' : 'text-blue-100 hover:bg-blue-800 hover:text-white'
+                    isActive ? 'bg-blue-800 text-white' : 'bg-blue-900/50 text-blue-100 hover:bg-blue-800 hover:text-white'
                   }`}
                 >
                   <div className="flex items-center gap-3">
@@ -131,7 +131,7 @@ export function Sidebar({ memberName = 'សមាជិក', isAdmin = false }: 
                         className={`block px-3 py-2 rounded-lg text-sm transition-colors ${
                           pathname === child.href
                             ? 'bg-white text-blue-900 font-medium'
-                            : 'text-blue-200 hover:bg-blue-800 hover:text-white'
+                            : 'bg-blue-900/30 text-blue-200 hover:bg-blue-800 hover:text-white'
                         }`}
                       >
                         {child.label}
@@ -148,7 +148,7 @@ export function Sidebar({ memberName = 'សមាជិក', isAdmin = false }: 
               key={item.href}
               href={item.href!}
               className={`flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors ${
-                isActive ? 'bg-white text-blue-900' : 'text-blue-100 hover:bg-blue-800 hover:text-white'
+                isActive ? 'bg-white text-blue-900' : 'bg-blue-900/50 text-blue-100 hover:bg-blue-800 hover:text-white'
               }`}
             >
               <Icon className="w-5 h-5 flex-shrink-0" />
@@ -162,7 +162,7 @@ export function Sidebar({ memberName = 'សមាជិក', isAdmin = false }: 
       <div className="p-4 border-t border-blue-800 space-y-1">
         <Link
           href="/dashboard/notifications"
-          className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-blue-100 hover:bg-blue-800 hover:text-white transition-colors"
+          className="flex items-center gap-3 rounded-lg bg-blue-900/50 px-3 py-2.5 text-sm font-medium text-blue-100 transition-colors hover:bg-blue-800 hover:text-white"
         >
           <Bell className="w-5 h-5" />
           ការជូនដំណឹង
@@ -170,7 +170,7 @@ export function Sidebar({ memberName = 'សមាជិក', isAdmin = false }: 
         <form action="/api/auth/signout" method="POST">
           <button
             type="submit"
-            className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-blue-100 hover:bg-blue-800 hover:text-white transition-colors"
+            className="w-full flex items-center gap-3 rounded-lg bg-blue-900/50 px-3 py-2.5 text-sm font-medium text-blue-100 transition-colors hover:bg-blue-800 hover:text-white"
           >
             <LogOut className="w-5 h-5" />
             ចាកចេញ

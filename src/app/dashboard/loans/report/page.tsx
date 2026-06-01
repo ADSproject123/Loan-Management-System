@@ -97,7 +97,7 @@ export default function LoanReportPage() {
                   className={`px-3 py-2 rounded-lg text-sm font-medium transition-colors border text-left ${
                     periodFrom === period.from && periodTo === period.to
                       ? 'bg-blue-900 text-white border-blue-900'
-                      : 'border-gray-300 text-gray-700 hover:border-blue-400 hover:text-blue-700 hover:bg-blue-50'
+                      : 'bg-white border-gray-300 text-gray-700 hover:border-blue-400 hover:text-blue-700 hover:bg-blue-50'
                   }`}
                 >
                   {period.label}
@@ -178,7 +178,7 @@ export default function LoanReportPage() {
             <div className="flex gap-3 justify-center">
               <button
                 onClick={() => { setSubmitted(false); setPeriodFrom(''); setPeriodTo('') }}
-                className="inline-flex items-center gap-2 border border-gray-300 text-gray-700 px-5 py-2.5 rounded-lg text-sm font-semibold hover:bg-gray-50 transition-colors"
+                className="inline-flex items-center gap-2 bg-white border border-gray-300 text-gray-700 px-5 py-2.5 rounded-lg text-sm font-semibold hover:bg-gray-50 transition-colors"
               >
                 ស្នើសុំម្តងទៀត
               </button>

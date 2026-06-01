@@ -25,7 +25,7 @@ export default function HomePage() {
     {
       icon: Users,
       title: 'ចូលជាសមាជិក',
-      description: 'ចូលរួមជាមួយអ្នកធានាដែលបានផ្ទៀងផ្ទាត់ ដាក់ឯកសារ ហើយចូលប្រើវិបផតថលសមាជិកសន្សំបន្ទាប់ពីការអនុម័ត។',
+      description: 'ចូលរួមជាមួយអ្នកធានាដែលបានផ្ទៀងផ្ទាត់ ដាក់ឯកសារ ហើយចូលប្រើវិបផតថលសមាជិកសន្សំបន្ទាប់ពីការទទួលយក។',
     },
     {
       icon: PiggyBank,
@@ -35,7 +35,7 @@ export default function HomePage() {
     {
       icon: CreditCard,
       title: 'អត្រាការប្រាក់ឥណទាន',
-      description: 'ដាក់ពាក្យសុំឥណទានជាសមាជិកដោយយុត្តិធម៌ មានអត្រាការប្រាក់តម្លាភាព ការផ្ទៀងផ្ទាត់អ្នកធានា និង ការអនុម័តពីគណៈកម្មាធិការ។',
+      description: 'ដាក់ពាក្យសុំឥណទានជាសមាជិកដោយយុត្តិធម៌ មានអត្រាការប្រាក់តម្លាភាព ការផ្ទៀងផ្ទាត់អ្នកធានា និង ការទទួលយកពីគណៈកម្មាធិការ។',
     },
   ]
 
@@ -58,7 +58,7 @@ export default function HomePage() {
               </h1>
               <p className="text-blue-100 text-lg md:text-xl leading-8 max-w-2xl mb-8">
                 សន្សំជួយសមាជិកសន្សំទៀងទាត់ ស្នើសុំឥណទានដោយតម្លាភាព និង គ្រប់គ្រងគ្រប់ជំហានតាមអនឡាញ
-                ជាមួយការផ្ទៀងផ្ទាត់ឯកសារ ភស្តុតាងបង់ប្រាក់ និង ការអនុម័តពីអ្នកគ្រប់គ្រង។
+                ជាមួយការផ្ទៀងផ្ទាត់ឯកសារ ភស្តុតាងបង់ប្រាក់ និង ការទទួលយកពីអ្នកគ្រប់គ្រង។
               </p>
               <div className="flex flex-wrap gap-3">
                 <Link
@@ -91,7 +91,7 @@ export default function HomePage() {
                 <div className="grid grid-cols-2 gap-4">
                   {[
                     { label: 'ការប្រាក់សន្សំ', value: '៣%', icon: TrendingUp },
-                    { label: 'ការអនុម័តឥណទាន', value: '១-៣ថ្ងៃ', icon: CreditCard },
+                    { label: 'ការទទួលយកឥណទាន', value: '១-៣ថ្ងៃ', icon: CreditCard },
                     { label: 'របាយការណ៍', value: 'តេឡេក្រាម', icon: CheckCircle },
                     { label: 'ការដកដើមទុន', value: '២០-២៥ មករា', icon: Wallet },
                   ].map((item) => {
@@ -169,7 +169,7 @@ export default function HomePage() {
               </p>
               <div className="grid sm:grid-cols-2 gap-4 mb-7">
                 {[
-                  { title: 'ក្លាយជាសមាជិក', text: 'ចុះឈ្មោះតាមអនឡាញ និង រង់ចាំការអនុម័តគណនី។' },
+                  { title: 'ក្លាយជាសមាជិក', text: 'ចុះឈ្មោះតាមអនឡាញ និង រង់ចាំការទទួលយកគណនី។' },
                   { title: 'ដកចូលជាសមាជិក', text: 'ស្នើសុំដកដើមទុនក្នុងអំឡុងពេលប្រចាំឆ្នាំ។' },
                 ].map((item) => (
                   <div key={item.title} className="rounded-2xl bg-blue-50 p-5">
@@ -197,7 +197,7 @@ export default function HomePage() {
                   { label: 'អត្ថប្រយោជន៍សន្សំ', value: 'ការប្រាក់ ៣% ក្នុងមួយខែ' },
                   { label: 'អត្រាការប្រាក់ឥណទាន', value: 'ចាប់ពី ១-២% ក្នុងមួយខែ' },
                   { label: 'របាយការណ៍', value: 'របាយការណ៍សន្សំ និង ឥណទាន' },
-                  { label: 'ការអនុម័ត', value: 'ដំណើរការត្រួតពិនិត្យដោយអ្នកគ្រប់គ្រង' },
+                  { label: 'ការទទួលយក', value: 'ដំណើរការត្រួតពិនិត្យដោយអ្នកគ្រប់គ្រង' },
                 ].map((item) => (
                   <div key={item.label} className="flex items-center justify-between gap-4 border-b border-white/10 py-3">
                     <span className="text-blue-200 text-sm">{item.label}</span>

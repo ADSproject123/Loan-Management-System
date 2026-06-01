@@ -138,7 +138,7 @@ export default function AddSavingPage() {
                   className={`px-4 py-1.5 rounded-lg text-sm font-medium transition-colors border ${
                     amount === amt.toString()
                       ? 'bg-blue-900 text-white border-blue-900'
-                      : 'border-gray-300 text-gray-700 hover:border-blue-400 hover:text-blue-700'
+                      : 'bg-white border-gray-300 text-gray-700 hover:border-blue-400 hover:text-blue-700 hover:bg-blue-50'
                   }`}
                 >
                   ฿{amt.toLocaleString()}
@@ -328,7 +328,7 @@ export default function AddSavingPage() {
               </Link>
               <Link
                 href="/dashboard"
-                className="flex-1 inline-flex items-center justify-center gap-2 border border-gray-300 text-gray-700 py-2.5 rounded-lg font-semibold hover:bg-gray-50 transition-colors text-sm"
+                className="flex-1 inline-flex items-center justify-center gap-2 bg-white border border-gray-300 text-gray-700 py-2.5 rounded-lg font-semibold hover:bg-gray-50 transition-colors text-sm"
               >
                 ផ្ទាំងគ្រប់គ្រង
               </Link>

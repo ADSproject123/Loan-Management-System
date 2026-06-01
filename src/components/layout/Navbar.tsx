@@ -57,8 +57,10 @@ export function Navbar() {
                 <div key={link.label} className="group relative">
                   <button
                     type="button"
-                    className={`flex items-center gap-1 transition-colors py-2 text-sm font-medium ${
-                      solidNav ? 'hover:text-blue-200' : 'text-white hover:text-blue-100'
+                    className={`flex items-center gap-1 rounded-lg px-2 py-2 text-sm font-medium transition-colors ${
+                      solidNav
+                        ? 'bg-blue-800/40 text-white hover:bg-blue-800/60 hover:text-blue-200'
+                        : 'bg-white/10 text-white hover:bg-white/20 hover:text-blue-100'
                     }`}
                   >
                     {link.label}
@@ -106,8 +108,8 @@ export function Navbar() {
 
           {/* Mobile menu button */}
           <button
-            className={`md:hidden p-2 rounded-md transition-colors ${
-              solidNav ? 'hover:bg-blue-800' : 'hover:bg-white/15'
+            className={`rounded-md p-2 transition-colors md:hidden ${
+              solidNav ? 'bg-blue-800/40 hover:bg-blue-800' : 'bg-white/10 hover:bg-white/20'
             }`}
             onClick={() => setMobileOpen(!mobileOpen)}
             aria-label="បើក/បិទម៉ឺនុយ"

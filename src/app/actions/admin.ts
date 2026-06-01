@@ -36,11 +36,13 @@ export async function approveMember(formData: FormData): Promise<ActionResult> {
       .single()
 
     if (error) throw error
-    await notify(data.id, 'គណនីត្រូវបានអនុម័ត', 'គណនីសន្សំរបស់អ្នកឥឡូវនេះកំពុងដំណើរការ។')
+    await notify(data.id, 'គណនីត្រូវបានទទួលយក', 'គណនីសន្សំរបស់អ្នកឥឡូវនេះកំពុងដំណើរការ។')
     revalidatePath('/admin')
+    revalidatePath('/admin/members')
+    revalidatePath(`/admin/members/${id}`)
     return { success: true }
   } catch (error) {
-    return { success: false, error: error instanceof Error ? error.message : 'មិនអាចអនុម័តសមាជិកបានទេ។' }
+    return { success: false, error: error instanceof Error ? error.message : 'មិនអាចទទួលយកសមាជិកបានទេ។' }
   }
 }
 
@@ -52,6 +54,8 @@ export async function suspendMember(formData: FormData): Promise<ActionResult> {
     const { error } = await admin.from('members').update({ status: 'suspended' }).eq('id', id)
     if (error) throw error
     revalidatePath('/admin')
+    revalidatePath('/admin/members')
+    revalidatePath(`/admin/members/${id}`)
     return { success: true }
   } catch (error) {
     return { success: false, error: error instanceof Error ? error.message : 'មិនអាចផ្អាកសមាជិកបានទេ។' }
@@ -117,12 +121,12 @@ export async function approveLoan(formData: FormData): Promise<ActionResult> {
       .single()
 
     if (error) throw error
-    await notify(data.member_id, 'ឥណទានត្រូវបានអនុម័ត', `ការស្នើសុំឥណទានរបស់អ្នកចំនួន ฿${Number(data.amount).toLocaleString()} ត្រូវបានអនុម័ត។ សូមដាក់ស្នើឯកសារច្បាប់ដើមមុនការបើកប្រាក់។`)
+    await notify(data.member_id, 'ឥណទានត្រូវបានទទួលយក', `ការស្នើសុំឥណទានរបស់អ្នកចំនួន ฿${Number(data.amount).toLocaleString()} ត្រូវបានទទួលយក។ សូមដាក់ស្នើឯកសារច្បាប់ដើមមុនការបើកប្រាក់។`)
     revalidatePath('/admin')
     revalidatePath('/dashboard/loans')
     return { success: true }
   } catch (error) {
-    return { success: false, error: error instanceof Error ? error.message : 'មិនអាចអនុម័តឥណទានបានទេ។' }
+    return { success: false, error: error instanceof Error ? error.message : 'មិនអាចទទួលយកឥណទានបានទេ។' }
   }
 }
 
@@ -170,7 +174,7 @@ export async function rejectLoan(formData: FormData): Promise<ActionResult> {
       .single()
 
     if (error) throw error
-    await notify(data.member_id, 'ឥណទានត្រូវបានបដិសេធ', 'ការស្នើសុំឥណទានរបស់អ្នកមិនត្រូវបានអនុម័តទេ។')
+    await notify(data.member_id, 'ឥណទានត្រូវបានបដិសេធ', 'ការស្នើសុំឥណទានរបស់អ្នកមិនត្រូវបានទទួលយកទេ។')
     revalidatePath('/admin')
     revalidatePath('/dashboard/loans')
     return { success: true }
@@ -193,7 +197,7 @@ export async function decideCapitalRequest(formData: FormData): Promise<ActionRe
       .single()
 
     if (error) throw error
-    const decisionLabel = decision === 'approved' ? 'បានអនុម័ត' : 'បានបដិសេធ'
+    const decisionLabel = decision === 'approved' ? 'បានទទួលយក' : 'បានបដិសេធ'
     await notify(data.member_id, 'ការស្នើសុំដើមទុនត្រូវបានធ្វើបច្ចុប្បន្នភាព', `ការស្នើសុំដើមទុនរបស់អ្នកចំនួន ฿${Number(data.amount).toLocaleString()} ${decisionLabel} ។`)
     revalidatePath('/admin')
     return { success: true }
