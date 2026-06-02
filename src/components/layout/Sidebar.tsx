@@ -34,18 +34,18 @@ const navItems: NavItem[] = [
     icon: PiggyBank,
     children: [
       { label: 'ទិដ្ឋភាពទូទៅ', href: '/dashboard/savings' },
-      { label: 'បន្ថែមការសន្សំប្រចាំខែ', href: '/dashboard/savings/add' },
+      { label: 'ស្នើសុំការសន្សំ', href: '/dashboard/savings/add' },
       { label: 'របាយការណ៍សន្សំ', href: '/dashboard/savings/report' },
     ],
   },
   {
-    label: 'ឥណទាន',
+    label: 'កម្ជី',
     icon: CreditCard,
     children: [
       { label: 'ទិដ្ឋភាពទូទៅ', href: '/dashboard/loans' },
-      { label: 'ស្នើសុំឥណទាន', href: '/dashboard/loans/request' },
-      { label: 'សងឥណទាន', href: '/dashboard/loans/repay' },
-      { label: 'របាយការណ៍ឥណទាន', href: '/dashboard/loans/report' },
+      { label: 'ស្នើសុំកម្ជី', href: '/dashboard/loans/request' },
+      { label: 'សងកម្ជី', href: '/dashboard/loans/repay' },
+      { label: 'របាយការណ៍កម្ជី', href: '/dashboard/loans/report' },
     ],
   },
   {
@@ -62,7 +62,7 @@ interface SidebarProps {
 
 export function Sidebar({ memberName = 'សមាជិក', isAdmin = false }: SidebarProps) {
   const pathname = usePathname()
-  const [expandedItems, setExpandedItems] = useState<string[]>(['ការសន្សំ', 'ឥណទាន'])
+  const [expandedItems, setExpandedItems] = useState<string[]>(['ការសន្សំ', 'កម្ជី'])
   const items: NavItem[] = isAdmin
     ? [
         ...navItems,

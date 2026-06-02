@@ -4,7 +4,6 @@ import React, { useState } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import {
-  AlertCircle,
   ArrowRight,
   Building2,
   CheckCircle2,
@@ -19,6 +18,7 @@ import {
   TrendingUp,
 } from 'lucide-react'
 import { signInMember } from '@/app/actions/auth'
+import { showError } from '@/lib/toast'
 
 export default function LoginPage() {
   const router = useRouter()
@@ -26,25 +26,22 @@ export default function LoginPage() {
   const [password, setPassword] = useState('')
   const [showPassword, setShowPassword] = useState(false)
   const [loading, setLoading] = useState(false)
-  const [error, setError] = useState<string | null>(null)
-
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault()
     setLoading(true)
-    setError(null)
 
     try {
       const result = await signInMember(email, password)
 
       if (!result.success) {
-        setError(result.error ?? 'មិនអាចចូលគណនីបានទេនៅពេលនេះ។ សូមព្យាយាមម្តងទៀត។')
+        showError(result.error ?? 'មិនអាចចូលគណនីបានទេនៅពេលនេះ។ សូមព្យាយាមម្តងទៀត។')
         return
       }
 
       router.push('/dashboard')
       router.refresh()
     } catch {
-      setError('មិនអាចចូលគណនីបានទេនៅពេលនេះ។ សូមព្យាយាមម្តងទៀត។')
+      showError('មិនអាចចូលគណនីបានទេនៅពេលនេះ។ សូមព្យាយាមម្តងទៀត។')
     } finally {
       setLoading(false)
     }
@@ -97,19 +94,9 @@ export default function LoginPage() {
                   សូមស្វាគមន៍ការត្រឡប់មកវិញ
                 </h1>
                 <p className="mt-2 text-[15px] leading-6 text-slate-600">
-                  ចូលគណនីដើម្បីគ្រប់គ្រងការសន្សំ ឥណទាន និង សកម្មភាពសមាជិករបស់អ្នក។
+                  ចូលគណនីដើម្បីគ្រប់គ្រងការសន្សំ កម្ជី និង សកម្មភាពសមាជិករបស់អ្នក។
                 </p>
               </div>
-
-              {error && (
-                <div
-                  role="alert"
-                  className="mb-6 flex items-start gap-3 rounded-2xl border border-rose-200 bg-rose-50 px-4 py-3 text-rose-800"
-                >
-                  <AlertCircle className="mt-0.5 h-5 w-5 shrink-0" />
-                  <p className="text-sm leading-6">{error}</p>
-                </div>
-              )}
 
               <div className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm shadow-slate-200/40 sm:p-8">
                 <form onSubmit={handleLogin} className="space-y-5">
@@ -239,21 +226,18 @@ function BrandPanel() {
     },
     {
       icon: CreditCard,
-      title: 'ឥណទានសមាជិកដោយយុត្តិធម៌',
+      title: 'កម្ជីសមាជិកដោយយុត្តិធម៌',
       description: 'អត្រាការប្រាក់ចាប់ពី ១-២% ក្នុងមួយខែ ជាមួយដំណើរការតម្លាភាព។',
     },
     {
       icon: TrendingUp,
       title: 'របាយការណ៍ភ្លាមៗ',
-      description: 'ទទួលរបាយការណ៍សន្សំ និង ឥណទានតាមរយៈ Telegram។',
+      description: 'ទទួលរបាយការណ៍សន្សំ និង កម្ជីតាមរយៈ Telegram។',
     },
   ]
 
   return (
     <aside className="relative hidden overflow-hidden bg-blue-950 text-white lg:flex lg:flex-col">
-      <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(96,165,250,0.25),transparent_45%)]" />
-      <div className="absolute inset-x-0 bottom-0 h-72 bg-[radial-gradient(circle_at_bottom_right,rgba(59,130,246,0.28),transparent_55%)]" />
-
       <div className="relative flex h-full flex-col px-10 py-10">
         <Link href="/" className="inline-flex w-fit items-center gap-2.5 group">
           <span className="grid h-10 w-10 place-items-center rounded-xl bg-white/10 ring-1 ring-white/15 transition group-hover:bg-white/15">
@@ -263,15 +247,11 @@ function BrandPanel() {
         </Link>
 
         <div className="mt-14">
-          <span className="inline-flex items-center gap-1.5 rounded-full bg-white/10 px-3 py-1 text-xs font-semibold uppercase tracking-wide text-blue-100 ring-1 ring-white/15">
-            <Sparkles className="h-3.5 w-3.5" />
-            វិបផតថលសមាជិក
-          </span>
           <h2 className="mt-5 text-[28px] font-bold leading-[1.2]">
             បន្តដំណើរហិរញ្ញវត្ថុរបស់អ្នកជាមួយសន្សំ។
           </h2>
           <p className="mt-3 text-[15px] leading-7 text-blue-100/85">
-            ចូលគណនីដើម្បីបន្ថែមការសន្សំ ស្នើសុំឥណទាន មើលរបាយការណ៍ និង
+            ចូលគណនីដើម្បីបន្ថែមការសន្សំ ស្នើសុំកម្ជី មើលរបាយការណ៍ និង
             តាមដានគ្រប់សកម្មភាពសមាជិករបស់អ្នក។
           </p>
         </div>

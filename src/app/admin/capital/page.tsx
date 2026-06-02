@@ -10,7 +10,7 @@ export default async function AdminCapitalPage() {
   const admin = createAdminClient()
   const { data } = await admin
     .from('capital_requests')
-    .select('id, amount, reason, status, continue_saving, remove_membership, created_at, members(full_name, email)')
+    .select('id, amount, reason, status, continue_saving, remove_membership, created_at, members:members!capital_requests_member_id_fkey(full_name, email)')
     .order('created_at', { ascending: false })
 
   const requests = data ?? []

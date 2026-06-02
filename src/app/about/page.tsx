@@ -45,7 +45,7 @@ export default function AboutPage() {
   const tabs: { id: Tab; label: string; icon: React.ElementType }[] = [
     { id: 'vision', label: 'ចក្ខុវិស័យ និង បេសកកម្ម', icon: Eye },
     { id: 'saving-benefits', label: 'អត្ថប្រយោជន៍សន្សំ', icon: PiggyBank },
-    { id: 'loan-rates', label: 'អត្រាការប្រាក់ឥណទាន', icon: CreditCard },
+    { id: 'loan-rates', label: 'អត្រាការប្រាក់កម្ជី', icon: CreditCard },
     { id: 'membership', label: 'ចូលជាសមាជិក', icon: Users },
   ]
 
@@ -82,8 +82,7 @@ function Hero() {
         className="absolute inset-0 bg-cover bg-center"
         style={{ backgroundImage: `url('${IMAGES.hero}')` }}
       />
-      <div className="absolute inset-0 bg-linear-to-r from-blue-950/95 via-blue-900/80 to-blue-800/55" />
-      <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(191,219,254,0.22),transparent_38%)]" />
+      <div className="absolute inset-0 bg-blue-950/88" />
 
       <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-28 pb-20 md:pt-32 md:pb-24">
         <div className="flex items-center gap-2 text-blue-200/90 text-sm mb-5">
@@ -103,7 +102,7 @@ function Hero() {
           រឿងរ៉ាវរបស់យើង។ បេសកកម្មរបស់យើង។ សហគមន៍របស់យើង។
         </h1>
         <p className="mt-5 max-w-2xl text-blue-100 text-lg leading-8">
-          ស្វែងយល់ពីរបៀបដែលសន្សំជួយសមាជិករាប់រយនាក់ក្នុងការសន្សំទៀងទាត់ ស្នើសុំឥណទាន
+          ស្វែងយល់ពីរបៀបដែលសន្សំជួយសមាជិករាប់រយនាក់ក្នុងការសន្សំទៀងទាត់ ស្នើសុំកម្ជី
           ដោយយុត្តិធម៌ និង រីកចម្រើនទៅជាមួយគ្នាជាសហគមន៍ដ៏ខ្លាំង។
         </p>
       </div>
@@ -119,7 +118,7 @@ function StatsStrip() {
   const stats = [
     { value: '៥០០+', label: 'សមាជិកសកម្ម' },
     { value: '៣%', label: 'ការប្រាក់សន្សំប្រចាំខែ' },
-    { value: '១-២%', label: 'អត្រាការប្រាក់ឥណទាន' },
+    { value: '១-២%', label: 'អត្រាការប្រាក់កម្ជី' },
     { value: '១-៣ ថ្ងៃ', label: 'ការទទួលយកពាក្យសុំ' },
   ]
   return (
@@ -242,8 +241,7 @@ function VisionSection() {
 
       {/* Mission */}
       <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="rounded-3xl bg-gradient-to-br from-blue-950 via-blue-900 to-blue-800 p-8 md:p-12 text-white shadow-2xl shadow-blue-900/30 overflow-hidden relative">
-          <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(96,165,250,0.25),transparent_45%)]" />
+        <div className="rounded-3xl bg-blue-950 p-8 md:p-12 text-white shadow-2xl shadow-blue-900/30 overflow-hidden relative">
           <div className="relative grid lg:grid-cols-[1fr_1.4fr] gap-10 items-start">
             <div>
               <span className="inline-flex rounded-xl bg-white/10 ring-1 ring-white/15 p-3 mb-5">
@@ -258,7 +256,7 @@ function VisionSection() {
             <ul className="grid sm:grid-cols-2 gap-3">
               {[
                 'វេទិកាសន្សំសហការដែលមានសុវត្ថិភាព និង តម្លាភាព',
-                'ឥណទានដែលយុត្តិធម៌ និង ងាយស្រួលសម្រាប់សេចក្តីត្រូវការសមាជិក',
+                'កម្ជីដែលយុត្តិធម៌ និង ងាយស្រួលសម្រាប់សេចក្តីត្រូវការសមាជិក',
                 'អប់រំហិរញ្ញវត្ថុ និង គ្រប់គ្រងលុយដោយទំនួលខុសត្រូវ',
                 'អភិបាលកិច្ចដែលជំរុញដោយសហគមន៍ដែលសមាជិកមានសំឡេង',
                 'ការគាំទ្រសមាជិកក្នុងពេលអាសន្នហិរញ្ញវត្ថុ',
@@ -288,26 +286,26 @@ function VisionSection() {
               icon: Eye,
               title: 'តម្លាភាព',
               description: 'ប្រតិបត្តិការហិរញ្ញវត្ថុទាំងអស់គឺបើកចំហ និង ទទួលខុសត្រូវចំពោះសមាជិកគ្រប់រូប។',
-              accent: 'from-blue-500 to-blue-700',
+              accent: 'bg-blue-600',
             },
             {
               icon: Users,
               title: 'សហគមន៍',
               description: 'យើងរីកចម្រើនជាមួយគ្នា។ ភាពជោគជ័យរបស់សមាជិកម្នាក់ពង្រឹងសហករណ៍ទាំងមូល។',
-              accent: 'from-emerald-500 to-emerald-700',
+              accent: 'bg-emerald-600',
             },
             {
               icon: Shield,
               title: 'សុចរិតភាព',
               description: 'យើងប្រតិបត្តិតាមស្តង់ដារក្រមសីលធម៌ខ្ពស់បំផុតក្នុងគ្រប់ការងារ និង ទំនាក់ទំនងសមាជិក។',
-              accent: 'from-purple-500 to-purple-700',
+              accent: 'bg-purple-600',
             },
           ].map((value) => {
             const Icon = value.icon
             return (
               <div key={value.title} className="group relative rounded-3xl bg-white p-7 shadow-sm ring-1 ring-slate-200 hover:shadow-xl hover:shadow-blue-900/10 hover:-translate-y-1 transition-all overflow-hidden">
-                <div className={`absolute top-0 inset-x-0 h-1 bg-gradient-to-r ${value.accent}`} />
-                <span className={`inline-flex h-12 w-12 items-center justify-center rounded-2xl bg-gradient-to-br ${value.accent} text-white shadow-md mb-5`}>
+                <div className={`absolute top-0 inset-x-0 h-1 ${value.accent}`} />
+                <span className={`inline-flex h-12 w-12 items-center justify-center rounded-2xl ${value.accent} text-white shadow-md mb-5`}>
                   <Icon className="h-6 w-6" />
                 </span>
                 <h3 className="text-xl font-bold text-gray-950 mb-3">{value.title}</h3>
@@ -353,7 +351,7 @@ function VisionSection() {
             className="relative rounded-3xl overflow-hidden bg-cover bg-center min-h-72 shadow-2xl shadow-blue-900/20"
             style={{ backgroundImage: `url('${IMAGES.community}')` }}
           >
-            <div className="absolute inset-0 bg-gradient-to-t from-blue-950/90 via-blue-950/40 to-transparent" />
+            <div className="absolute inset-0 bg-blue-950/80" />
             <div className="absolute inset-x-0 bottom-0 p-7 text-white">
               <Quote className="w-8 h-8 text-blue-200/80 mb-3" />
               <p className="text-lg leading-7 font-medium">
@@ -413,8 +411,8 @@ function SavingsSection() {
             />
             <div className="absolute -bottom-6 -left-6 rounded-2xl bg-white p-5 shadow-xl shadow-blue-900/10 ring-1 ring-slate-200/60">
               <p className="text-xs font-semibold uppercase tracking-wide text-blue-700">ការប្រាក់ខែនេះ</p>
-              <p className="mt-1 text-3xl font-extrabold text-gray-950">+฿៣០០</p>
-              <p className="text-xs text-gray-500 mt-1">លើការសន្សំ ฿១០,០០០</p>
+              <p className="mt-1 text-3xl font-extrabold text-gray-950">+$៣០០</p>
+              <p className="text-xs text-gray-500 mt-1">លើការសន្សំ $១០,០០០</p>
             </div>
           </div>
         </div>
@@ -482,7 +480,7 @@ function SavingsSection() {
           </h2>
         </div>
         <div className="relative">
-          <div className="hidden lg:block absolute top-7 left-0 right-0 h-px bg-gradient-to-r from-blue-200 via-blue-400 to-blue-200" />
+          <div className="hidden lg:block absolute top-7 left-0 right-0 h-px bg-blue-300" />
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-5 relative">
             {[
               { step: '១', title: 'ចូលគណនី', description: 'ផ្ទៀងផ្ទាត់អត្តសញ្ញាណរបស់អ្នក' },
@@ -505,7 +503,7 @@ function SavingsSection() {
 
       {/* Telegram Reports Card */}
       <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="rounded-3xl bg-gradient-to-br from-emerald-50 via-white to-emerald-50 ring-1 ring-emerald-200 p-8 md:p-10">
+        <div className="rounded-3xl bg-emerald-50 ring-1 ring-emerald-200 p-8 md:p-10">
           <div className="grid lg:grid-cols-[1fr_1.2fr] gap-8 items-center">
             <div>
               <span className="inline-flex rounded-xl bg-emerald-100 p-3 text-emerald-700 mb-5">
@@ -568,13 +566,13 @@ function LoansSection() {
           </div>
 
           <div className="order-1 lg:order-2">
-            <p className="text-blue-700 text-sm font-bold uppercase tracking-wide mb-3">អត្រាការប្រាក់ឥណទាន</p>
+            <p className="text-blue-700 text-sm font-bold uppercase tracking-wide mb-3">អត្រាការប្រាក់កម្ជី</p>
             <h2 className="text-3xl md:text-5xl font-extrabold tracking-tight text-gray-950 leading-[1.05]">
-              ឥណទានដោយយុត្តិធម៌។<br />
+              កម្ជីដោយយុត្តិធម៌។<br />
               <span className="text-blue-900">តម្លាភាពពេញលេញ។</span>
             </h2>
             <p className="text-gray-600 leading-8 mt-5 text-lg">
-              ទទួលបានឥណទានដែលរចនាឡើងសម្រាប់សេចក្តីត្រូវការសមាជិក។ អត្រាការប្រាក់ប្រកួតប្រជែង
+              ទទួលបានកម្ជីដែលរចនាឡើងសម្រាប់សេចក្តីត្រូវការសមាជិក។ អត្រាការប្រាក់ប្រកួតប្រជែង
               ដំណើរការត្រង់ និង ការទទួលយកលឿន។
             </p>
           </div>
@@ -605,7 +603,7 @@ function LoansSection() {
               <ShieldCheck className="h-6 w-6" />
             </span>
             <div>
-              <h3 className="text-2xl font-extrabold text-gray-950">លក្ខខណ្ឌសិទ្ធិទទួលបានឥណទាន</h3>
+              <h3 className="text-2xl font-extrabold text-gray-950">លក្ខខណ្ឌសិទ្ធិទទួលបានកម្ជី</h3>
               <p className="text-sm text-gray-500">ត្រូវបំពេញលក្ខខណ្ឌខាងក្រោមដើម្បីដាក់ពាក្យសុំ</p>
             </div>
           </div>
@@ -614,8 +612,8 @@ function LoansSection() {
               'ត្រូវតែជាសមាជិកសកម្មរបស់សន្សំ',
               'ចូលជាសមាជិកមានស្ថានភាពល្អយ៉ាងតិច ៣ ខែ',
               'ត្រូវការអ្នកធានាដែលបានផ្ទៀងផ្ទាត់ (សមាជិកសន្សំ)',
-              'ចំនួនឥណទានអតិបរមាផ្អែកលើសមតុល្យសន្សំ',
-              'គ្មានឥណទានដែលមិនទាន់សងនៅឡើយ',
+              'ចំនួនកម្ជីអតិបរមាផ្អែកលើសមតុល្យសន្សំ',
+              'គ្មានកម្ជីដែលមិនទាន់សងនៅឡើយ',
               'ត្រូវដាក់ឯកសារច្បាប់ដើមជាមួយការផ្តិតមេដៃ',
             ].map((req) => (
               <div key={req} className="flex items-start gap-3 rounded-2xl bg-slate-50 ring-1 ring-slate-200/70 p-4">
@@ -637,12 +635,12 @@ function LoansSection() {
         </div>
         <div className="grid md:grid-cols-2 gap-x-10 gap-y-5">
           {[
-            { step: '១', title: 'ដាក់ពាក្យសុំឥណទាន', description: 'បំពេញពាក្យសុំជាមួយចំនួន គោលបំណង និង រយៈពេល។' },
+            { step: '១', title: 'ដាក់ពាក្យសុំកម្ជី', description: 'បំពេញពាក្យសុំជាមួយចំនួន គោលបំណង និង រយៈពេល។' },
             { step: '២', title: 'ផ្ទុកឯកសារគាំទ្រ', description: 'ផ្តល់ឯកសារដែលត្រូវការដើម្បីគាំទ្រពាក្យសុំ។' },
             { step: '៣', title: 'ការផ្ទៀងផ្ទាត់អ្នកធានា', description: 'អ្នកធានាដែលអ្នកកំណត់ត្រូវផ្ទៀងផ្ទាត់ និង ទទួលយក។' },
             { step: '៤', title: 'ការត្រួតពិនិត្យ', description: 'គណៈកម្មាធិការសន្សំត្រួតពិនិត្យក្នុងរយៈពេល ១-៣ ថ្ងៃ។' },
             { step: '៥', title: 'ដាក់ឯកសារច្បាប់ដើម', description: 'ប្រគល់ឯកសារច្បាប់ដើមជាមួយការផ្តិតមេដៃទៅសហករណ៍។' },
-            { step: '៦', title: 'បើកប្រាក់ឥណទាន', description: 'ចំនួនឥណទានដែលទទួលយកត្រូវផ្ទេរទៅគណនីរបស់អ្នក។' },
+            { step: '៦', title: 'បើកប្រាក់កម្ជី', description: 'ចំនួនកម្ជីដែលទទួលយកត្រូវផ្ទេរទៅគណនីរបស់អ្នក។' },
           ].map((s) => (
             <div key={s.step} className="flex gap-5 rounded-2xl bg-white ring-1 ring-slate-200 p-5 hover:shadow-md transition-shadow">
               <div className="shrink-0">
@@ -675,7 +673,7 @@ function LoansSection() {
                 ការសងងាយស្រួលតាម QR
               </h3>
               <p className="text-gray-600 leading-7 mb-5">
-                សងឥណទានរបស់អ្នកតាមរយៈវិបផតថលសមាជិក។ ការសងនីមួយៗត្រូវការការបង់ប្រាក់
+                សងកម្ជីរបស់អ្នកតាមរយៈវិបផតថលសមាជិក។ ការសងនីមួយៗត្រូវការការបង់ប្រាក់
                 តាម QR code ជាមួយការដាក់ភស្តុតាង។ ការផ្ទៀងផ្ទាត់ដោយអ្នកគ្រប់គ្រងក្នុងរយៈពេល ២៤ ម៉ោង។
               </p>
               <div className="flex items-center gap-2 text-sm font-semibold text-blue-900">
@@ -708,7 +706,7 @@ function MembershipSection() {
             </h2>
             <p className="text-gray-600 leading-8 mt-5 text-lg">
               ចូលជាសមាជិកគឺបើកចំហសម្រាប់អ្នកដែលមានអ្នកធានាដែលបានផ្ទៀងផ្ទាត់។
-              ចូលរួមដើម្បីទទួលបានសេវាសន្សំ និង ឥណទានទាំងអស់របស់សន្សំ។
+              ចូលរួមដើម្បីទទួលបានសេវាសន្សំ និង កម្ជីទាំងអស់របស់សន្សំ។
             </p>
           </div>
           <div
@@ -822,7 +820,7 @@ function MembershipSection() {
         <div className="grid sm:grid-cols-2 md:grid-cols-4 gap-4">
           {[
             { icon: PiggyBank, label: 'ការសន្សំប្រចាំខែ', value: 'ការប្រាក់ ៣%' },
-            { icon: CreditCard, label: 'ឥណទាន', value: 'ចាប់ពី ១%/ខែ' },
+            { icon: CreditCard, label: 'កម្ជី', value: 'ចាប់ពី ១%/ខែ' },
             { icon: Send, label: 'របាយការណ៍', value: 'តាមរយៈ Telegram' },
             { icon: Wallet, label: 'អភិបាលកិច្ច', value: 'ការបោះឆ្នោតសមាជិក' },
           ].map((benefit) => {
@@ -853,7 +851,6 @@ function CTAFooter() {
         style={{ backgroundImage: `url('${IMAGES.cta}')` }}
       />
       <div className="absolute inset-0 bg-blue-950/85" />
-      <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(96,165,250,0.25),transparent_45%)]" />
       <div className="relative max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-20 text-center">
         <h2 className="text-3xl md:text-5xl font-extrabold tracking-tight mb-5">
           ត្រៀមរួចហើយដើម្បីចូលរួមជាមួយសន្សំ?

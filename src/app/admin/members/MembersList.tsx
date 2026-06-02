@@ -2,8 +2,10 @@
 
 import { useMemo, useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { Search, Users } from 'lucide-react'
+import { ChevronDown, Search, Users } from 'lucide-react'
 import { formatDate } from '@/app/admin/adminUtils'
+import { SuspendMemberButton } from '@/app/admin/SuspendMemberButton'
+import { DenyMemberButton } from '@/app/admin/DenyMemberButton'
 import type { ActionResult } from '@/app/actions/member'
 import type { MemberStatus } from '@/types/database'
 
@@ -23,21 +25,21 @@ const filters: { key: FilterKey; label: string }[] = [
   { key: 'pending', label: 'រង់ចាំ' },
   { key: 'active', label: 'សកម្ម' },
   { key: 'suspended', label: 'ផ្អាក' },
+  { key: 'rejected', label: 'បដិសេធ' },
   { key: 'withdrawn', label: 'បានដក' },
 ]
 
 export function MembersList({
   members,
   approveAction,
-  suspendAction,
 }: {
   members: MemberListItem[]
   approveAction: (formData: FormData) => Promise<ActionResult>
-  suspendAction: (formData: FormData) => Promise<ActionResult>
 }) {
   const router = useRouter()
   const [query, setQuery] = useState('')
   const [filter, setFilter] = useState<FilterKey>('all')
+  const [filterOpen, setFilterOpen] = useState(false)
 
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase()
@@ -52,12 +54,15 @@ export function MembersList({
     })
   }, [members, query, filter])
 
+  const activeFilter = filters.find((item) => item.key === filter) ?? filters[0]
+
   const counts = useMemo(() => {
     const tally: Record<FilterKey, number> = {
       all: members.length,
       pending: 0,
       active: 0,
       suspended: 0,
+      rejected: 0,
       withdrawn: 0,
     }
     for (const member of members) {
@@ -69,44 +74,82 @@ export function MembersList({
   return (
     <div className="space-y-5">
       <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
-        <div className="relative max-w-md flex-1">
-          <Search className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
-          <input
-            type="search"
-            value={query}
-            onChange={(e) => setQuery(e.target.value)}
-            placeholder="ស្វែងរកតាមឈ្មោះ ឬទូរស័ព្ទ..."
-            className="w-full rounded-xl border border-gray-200 bg-white py-2.5 pl-10 pr-4 text-sm text-gray-900 shadow-xs outline-none transition placeholder:text-gray-400 focus:border-blue-400 focus:ring-4 focus:ring-blue-500/15"
-          />
+        <div className="flex flex-1 flex-col gap-3 sm:flex-row sm:items-center">
+          <div className="relative w-full max-w-md flex-1">
+            <Search className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
+            <input
+              type="search"
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+              placeholder="ស្វែងរកតាមឈ្មោះ ឬទូរស័ព្ទ..."
+              className="w-full rounded-xl border border-gray-200 bg-white py-2.5 pl-10 pr-4 text-sm text-gray-900 shadow-xs outline-none transition placeholder:text-gray-400 focus:border-blue-400 focus:ring-4 focus:ring-blue-500/15"
+            />
+          </div>
+
+          <div className="relative w-full sm:w-48">
+            <button
+              type="button"
+              onClick={() => setFilterOpen((open) => !open)}
+              aria-haspopup="listbox"
+              aria-expanded={filterOpen}
+              className="flex w-full items-center justify-between gap-2 rounded-xl border border-gray-200 bg-white px-4 py-2.5 text-sm font-semibold text-gray-700 shadow-xs transition hover:bg-gray-50"
+            >
+              <span className="flex items-center gap-1.5">
+                {activeFilter.label}
+                <span className="tabular-nums text-gray-400">({counts[activeFilter.key]})</span>
+              </span>
+              <ChevronDown
+                className={`h-4 w-4 shrink-0 text-gray-400 transition-transform ${filterOpen ? 'rotate-180' : ''}`}
+              />
+            </button>
+
+            {filterOpen && (
+              <>
+                <button
+                  type="button"
+                  className="fixed inset-0 z-10 cursor-default"
+                  aria-label="បិទ"
+                  onClick={() => setFilterOpen(false)}
+                />
+                <ul
+                  role="listbox"
+                  className="absolute left-0 top-full z-20 mt-2 w-full overflow-hidden rounded-xl border border-gray-200 bg-white py-1 shadow-lg"
+                >
+                  {filters.map((item) => (
+                    <li key={item.key} role="option" aria-selected={filter === item.key}>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setFilter(item.key)
+                          setFilterOpen(false)
+                        }}
+                        className={`flex w-full items-center justify-between gap-2 px-4 py-2.5 text-sm font-medium transition ${
+                          filter === item.key
+                            ? 'bg-blue-50 text-blue-900'
+                            : 'text-gray-700 hover:bg-gray-50'
+                        }`}
+                      >
+                        {item.label}
+                        <span
+                          className={`tabular-nums ${
+                            filter === item.key ? 'text-blue-400' : 'text-gray-400'
+                          }`}
+                        >
+                          {counts[item.key]}
+                        </span>
+                      </button>
+                    </li>
+                  ))}
+                </ul>
+              </>
+            )}
+          </div>
         </div>
+
         <p className="text-sm text-gray-500">
           បង្ហាញ <span className="font-semibold text-gray-900">{filtered.length}</span> នៃ{' '}
           {members.length} សមាជិក
         </p>
-      </div>
-
-      <div className="flex flex-wrap gap-2">
-        {filters.map((item) => (
-          <button
-            key={item.key}
-            type="button"
-            onClick={() => setFilter(item.key)}
-            className={`rounded-full px-4 py-2 text-sm font-semibold transition ${
-              filter === item.key
-                ? 'bg-blue-900 text-white shadow-sm'
-                : 'bg-white text-gray-600 ring-1 ring-gray-200 hover:bg-gray-50 hover:text-gray-900'
-            }`}
-          >
-            {item.label}
-            <span
-              className={`ml-1.5 tabular-nums ${
-                filter === item.key ? 'text-blue-200' : 'text-gray-400'
-              }`}
-            >
-              ({counts[item.key]})
-            </span>
-          </button>
-        ))}
       </div>
 
       <div className="overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm">
@@ -161,12 +204,18 @@ export function MembersList({
                             label="ទទួលយក"
                           />
                         )}
-                        {member.status !== 'suspended' && (
-                          <QuickActionForm
-                            action={suspendAction}
-                            id={member.id}
+                        {member.status === 'pending' && (
+                          <DenyMemberButton
+                            memberId={member.id}
+                            memberName={member.full_name}
+                            label="បដិសេធ"
+                          />
+                        )}
+                        {member.status !== 'suspended' && member.status !== 'pending' && (
+                          <SuspendMemberButton
+                            memberId={member.id}
+                            memberName={member.full_name}
                             label="ផ្អាក"
-                            danger
                           />
                         )}
                       </div>

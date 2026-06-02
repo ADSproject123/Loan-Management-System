@@ -5,25 +5,23 @@ import Link from 'next/link'
 import { Button } from '@/components/ui/Button'
 import { Card } from '@/components/ui/Card'
 import { requestReport } from '@/app/actions/member'
-import { ArrowLeft, FileText, CheckCircle, AlertCircle, Send, Calendar } from 'lucide-react'
+import { showError } from '@/lib/toast'
+import { ArrowLeft, FileText, CheckCircle, Send, Calendar } from 'lucide-react'
 
 export default function SavingReportPage() {
   const [periodFrom, setPeriodFrom] = useState('')
   const [periodTo, setPeriodTo] = useState('')
   const [submitted, setSubmitted] = useState(false)
   const [loading, setLoading] = useState(false)
-  const [error, setError] = useState<string | null>(null)
-
   const handleSubmit = async () => {
     if (!periodFrom || !periodTo) {
-      setError('សូមជ្រើសរើសកាលបរិច្ឆេទចាប់ផ្តើម និង បញ្ចប់។')
+      showError('សូមជ្រើសរើសកាលបរិច្ឆេទចាប់ផ្តើម និង បញ្ចប់។')
       return
     }
     if (new Date(periodFrom) > new Date(periodTo)) {
-      setError('កាលបរិច្ឆេទចាប់ផ្តើមត្រូវនៅមុនកាលបរិច្ឆេទបញ្ចប់។')
+      showError('កាលបរិច្ឆេទចាប់ផ្តើមត្រូវនៅមុនកាលបរិច្ឆេទបញ្ចប់។')
       return
     }
-    setError(null)
     setLoading(true)
 
     const payload = new FormData()
@@ -35,7 +33,7 @@ export default function SavingReportPage() {
     setLoading(false)
 
     if (!result.success) {
-      setError(result.error ?? 'មិនអាចស្នើសុំរបាយការណ៍បានទេ។')
+      showError(result.error ?? 'មិនអាចស្នើសុំរបាយការណ៍បានទេ។')
       return
     }
 
@@ -50,7 +48,7 @@ export default function SavingReportPage() {
   ]
 
   return (
-    <div className="p-6 md:p-8 max-w-xl mx-auto">
+    <div className="p-6 md:p-8 w-full">
       <div className="mb-6">
         <Link
           href="/dashboard/savings"
@@ -76,13 +74,6 @@ export default function SavingReportPage() {
               <p className="text-gray-500 text-sm">ជ្រើសរើសរយៈពេលកាលបរិច្ឆេទសម្រាប់របាយការណ៍របស់អ្នក</p>
             </div>
           </div>
-
-          {error && (
-            <div className="mb-5 flex items-start gap-3 bg-red-50 border border-red-200 text-red-700 rounded-lg p-4">
-              <AlertCircle className="w-5 h-5 flex-shrink-0 mt-0.5" />
-              <p className="text-sm">{error}</p>
-            </div>
-          )}
 
           {/* Quick periods */}
           <div className="mb-5">

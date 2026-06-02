@@ -1,5 +1,6 @@
 import type { Metadata } from 'next'
 import { Geist, Noto_Sans_Khmer } from 'next/font/google'
+import { ToastProvider } from '@/components/providers/ToastProvider'
 import './globals.css'
 
 const geistSans = Geist({
@@ -16,8 +17,8 @@ const notoKhmer = Noto_Sans_Khmer({
 })
 
 export const metadata: Metadata = {
-  title: 'សន្សំ - សមាគមន៏សន្សំ និង ឥណទាន',
-  description: 'វិបផតថលសមាជិកសន្សំសម្រាប់គ្រប់គ្រងការសន្សំ និង ឥណទាន',
+  title: 'សន្សំ - សមាគមន៏សន្សំ និង កម្ជី',
+  description: 'វិបផតថលសមាជិកសន្សំសម្រាប់គ្រប់គ្រងការសន្សំ និង កម្ជី',
 }
 
 export default function RootLayout({
@@ -27,7 +28,10 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="km" className={`${geistSans.variable} ${notoKhmer.variable} h-full antialiased`}>
-      <body className="min-h-full bg-gray-50">{children}</body>
+      <body className="min-h-full bg-gray-50">
+        {children}
+        <ToastProvider />
+      </body>
     </html>
   )
 }

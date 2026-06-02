@@ -19,7 +19,7 @@ export function Badge({ children, variant = 'default', className = '' }: BadgePr
   }
 
   return (
-    <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${variantClasses[variant]} ${className}`}>
+    <span className={`inline-flex items-center px-2.5 py-0.5 text-xs font-medium ${variantClasses[variant]} ${className}`}>
       {children}
     </span>
   )
@@ -31,6 +31,7 @@ export function MemberStatusBadge({ status }: { status: MemberStatus }) {
     active: { label: 'សកម្ម', variant: 'success' },
     suspended: { label: 'ផ្អាក', variant: 'error' },
     withdrawn: { label: 'បានដក', variant: 'default' },
+    rejected: { label: 'បដិសេធ', variant: 'error' },
   }
   const { label, variant } = config[status]
   return <Badge variant={variant}>{label}</Badge>
@@ -54,6 +55,7 @@ export function SavingStatusBadge({ status }: { status: SavingStatus }) {
     pending: { label: 'រង់ចាំ', variant: 'warning' },
     verified: { label: 'បានផ្ទៀងផ្ទាត់', variant: 'info' },
     completed: { label: 'បានបញ្ចប់', variant: 'success' },
+    refunded: { label: 'បានសងប្រាក់វិញ', variant: 'error' },
   }
   const { label, variant } = config[status]
   return <Badge variant={variant}>{label}</Badge>

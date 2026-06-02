@@ -16,8 +16,9 @@ import {
 const adminNav = [
   { label: 'ទិដ្ឋភាពទូទៅ', href: '/admin', icon: LayoutDashboard },
   { label: 'សមាជិក', href: '/admin/members', icon: Users },
-  { label: 'ការបង់ប្រាក់', href: '/admin/payments', icon: PiggyBank },
-  { label: 'ឥណទាន', href: '/admin/loans', icon: CreditCard },
+  { label: 'ការសន្សំ', href: '/admin/savings', icon: PiggyBank },
+  { label: 'ការសងកម្ជី', href: '/admin/payments', icon: CreditCard },
+  { label: 'កម្ជី', href: '/admin/loans', icon: CreditCard },
   { label: 'ដើមទុន', href: '/admin/capital', icon: Wallet },
   { label: 'របាយការណ៍', href: '/admin/reports', icon: FileText },
 ]

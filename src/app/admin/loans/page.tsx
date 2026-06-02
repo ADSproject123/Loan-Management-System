@@ -1,63 +1,87 @@
-import { Card } from '@/components/ui/Card'
-import { LoanStatusBadge } from '@/components/ui/Badge'
+import { CheckCircle2, Clock, Landmark, Wallet } from 'lucide-react'
 import { createAdminClient } from '@/lib/supabase/admin'
-import { activateLoan, approveLoan, rejectLoan } from '@/app/actions/admin'
-import { AdminActionButton } from '@/app/admin/AdminActionButton'
-import { formatDate, money, relatedMemberEmail, relatedMemberName } from '@/app/admin/adminUtils'
-import type { LoanStatus } from '@/types/database'
+import { sumByCurrency } from '@/app/admin/adminUtils'
+import { LoansList } from '@/app/admin/loans/LoansList'
+import {
+  AdminPageHeader,
+  AdminPagination,
+  AdminPanel,
+  AdminStatCard,
+} from '@/components/admin'
 
-export default async function AdminLoansPage() {
+export default async function AdminLoansPage({
+  searchParams,
+}: {
+  searchParams?: Promise<{ page?: string }>
+}) {
   const admin = createAdminClient()
-  const { data } = await admin
-    .from('loans')
-    .select('id, amount, purpose, term_months, interest_rate, status, support_document_url, hard_copy_submitted, thumbprint_submitted, created_at, members(full_name, email)')
-    .order('created_at', { ascending: false })
+  const pageSize = 10
 
-  const loans = data ?? []
+  const params = (await searchParams) ?? {}
+  const page = typeof params.page === 'string' ? Math.max(1, Number(params.page)) : 1
+  const from = (page - 1) * pageSize
+  const to = from + pageSize - 1
+
+  const [{ data }, { count: underReviewTotal }, { count: approvedTotal }] = await Promise.all([
+    admin
+      .from('loans')
+      .select(
+        'id, member_id, amount, currency, purpose, status, created_at, members:members!loans_member_id_fkey(full_name, email)'
+      )
+      .order('created_at', { ascending: false })
+      .range(from, to),
+    admin.from('loans').select('id', { count: 'exact', head: true }).eq('status', 'under_review'),
+    admin.from('loans').select('id', { count: 'exact', head: true }).eq('status', 'approved'),
+  ])
+
+  const loanRows = data ?? []
+  const hasNext = loanRows.length === pageSize
+  const hasPrev = page > 1
+  const pageTotals = sumByCurrency(loanRows)
 
   return (
-    <main className="space-y-6 p-6 md:p-8 max-w-7xl mx-auto">
-      <div>
-        <p className="text-sm font-semibold uppercase tracking-wide text-blue-700">អ្នកគ្រប់គ្រង</p>
-        <h2 className="text-2xl font-bold text-gray-900">ការត្រួតពិនិត្យឥណទាន</h2>
-        <p className="text-sm text-gray-500">ទទួលយក បដិសេធ និង ដំណើរការពាក្យសុំឥណទានបន្ទាប់ពីការត្រួតពិនិត្យឯកសារ។</p>
+    <main className="w-full space-y-8 p-6 md:p-8">
+      <AdminPageHeader
+        title="ការត្រួតពិនិត្យកម្ជី"
+        description="ទទួលយក បដិសេធ និងដំណើរការពាក្យសុំកម្ជីបន្ទាប់ពីផ្ទៀងផ្ទាត់ឯកសារគាំទ្រ ច្បាប់ដើម និងការផ្តិតមេដៃ។"
+      />
+
+      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+        <AdminStatCard
+          label="កំពុងពិនិត្យ"
+          value={underReviewTotal ?? 0}
+          icon={Clock}
+          tone="amber"
+        />
+        <AdminStatCard
+          label="រង់ដំណើរការ"
+          value={approvedTotal ?? 0}
+          icon={CheckCircle2}
+          tone="blue"
+        />
+        <AdminStatCard label="លើទំព័រនេះ" value={loanRows.length} icon={Landmark} tone="emerald" />
+        <AdminStatCard
+          label="សរុបទំព័រនេះ"
+          currencyTotals={pageTotals}
+          icon={Wallet}
+          tone="slate"
+        />
       </div>
 
-      <div className="grid gap-4">
-        {loans.length === 0 && (
-          <Card>
-            <p className="text-sm text-gray-500">រកមិនឃើញឥណទាន។</p>
-          </Card>
-        )}
-        {loans.map((loan) => (
-          <Card key={loan.id}>
-            <div className="flex flex-wrap items-start justify-between gap-4">
-              <div className="min-w-0">
-                <div className="mb-3 flex flex-wrap items-center gap-2">
-                  <h3 className="text-lg font-semibold text-gray-900">{money(loan.amount)}</h3>
-                  <LoanStatusBadge status={loan.status as LoanStatus} />
-                </div>
-                <p className="text-sm text-gray-700">{loan.purpose}</p>
-                <p className="mt-1 text-sm text-gray-500">{relatedMemberName(loan)} • {relatedMemberEmail(loan)}</p>
-                <div className="mt-4 grid gap-3 text-sm text-gray-500 sm:grid-cols-4">
-                  <p><span className="font-medium text-gray-700">រយៈពេល៖</span> {loan.term_months ?? 0} ខែ</p>
-                  <p><span className="font-medium text-gray-700">អត្រា៖</span> {loan.interest_rate ?? 0}%/ខែ</p>
-                  <p><span className="font-medium text-gray-700">ដាក់ស្នើ៖</span> {formatDate(loan.created_at)}</p>
-                  <p><span className="font-medium text-gray-700">ឯកសារគាំទ្រ៖</span> {loan.support_document_url ? 'បានផ្ទុក' : 'បាត់'}</p>
-                </div>
-                <p className="mt-2 text-xs text-gray-400">
-                  ច្បាប់ដើម៖ {loan.hard_copy_submitted ? 'បានទទួល' : 'រង់ចាំ'} • ការផ្តិតមេដៃ៖ {loan.thumbprint_submitted ? 'បានទទួល' : 'រង់ចាំ'}
-                </p>
-              </div>
-              <div className="flex flex-wrap gap-2">
-                {loan.status === 'under_review' && <AdminActionButton action={approveLoan} id={loan.id}>ទទួលយក</AdminActionButton>}
-                {loan.status === 'approved' && <AdminActionButton action={activateLoan} id={loan.id}>ដំណើរការ</AdminActionButton>}
-                {loan.status !== 'rejected' && loan.status !== 'completed' && <AdminActionButton action={rejectLoan} id={loan.id} danger>បដិសេធ</AdminActionButton>}
-              </div>
-            </div>
-          </Card>
-        ))}
-      </div>
+      <AdminPanel
+        title="បញ្ជីពាក្យសុំកម្ជី"
+        description={`លើទំព័រនេះ ${loanRows.length} កម្ជី • ទំព័រ ${page} · ចុចជួរដើម្បីមើលលម្អិត`}
+        footer={
+          <AdminPagination
+            basePath="/admin/loans"
+            page={page}
+            hasPrev={hasPrev}
+            hasNext={hasNext}
+          />
+        }
+      >
+        <LoansList loans={loanRows} />
+      </AdminPanel>
     </main>
   )
 }

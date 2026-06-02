@@ -6,13 +6,15 @@ import { Steps } from '@/components/ui/Steps'
 import { Button } from '@/components/ui/Button'
 import { Card } from '@/components/ui/Card'
 import { addSaving } from '@/app/actions/member'
+import { showError } from '@/lib/toast'
+import { currencySymbol, type CurrencyCode } from '@/lib/currency'
+import { CurrencySelect } from '@/components/ui/CurrencySelect'
 import {
   PiggyBank,
   QrCode,
   Upload,
   CheckCircle,
   ArrowLeft,
-  AlertCircle,
   Info,
 } from 'lucide-react'
 
@@ -26,35 +28,33 @@ const STEPS = [
 export default function AddSavingPage() {
   const [step, setStep] = useState(1)
   const [amount, setAmount] = useState('')
+  const [currency, setCurrency] = useState<CurrencyCode>('USD')
   const [notes, setNotes] = useState('')
   const [evidence, setEvidence] = useState<File | null>(null)
   const [loading, setLoading] = useState(false)
-  const [error, setError] = useState<string | null>(null)
-
   const handleAmountNext = () => {
     const num = parseFloat(amount)
     if (!amount || isNaN(num) || num <= 0) {
-      setError('សូមបញ្ចូលចំនួនទឹកប្រាក់សន្សំត្រឹមត្រូវ។')
+      showError('សូមបញ្ចូលចំនួនទឹកប្រាក់សន្សំត្រឹមត្រូវ។')
       return
     }
     if (num < 100) {
-      setError('ចំនួនទឹកប្រាក់សន្សំអប្បបរមាគឺ ฿១០០។')
+      showError(`ចំនួនទឹកប្រាក់សន្សំអប្បបរមាគឺ ${currencySymbol(currency)}១០០។`)
       return
     }
-    setError(null)
     setStep(2)
   }
 
   const handleSubmitEvidence = async () => {
     if (!evidence) {
-      setError('សូមផ្ទុកភស្តុតាងបង់ប្រាក់។')
+      showError('សូមផ្ទុកភស្តុតាងបង់ប្រាក់។')
       return
     }
     setLoading(true)
-    setError(null)
 
     const payload = new FormData()
     payload.append('amount', amount)
+    payload.append('currency', currency)
     payload.append('notes', notes)
     payload.append('evidence', evidence)
 
@@ -62,17 +62,15 @@ export default function AddSavingPage() {
     setLoading(false)
 
     if (!result.success) {
-      setError(result.error ?? 'មិនអាចដាក់ស្នើការសន្សំបានទេ។')
+      showError(result.error ?? 'មិនអាចដាក់ស្នើការសន្សំបានទេ។')
       return
     }
 
     setStep(4)
   }
 
-  const suggestedAmounts = [1000, 2000, 3000, 5000, 10000]
-
   return (
-    <div className="p-6 md:p-8 max-w-2xl mx-auto">
+    <div className="p-6 md:p-8 w-full">
       {/* Header */}
       <div className="mb-6">
         <Link
@@ -82,7 +80,7 @@ export default function AddSavingPage() {
           <ArrowLeft className="w-4 h-4" />
           ត្រឡប់ទៅការសន្សំ
         </Link>
-        <h1 className="text-2xl font-bold text-gray-900">បន្ថែមការសន្សំប្រចាំខែ</h1>
+        <h1 className="text-2xl font-bold text-gray-900">ស្នើសុំការសន្សំ</h1>
         <p className="text-gray-500 text-sm mt-1">បន្ថែមការបរិច្ចាគសន្សំប្រចាំខែរបស់អ្នក</p>
       </div>
 
@@ -90,14 +88,6 @@ export default function AddSavingPage() {
       <div className="mb-8">
         <Steps steps={STEPS} currentStep={step} />
       </div>
-
-      {/* Error */}
-      {error && (
-        <div className="mb-5 flex items-start gap-3 bg-red-50 border border-red-200 text-red-700 rounded-lg p-4">
-          <AlertCircle className="w-5 h-5 flex-shrink-0 mt-0.5" />
-          <p className="text-sm">{error}</p>
-        </div>
-      )}
 
       {/* Step 1: Enter Amount */}
       {step === 1 && (
@@ -113,48 +103,33 @@ export default function AddSavingPage() {
           </div>
 
           <div className="mb-5">
-            <label className="block text-sm font-medium text-gray-700 mb-2">ចំនួនទឹកប្រាក់ (฿)</label>
-            <div className="relative">
-              <span className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500 font-medium">฿</span>
-              <input
-                type="number"
-                value={amount}
-                onChange={(e) => setAmount(e.target.value)}
-                placeholder="0.00"
-                min="100"
-                step="100"
-                className="w-full pl-8 pr-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-lg font-semibold text-gray-900"
-              />
-            </div>
-          </div>
-
-          <div className="mb-5">
-            <p className="text-sm text-gray-500 mb-2">ចំនួនរហ័ស៖</p>
-            <div className="flex flex-wrap gap-2">
-              {suggestedAmounts.map((amt) => (
-                <button
-                  key={amt}
-                  onClick={() => setAmount(amt.toString())}
-                  className={`px-4 py-1.5 rounded-lg text-sm font-medium transition-colors border ${
-                    amount === amt.toString()
-                      ? 'bg-blue-900 text-white border-blue-900'
-                      : 'bg-white border-gray-300 text-gray-700 hover:border-blue-400 hover:text-blue-700 hover:bg-blue-50'
-                  }`}
-                >
-                  ฿{amt.toLocaleString()}
-                </button>
-              ))}
+            <label className="block text-sm font-medium text-gray-700 mb-2">ចំនួនទឹកប្រាក់ ({currency})</label>
+            <div className="flex gap-2">
+              <div className="relative flex-1">
+                <span className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500 font-medium">{currencySymbol(currency)}</span>
+                <input
+                  type="number"
+                  value={amount}
+                  onChange={(e) => setAmount(e.target.value)}
+                  onWheel={(e) => e.currentTarget.blur()}
+                  placeholder="0.00"
+                  min="100"
+                  step="100"
+                  className="w-full pl-8 pr-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-lg font-semibold text-gray-900"
+                />
+              </div>
+              <CurrencySelect value={currency} onChange={setCurrency} className="shrink-0" />
             </div>
           </div>
 
           <div className="mb-6">
-            <label className="block text-sm font-medium text-gray-700 mb-2">កំណត់ចំណាំ (ស្រេចចិត្ត)</label>
-            <input
-              type="text"
+            <label className="block text-sm font-medium text-gray-700 mb-2">កំណត់ចំណាំ </label>
+            <textarea
               value={notes}
               onChange={(e) => setNotes(e.target.value)}
+              rows={3}
               placeholder="ឧ. ការសន្សំប្រចាំខែឧសភា"
-              className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
+              className="w-full resize-y px-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
             />
           </div>
 
@@ -162,11 +137,11 @@ export default function AddSavingPage() {
             <div className="bg-blue-50 rounded-lg p-4 mb-5">
               <div className="flex justify-between items-center">
                 <span className="text-blue-700 text-sm">ចំនួនទឹកប្រាក់សន្សំ</span>
-                <span className="text-blue-900 font-semibold">฿{parseFloat(amount).toLocaleString()}</span>
+                <span className="text-blue-900 font-semibold">{currencySymbol(currency)}{parseFloat(amount).toLocaleString()}</span>
               </div>
               <div className="flex justify-between items-center mt-1">
                 <span className="text-blue-700 text-sm">ការប្រាក់ប្រចាំខែ (៣%)</span>
-                <span className="text-green-600 font-semibold">+฿{(parseFloat(amount) * 0.03).toFixed(2)}</span>
+                <span className="text-green-600 font-semibold">+{currencySymbol(currency)}{(parseFloat(amount) * 0.03).toFixed(2)}</span>
               </div>
             </div>
           )}
@@ -196,7 +171,7 @@ export default function AddSavingPage() {
                 <QrCode className="w-32 h-32 text-gray-400" />
               </div>
             </div>
-            <p className="font-semibold text-gray-900 text-lg">฿{parseFloat(amount).toLocaleString()}</p>
+            <p className="font-semibold text-gray-900 text-lg">{currencySymbol(currency)}{parseFloat(amount).toLocaleString()}</p>
             <p className="text-gray-500 text-sm mt-1">ផ្ទេរចំនួនពិតប្រាកដនេះ</p>
           </div>
 
@@ -206,7 +181,7 @@ export default function AddSavingPage() {
               <div className="text-sm text-yellow-700">
                 <p className="font-medium mb-1">សំខាន់៖</p>
                 <ul className="space-y-1 list-disc list-inside text-xs">
-                  <li>ផ្ទេរចំនួនពិតប្រាកដ <strong>฿{parseFloat(amount).toLocaleString()}</strong></li>
+                  <li>ផ្ទេរចំនួនពិតប្រាកដ <strong>{currencySymbol(currency)}{parseFloat(amount).toLocaleString()}</strong></li>
                   <li>ថតរូបអេក្រង់នៃការបញ្ជាក់ការផ្ទេរ</li>
                   <li>កុំបិទទំព័រនេះរហូតដល់អ្នកមានរូបអេក្រង់</li>
                 </ul>
@@ -264,7 +239,7 @@ export default function AddSavingPage() {
           <div className="bg-gray-50 rounded-lg p-4 mb-6">
             <div className="flex justify-between items-center text-sm">
               <span className="text-gray-500">ចំនួនទឹកប្រាក់សន្សំ</span>
-              <span className="font-semibold text-gray-900">฿{parseFloat(amount).toLocaleString()}</span>
+              <span className="font-semibold text-gray-900">{currencySymbol(currency)}{parseFloat(amount).toLocaleString()}</span>
             </div>
             {notes && (
               <div className="flex justify-between items-center text-sm mt-1">
@@ -294,7 +269,7 @@ export default function AddSavingPage() {
             </div>
             <h2 className="text-2xl font-bold text-gray-900 mb-2">ការសន្សំបានដាក់ស្នើ!</h2>
             <p className="text-gray-600 mb-2">
-              ការសន្សំរបស់អ្នកចំនួន <strong>฿{parseFloat(amount).toLocaleString()}</strong> ត្រូវបានដាក់ស្នើដោយជោគជ័យ។
+              ការសន្សំរបស់អ្នកចំនួន <strong>{currencySymbol(currency)}{parseFloat(amount).toLocaleString()}</strong> ត្រូវបានដាក់ស្នើដោយជោគជ័យ។
             </p>
             <p className="text-gray-500 text-sm mb-6">
               អ្នកគ្រប់គ្រងនឹងផ្ទៀងផ្ទាត់ភស្តុតាងបង់ប្រាក់របស់អ្នកក្នុងរយៈពេល ២៤ ម៉ោង។
@@ -306,7 +281,7 @@ export default function AddSavingPage() {
               <div className="space-y-1">
                 <div className="flex justify-between text-sm">
                   <span className="text-green-700">ចំនួនទឹកប្រាក់</span>
-                  <span className="font-medium text-green-900">฿{parseFloat(amount).toLocaleString()}</span>
+                  <span className="font-medium text-green-900">{currencySymbol(currency)}{parseFloat(amount).toLocaleString()}</span>
                 </div>
                 <div className="flex justify-between text-sm">
                   <span className="text-green-700">ស្ថានភាព</span>

@@ -12,7 +12,7 @@ const navLinks = [
     children: [
       { label: 'ចក្ខុវិស័យ និង បេសកកម្ម', href: '/about#vision' },
       { label: 'អត្ថប្រយោជន៍នៃការសន្សំ', href: '/about#saving-benefits' },
-      { label: 'អត្រាការប្រាក់ឥណទាន', href: '/about#loan-rates' },
+      { label: 'អត្រាការប្រាក់កម្ជី', href: '/about#loan-rates' },
     ],
   },
   { label: 'ចូលជាសមាជិក', href: '/register' },
