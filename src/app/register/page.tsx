@@ -1,12 +1,12 @@
 'use client'
 
-import React, { useMemo, useState } from 'react'
+import React, { useEffect, useMemo, useState } from 'react'
 import Link from 'next/link'
 import {
-  AlertCircle,
   ArrowLeft,
   ArrowRight,
   Building2,
+  Calendar,
   Check,
   CheckCircle2,
   CreditCard,
@@ -25,6 +25,7 @@ import {
   X,
 } from 'lucide-react'
 import { registerMember } from '@/app/actions/member'
+import { showError } from '@/lib/toast'
 
 type StepId = 1 | 2 | 3 | 4 | 5
 
@@ -72,8 +73,10 @@ interface FormData {
   email: string
   password: string
   confirmPassword: string
-  full_name: string
+  full_name_kh: string
+  full_name_en: string
   phone: string
+  date_of_birth: string
   address: string
   id_number: string
   resident_book_number: string
@@ -86,8 +89,10 @@ const INITIAL_FORM: FormData = {
   email: '',
   password: '',
   confirmPassword: '',
-  full_name: '',
+  full_name_kh: '',
+  full_name_en: '',
   phone: '',
+  date_of_birth: '',
   address: '',
   id_number: '',
   resident_book_number: '',
@@ -96,17 +101,41 @@ const INITIAL_FORM: FormData = {
   resident_book: null,
 }
 
+/** Keeps every text field a string so inputs stay controlled (e.g. after HMR or field renames). */
+function normalizeFormData(data: Partial<FormData> & { full_name?: string }): FormData {
+  const merged = { ...INITIAL_FORM, ...data }
+  return {
+    ...merged,
+    email: merged.email ?? '',
+    password: merged.password ?? '',
+    confirmPassword: merged.confirmPassword ?? '',
+    full_name_kh: merged.full_name_kh ?? data.full_name ?? '',
+    full_name_en: merged.full_name_en ?? '',
+    phone: merged.phone ?? '',
+    date_of_birth: merged.date_of_birth ?? '',
+    address: merged.address ?? '',
+    id_number: merged.id_number ?? '',
+    resident_book_number: merged.resident_book_number ?? '',
+    referee_email: merged.referee_email ?? '',
+    id_document: merged.id_document ?? null,
+    resident_book: merged.resident_book ?? null,
+  }
+}
+
 export default function RegisterPage() {
   const [step, setStep] = useState<StepId>(1)
   const [loading, setLoading] = useState(false)
-  const [error, setError] = useState<string | null>(null)
   const [showPassword, setShowPassword] = useState(false)
   const [showConfirmPassword, setShowConfirmPassword] = useState(false)
-  const [formData, setFormData] = useState<FormData>(INITIAL_FORM)
+  const [formData, setFormData] = useState<FormData>(() => normalizeFormData(INITIAL_FORM))
 
   const updateField = <K extends keyof FormData>(field: K, value: FormData[K]) => {
-    setFormData((prev) => ({ ...prev, [field]: value }))
+    setFormData((prev) => normalizeFormData({ ...prev, [field]: value }))
   }
+
+  useEffect(() => {
+    setFormData((prev) => normalizeFormData(prev))
+  }, [])
 
   const currentStep = STEPS[step - 1]
   const totalSteps = 4
@@ -132,52 +161,61 @@ export default function RegisterPage() {
 
   const validateStep1 = () => {
     if (!formData.email || !formData.password || !formData.confirmPassword) {
-      setError('សូមបំពេញអ៊ីមែល និង ពាក្យសម្ងាត់របស់អ្នក។')
+      showError('សូមបំពេញអ៊ីមែល និង ពាក្យសម្ងាត់របស់អ្នក។')
       return false
     }
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
-      setError('សូមបញ្ចូលអាសយដ្ឋានអ៊ីមែលត្រឹមត្រូវ។')
+      showError('សូមបញ្ចូលអាសយដ្ឋានអ៊ីមែលត្រឹមត្រូវ។')
       return false
     }
     if (formData.password.length < 8) {
-      setError('ពាក្យសម្ងាត់ត្រូវមានយ៉ាងតិច ៨ តួអក្សរ។')
+      showError('ពាក្យសម្ងាត់ត្រូវមានយ៉ាងតិច ៨ តួអក្សរ។')
       return false
     }
     if (formData.password !== formData.confirmPassword) {
-      setError('ពាក្យសម្ងាត់មិនត្រូវគ្នាទេ។')
+      showError('ពាក្យសម្ងាត់មិនត្រូវគ្នាទេ។')
       return false
     }
     return true
   }
 
   const validateStep2 = () => {
-    if (!formData.full_name || !formData.phone || !formData.id_number) {
-      setError('សូមបំពេញឈ្មោះពេញ លេខទូរស័ព្ទ និង លេខអត្តសញ្ញាណប័ណ្ណ។')
+    if (
+      !formData.full_name_kh ||
+      !formData.full_name_en ||
+      !formData.phone ||
+      !formData.date_of_birth ||
+      !formData.id_number
+    ) {
+      showError(
+        'សូមបំពេញឈ្មោះ (ខ្មែរ និង អង់គ្លេស) ថ្ងៃខែឆ្នាំកំណើត លេខទូរស័ព្ទ និង លេខអត្តសញ្ញាណប័ណ្ណ។'
+      )
+      return false
+    }
+    if (formData.date_of_birth > new Date().toISOString().slice(0, 10)) {
+      showError('ថ្ងៃខែឆ្នាំកំណើតមិនអាចនៅពេលអនាគតបានទេ។')
       return false
     }
     return true
   }
 
   const handleNext = () => {
-    setError(null)
     if (step === 1 && !validateStep1()) return
     if (step === 2 && !validateStep2()) return
     setStep((prev) => Math.min(prev + 1, 5) as StepId)
   }
 
   const handleBack = () => {
-    setError(null)
     setStep((prev) => Math.max(prev - 1, 1) as StepId)
   }
 
   const handleSubmit = async () => {
     if (formData.password !== formData.confirmPassword) {
-      setError('ពាក្យសម្ងាត់មិនត្រូវគ្នាទេ។')
+      showError('ពាក្យសម្ងាត់មិនត្រូវគ្នាទេ។')
       return
     }
 
     setLoading(true)
-    setError(null)
 
     try {
       const payload = new FormData()
@@ -187,14 +225,14 @@ export default function RegisterPage() {
 
       const result = await registerMember(payload)
       if (!result.success) {
-        setError(result.error ?? 'ការចុះឈ្មោះបរាជ័យ។ សូមព្យាយាមម្តងទៀត។')
+        showError(result.error ?? 'ការចុះឈ្មោះបរាជ័យ។ សូមព្យាយាមម្តងទៀត។')
         return
       }
 
       setStep(5)
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : 'ការចុះឈ្មោះបរាជ័យ។ សូមព្យាយាមម្តងទៀត។'
-      setError(message)
+      showError(message)
     } finally {
       setLoading(false)
     }
@@ -252,20 +290,10 @@ export default function RegisterPage() {
                 <div className="mb-6">
                   <div className="h-1.5 w-full overflow-hidden rounded-full bg-slate-200">
                     <div
-                      className="h-full rounded-full bg-linear-to-r from-blue-600 to-blue-900 transition-all duration-500 ease-out"
+                      className="h-full rounded-full bg-blue-800 transition-all duration-500 ease-out"
                       style={{ width: `${progress}%` }}
                     />
                   </div>
-                </div>
-              )}
-
-              {error && (
-                <div
-                  role="alert"
-                  className="mb-6 flex items-start gap-3 rounded-2xl border border-rose-200 bg-rose-50 px-4 py-3 text-rose-800"
-                >
-                  <AlertCircle className="mt-0.5 h-5 w-5 shrink-0" />
-                  <p className="text-sm leading-6">{error}</p>
                 </div>
               )}
 
@@ -366,9 +394,6 @@ export default function RegisterPage() {
 function BrandPanel({ currentStep }: { currentStep: StepId }) {
   return (
     <aside className="relative hidden overflow-hidden bg-blue-950 text-white lg:flex lg:flex-col">
-      <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(96,165,250,0.25),transparent_45%)]" />
-      <div className="absolute inset-x-0 bottom-0 h-72 bg-[radial-gradient(circle_at_bottom_right,rgba(59,130,246,0.28),transparent_55%)]" />
-
       <div className="relative flex h-full flex-col px-10 py-10">
         <Link href="/" className="inline-flex w-fit items-center gap-2.5 group">
           <span className="grid h-10 w-10 place-items-center rounded-xl bg-white/10 ring-1 ring-white/15 transition group-hover:bg-white/15">
@@ -378,16 +403,11 @@ function BrandPanel({ currentStep }: { currentStep: StepId }) {
         </Link>
 
         <div className="mt-14">
-          <span className="inline-flex items-center gap-1.5 rounded-full bg-white/10 px-3 py-1 text-xs font-semibold uppercase tracking-wide text-blue-100 ring-1 ring-white/15">
-            <Sparkles className="h-3.5 w-3.5" />
-            ការចុះឈ្មោះសមាជិកថ្មី
-          </span>
           <h2 className="mt-5 text-[28px] font-bold leading-[1.2]">
             ចូលរួមសហគមន៍ដែលគ្រប់គ្រងដោយសមាជិកដែលអាចទុកចិត្តបាន។
           </h2>
           <p className="mt-3 text-[15px] leading-7 text-blue-100/85">
-            បំពេញជំហានខ្លីៗបួនដើម្បីបើកគណនី បន្ទាប់មកសន្សំដោយយុត្តិធម៌
-            ស្នើសុំឥណទានដោយតម្លាភាព និង រីកចម្រើនជាមួយសមាជិកដូចអ្នក។
+            បំពេញជំហានខ្លីៗបួនដើម្បីបើកគណនី។
           </p>
         </div>
 
@@ -483,7 +503,7 @@ function Field({ label, htmlFor, hint, optional, children }: FieldShellProps) {
         <label htmlFor={htmlFor} className="text-sm font-semibold text-slate-800">
           {label}
           {optional && (
-            <span className="ml-1.5 text-xs font-normal text-slate-400">(ស្រេចចិត្ត)</span>
+            <span className="ml-1.5 text-xs font-normal text-slate-400"></span>
           )}
         </label>
         {hint && <span className="text-xs text-slate-400">{hint}</span>}
@@ -501,7 +521,7 @@ interface IconInputProps extends React.InputHTMLAttributes<HTMLInputElement> {
   trailing?: React.ReactNode
 }
 
-function IconInput({ icon, trailing, className = '', ...rest }: IconInputProps) {
+function IconInput({ icon, trailing, className = '', value, ...rest }: IconInputProps) {
   return (
     <div className="relative">
       <span className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400">
@@ -509,6 +529,7 @@ function IconInput({ icon, trailing, className = '', ...rest }: IconInputProps) 
       </span>
       <input
         {...rest}
+        value={value ?? ''}
         className={`${inputBase} pl-11 ${trailing ? 'pr-11' : ''} ${className}`}
       />
       {trailing && (
@@ -621,15 +642,7 @@ function StepAccount({
             <span className="font-semibold text-slate-700">{strength.label}</span>
           </div>
         </div>
-      )}
-
-      <div className="flex items-start gap-3 rounded-2xl border border-blue-100 bg-blue-50/60 p-4 text-sm leading-6 text-blue-900">
-        <ShieldCheck className="mt-0.5 h-5 w-5 shrink-0 text-blue-700" />
-        <p>
-          ប្រើប្រាស់ពាក្យសម្ងាត់ដែលរឹងមាំ និង មានតែមួយ។ គណនីរបស់អ្នកការពារការសន្សំ
-          ការស្នើសុំឥណទាន ការសងវិញ និង របាយការណ៍របស់អ្នក។
-        </p>
-      </div>
+      )}      
     </div>
   )
 }
@@ -638,15 +651,26 @@ function StepPersonal({ formData, updateField }: StepProps) {
   return (
     <div className="space-y-5">
       <div className="grid gap-5 sm:grid-cols-2">
-        <Field label="ឈ្មោះពេញ" htmlFor="full_name" hint="ដូចនៅលើអត្តសញ្ញាណប័ណ្ណ">
+        <Field label="ឈ្មោះ (ខ្មែរ)" htmlFor="full_name_kh" hint="ដូចនៅលើអត្តសញ្ញាណប័ណ្ណ">
           <IconInput
-            id="full_name"
+            id="full_name_kh"
             icon={<User className="h-4.5 w-4.5" />}
             type="text"
             autoComplete="name"
-            value={formData.full_name}
-            onChange={(e) => updateField('full_name', e.target.value)}
-            placeholder="ឈ្មោះពេញច្បាប់របស់អ្នក"
+            value={formData.full_name_kh}
+            onChange={(e) => updateField('full_name_kh', e.target.value)}
+            placeholder="ឈ្មោះជាអក្សរខ្មែរ"
+          />
+        </Field>
+        <Field label="ឈ្មោះ (អង់គ្លេស)" htmlFor="full_name_en" hint="ដូចនៅលើអត្តសញ្ញាណប័ណ្ណ">
+          <IconInput
+            id="full_name_en"
+            icon={<User className="h-4.5 w-4.5" />}
+            type="text"
+            autoComplete="additional-name"
+            value={formData.full_name_en}
+            onChange={(e) => updateField('full_name_en', e.target.value)}
+            placeholder="Full name in English"
           />
         </Field>
         <Field label="លេខទូរស័ព្ទ" htmlFor="phone">
@@ -658,6 +682,17 @@ function StepPersonal({ formData, updateField }: StepProps) {
             value={formData.phone}
             onChange={(e) => updateField('phone', e.target.value)}
             placeholder="0812345678"
+          />
+        </Field>
+        <Field label="ថ្ងៃខែឆ្នាំកំណើត" htmlFor="date_of_birth" hint="ដូចនៅលើអត្តសញ្ញាណប័ណ្ណ">
+          <IconInput
+            id="date_of_birth"
+            icon={<Calendar className="h-4.5 w-4.5" />}
+            type="date"
+            autoComplete="bday"
+            value={formData.date_of_birth}
+            max={new Date().toISOString().slice(0, 10)}
+            onChange={(e) => updateField('date_of_birth', e.target.value)}
           />
         </Field>
       </div>
@@ -691,7 +726,7 @@ function StepPersonal({ formData, updateField }: StepProps) {
           <MapPin className="pointer-events-none absolute left-3.5 top-3.5 h-4.5 w-4.5 text-slate-400" />
           <textarea
             id="address"
-            value={formData.address}
+            value={formData.address ?? ''}
             onChange={(e) => updateField('address', e.target.value)}
             placeholder="អាសយដ្ឋានបច្ចុប្បន្នរបស់អ្នក"
             rows={3}

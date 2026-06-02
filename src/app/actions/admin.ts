@@ -4,6 +4,7 @@ import { revalidatePath } from 'next/cache'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { requireAdmin } from '@/lib/auth/member'
 import type { ActionResult } from '@/app/actions/member'
+import { formatMoney } from '@/lib/currency'
 
 function idFrom(formData: FormData) {
   const id = formData.get('id')
@@ -30,7 +31,13 @@ export async function approveMember(formData: FormData): Promise<ActionResult> {
     const admin = createAdminClient()
     const { data, error } = await admin
       .from('members')
-      .update({ status: 'active' })
+      .update({
+        status: 'active',
+        suspension_reason: null,
+        suspended_at: null,
+        rejection_reason: null,
+        rejected_at: null,
+      })
       .eq('id', id)
       .select('id')
       .single()
@@ -40,6 +47,7 @@ export async function approveMember(formData: FormData): Promise<ActionResult> {
     revalidatePath('/admin')
     revalidatePath('/admin/members')
     revalidatePath(`/admin/members/${id}`)
+    revalidatePath('/pending-approval')
     return { success: true }
   } catch (error) {
     return { success: false, error: error instanceof Error ? error.message : 'មិនអាចទទួលយកសមាជិកបានទេ។' }
@@ -50,38 +58,168 @@ export async function suspendMember(formData: FormData): Promise<ActionResult> {
   try {
     await requireAdmin()
     const id = idFrom(formData)
+    const reason = formData.get('reason')
+    if (typeof reason !== 'string' || reason.trim().length < 5) {
+      return { success: false, error: 'សូមបញ្ចូលមូលហេតុផ្អាកយ៉ាងតិច ៥ តួអក្សរ។' }
+    }
+    const trimmedReason = reason.trim()
     const admin = createAdminClient()
-    const { error } = await admin.from('members').update({ status: 'suspended' }).eq('id', id)
+    const { data, error } = await admin
+      .from('members')
+      .update({
+        status: 'suspended',
+        suspension_reason: trimmedReason,
+        suspended_at: new Date().toISOString(),
+      })
+      .eq('id', id)
+      .select('id')
+      .single()
+
     if (error) throw error
+
+    await notify(
+      data.id,
+      'គណនីត្រូវបានផ្អាក',
+      `គណនីរបស់អ្នកត្រូវបានផ្អាក។ មូលហេតុ៖ ${trimmedReason}`
+    )
+
     revalidatePath('/admin')
     revalidatePath('/admin/members')
     revalidatePath(`/admin/members/${id}`)
+    revalidatePath('/pending-approval')
     return { success: true }
   } catch (error) {
     return { success: false, error: error instanceof Error ? error.message : 'មិនអាចផ្អាកសមាជិកបានទេ។' }
   }
 }
 
-export async function verifySaving(formData: FormData): Promise<ActionResult> {
+export async function denyMember(formData: FormData): Promise<ActionResult> {
+  try {
+    await requireAdmin()
+    const id = idFrom(formData)
+    const reason = formData.get('reason')
+    if (typeof reason !== 'string' || reason.trim().length < 5) {
+      return { success: false, error: 'សូមបញ្ចូលមូលហេតុបដិសេធយ៉ាងតិច ៥ តួអក្សរ។' }
+    }
+    const trimmedReason = reason.trim()
+    const admin = createAdminClient()
+    const { data, error } = await admin
+      .from('members')
+      .update({
+        status: 'rejected',
+        rejection_reason: trimmedReason,
+        rejected_at: new Date().toISOString(),
+      })
+      .eq('id', id)
+      .select('id')
+      .single()
+
+    if (error) throw error
+
+    await notify(
+      data.id,
+      'ការចុះឈ្មោះត្រូវបានបដិសេធ',
+      `ការចុះឈ្មោះរបស់អ្នកមិនត្រូវបានទទួលយកទេ។ មូលហេតុ៖ ${trimmedReason}`
+    )
+
+    revalidatePath('/admin')
+    revalidatePath('/admin/members')
+    revalidatePath(`/admin/members/${id}`)
+    revalidatePath('/pending-approval')
+    return { success: true }
+  } catch (error) {
+    return { success: false, error: error instanceof Error ? error.message : 'មិនអាចបដិសេធសមាជិកបានទេ។' }
+  }
+}
+
+export async function approveSaving(formData: FormData): Promise<ActionResult> {
   try {
     const approver = await requireAdmin()
     const id = idFrom(formData)
     const admin = createAdminClient()
     const { data, error } = await admin
       .from('savings')
-      .update({ status: 'completed', verified_by: approver.id, verified_at: new Date().toISOString() })
+      .update({
+        status: 'completed',
+        verified_by: approver.id,
+        verified_at: new Date().toISOString(),
+      })
       .eq('id', id)
-      .select('member_id, amount')
-      .single()
+      .eq('status', 'pending')
+      .select('member_id, amount, currency')
+      .maybeSingle()
 
     if (error) throw error
-    await notify(data.member_id, 'ការសន្សំបានផ្ទៀងផ្ទាត់', `ការសន្សំរបស់អ្នកចំនួន ฿${Number(data.amount).toLocaleString()} ត្រូវបានផ្ទៀងផ្ទាត់។`)
+    if (!data) {
+      return { success: false, error: 'សំណើនេះមិនអាចអនុម័តបានទេ ឬត្រូវបានដំណើរការរួចហើយ។' }
+    }
+    await notify(
+      data.member_id,
+      'ការសន្សំត្រូវបានអនុម័ត',
+      `ការសន្សំរបស់អ្នកចំនួន ${formatMoney(data.amount, data.currency ?? 'USD')} ត្រូវបានអនុម័តដោយជោគជ័យ។`
+    )
     revalidatePath('/admin')
+    revalidatePath('/admin/savings')
     revalidatePath('/dashboard')
     revalidatePath('/dashboard/savings')
     return { success: true }
   } catch (error) {
-    return { success: false, error: error instanceof Error ? error.message : 'មិនអាចផ្ទៀងផ្ទាត់ការសន្សំបានទេ។' }
+    return { success: false, error: error instanceof Error ? error.message : 'មិនអាចអនុម័តការសន្សំបានទេ។' }
+  }
+}
+
+/** @deprecated Use approveSaving */
+export async function verifySaving(formData: FormData): Promise<ActionResult> {
+  return approveSaving(formData)
+}
+
+/** @deprecated Use approveSaving */
+export async function acceptSaving(formData: FormData): Promise<ActionResult> {
+  return approveSaving(formData)
+}
+
+export async function refundSaving(formData: FormData): Promise<ActionResult> {
+  try {
+    const approver = await requireAdmin()
+    const id = idFrom(formData)
+    const reason = formData.get('reason')
+    if (typeof reason !== 'string' || reason.trim().length < 5) {
+      return { success: false, error: 'សូមបញ្ចូលមូលហេតុសងប្រាក់វិញយ៉ាងតិច ៥ តួអក្សរ។' }
+    }
+    const trimmedReason = reason.trim()
+    const admin = createAdminClient()
+    const { data, error } = await admin
+      .from('savings')
+      .update({
+        status: 'refunded',
+        refund_reason: trimmedReason,
+        refunded_at: new Date().toISOString(),
+        refunded_by: approver.id,
+      })
+      .eq('id', id)
+      .eq('status', 'pending')
+      .select('member_id, amount, currency')
+      .maybeSingle()
+
+    if (error) throw error
+    if (!data) {
+      return { success: false, error: 'សំណើនេះមិនអាចសងប្រាក់វិញបានទេ ឬត្រូវបានដំណើរការរួចហើយ។' }
+    }
+    await notify(
+      data.member_id,
+      'ការសន្សំត្រូវបានសងប្រាក់វិញ',
+      `ការសន្សំចំនួន ${formatMoney(data.amount, data.currency ?? 'USD')} ត្រូវបានសងប្រាក់វិញ។ មូលហេតុ៖ ${trimmedReason}`
+    )
+    revalidatePath('/admin')
+    revalidatePath('/admin/savings')
+    revalidatePath('/dashboard')
+    revalidatePath('/dashboard/savings')
+    return { success: true }
+  } catch (error) {
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : 'មិនអាចសងប្រាក់វិញបានទេ។',
+    }
   }
 }
 
@@ -94,12 +232,13 @@ export async function verifyRepayment(formData: FormData): Promise<ActionResult>
       .from('loan_repayments')
       .update({ status: 'completed', verified_by: approver.id, verified_at: new Date().toISOString() })
       .eq('id', id)
-      .select('member_id, amount')
+      .select('member_id, amount, currency')
       .single()
 
     if (error) throw error
-    await notify(data.member_id, 'ការសងបានផ្ទៀងផ្ទាត់', `ការសងរបស់អ្នកចំនួន ฿${Number(data.amount).toLocaleString()} ត្រូវបានផ្ទៀងផ្ទាត់។`)
+    await notify(data.member_id, 'ការសងបានផ្ទៀងផ្ទាត់', `ការសងរបស់អ្នកចំនួន ${formatMoney(data.amount, data.currency ?? 'USD')} ត្រូវបានផ្ទៀងផ្ទាត់។`)
     revalidatePath('/admin')
+    revalidatePath('/admin/payments')
     revalidatePath('/dashboard')
     revalidatePath('/dashboard/loans')
     return { success: true }
@@ -117,16 +256,18 @@ export async function approveLoan(formData: FormData): Promise<ActionResult> {
       .from('loans')
       .update({ status: 'approved', approved_by: approver.id, approved_at: new Date().toISOString() })
       .eq('id', id)
-      .select('member_id, amount')
+      .select('member_id, amount, currency')
       .single()
 
     if (error) throw error
-    await notify(data.member_id, 'ឥណទានត្រូវបានទទួលយក', `ការស្នើសុំឥណទានរបស់អ្នកចំនួន ฿${Number(data.amount).toLocaleString()} ត្រូវបានទទួលយក។ សូមដាក់ស្នើឯកសារច្បាប់ដើមមុនការបើកប្រាក់។`)
+    await notify(data.member_id, 'កម្ជីត្រូវបានទទួលយក', `ការស្នើសុំកម្ជីរបស់អ្នកចំនួន ${formatMoney(data.amount, data.currency ?? 'USD')} ត្រូវបានទទួលយក។ សូមដាក់ស្នើឯកសារច្បាប់ដើមមុនការបើកប្រាក់។`)
     revalidatePath('/admin')
+    revalidatePath('/admin/loans')
+    revalidatePath(`/admin/loans/${id}`)
     revalidatePath('/dashboard/loans')
     return { success: true }
   } catch (error) {
-    return { success: false, error: error instanceof Error ? error.message : 'មិនអាចទទួលយកឥណទានបានទេ។' }
+    return { success: false, error: error instanceof Error ? error.message : 'មិនអាចទទួលយកកម្ជីបានទេ។' }
   }
 }
 
@@ -148,16 +289,18 @@ export async function activateLoan(formData: FormData): Promise<ActionResult> {
         due_date: dueDate.toISOString().slice(0, 10),
       })
       .eq('id', id)
-      .select('member_id, amount')
+      .select('member_id, amount, currency')
       .single()
 
     if (error) throw error
-    await notify(data.member_id, 'ឥណទានត្រូវបានបើក', `ឥណទានរបស់អ្នកចំនួន ฿${Number(data.amount).toLocaleString()} ត្រូវបានសម្គាល់ថាសកម្ម។`)
+    await notify(data.member_id, 'កម្ជីត្រូវបានបើក', `កម្ជីរបស់អ្នកចំនួន ${formatMoney(data.amount, data.currency ?? 'USD')} ត្រូវបានសម្គាល់ថាសកម្ម។`)
     revalidatePath('/admin')
+    revalidatePath('/admin/loans')
+    revalidatePath(`/admin/loans/${id}`)
     revalidatePath('/dashboard/loans')
     return { success: true }
   } catch (error) {
-    return { success: false, error: error instanceof Error ? error.message : 'មិនអាចដំណើរការឥណទានបានទេ។' }
+    return { success: false, error: error instanceof Error ? error.message : 'មិនអាចដំណើរការកម្ជីបានទេ។' }
   }
 }
 
@@ -174,12 +317,14 @@ export async function rejectLoan(formData: FormData): Promise<ActionResult> {
       .single()
 
     if (error) throw error
-    await notify(data.member_id, 'ឥណទានត្រូវបានបដិសេធ', 'ការស្នើសុំឥណទានរបស់អ្នកមិនត្រូវបានទទួលយកទេ។')
+    await notify(data.member_id, 'កម្ជីត្រូវបានបដិសេធ', 'ការស្នើសុំកម្ជីរបស់អ្នកមិនត្រូវបានទទួលយកទេ។')
     revalidatePath('/admin')
+    revalidatePath('/admin/loans')
+    revalidatePath(`/admin/loans/${id}`)
     revalidatePath('/dashboard/loans')
     return { success: true }
   } catch (error) {
-    return { success: false, error: error instanceof Error ? error.message : 'មិនអាចបដិសេធឥណទានបានទេ។' }
+    return { success: false, error: error instanceof Error ? error.message : 'មិនអាចបដិសេធកម្ជីបានទេ។' }
   }
 }
 
@@ -193,12 +338,12 @@ export async function decideCapitalRequest(formData: FormData): Promise<ActionRe
       .from('capital_requests')
       .update({ status: decision, approved_by: approver.id, approved_at: new Date().toISOString() })
       .eq('id', id)
-      .select('member_id, amount')
+      .select('member_id, amount, currency')
       .single()
 
     if (error) throw error
     const decisionLabel = decision === 'approved' ? 'បានទទួលយក' : 'បានបដិសេធ'
-    await notify(data.member_id, 'ការស្នើសុំដើមទុនត្រូវបានធ្វើបច្ចុប្បន្នភាព', `ការស្នើសុំដើមទុនរបស់អ្នកចំនួន ฿${Number(data.amount).toLocaleString()} ${decisionLabel} ។`)
+    await notify(data.member_id, 'ការស្នើសុំដើមទុនត្រូវបានធ្វើបច្ចុប្បន្នភាព', `ការស្នើសុំដើមទុនរបស់អ្នកចំនួន ${formatMoney(data.amount, data.currency ?? 'USD')} ${decisionLabel} ។`)
     revalidatePath('/admin')
     return { success: true }
   } catch (error) {
@@ -218,6 +363,8 @@ export async function markReportSent(formData: FormData): Promise<ActionResult> 
 
     if (error) throw error
     revalidatePath('/admin')
+    revalidatePath('/admin/reports')
+    revalidatePath('/admin/savings')
     return { success: true }
   } catch (error) {
     return { success: false, error: error instanceof Error ? error.message : 'មិនអាចសម្គាល់ថារបាយការណ៍បានផ្ញើទេ។' }

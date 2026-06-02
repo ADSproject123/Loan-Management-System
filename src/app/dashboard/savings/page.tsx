@@ -4,6 +4,7 @@ import { SavingStatusBadge } from '@/components/ui/Badge'
 import { requireMember } from '@/lib/auth/member'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { PiggyBank, Plus, FileText, TrendingUp, ChevronRight } from 'lucide-react'
+import { currencySymbol, predominantCurrency } from '@/lib/currency'
 
 function toNumber(value: unknown) {
   const numberValue = Number(value ?? 0)
@@ -15,14 +16,29 @@ export default async function SavingsPage() {
   const admin = createAdminClient()
   const { data } = await admin
     .from('savings')
-    .select('id, amount, saving_date, status, notes')
+    .select('id, amount, currency, saving_date, status, notes, refund_reason, verified_at, verified_by')
     .eq('member_id', member.id)
     .order('saving_date', { ascending: false })
 
   const savings = data ?? []
-  const verifiedSavings = savings.filter((saving) => saving.status === 'verified' || saving.status === 'completed')
+  const effectiveStatus = (saving: {
+    status: string
+    verified_at?: string | null
+    verified_by?: string | null
+  }) => {
+    if (saving.status === 'refunded') return 'refunded' as const
+    if (saving.verified_at || saving.verified_by) return 'completed' as const
+    return saving.status as 'pending' | 'verified' | 'completed'
+  }
+
+  const verifiedSavings = savings.filter((saving) => {
+    const status = effectiveStatus(saving)
+    return status === 'verified' || status === 'completed'
+  })
   const totalSavings = verifiedSavings.reduce((sum, saving) => sum + toNumber(saving.amount), 0)
   const monthlyInterest = totalSavings * 0.03
+  const displayCurrency = predominantCurrency(verifiedSavings)
+  const displaySymbol = currencySymbol(displayCurrency)
 
   return (
     <div className="p-6 md:p-8 max-w-7xl mx-auto">
@@ -56,14 +72,14 @@ export default async function SavingsPage() {
           <div className="p-2.5 bg-green-100 rounded-lg inline-flex mb-3">
             <PiggyBank className="w-5 h-5 text-green-700" />
           </div>
-          <p className="text-2xl font-bold text-gray-900">฿{totalSavings.toLocaleString()}</p>
+          <p className="text-2xl font-bold text-gray-900">{displaySymbol}{totalSavings.toLocaleString()}</p>
           <p className="text-gray-500 text-sm mt-1">សមតុល្យសន្សំសរុប</p>
         </Card>
         <Card>
           <div className="p-2.5 bg-blue-100 rounded-lg inline-flex mb-3">
             <TrendingUp className="w-5 h-5 text-blue-700" />
           </div>
-          <p className="text-2xl font-bold text-gray-900">฿{monthlyInterest.toLocaleString()}</p>
+          <p className="text-2xl font-bold text-gray-900">{displaySymbol}{monthlyInterest.toLocaleString()}</p>
           <p className="text-gray-500 text-sm mt-1">ការប្រាក់ប្រចាំខែ (៣%)</p>
         </Card>
         <Card>
@@ -104,11 +120,15 @@ export default async function SavingsPage() {
                     {new Date(saving.saving_date).toLocaleDateString('km-KH', { day: 'numeric', month: 'long', year: 'numeric' })}
                   </td>
                   <td className="px-6 py-4">
-                    <span className="text-sm font-semibold text-green-700">+฿{saving.amount.toLocaleString()}</span>
+                    <span className="text-sm font-semibold text-green-700">+{currencySymbol(saving.currency ?? 'USD')}{saving.amount.toLocaleString()}</span>
                   </td>
-                  <td className="px-6 py-4 text-sm text-gray-500">{saving.notes || '—'}</td>
+                  <td className="px-6 py-4 text-sm text-gray-500">
+                    {saving.status === 'refunded' && saving.refund_reason
+                      ? saving.refund_reason
+                      : saving.notes || '—'}
+                  </td>
                   <td className="px-6 py-4">
-                    <SavingStatusBadge status={saving.status} />
+                    <SavingStatusBadge status={effectiveStatus(saving)} />
                   </td>
                 </tr>
               ))}
@@ -116,20 +136,6 @@ export default async function SavingsPage() {
           </table>
         </div>
       </Card>
-
-      {/* Info Card */}
-      <div className="mt-6 bg-blue-50 rounded-xl p-5 border border-blue-100">
-        <div className="flex items-start gap-3">
-          <TrendingUp className="w-5 h-5 text-blue-700 flex-shrink-0 mt-0.5" />
-          <div>
-            <p className="text-blue-900 font-semibold text-sm">របៀបដែលការសន្សំរបស់អ្នករីកចម្រើន</p>
-            <p className="text-blue-700 text-sm mt-1">
-              ការសន្សំរបស់អ្នកទទួលបានការប្រាក់ ៣% ក្នុងមួយខែលើសមតុល្យសរុប។ ការប្រាក់ត្រូវបានឥណពន្ធដោយស្វ័យប្រវត្តិ
-              នៅចុងខែនីមួយៗ។ អ្នកអាចស្នើសុំរបាយការណ៍សន្សំភ្លាមៗដើម្បីមើលការគណនាលម្អិត។
-            </p>
-          </div>
-        </div>
-      </div>
     </div>
   )
 }

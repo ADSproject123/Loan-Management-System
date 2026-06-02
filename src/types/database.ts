@@ -1,13 +1,17 @@
-export type MemberStatus = 'pending' | 'active' | 'suspended' | 'withdrawn'
+export type MemberStatus = 'pending' | 'active' | 'suspended' | 'withdrawn' | 'rejected'
 export type LoanStatus = 'pending' | 'under_review' | 'approved' | 'active' | 'completed' | 'rejected'
 export type CapitalRequestStatus = 'pending' | 'approved' | 'rejected'
-export type SavingStatus = 'pending' | 'verified' | 'completed'
+export type SavingStatus = 'pending' | 'verified' | 'completed' | 'refunded'
+export type CurrencyCode = 'KHR' | 'USD'
 
 export interface Member {
   id: string
   full_name: string
+  full_name_kh?: string
+  full_name_en?: string
   email: string
   phone?: string
+  date_of_birth?: string
   id_number?: string
   resident_book_number?: string
   address?: string
@@ -19,6 +23,10 @@ export interface Member {
   resident_book_url?: string
   is_admin: boolean
   telegram_chat_id?: string
+  suspension_reason?: string | null
+  suspended_at?: string | null
+  rejection_reason?: string | null
+  rejected_at?: string | null
   joined_at: string
   created_at: string
   updated_at: string
@@ -33,8 +41,12 @@ export interface Saving {
   evidence_url?: string
   status: SavingStatus
   notes?: string
+  currency?: CurrencyCode
   verified_by?: string
   verified_at?: string
+  refund_reason?: string | null
+  refunded_at?: string | null
+  refunded_by?: string | null
   created_at: string
   updated_at: string
 }
@@ -46,6 +58,7 @@ export interface Loan {
   purpose?: string
   term_months?: number
   interest_rate?: number
+  currency?: CurrencyCode
   status: LoanStatus
   referee_id?: string
   referee_verified: boolean
@@ -68,6 +81,7 @@ export interface LoanRepayment {
   payment_date: string
   qr_code_ref?: string
   evidence_url?: string
+  currency?: CurrencyCode
   status: SavingStatus
   verified_by?: string
   verified_at?: string
@@ -80,6 +94,7 @@ export interface CapitalRequest {
   member_id: string
   amount: number
   reason?: string
+  currency?: CurrencyCode
   action_after?: CapitalRequestStatus
   continue_saving?: boolean
   remove_membership: boolean

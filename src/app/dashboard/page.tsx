@@ -3,6 +3,7 @@ import { Card } from '@/components/ui/Card'
 import { MemberStatusBadge } from '@/components/ui/Badge'
 import { requireMember } from '@/lib/auth/member'
 import { createAdminClient } from '@/lib/supabase/admin'
+import { currencySymbol, predominantCurrency } from '@/lib/currency'
 import {
   PiggyBank,
   CreditCard,
@@ -51,18 +52,18 @@ export default async function DashboardPage() {
   const [savingsResult, loansResult, repaymentsResult, notificationsResult] = await Promise.all([
     admin
       .from('savings')
-      .select('id, amount, saving_date, status, created_at')
+      .select('id, amount, currency, saving_date, status, verified_at, verified_by, created_at')
       .eq('member_id', member.id)
       .order('created_at', { ascending: false })
       .limit(5),
     admin
       .from('loans')
-      .select('id, amount, purpose, status, created_at')
+      .select('id, amount, currency, purpose, status, created_at')
       .eq('member_id', member.id)
       .order('created_at', { ascending: false }),
     admin
       .from('loan_repayments')
-      .select('id, amount, payment_date, status, created_at')
+      .select('id, amount, currency, payment_date, status, created_at')
       .eq('member_id', member.id)
       .order('created_at', { ascending: false })
       .limit(5),
@@ -78,27 +79,36 @@ export default async function DashboardPage() {
   const loans = loansResult.data ?? []
   const repayments = repaymentsResult.data ?? []
   const notifications = notificationsResult.data ?? []
-  const verifiedSavings = savings.filter((saving) => saving.status === 'verified' || saving.status === 'completed')
+  const effectiveSavingStatus = (saving: { status: string; verified_at?: string | null; verified_by?: string | null }) =>
+    saving.verified_at || saving.verified_by ? 'completed' : saving.status
+
+  const verifiedSavings = savings.filter((saving) => {
+    const status = effectiveSavingStatus(saving)
+    return status === 'verified' || status === 'completed'
+  })
   const totalSavings = verifiedSavings.reduce((sum, saving) => sum + toNumber(saving.amount), 0)
   const monthlyInterest = totalSavings * 0.03
-  const activeLoanAmount = loans
-    .filter((loan) => loan.status === 'active')
-    .reduce((sum, loan) => sum + toNumber(loan.amount), 0)
+  const activeLoans = loans.filter((loan) => loan.status === 'active')
+  const activeLoanAmount = activeLoans.reduce((sum, loan) => sum + toNumber(loan.amount), 0)
   const availableCredit = Math.max(totalSavings - activeLoanAmount, 0)
+  const savingsSymbol = currencySymbol(predominantCurrency(verifiedSavings))
+  const loanSymbol = currencySymbol(predominantCurrency(activeLoans))
   const activity = [
     ...savings.map((saving) => ({
       id: `saving-${saving.id}`,
       type: 'saving',
       description: 'បានដាក់ស្នើការសន្សំ',
       amount: toNumber(saving.amount),
+      currency: saving.currency ?? 'USD',
       date: saving.saving_date,
-      status: saving.status,
+      status: effectiveSavingStatus(saving),
     })),
     ...repayments.map((repayment) => ({
       id: `repayment-${repayment.id}`,
       type: 'loan_repay',
-      description: 'បានដាក់ស្នើការសងឥណទាន',
+      description: 'បានដាក់ស្នើការសងកម្ជី',
       amount: toNumber(repayment.amount),
+      currency: repayment.currency ?? 'USD',
       date: repayment.payment_date,
       status: repayment.status,
     })),
@@ -129,7 +139,7 @@ export default async function DashboardPage() {
       </div>
 
       {/* Quick Action Banner */}
-      <div className="bg-gradient-to-r from-blue-900 to-blue-700 text-white rounded-xl p-5 mb-8 flex items-center justify-between">
+      <div className="bg-blue-900 text-white rounded-xl p-5 mb-8 flex items-center justify-between">
         <div className="flex items-center gap-3">
           <Calendar className="w-6 h-6 text-blue-200 flex-shrink-0" />
           <div>
@@ -154,16 +164,16 @@ export default async function DashboardPage() {
             </div>
             <TrendingUp className="w-4 h-4 text-green-500" />
           </div>
-          <p className="text-2xl font-bold text-gray-900">฿{totalSavings.toLocaleString()}</p>
+          <p className="text-2xl font-bold text-gray-900">{savingsSymbol}{totalSavings.toLocaleString()}</p>
           <p className="text-gray-500 text-sm mt-1">ការសន្សំសរុប</p>
-          <p className="text-green-600 text-xs mt-2 font-medium">+฿{monthlyInterest.toLocaleString()} ខែនេះ</p>
+          <p className="text-green-600 text-xs mt-2 font-medium">+{savingsSymbol}{monthlyInterest.toLocaleString()} ខែនេះ</p>
         </Card>
 
         <Card>
           <div className="p-2.5 bg-blue-100 rounded-lg inline-flex mb-3">
             <TrendingUp className="w-5 h-5 text-blue-700" />
           </div>
-          <p className="text-2xl font-bold text-gray-900">฿{monthlyInterest.toLocaleString()}</p>
+          <p className="text-2xl font-bold text-gray-900">{savingsSymbol}{monthlyInterest.toLocaleString()}</p>
           <p className="text-gray-500 text-sm mt-1">ការប្រាក់ប្រចាំខែ</p>
           <p className="text-blue-600 text-xs mt-2 font-medium">៣% ក្នុងមួយខែ</p>
         </Card>
@@ -172,8 +182,8 @@ export default async function DashboardPage() {
           <div className="p-2.5 bg-orange-100 rounded-lg inline-flex mb-3">
             <CreditCard className="w-5 h-5 text-orange-700" />
           </div>
-          <p className="text-2xl font-bold text-gray-900">฿{activeLoanAmount.toLocaleString()}</p>
-          <p className="text-gray-500 text-sm mt-1">ឥណទានសកម្ម</p>
+          <p className="text-2xl font-bold text-gray-900">{loanSymbol}{activeLoanAmount.toLocaleString()}</p>
+          <p className="text-gray-500 text-sm mt-1">កម្ជីសកម្ម</p>
           <Link href="/dashboard/loans" className="text-orange-600 text-xs mt-2 font-medium hover:text-orange-700 inline-flex items-center gap-1">
             មើលលម្អិត <ChevronRight className="w-3 h-3" />
           </Link>
@@ -183,10 +193,10 @@ export default async function DashboardPage() {
           <div className="p-2.5 bg-purple-100 rounded-lg inline-flex mb-3">
             <Wallet className="w-5 h-5 text-purple-700" />
           </div>
-          <p className="text-2xl font-bold text-gray-900">฿{availableCredit.toLocaleString()}</p>
-          <p className="text-gray-500 text-sm mt-1">ឥណទានដែលអាចទទួលបាន</p>
+          <p className="text-2xl font-bold text-gray-900">{savingsSymbol}{availableCredit.toLocaleString()}</p>
+          <p className="text-gray-500 text-sm mt-1">កម្ជីដែលអាចទទួលបាន</p>
           <Link href="/dashboard/loans/request" className="text-purple-600 text-xs mt-2 font-medium hover:text-purple-700 inline-flex items-center gap-1">
-            ស្នើសុំឥណទាន <ChevronRight className="w-3 h-3" />
+            ស្នើសុំកម្ជី <ChevronRight className="w-3 h-3" />
           </Link>
         </Card>
       </div>
@@ -201,22 +211,22 @@ export default async function DashboardPage() {
               {
                 href: '/dashboard/savings/add',
                 icon: PiggyBank,
-                label: 'បន្ថែមការសន្សំប្រចាំខែ',
+                label: 'ស្នើសុំការសន្សំ',
                 description: 'កត់ត្រាការបរិច្ចាគប្រចាំខែរបស់អ្នក',
                 color: 'bg-green-50 text-green-700',
               },
               {
                 href: '/dashboard/loans/request',
                 icon: CreditCard,
-                label: 'ស្នើសុំឥណទាន',
-                description: 'ដាក់ពាក្យសុំឥណទានសមាជិក',
+                label: 'ស្នើសុំកម្ជី',
+                description: 'ដាក់ពាក្យសុំកម្ជីសមាជិក',
                 color: 'bg-blue-50 text-blue-700',
               },
               {
                 href: '/dashboard/loans/repay',
                 icon: ArrowRight,
-                label: 'សងឥណទាន',
-                description: 'បង់ប្រាក់ឥណទានបន្តិចម្តងៗ',
+                label: 'សងកម្ជី',
+                description: 'បង់ប្រាក់កម្ជីបន្តិចម្តងៗ',
                 color: 'bg-orange-50 text-orange-700',
               },
               {
@@ -284,7 +294,7 @@ export default async function DashboardPage() {
                     </div>
                     <div className="text-right">
                       <p className={`text-sm font-semibold ${item.type === 'loan_repay' ? 'text-orange-600' : 'text-green-600'}`}>
-                        {item.type === 'loan_repay' ? '-' : '+'}฿{item.amount.toLocaleString()}
+                        {item.type === 'loan_repay' ? '-' : '+'}{currencySymbol(item.currency)}{item.amount.toLocaleString()}
                       </p>
                       <div className="flex items-center gap-1 justify-end mt-0.5">
                         <CheckCircle className="w-3 h-3 text-green-500" />

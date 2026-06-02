@@ -4,6 +4,7 @@ import { revalidatePath } from 'next/cache'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { requireActiveMember } from '@/lib/auth/member'
 import { uploadPrivateFile } from '@/lib/uploads'
+import { normalizeCurrency } from '@/lib/currency'
 
 export type ActionResult = {
   success: boolean
@@ -36,16 +37,28 @@ export async function registerMember(formData: FormData): Promise<ActionResult> 
   try {
     const email = asString(formData, 'email').toLowerCase()
     const password = asString(formData, 'password')
-    const fullName = asString(formData, 'full_name')
+    const fullNameKh = asString(formData, 'full_name_kh')
+    const fullNameEn = asString(formData, 'full_name_en')
     const phone = asString(formData, 'phone')
+    const dateOfBirth = asString(formData, 'date_of_birth')
     const address = asString(formData, 'address')
     const idNumber = asString(formData, 'id_number')
     const residentBookNumber = asString(formData, 'resident_book_number')
     const refereeEmail = asString(formData, 'referee_email').toLowerCase()
 
-    if (!email || !password || !fullName || !phone || !idNumber) {
+    if (!email || !password || !fullNameKh || !fullNameEn || !phone || !dateOfBirth || !idNumber) {
       return { success: false, error: 'សូមបំពេញគ្រប់វាលទាំងអស់ដែលត្រូវការ។' }
     }
+
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(dateOfBirth)) {
+      return { success: false, error: 'សូមបញ្ចូលថ្ងៃខែឆ្នាំកំណើតត្រឹមត្រូវ។' }
+    }
+
+    if (dateOfBirth > new Date().toISOString().slice(0, 10)) {
+      return { success: false, error: 'ថ្ងៃខែឆ្នាំកំណើតមិនអាចនៅពេលអនាគតបានទេ។' }
+    }
+
+    const fullName = `${fullNameKh} | ${fullNameEn}`
 
     if (password.length < 8) {
       return { success: false, error: 'ពាក្យសម្ងាត់ត្រូវមានយ៉ាងតិច ៨ តួអក្សរ។' }
@@ -55,7 +68,7 @@ export async function registerMember(formData: FormData): Promise<ActionResult> 
       email,
       password,
       email_confirm: true,
-      user_metadata: { full_name: fullName },
+      user_metadata: { full_name: fullName, full_name_kh: fullNameKh, full_name_en: fullNameEn },
     })
 
     if (authError) throw authError
@@ -90,8 +103,11 @@ export async function registerMember(formData: FormData): Promise<ActionResult> 
     const { error: memberError } = await admin.from('members').insert({
       auth_user_id: authUserId,
       full_name: fullName,
+      full_name_kh: fullNameKh,
+      full_name_en: fullNameEn,
       email,
       phone,
+      date_of_birth: dateOfBirth,
       address,
       id_number: idNumber,
       resident_book_number: residentBookNumber,
@@ -115,6 +131,7 @@ export async function addSaving(formData: FormData): Promise<ActionResult> {
     const member = await requireActiveMember()
     const amount = asNumber(formData, 'amount')
     const notes = asString(formData, 'notes')
+    const currency = normalizeCurrency(asString(formData, 'currency'))
 
     if (amount <= 0) {
       return { success: false, error: 'សូមបញ្ចូលចំនួនទឹកប្រាក់សន្សំត្រឹមត្រូវ។' }
@@ -136,6 +153,7 @@ export async function addSaving(formData: FormData): Promise<ActionResult> {
       member_id: member.id,
       amount,
       notes,
+      currency,
       evidence_url: evidenceUrl,
       qr_code_ref: `SAV-${Date.now()}`,
       status: 'pending',
@@ -159,9 +177,10 @@ export async function requestLoan(formData: FormData): Promise<ActionResult> {
     const purpose = asString(formData, 'purpose')
     const termMonths = asNumber(formData, 'term_months') || 12
     const refereeEmail = asString(formData, 'referee_email').toLowerCase()
+    const currency = normalizeCurrency(asString(formData, 'currency'))
 
     if (amount <= 0 || !purpose) {
-      return { success: false, error: 'សូមបញ្ចូលចំនួនទឹកប្រាក់ឥណទាន និង គោលបំណងត្រឹមត្រូវ។' }
+      return { success: false, error: 'សូមបញ្ចូលចំនួនទឹកប្រាក់កម្ជី និង គោលបំណងត្រឹមត្រូវ។' }
     }
 
     const admin = createAdminClient()
@@ -187,6 +206,7 @@ export async function requestLoan(formData: FormData): Promise<ActionResult> {
     const { error } = await admin.from('loans').insert({
       member_id: member.id,
       amount,
+      currency,
       purpose,
       term_months: termMonths,
       interest_rate: 2,
@@ -201,7 +221,7 @@ export async function requestLoan(formData: FormData): Promise<ActionResult> {
     revalidatePath('/dashboard/loans')
     return { success: true }
   } catch (error) {
-    const message = error instanceof Error ? error.message : 'មិនអាចដាក់ស្នើពាក្យសុំឥណទានបានទេ។'
+    const message = error instanceof Error ? error.message : 'មិនអាចដាក់ស្នើពាក្យសុំកម្ជីបានទេ។'
     return { success: false, error: message }
   }
 }
@@ -210,6 +230,7 @@ export async function repayLoan(formData: FormData): Promise<ActionResult> {
   try {
     const member = await requireActiveMember()
     const amount = asNumber(formData, 'amount')
+    const currency = normalizeCurrency(asString(formData, 'currency'))
 
     if (amount <= 0) {
       return { success: false, error: 'សូមបញ្ចូលចំនួនទឹកប្រាក់សងត្រឹមត្រូវ។' }
@@ -227,7 +248,7 @@ export async function repayLoan(formData: FormData): Promise<ActionResult> {
 
     if (loanError) throw loanError
     if (!activeLoan) {
-      return { success: false, error: 'រកមិនឃើញឥណទានសកម្មសម្រាប់ការសង។' }
+      return { success: false, error: 'រកមិនឃើញកម្ជីសកម្មសម្រាប់ការសង។' }
     }
 
     const evidenceUrl = await uploadPrivateFile(
@@ -245,6 +266,7 @@ export async function repayLoan(formData: FormData): Promise<ActionResult> {
       loan_id: activeLoan.id,
       member_id: member.id,
       amount,
+      currency,
       evidence_url: evidenceUrl,
       qr_code_ref: `REP-${Date.now()}`,
       status: 'pending',
@@ -298,6 +320,7 @@ export async function requestCapitalWithdrawal(formData: FormData): Promise<Acti
     const amount = asNumber(formData, 'amount')
     const reason = asString(formData, 'reason')
     const afterDecision = asString(formData, 'after_decision')
+    const currency = normalizeCurrency(asString(formData, 'currency'))
 
     if (amount <= 0 || !reason || (afterDecision !== 'continue' && afterDecision !== 'withdraw')) {
       return { success: false, error: 'សូមបំពេញបែបបទស្នើសុំដើមទុនឱ្យបានពេញលេញ។' }
@@ -307,6 +330,7 @@ export async function requestCapitalWithdrawal(formData: FormData): Promise<Acti
     const { error } = await admin.from('capital_requests').insert({
       member_id: member.id,
       amount,
+      currency,
       reason,
       continue_saving: afterDecision === 'continue',
       remove_membership: afterDecision === 'withdraw',
