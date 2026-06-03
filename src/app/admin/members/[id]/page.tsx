@@ -137,7 +137,7 @@ export default async function AdminMemberDetailPage({ params }: PageProps) {
       </div>
 
       <section className="w-full overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm">
-        <div className="h-1.5 w-full bg-linear-to-r from-blue-900 via-blue-700 to-blue-500" />
+        <div className="h-1.5 w-full bg-blue-800" />
         <div className="flex flex-col gap-6 p-6 lg:flex-row lg:items-start lg:justify-between lg:p-8">
           <div className="flex min-w-0 flex-1 items-start gap-4 sm:gap-5">
             <span className="grid h-14 w-14 shrink-0 place-items-center rounded-2xl bg-blue-900 text-lg font-bold text-white shadow-sm sm:h-16 sm:w-16 sm:text-xl">

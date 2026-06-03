@@ -1,7 +1,7 @@
 'use client'
 
 import { activateLoan, approveLoan, rejectLoan } from '@/app/actions/admin'
-import { AdminActionButton } from '@/components/admin'
+import { AdminActionButton, AdminReasonDialogButton } from '@/components/admin'
 import type { LoanStatus } from '@/types/database'
 
 type LoanActionsProps = {
@@ -38,14 +38,17 @@ export function LoanActions({ loanId, status, className = '' }: LoanActionsProps
         </AdminActionButton>
       )}
       {canReject && (
-        <AdminActionButton
+        <AdminReasonDialogButton
           action={rejectLoan}
           id={loanId}
-          variant="danger"
+          label="បដិសេធ"
+          dialogTitle="បដិសេធពាក្យសុំកម្ជី"
+          dialogDescription="សមាជិកនឹងទទួលការជូនដំណឹងជាមួយមូលហេតុបដិសេធ។"
+          reasonLabel="មូលហេតុបដិសេធ"
+          reasonPlaceholder="ពិពណ៌នាមូលហេតុដែលពាក្យសុំកម្ជីត្រូវបានបដិសេធ..."
+          confirmLabel="បញ្ជាក់បដិសេធ"
           successMessage="បានបដិសេធពាក្យសុំកម្ជី។"
-        >
-          បដិសេធ
-        </AdminActionButton>
+        />
       )}
     </div>
   )

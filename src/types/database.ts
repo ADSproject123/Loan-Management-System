@@ -69,6 +69,8 @@ export interface Loan {
   approved_at?: string
   disbursed_at?: string
   due_date?: string
+  rejection_reason?: string | null
+  rejected_at?: string | null
   created_at: string
   updated_at: string
 }
@@ -102,6 +104,7 @@ export interface CapitalRequest {
   notification_date?: string
   approved_by?: string
   approved_at?: string
+  rejection_reason?: string | null
   created_at: string
   updated_at: string
 }

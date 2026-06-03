@@ -86,18 +86,23 @@ export function Sidebar({ memberName = 'សមាជិក', isAdmin = false }: 
   }
 
   return (
-    <aside className="w-64 bg-blue-900 min-h-screen flex flex-col text-white">
-      {/* Logo */}
-      <div className="p-6 border-b border-blue-800">
-        <Link href="/" className="flex items-center gap-2 font-bold text-xl hover:text-blue-200 transition-colors">
-          <Building2 className="w-7 h-7" />
-          <span>សន្សំ</span>
+    <aside className="app-sidebar flex w-[17rem] shrink-0 flex-col text-white">
+      <div className="border-b border-white/10 p-5">
+        <Link
+          href="/"
+          className="flex items-center gap-3 rounded-xl transition-opacity hover:opacity-90"
+        >
+          <span className="grid h-10 w-10 place-items-center rounded-xl bg-white/15 ring-1 ring-white/20">
+            <Building2 className="h-5 w-5" />
+          </span>
+          <div className="min-w-0">
+            <p className="truncate text-lg font-bold leading-tight">សន្សំ</p>
+            <p className="truncate text-xs font-medium text-blue-200/90">{memberName}</p>
+          </div>
         </Link>
-        <p className="text-blue-300 text-xs mt-1 truncate">{memberName}</p>
       </div>
 
-      {/* Navigation */}
-      <nav className="flex-1 p-4 space-y-1">
+      <nav className="flex-1 space-y-1 overflow-y-auto p-3">
         {items.map((item) => {
           const Icon = item.icon
           const isActive = isActiveParent(item)
@@ -107,31 +112,32 @@ export function Sidebar({ memberName = 'សមាជិក', isAdmin = false }: 
             return (
               <div key={item.label}>
                 <button
+                  type="button"
                   onClick={() => toggleExpand(item.label)}
-                  className={`w-full flex items-center justify-between px-3 py-2.5 rounded-lg text-sm font-medium transition-colors ${
-                    isActive ? 'bg-blue-800 text-white' : 'bg-blue-900/50 text-blue-100 hover:bg-blue-800 hover:text-white'
+                  className={`flex w-full cursor-pointer items-center justify-between rounded-xl px-3 py-2.5 text-sm font-medium transition-colors duration-200 ${
+                    isActive ? 'app-sidebar-nav-active' : 'app-sidebar-nav-idle'
                   }`}
                 >
                   <div className="flex items-center gap-3">
-                    <Icon className="w-5 h-5 flex-shrink-0" />
-                    {item.label}
+                    <Icon className="h-5 w-5 shrink-0 opacity-90" />
+                    <span className="truncate">{item.label}</span>
                   </div>
                   {isExpanded ? (
-                    <ChevronDown className="w-4 h-4" />
+                    <ChevronDown className="h-4 w-4 shrink-0 opacity-70" />
                   ) : (
-                    <ChevronRight className="w-4 h-4" />
+                    <ChevronRight className="h-4 w-4 shrink-0 opacity-70" />
                   )}
                 </button>
                 {isExpanded && (
-                  <div className="mt-1 ml-4 space-y-1 pl-4 border-l border-blue-700">
+                  <div className="mt-1 space-y-0.5 border-l border-white/15 py-1 pl-3 ml-5">
                     {item.children.map((child) => (
                       <Link
                         key={child.href}
                         href={child.href}
-                        className={`block px-3 py-2 rounded-lg text-sm transition-colors ${
+                        className={`block cursor-pointer rounded-lg px-3 py-2 text-sm transition-colors duration-200 ${
                           pathname === child.href
-                            ? 'bg-white text-blue-900 font-medium'
-                            : 'bg-blue-900/30 text-blue-200 hover:bg-blue-800 hover:text-white'
+                            ? 'app-sidebar-nav-child-active'
+                            : 'app-sidebar-nav-idle'
                         }`}
                       >
                         {child.label}
@@ -147,32 +153,31 @@ export function Sidebar({ memberName = 'សមាជិក', isAdmin = false }: 
             <Link
               key={item.href}
               href={item.href!}
-              className={`flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors ${
-                isActive ? 'bg-white text-blue-900' : 'bg-blue-900/50 text-blue-100 hover:bg-blue-800 hover:text-white'
+              className={`flex cursor-pointer items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition-colors duration-200 ${
+                isActive ? 'app-sidebar-nav-active' : 'app-sidebar-nav-idle'
               }`}
             >
-              <Icon className="w-5 h-5 flex-shrink-0" />
-              {item.label}
+              <Icon className="h-5 w-5 shrink-0 opacity-90" />
+              <span className="truncate">{item.label}</span>
             </Link>
           )
         })}
       </nav>
 
-      {/* Footer actions */}
-      <div className="p-4 border-t border-blue-800 space-y-1">
+      <div className="space-y-1 border-t border-white/10 p-3">
         <Link
           href="/dashboard/notifications"
-          className="flex items-center gap-3 rounded-lg bg-blue-900/50 px-3 py-2.5 text-sm font-medium text-blue-100 transition-colors hover:bg-blue-800 hover:text-white"
+          className="app-sidebar-nav-idle flex cursor-pointer items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition-colors duration-200"
         >
-          <Bell className="w-5 h-5" />
+          <Bell className="h-5 w-5 shrink-0" />
           ការជូនដំណឹង
         </Link>
         <form action="/api/auth/signout" method="POST">
           <button
             type="submit"
-            className="w-full flex items-center gap-3 rounded-lg bg-blue-900/50 px-3 py-2.5 text-sm font-medium text-blue-100 transition-colors hover:bg-blue-800 hover:text-white"
+            className="app-sidebar-nav-idle flex w-full cursor-pointer items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition-colors duration-200"
           >
-            <LogOut className="w-5 h-5" />
+            <LogOut className="h-5 w-5 shrink-0" />
             ចាកចេញ
           </button>
         </form>

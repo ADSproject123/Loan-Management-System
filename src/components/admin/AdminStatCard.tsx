@@ -25,7 +25,7 @@ type AdminStatCardProps = {
 
 export function AdminStatCard({ label, value, currencyTotals, icon: Icon, tone }: AdminStatCardProps) {
   return (
-    <div className={`p-5 ring-1 ${TONE_CLASSES[tone]}`}>
+    <div className={`rounded-2xl p-5 ring-1 ${TONE_CLASSES[tone]}`}>
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0">
           <p className="text-xs font-semibold uppercase tracking-wide opacity-70">{label}</p>
@@ -42,7 +42,7 @@ export function AdminStatCard({ label, value, currencyTotals, icon: Icon, tone }
             <p className="mt-2 text-3xl font-bold tabular-nums">{value}</p>
           )}
         </div>
-        <span className={`grid h-10 w-10 shrink-0 place-items-center ${ICON_TONE_CLASSES[tone]}`}>
+        <span className={`grid h-10 w-10 shrink-0 place-items-center rounded-xl ${ICON_TONE_CLASSES[tone]}`}>
           <Icon className="h-5 w-5" />
         </span>
       </div>

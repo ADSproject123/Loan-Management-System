@@ -30,7 +30,7 @@ export default async function AdminLoanDetailPage({ params }: PageProps) {
     .select(
       `id, member_id, amount, currency, purpose, term_months, interest_rate, status,
       referee_id, referee_verified, support_document_url, hard_copy_submitted, thumbprint_submitted,
-      approved_at, disbursed_at, due_date, created_at, updated_at,
+      approved_at, disbursed_at, due_date, rejection_reason, rejected_at, created_at, updated_at,
       members:members!loans_member_id_fkey(id, full_name, full_name_kh, email, phone),
       referee:referee_id(id, full_name, email, phone),
       approver:approved_by(id, full_name)`
@@ -123,6 +123,16 @@ export default async function AdminLoanDetailPage({ params }: PageProps) {
         </p>
         <p className="mt-2 text-sm text-gray-500">ដាក់ស្នើ {formatDate(loan.created_at)}</p>
       </AdminHeroPanel>
+
+      {loan.status === 'rejected' && loan.rejection_reason && (
+        <div className="rounded-2xl border border-red-200 bg-red-50 px-5 py-4">
+          <p className="text-sm font-semibold text-red-950">មូលហេតុបដិសេធ</p>
+          <p className="mt-2 whitespace-pre-wrap text-sm leading-6 text-red-900">{loan.rejection_reason}</p>
+          {loan.rejected_at && (
+            <p className="mt-2 text-xs text-red-700">បដិសេធនៅ {formatDate(loan.rejected_at)}</p>
+          )}
+        </div>
+      )}
 
       <div className="grid gap-6 lg:grid-cols-2">
         <AdminDetailCard title="លក្ខខណ្ឌកម្ជី">

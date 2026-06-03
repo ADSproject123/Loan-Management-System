@@ -1,4 +1,3 @@
-import Link from 'next/link'
 import { requireAdmin } from '@/lib/auth/member'
 import { AdminSidebar } from '@/components/layout/AdminSidebar'
 
@@ -10,28 +9,9 @@ export default async function AdminLayout({
   const admin = await requireAdmin()
 
   return (
-    <div className="flex min-h-screen bg-gray-50">
+    <div className="flex min-h-screen">
       <AdminSidebar adminName={admin.full_name} />
-      <div className="min-w-0 flex-1">
-        <header className="sticky top-0 z-30 border-b border-gray-200 bg-white">
-          <div className="flex items-center justify-between px-5 py-4 lg:px-8">
-            <div>
-              <p className="text-xs font-semibold uppercase tracking-wide text-blue-700">អ្នកគ្រប់គ្រងសន្សំ</p>
-              <h1 className="text-xl font-bold text-gray-900">ផ្ទាំងគ្រប់គ្រងការងារ</h1>
-            </div>
-            <div className="flex items-center gap-4 text-sm">
-              <span className="hidden text-gray-500 sm:inline">{admin.full_name}</span>
-              <Link
-                href="/dashboard"
-                className="rounded-lg bg-blue-50 px-3 py-1.5 font-medium text-blue-700 transition hover:bg-blue-100 hover:text-blue-900"
-              >
-                វិបផតថលសមាជិក
-              </Link>
-            </div>
-          </div>
-        </header>
-        {children}
-      </div>
+      <main className="app-canvas min-w-0 flex-1 overflow-auto">{children}</main>
     </div>
   )
 }

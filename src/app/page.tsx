@@ -130,9 +130,9 @@ export default function HomePage() {
           </ScrollReveal>
 
           <div className="grid lg:grid-cols-[0.9fr_1.1fr] gap-8 items-stretch">
-            <ScrollReveal animation="fade-right">
+            <ScrollReveal animation="fade-right" className="h-full">
               <div
-                className="min-h-96 rounded-3xl bg-cover bg-center shadow-xl shadow-blue-900/10 relative overflow-hidden"
+                className="h-full min-h-96 lg:min-h-0 rounded-3xl bg-cover bg-center shadow-xl shadow-blue-900/10 relative overflow-hidden"
                 style={{ backgroundImage: "url('/home-about-community.jpg')" }}
               >
                 <div className="absolute inset-0 bg-blue-950/75" />
@@ -246,7 +246,7 @@ export default function HomePage() {
         </div>
       </section>
 
-      <footer className="bg-blue-900 text-white py-10">
+      <footer className="bg-blue-900 text-white py-12">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <ScrollReveal animation="fade-in" className="flex flex-col md:flex-row justify-between items-center gap-4">
             <div className="flex items-center gap-2 font-bold text-xl">

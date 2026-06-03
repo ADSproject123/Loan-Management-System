@@ -16,27 +16,27 @@ export function AdminPagination({ basePath, page, hasPrev, hasNext }: AdminPagin
       {hasPrev ? (
         <Link
           href={prevHref}
-          className="border border-gray-300 bg-white px-4 py-2 text-sm font-semibold text-gray-700 transition hover:bg-gray-50"
+          className="cursor-pointer rounded-xl border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-700 shadow-sm transition hover:border-slate-300 hover:bg-slate-50"
         >
           មុន
         </Link>
       ) : (
-        <span className="border border-gray-200 bg-gray-50 px-4 py-2 text-sm font-semibold text-gray-400">
+        <span className="rounded-xl border border-slate-100 bg-slate-50 px-4 py-2 text-sm font-semibold text-slate-400">
           មុន
         </span>
       )}
 
-      <span className="text-sm font-semibold text-gray-600">ទំព័រ {page}</span>
+      <span className="text-sm font-semibold text-slate-600">ទំព័រ {page}</span>
 
       {hasNext ? (
         <Link
           href={nextHref}
-          className="border border-gray-300 bg-white px-4 py-2 text-sm font-semibold text-gray-700 transition hover:bg-gray-50"
+          className="cursor-pointer rounded-xl border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-700 shadow-sm transition hover:border-slate-300 hover:bg-slate-50"
         >
           បន្ទាប់
         </Link>
       ) : (
-        <span className="border border-gray-200 bg-gray-50 px-4 py-2 text-sm font-semibold text-gray-400">
+        <span className="rounded-xl border border-slate-100 bg-slate-50 px-4 py-2 text-sm font-semibold text-slate-400">
           បន្ទាប់
         </span>
       )}
