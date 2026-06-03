@@ -1,4 +1,5 @@
 export { AdminActionButton } from '@/components/admin/AdminActionButton'
+export { AdminReasonDialogButton } from '@/components/admin/AdminReasonDialogButton'
 export { AdminBackLink } from '@/components/admin/AdminBackLink'
 export { AdminDateField } from '@/components/admin/AdminDateField'
 export { AdminDetailCard } from '@/components/admin/AdminDetailCard'

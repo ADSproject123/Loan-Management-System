@@ -115,43 +115,48 @@ export default async function DashboardPage() {
   ].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()).slice(0, 5)
 
   return (
-    <div className="p-6 md:p-8 max-w-7xl mx-auto">
-      {/* Header */}
-      <div className="flex items-start justify-between mb-8">
+    <div className="mx-auto max-w-7xl p-6 md:p-10">
+      <div className="mb-8 flex items-start justify-between gap-4">
         <div>
-          <h1 className="text-2xl md:text-3xl font-bold text-gray-900">
-            សូមស្វាគមន៍ការត្រឡប់មកវិញ, {member.full_name.split(' ')[0]}!
+          <p className="text-xs font-bold uppercase tracking-wider text-blue-700">វិបផតថលសមាជិក</p>
+          <h1 className="mt-1 text-2xl font-bold tracking-tight text-slate-900 md:text-3xl">
+            សូមស្វាគមន៍, {member.full_name.split(' ')[0]}
           </h1>
-          <div className="flex items-center gap-2 mt-1">
-            <p className="text-gray-500 text-sm">សមាជិកតាំងពី {new Date(member.joined_at).toLocaleDateString('km-KH', { month: 'long', year: 'numeric' })}</p>
-            <span className="text-gray-300">•</span>
+          <div className="mt-2 flex flex-wrap items-center gap-2 text-sm text-slate-500">
+            <span>
+              សមាជិកតាំងពី{' '}
+              {new Date(member.joined_at).toLocaleDateString('km-KH', { month: 'long', year: 'numeric' })}
+            </span>
+            <span className="text-slate-300">·</span>
             <MemberStatusBadge status={member.status} />
           </div>
         </div>
-        <div className="relative">
-          <button className="relative p-2 rounded-lg bg-white border border-gray-200 hover:bg-gray-50 transition-colors">
-            <Bell className="w-5 h-5 text-gray-600" />
-            {notifications.some((notification) => !notification.read) && (
-              <span className="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full"></span>
-            )}
-          </button>
-        </div>
+        <Link
+          href="/dashboard/notifications"
+          className="relative grid h-11 w-11 shrink-0 place-items-center rounded-xl border border-slate-200/80 bg-white shadow-sm transition hover:border-blue-200 hover:shadow"
+        >
+          <Bell className="h-5 w-5 text-slate-600" />
+          {notifications.some((notification) => !notification.read) && (
+            <span className="absolute right-2 top-2 h-2.5 w-2.5 rounded-full bg-red-500 ring-2 ring-white" />
+          )}
+        </Link>
       </div>
 
-      {/* Quick Action Banner */}
-      <div className="bg-blue-900 text-white rounded-xl p-5 mb-8 flex items-center justify-between">
+      <div className="mb-8 flex flex-col gap-4 rounded-2xl bg-blue-900 p-5 text-white shadow-md ring-1 ring-slate-900/10 sm:flex-row sm:items-center sm:justify-between md:p-6">
         <div className="flex items-center gap-3">
-          <Calendar className="w-6 h-6 text-blue-200 flex-shrink-0" />
+          <span className="grid h-11 w-11 shrink-0 place-items-center rounded-xl bg-white/15 ring-1 ring-white/20">
+            <Calendar className="h-5 w-5 text-blue-100" />
+          </span>
           <div>
-            <p className="font-semibold">ដល់ពេលសន្សំខែឧសភា</p>
-            <p className="text-blue-200 text-sm">បន្ថែមការសន្សំប្រចាំខែរបស់អ្នកមុនចុងខែ</p>
+            <p className="font-semibold">ដល់ពេលសន្សំខែនេះ</p>
+            <p className="text-sm text-blue-100/90">បន្ថែមការសន្សំប្រចាំខែមុនផុតកំណត់</p>
           </div>
         </div>
         <Link
           href="/dashboard/savings/add"
-          className="flex items-center gap-1 bg-white text-blue-900 px-4 py-2 rounded-lg text-sm font-semibold hover:bg-blue-50 transition-colors flex-shrink-0"
+          className="inline-flex cursor-pointer items-center justify-center gap-1.5 rounded-xl bg-white px-5 py-2.5 text-sm font-semibold text-blue-900 shadow-sm transition hover:bg-blue-50"
         >
-          បន្ថែមឥឡូវនេះ <ArrowRight className="w-4 h-4" />
+          បន្ថែមឥឡូវនេះ <ArrowRight className="h-4 w-4" />
         </Link>
       </div>
 

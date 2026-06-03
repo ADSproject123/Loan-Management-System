@@ -29,12 +29,21 @@ export type SavingListItem = {
   members?: { full_name?: string | null; email?: string | null } | { full_name?: string | null; email?: string | null }[] | null
 }
 
+const STATUS_FILTER_OPTIONS = [
+  { value: '', label: 'ទាំងអស់' },
+  { value: 'pending', label: 'រង់ផ្ទៀងផ្ទាត់' },
+  { value: 'completed', label: 'បានអនុម័ត' },
+  { value: 'verified', label: 'verified' },
+  { value: 'refunded', label: 'សងប្រាក់វិញ' },
+]
+
 export function SavingsList({ savings }: { savings: SavingListItem[] }) {
   const [query, setQuery] = useState('')
+  const [statusFilter, setStatusFilter] = useState('')
   const [dateFrom, setDateFrom] = useState('')
   const [dateTo, setDateTo] = useState('')
 
-  const hasActiveFilters = Boolean(query.trim() || dateFrom || dateTo)
+  const hasActiveFilters = Boolean(query.trim() || statusFilter || dateFrom || dateTo)
 
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase()
@@ -42,6 +51,7 @@ export function SavingsList({ savings }: { savings: SavingListItem[] }) {
     const toMs = dateTo ? endOfDay(dateTo) : null
 
     return savings.filter((saving) => {
+      if (statusFilter && saving.status !== statusFilter) return false
       if (q) {
         const name = relatedMemberName(saving).toLowerCase()
         const email = relatedMemberEmail(saving).toLowerCase()
@@ -61,10 +71,11 @@ export function SavingsList({ savings }: { savings: SavingListItem[] }) {
 
       return true
     })
-  }, [savings, query, dateFrom, dateTo])
+  }, [savings, query, statusFilter, dateFrom, dateTo])
 
   function clearFilters() {
     setQuery('')
+    setStatusFilter('')
     setDateFrom('')
     setDateTo('')
   }
@@ -75,6 +86,11 @@ export function SavingsList({ savings }: { savings: SavingListItem[] }) {
         searchValue={query}
         onSearchChange={setQuery}
         searchPlaceholder="ស្វែងរកតាមឈ្មោះ អ៊ីមែល ឬចំនួនទឹកប្រាក់..."
+        selectLabel="ស្ថានភាព"
+        selectId="savings-status-filter"
+        selectValue={statusFilter}
+        onSelectChange={setStatusFilter}
+        selectOptions={STATUS_FILTER_OPTIONS}
         showClear={hasActiveFilters}
         onClear={clearFilters}
         extra={
@@ -119,8 +135,8 @@ export function SavingsList({ savings }: { savings: SavingListItem[] }) {
               <AdminTableEmpty
                 colSpan={6}
                 icon={PiggyBank}
-                title="មិនមានសំណើរង់ចាំ"
-                description="សំណើសន្សំថ្មីរបស់សមាជិកនឹងបង្ហាញនៅទីនេះ។"
+                title="មិនមានការសន្សំ"
+                description="ការដាក់សន្សំរបស់សមាជិកនឹងបង្ហាញនៅទីនេះ។"
               />
             )}
 
