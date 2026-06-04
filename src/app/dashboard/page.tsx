@@ -30,7 +30,7 @@ function formatDate(value: string) {
 const STATUS_LABELS: Record<string, string> = {
   pending: 'រង់ចាំ',
   verified: 'បានផ្ទៀងផ្ទាត់',
-  completed: 'បានបញ្ចប់',
+  completed: 'បានទទួល',
   active: 'សកម្ម',
   approved: 'បានទទួលយក',
   rejected: 'បានបដិសេធ',
@@ -118,7 +118,7 @@ export default async function DashboardPage() {
     <div className="mx-auto max-w-7xl p-6 md:p-10">
       <div className="mb-8 flex items-start justify-between gap-4">
         <div>
-          <p className="text-xs font-bold uppercase tracking-wider text-blue-700">វិបផតថលសមាជិក</p>
+          <p className="text-xs font-bold uppercase tracking-wider text-brand-700">វិបផតថលសមាជិក</p>
           <h1 className="mt-1 text-2xl font-bold tracking-tight text-slate-900 md:text-3xl">
             សូមស្វាគមន៍, {member.full_name.split(' ')[0]}
           </h1>
@@ -133,7 +133,7 @@ export default async function DashboardPage() {
         </div>
         <Link
           href="/dashboard/notifications"
-          className="relative grid h-11 w-11 shrink-0 place-items-center rounded-xl border border-slate-200/80 bg-white shadow-sm transition hover:border-blue-200 hover:shadow"
+          className="relative grid h-11 w-11 shrink-0 place-items-center rounded-xl border border-slate-200/80 bg-white shadow-sm transition hover:border-brand-200 hover:shadow"
         >
           <Bell className="h-5 w-5 text-slate-600" />
           {notifications.some((notification) => !notification.read) && (
@@ -142,19 +142,19 @@ export default async function DashboardPage() {
         </Link>
       </div>
 
-      <div className="mb-8 flex flex-col gap-4 rounded-2xl bg-blue-900 p-5 text-white shadow-md ring-1 ring-slate-900/10 sm:flex-row sm:items-center sm:justify-between md:p-6">
+      <div className="mb-8 flex flex-col gap-4 app-hero-banner p-5 sm:flex-row sm:items-center sm:justify-between md:p-6">
         <div className="flex items-center gap-3">
           <span className="grid h-11 w-11 shrink-0 place-items-center rounded-xl bg-white/15 ring-1 ring-white/20">
-            <Calendar className="h-5 w-5 text-blue-100" />
+            <Calendar className="h-5 w-5 text-brand-100" />
           </span>
           <div>
             <p className="font-semibold">ដល់ពេលសន្សំខែនេះ</p>
-            <p className="text-sm text-blue-100/90">បន្ថែមការសន្សំប្រចាំខែមុនផុតកំណត់</p>
+            <p className="text-sm text-brand-100/90">បន្ថែមការសន្សំប្រចាំខែមុនផុតកំណត់</p>
           </div>
         </div>
         <Link
           href="/dashboard/savings/add"
-          className="inline-flex cursor-pointer items-center justify-center gap-1.5 rounded-xl bg-white px-5 py-2.5 text-sm font-semibold text-blue-900 shadow-sm transition hover:bg-blue-50"
+          className="inline-flex cursor-pointer items-center justify-center gap-1.5 rounded-xl bg-white px-5 py-2.5 text-sm font-semibold text-brand-900 shadow-sm transition hover:bg-brand-50"
         >
           បន្ថែមឥឡូវនេះ <ArrowRight className="h-4 w-4" />
         </Link>
@@ -175,12 +175,12 @@ export default async function DashboardPage() {
         </Card>
 
         <Card>
-          <div className="p-2.5 bg-blue-100 rounded-lg inline-flex mb-3">
-            <TrendingUp className="w-5 h-5 text-blue-700" />
+          <div className="p-2.5 bg-brand-100 rounded-lg inline-flex mb-3">
+            <TrendingUp className="w-5 h-5 text-brand-700" />
           </div>
           <p className="text-2xl font-bold text-gray-900">{savingsSymbol}{monthlyInterest.toLocaleString()}</p>
           <p className="text-gray-500 text-sm mt-1">ការប្រាក់ប្រចាំខែ</p>
-          <p className="text-blue-600 text-xs mt-2 font-medium">៣% ក្នុងមួយខែ</p>
+          <p className="text-brand-600 text-xs mt-2 font-medium">៣% ក្នុងមួយខែ</p>
         </Card>
 
         <Card>
@@ -225,7 +225,7 @@ export default async function DashboardPage() {
                 icon: CreditCard,
                 label: 'ស្នើសុំកម្ជី',
                 description: 'ដាក់ពាក្យសុំកម្ជីសមាជិក',
-                color: 'bg-blue-50 text-blue-700',
+                color: 'bg-brand-50 text-brand-700',
               },
               {
                 href: '/dashboard/loans/repay',
@@ -247,7 +247,7 @@ export default async function DashboardPage() {
                 <Link
                   key={action.href}
                   href={action.href}
-                  className="flex items-center gap-3 p-4 bg-white rounded-xl border border-gray-200 hover:border-blue-300 hover:shadow-sm transition-all group"
+                  className="flex items-center gap-3 p-4 bg-white rounded-xl border border-gray-200 hover:border-brand-300 hover:shadow-sm transition-all group"
                 >
                   <div className={`p-2.5 rounded-lg flex-shrink-0 ${action.color}`}>
                     <Icon className="w-5 h-5" />
@@ -256,7 +256,7 @@ export default async function DashboardPage() {
                     <p className="font-medium text-gray-900 text-sm">{action.label}</p>
                     <p className="text-xs text-gray-500 mt-0.5">{action.description}</p>
                   </div>
-                  <ChevronRight className="w-4 h-4 text-gray-400 group-hover:text-blue-500 transition-colors" />
+                  <ChevronRight className="w-4 h-4 text-gray-400 group-hover:text-brand-500 transition-colors" />
                 </Link>
               )
             })}
@@ -269,7 +269,7 @@ export default async function DashboardPage() {
           <div>
             <div className="flex items-center justify-between mb-4">
               <h2 className="text-lg font-semibold text-gray-900">សកម្មភាពថ្មីៗ</h2>
-              <Link href="/dashboard/savings" className="text-blue-700 text-sm hover:text-blue-900 transition-colors">
+              <Link href="/dashboard/savings" className="text-brand-700 text-sm hover:text-brand-900 transition-colors">
                 មើលទាំងអស់
               </Link>
             </div>
@@ -283,14 +283,14 @@ export default async function DashboardPage() {
                     <div className={`p-2 rounded-lg flex-shrink-0 ${
                       item.type === 'saving' ? 'bg-green-100' :
                       item.type === 'loan_repay' ? 'bg-orange-100' :
-                      'bg-blue-100'
+                      'bg-brand-100'
                     }`}>
                       {item.type === 'saving' ? (
                         <PiggyBank className="w-4 h-4 text-green-700" />
                       ) : item.type === 'loan_repay' ? (
                         <CreditCard className="w-4 h-4 text-orange-700" />
                       ) : (
-                        <TrendingUp className="w-4 h-4 text-blue-700" />
+                        <TrendingUp className="w-4 h-4 text-brand-700" />
                       )}
                     </div>
                     <div className="flex-1">
@@ -316,7 +316,7 @@ export default async function DashboardPage() {
           <div>
             <div className="flex items-center justify-between mb-4">
               <h2 className="text-lg font-semibold text-gray-900">ការជូនដំណឹង</h2>
-              <button className="rounded-lg bg-blue-50 px-3 py-1.5 text-sm font-medium text-blue-700 transition hover:bg-blue-100 hover:text-blue-900">
+              <button className="rounded-lg bg-brand-50 px-3 py-1.5 text-sm font-medium text-brand-700 transition hover:bg-brand-100 hover:text-brand-900">
                 សម្គាល់ថាអានទាំងអស់
               </button>
             </div>
@@ -327,24 +327,24 @@ export default async function DashboardPage() {
                 </div>
               )}
               {notifications.map((notif) => (
-                <div key={notif.id} className={`p-4 rounded-xl border ${notif.read ? 'bg-white border-gray-200' : 'bg-blue-50 border-blue-200'}`}>
+                <div key={notif.id} className={`p-4 rounded-xl border ${notif.read ? 'bg-white border-gray-200' : 'bg-brand-50 border-brand-200'}`}>
                   <div className="flex items-start gap-3">
-                    <div className={`p-1.5 rounded-full flex-shrink-0 ${notif.read ? 'bg-gray-100' : 'bg-blue-100'}`}>
+                    <div className={`p-1.5 rounded-full flex-shrink-0 ${notif.read ? 'bg-gray-100' : 'bg-brand-100'}`}>
                       {notif.read ? (
                         <CheckCircle className="w-4 h-4 text-gray-400" />
                       ) : (
-                        <Bell className="w-4 h-4 text-blue-700" />
+                        <Bell className="w-4 h-4 text-brand-700" />
                       )}
                     </div>
                     <div className="flex-1">
                       <div className="flex items-center justify-between gap-2">
-                        <p className={`text-sm font-medium ${notif.read ? 'text-gray-700' : 'text-blue-900'}`}>{notif.title}</p>
+                        <p className={`text-sm font-medium ${notif.read ? 'text-gray-700' : 'text-brand-900'}`}>{notif.title}</p>
                         <div className="flex items-center gap-1 text-gray-400 flex-shrink-0">
                           <Clock className="w-3 h-3" />
                           <span className="text-xs">{formatDate(notif.created_at)}</span>
                         </div>
                       </div>
-                      <p className={`text-sm mt-1 ${notif.read ? 'text-gray-500' : 'text-blue-700'}`}>{notif.message}</p>
+                      <p className={`text-sm mt-1 ${notif.read ? 'text-gray-500' : 'text-brand-700'}`}>{notif.message}</p>
                     </div>
                   </div>
                 </div>

@@ -14,9 +14,9 @@ export default async function DashboardLayout({
   }
 
   return (
-    <div className="flex min-h-screen">
+    <div className="min-h-screen">
       <Sidebar memberName={member.full_name} isAdmin={member.is_admin} />
-      <main className="app-canvas min-w-0 flex-1 overflow-auto">{children}</main>
+      <main className="app-canvas min-h-screen min-w-0 overflow-auto pl-68">{children}</main>
     </div>
   )
 }

@@ -38,7 +38,7 @@ export const adminNav: AdminNavItem[] = [
     basePath: '/admin/savings',
     children: [
       { label: 'បញ្ជីការសន្សំ', href: '/admin/savings' },
-      { label: 'រង់ផ្ទៀងផ្ទាត់', href: '/admin/savings/requests' },
+      { label: 'សំណើសន្សំ', href: '/admin/savings/requests' },
       { label: 'ស្នើសុំដកដើមទុន', href: '/admin/savings/capital' },
     ],
   },

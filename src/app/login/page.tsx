@@ -48,25 +48,25 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="min-h-screen bg-slate-50">
+    <div className="min-h-screen bg-background">
       <div className="mx-auto grid min-h-screen w-full max-w-[1400px] grid-cols-1 lg:grid-cols-[440px_1fr]">
         <BrandPanel />
 
-        <main className="relative flex min-h-screen flex-col bg-slate-50">
+        <main className="relative flex min-h-screen flex-col bg-background">
           {/* Mobile header */}
           <header className="flex items-center justify-between border-b border-slate-200 bg-white/80 px-4 py-4 backdrop-blur-sm sm:px-8 lg:hidden">
             <Link
               href="/"
-              className="inline-flex items-center gap-2 text-lg font-bold text-blue-950"
+              className="inline-flex items-center gap-2 text-lg font-bold text-brand-950"
             >
-              <span className="grid h-9 w-9 place-items-center rounded-xl bg-blue-950 text-white">
+              <span className="grid h-9 w-9 place-items-center rounded-xl bg-brand-950 text-white">
                 <Building2 className="h-5 w-5" />
               </span>
               សន្សំ
             </Link>
             <Link
               href="/register"
-              className="text-sm font-semibold text-blue-900 hover:text-blue-700"
+              className="text-sm font-semibold text-brand-900 hover:text-brand-700"
             >
               ចុះឈ្មោះ
             </Link>
@@ -77,7 +77,7 @@ export default function LoginPage() {
             <span className="mr-4 text-sm text-slate-500">មិនទាន់មានគណនី?</span>
             <Link
               href="/register"
-              className="inline-flex items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-blue-900 transition hover:border-blue-200 hover:text-blue-700"
+              className="inline-flex items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-brand-900 transition hover:border-brand-200 hover:text-brand-700"
             >
               ចុះឈ្មោះឥឡូវនេះ
             </Link>
@@ -87,7 +87,7 @@ export default function LoginPage() {
           <div className="flex flex-1 flex-col px-4 py-8 sm:px-8 lg:px-12 lg:py-12">
             <div className="mx-auto w-full max-w-md">
               <div className="mb-8">
-                <p className="text-xs font-semibold uppercase tracking-[0.18em] text-blue-700">
+                <p className="text-xs font-semibold uppercase tracking-[0.18em] text-brand-700">
                   វិបផតថលសមាជិក
                 </p>
                 <h1 className="mt-2 text-3xl font-bold tracking-tight text-slate-950 sm:text-[34px]">
@@ -98,7 +98,7 @@ export default function LoginPage() {
                 </p>
               </div>
 
-              <div className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm shadow-slate-200/40 sm:p-8">
+              <div className="rounded-3xl border border-border bg-surface p-6 shadow-sm shadow-slate-200/40 sm:p-8">
                 <form onSubmit={handleLogin} className="space-y-5">
                   <Field label="អាសយដ្ឋានអ៊ីមែល" htmlFor="email">
                     <IconInput
@@ -119,7 +119,7 @@ export default function LoginPage() {
                     trailingLabel={
                       <Link
                         href="/forgot-password"
-                        className="text-xs font-semibold text-blue-700 transition hover:text-blue-900"
+                        className="text-xs font-semibold text-brand-700 transition hover:text-brand-900"
                       >
                         ភ្លេចពាក្យសម្ងាត់?
                       </Link>
@@ -150,7 +150,7 @@ export default function LoginPage() {
                   <button
                     type="submit"
                     disabled={loading}
-                    className="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-blue-950 px-6 py-3 text-sm font-semibold text-white shadow-sm shadow-blue-950/10 transition hover:bg-blue-900 disabled:cursor-not-allowed disabled:opacity-60"
+                    className="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-brand-950 px-6 py-3 text-sm font-semibold text-white shadow-sm shadow-brand-950/10 transition hover:bg-brand-950 disabled:cursor-not-allowed disabled:opacity-60"
                   >
                     {loading ? (
                       <>
@@ -196,7 +196,7 @@ export default function LoginPage() {
 
                 <Link
                   href="/register"
-                  className="inline-flex w-full items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white px-6 py-3 text-sm font-semibold text-slate-700 transition hover:border-slate-300 hover:bg-slate-50"
+                  className="inline-flex w-full items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white px-6 py-3 text-sm font-semibold text-slate-700 transition hover:border-slate-300 hover:bg-background"
                 >
                   បង្កើតគណនីសមាជិកថ្មី
                 </Link>
@@ -205,7 +205,7 @@ export default function LoginPage() {
               <p className="mt-8 text-center text-xs text-slate-400 sm:text-left">
                 ដោយចូលគណនី អ្នកយល់ព្រមថាគណនីរបស់អ្នកត្រូវបានប្រើដោយខ្លួនអ្នកផ្ទាល់ និង
                 ការសម្ងាត់ត្រូវបានរក្សាដោយសុវត្ថិភាព។{' '}
-                <Link href="/" className="font-semibold text-blue-700 hover:text-blue-900">
+                <Link href="/" className="font-semibold text-brand-700 hover:text-brand-900">
                   ត្រឡប់ទៅទំព័រដើម
                 </Link>
               </p>
@@ -227,7 +227,7 @@ function BrandPanel() {
     {
       icon: CreditCard,
       title: 'កម្ជីសមាជិកដោយយុត្តិធម៌',
-      description: 'អត្រាការប្រាក់ចាប់ពី ១-២% ក្នុងមួយខែ ជាមួយដំណើរការតម្លាភាព។',
+      description: 'ដាក់ស្នើ តាមដាន និង សងកម្ជីតាមដំណើរការតម្លាភាព។',
     },
     {
       icon: TrendingUp,
@@ -237,7 +237,7 @@ function BrandPanel() {
   ]
 
   return (
-    <aside className="relative hidden overflow-hidden bg-blue-950 text-white lg:flex lg:flex-col">
+    <aside className="app-brand-panel relative hidden overflow-hidden lg:flex lg:flex-col">
       <div className="relative flex h-full flex-col px-10 py-10">
         <Link href="/" className="inline-flex w-fit items-center gap-2.5 group">
           <span className="grid h-10 w-10 place-items-center rounded-xl bg-white/10 ring-1 ring-white/15 transition group-hover:bg-white/15">
@@ -250,7 +250,7 @@ function BrandPanel() {
           <h2 className="mt-5 text-[28px] font-bold leading-[1.2]">
             បន្តដំណើរហិរញ្ញវត្ថុរបស់អ្នកជាមួយសន្សំ។
           </h2>
-          <p className="mt-3 text-[15px] leading-7 text-blue-100/85">
+          <p className="mt-3 text-[15px] leading-7 text-brand-100/85">
             ចូលគណនីដើម្បីបន្ថែមការសន្សំ ស្នើសុំកម្ជី មើលរបាយការណ៍ និង
             តាមដានគ្រប់សកម្មភាពសមាជិករបស់អ្នក។
           </p>
@@ -265,11 +265,11 @@ function BrandPanel() {
                 className="flex items-start gap-4 rounded-2xl bg-white/5 px-4 py-3 ring-1 ring-white/10"
               >
                 <span className="mt-0.5 grid h-9 w-9 shrink-0 place-items-center rounded-xl bg-white/10 ring-1 ring-white/15">
-                  <Icon className="h-4.5 w-4.5 text-blue-100" />
+                  <Icon className="h-4.5 w-4.5 text-brand-100" />
                 </span>
                 <div>
                   <p className="text-sm font-semibold text-white">{benefit.title}</p>
-                  <p className="mt-0.5 text-xs leading-5 text-blue-200/80">{benefit.description}</p>
+                  <p className="mt-0.5 text-xs leading-5 text-brand-200/80">{benefit.description}</p>
                 </div>
               </li>
             )
@@ -278,11 +278,11 @@ function BrandPanel() {
 
         <div className="mt-auto pt-10">
           <div className="rounded-2xl border border-white/10 bg-white/5 p-5 backdrop-blur-sm">
-            <div className="flex items-center gap-2 text-blue-100">
+            <div className="flex items-center gap-2 text-brand-100">
               <ShieldCheck className="h-5 w-5" />
               <p className="text-sm font-semibold">ការចូលគណនីដោយសុវត្ថិភាព</p>
             </div>
-            <p className="mt-2 flex items-start gap-2 text-xs leading-5 text-blue-200/85">
+            <p className="mt-2 flex items-start gap-2 text-xs leading-5 text-brand-200/85">
               <CheckCircle2 className="mt-0.5 h-3.5 w-3.5 shrink-0 text-emerald-300" />
               ព័ត៌មានគណនី និង ឯកសាររបស់អ្នកត្រូវបានអ៊ិនគ្រីប និង រក្សាការសម្ងាត់។
             </p>
@@ -315,7 +315,7 @@ function Field({ label, htmlFor, trailingLabel, children }: FieldShellProps) {
 }
 
 const inputBase =
-  'w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-[15px] text-slate-900 shadow-xs outline-none transition placeholder:text-slate-400 hover:border-slate-300 focus:border-blue-500 focus:ring-4 focus:ring-blue-500/15'
+  'app-input shadow-xs'
 
 interface IconInputProps extends React.InputHTMLAttributes<HTMLInputElement> {
   icon: React.ReactNode
@@ -330,7 +330,7 @@ function IconInput({ icon, trailing, className = '', ...rest }: IconInputProps) 
       </span>
       <input
         {...rest}
-        className={`${inputBase} pl-11 ${trailing ? 'pr-11' : ''} ${className}`}
+        className={`${inputBase} app-input--with-icon ${trailing ? 'app-input--with-trailing' : ''} ${className}`}
       />
       {trailing && (
         <div className="absolute right-2 top-1/2 -translate-y-1/2">{trailing}</div>

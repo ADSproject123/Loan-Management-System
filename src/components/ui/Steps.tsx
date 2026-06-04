@@ -30,16 +30,16 @@ export function Steps({ steps, currentStep, className = '' }: StepsProps) {
                 <div
                   className={`w-10 h-10 rounded-full flex items-center justify-center font-semibold text-sm transition-colors
                     ${isCompleted
-                      ? 'bg-blue-900 text-white'
+                      ? 'bg-brand-950 text-white'
                       : isCurrent
-                      ? 'bg-blue-100 text-blue-900 border-2 border-blue-900'
+                      ? 'bg-brand-100 text-brand-900 border-2 border-brand-900'
                       : 'bg-gray-100 text-gray-400 border-2 border-gray-200'
                     }`}
                 >
                   {isCompleted ? <Check className="w-5 h-5" /> : step.id}
                 </div>
                 <div className="mt-2 text-center">
-                  <p className={`text-xs font-medium ${isCurrent ? 'text-blue-900' : isCompleted ? 'text-gray-700' : 'text-gray-400'}`}>
+                  <p className={`text-xs font-medium ${isCurrent ? 'text-brand-900' : isCompleted ? 'text-gray-700' : 'text-gray-400'}`}>
                     {step.label}
                   </p>
                   {step.description && (
@@ -48,7 +48,7 @@ export function Steps({ steps, currentStep, className = '' }: StepsProps) {
                 </div>
               </div>
               {!isLast && (
-                <div className={`flex-1 h-0.5 mt-5 mx-2 transition-colors ${isCompleted ? 'bg-blue-900' : 'bg-gray-200'}`} />
+                <div className={`flex-1 h-0.5 mt-5 mx-2 transition-colors ${isCompleted ? 'bg-brand-950' : 'bg-gray-200'}`} />
               )}
             </React.Fragment>
           )

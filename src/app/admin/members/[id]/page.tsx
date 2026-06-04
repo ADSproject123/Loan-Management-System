@@ -1,13 +1,13 @@
-import Link from 'next/link'
 import { notFound } from 'next/navigation'
-import { ArrowLeft, Mail, Phone } from 'lucide-react'
-import { MemberStatusBadge } from '@/components/ui/Badge'
+import { AdminBackLink } from '@/components/admin'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { approveMember } from '@/app/actions/admin'
 import { AdminActionButton } from '@/app/admin/AdminActionButton'
 import { SuspendMemberButton } from '@/app/admin/SuspendMemberButton'
 import { DenyMemberButton } from '@/app/admin/DenyMemberButton'
-import { formatDate, money } from '@/app/admin/adminUtils'
+import { formatDate, sumByCurrency } from '@/app/admin/adminUtils'
+import { isVerifiedSavingForChart } from '@/lib/admin/savingsChartData'
+import { normalizeCurrency, type CurrencyCode } from '@/lib/currency'
 import { getPrivateFileUrl } from '@/lib/uploads'
 import type { MemberStatus } from '@/types/database'
 import { MemberDetailTabs, type TabId } from './MemberDetailTabs'
@@ -38,20 +38,30 @@ export default async function AdminMemberDetailPage({ params }: PageProps) {
 
   if (!member) notFound()
 
-  const [{ data: savings }, { data: loans }] = await Promise.all([
+  const [{ data: allSavings }, { data: allLoans }] = await Promise.all([
     admin
       .from('savings')
-      .select('id, amount, status, saving_date, created_at')
+      .select('id, amount, currency, status, saving_date, created_at, verified_at, verified_by')
       .eq('member_id', id)
-      .order('created_at', { ascending: false })
-      .limit(5),
+      .order('created_at', { ascending: false }),
     admin
       .from('loans')
-      .select('id, amount, purpose, status, term_months, created_at')
+      .select('id, amount, currency, purpose, status, term_months, created_at')
       .eq('member_id', id)
-      .order('created_at', { ascending: false })
-      .limit(5),
+      .order('created_at', { ascending: false }),
   ])
+
+  const savings = allSavings ?? []
+  const loans = allLoans ?? []
+  const recentSavings = savings.slice(0, 5)
+  const recentLoans = loans.slice(0, 5)
+
+  const verifiedSavings = savings.filter(isVerifiedSavingForChart)
+  const activeLoans = loans.filter((loan) => loan.status === 'active' || loan.status === 'approved')
+  const savingsTotals = sumByCurrency(verifiedSavings)
+  const loanTotals = sumByCurrency(activeLoans)
+  const savingsCountByCurrency = countByCurrency(verifiedSavings)
+  const loansCountByCurrency = countByCurrency(activeLoans)
 
   const [idDocumentUrl, residentBookUrl] = await Promise.all([
     getPrivateFileUrl(member.id_document_url),
@@ -59,10 +69,6 @@ export default async function AdminMemberDetailPage({ params }: PageProps) {
   ])
 
   const referee = normalizeReferee(member.referee)
-  const totalSavings = (savings ?? []).reduce((sum, item) => sum + Number(item.amount ?? 0), 0)
-  const activeLoans = (loans ?? []).filter((loan) =>
-    ['approved', 'active', 'under_review', 'pending'].includes(loan.status)
-  ).length
 
   const hasIdDoc = Boolean(member.id_document_url)
   const hasResidentBook = Boolean(member.resident_book_url)
@@ -91,28 +97,14 @@ export default async function AdminMemberDetailPage({ params }: PageProps) {
   ]
 
   const defaultTab: TabId = member.status === 'pending' ? 'documents' : 'profile'
-  const displayNameKh = member.full_name_kh ?? member.full_name
-  const displayNameEn = member.full_name_en ?? member.full_name
-  const initials = displayNameKh
-    .split(' ')
-    .map((part: string) => part[0])
-    .join('')
-    .slice(0, 2)
-    .toUpperCase()
 
   return (
     <main className="w-full space-y-6 p-6 md:p-8">
       <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
         <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:gap-4">
-          <Link
-            href="/admin/members"
-            className="inline-flex w-fit items-center gap-2 rounded-lg bg-white px-3 py-2 text-sm font-medium text-blue-700 ring-1 ring-gray-200 transition hover:bg-blue-50 hover:text-blue-900"
-          >
-            <ArrowLeft className="h-4 w-4" />
-            ត្រឡប់ទៅបញ្ជីសមាជិក
-          </Link>
-          <div className="hidden h-6 w-px bg-gray-200 sm:block" aria-hidden />
-          <p className="text-sm text-gray-500">
+          <AdminBackLink href="/admin/members">ត្រឡប់ទៅបញ្ជីសមាជិក</AdminBackLink>
+          <div className="hidden h-6 w-px bg-border sm:block" aria-hidden />
+          <p className="text-sm text-muted">
             ព័ត៌មានលម្អិតសមាជិក · ចូលរួម {formatDate(member.joined_at ?? member.created_at)}
           </p>
         </div>
@@ -135,62 +127,6 @@ export default async function AdminMemberDetailPage({ params }: PageProps) {
           )}
         </div>
       </div>
-
-      <section className="w-full overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm">
-        <div className="h-1.5 w-full bg-blue-800" />
-        <div className="flex flex-col gap-6 p-6 lg:flex-row lg:items-start lg:justify-between lg:p-8">
-          <div className="flex min-w-0 flex-1 items-start gap-4 sm:gap-5">
-            <span className="grid h-14 w-14 shrink-0 place-items-center rounded-2xl bg-blue-900 text-lg font-bold text-white shadow-sm sm:h-16 sm:w-16 sm:text-xl">
-              {initials}
-            </span>
-            <div className="min-w-0 flex-1">
-              <div className="flex flex-wrap items-center gap-2">
-                <MemberStatusBadge status={member.status as MemberStatus} />
-                {member.is_admin && (
-                  <span className="rounded-md bg-violet-100 px-2 py-0.5 text-xs font-semibold text-violet-800">
-                    អ្នកគ្រប់គ្រង
-                  </span>
-                )}
-              </div>
-              <h1 className="mt-2 text-2xl font-bold tracking-tight text-gray-900 md:text-3xl">
-                {displayNameKh}
-              </h1>
-              {displayNameEn !== displayNameKh && (
-                <p className="mt-1 text-base text-gray-500">{displayNameEn}</p>
-              )}
-              <div className="mt-4 flex flex-wrap gap-x-6 gap-y-2 text-sm text-gray-600">
-                <a
-                  href={`mailto:${member.email}`}
-                  className="inline-flex items-center gap-2 transition hover:text-blue-700"
-                >
-                  <Mail className="h-4 w-4 shrink-0 text-gray-400" />
-                  <span className="truncate">{member.email}</span>
-                </a>
-                {member.phone && (
-                  <a
-                    href={`tel:${member.phone}`}
-                    className="inline-flex items-center gap-2 transition hover:text-blue-700"
-                  >
-                    <Phone className="h-4 w-4 shrink-0 text-gray-400" />
-                    {member.phone}
-                  </a>
-                )}
-              </div>
-            </div>
-          </div>
-
-          <div className="grid w-full shrink-0 grid-cols-2 gap-px overflow-hidden rounded-xl border border-gray-200 bg-gray-200 sm:grid-cols-3 lg:w-auto lg:min-w-88">
-            <HeroStat label="សន្សំសរុប" value={money(totalSavings)} sub={`${savings?.length ?? 0} ការផ្ទុកថ្មីៗ`} />
-            <HeroStat label="កម្ជីសកម្ម" value={String(activeLoans)} sub={`${loans?.length ?? 0} កម្ជីថ្មីៗ`} />
-            <HeroStat
-              label="ឯកសារ"
-              value={docsComplete ? 'ពេញលេញ' : 'មិនពេញ'}
-              sub={docsComplete ? 'រួចរាល់ពិនិត្យ' : 'ត្រូវការពិនិត្យ'}
-              className="col-span-2 sm:col-span-1"
-            />
-          </div>
-        </div>
-      </section>
 
       {member.status === 'suspended' && member.suspension_reason && (
         <div className="w-full rounded-xl border border-red-200 bg-red-50 px-5 py-4 md:px-6">
@@ -232,8 +168,12 @@ export default async function AdminMemberDetailPage({ params }: PageProps) {
           telegram_chat_id: member.telegram_chat_id,
         }}
         referee={referee}
-        savings={savings ?? []}
-        loans={loans ?? []}
+        savings={recentSavings}
+        loans={recentLoans}
+        savingsTotals={savingsTotals}
+        loanTotals={loanTotals}
+        savingsCountByCurrency={savingsCountByCurrency}
+        loansCountByCurrency={loansCountByCurrency}
         idDocumentUrl={idDocumentUrl}
         residentBookUrl={residentBookUrl}
         checklist={checklist}
@@ -248,22 +188,13 @@ function normalizeReferee(value: RefereeRecord | RefereeRecord[] | null): Refere
   return Array.isArray(value) ? (value[0] ?? null) : value
 }
 
-function HeroStat({
-  label,
-  value,
-  sub,
-  className = '',
-}: {
-  label: string
-  value: string
-  sub: string
-  className?: string
-}) {
-  return (
-    <div className={`bg-white px-5 py-4 sm:px-6 sm:py-5 ${className}`}>
-      <p className="text-xs font-semibold uppercase tracking-wide text-gray-500">{label}</p>
-      <p className="mt-1 text-lg font-bold text-gray-900 sm:text-xl">{value}</p>
-      <p className="mt-0.5 text-xs text-gray-500 sm:text-sm">{sub}</p>
-    </div>
+function countByCurrency(rows: { currency?: string | null }[]): Record<CurrencyCode, number> {
+  return rows.reduce(
+    (counts, row) => {
+      const currency = normalizeCurrency(row.currency)
+      counts[currency] += 1
+      return counts
+    },
+    { USD: 0, KHR: 0 }
   )
 }

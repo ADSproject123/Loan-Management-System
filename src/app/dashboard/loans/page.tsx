@@ -17,7 +17,7 @@ export default async function LoansPage() {
   const [loansResult, repaymentsResult] = await Promise.all([
     admin
       .from('loans')
-      .select('id, amount, currency, purpose, term_months, interest_rate, status, disbursed_at, due_date, created_at')
+      .select('id, amount, currency, purpose, term_months, status, disbursed_at, due_date, created_at')
       .eq('member_id', member.id)
       .order('created_at', { ascending: false }),
     admin
@@ -61,7 +61,7 @@ export default async function LoansPage() {
           </Link>
           <Link
             href="/dashboard/loans/request"
-            className="inline-flex items-center gap-2 bg-blue-900 text-white px-4 py-2 rounded-lg text-sm font-semibold hover:bg-blue-800 transition-colors"
+            className="inline-flex items-center gap-2 bg-brand-950 text-white px-4 py-2 rounded-lg text-sm font-semibold hover:bg-brand-800 transition-colors"
           >
             <Plus className="w-4 h-4" />
             ស្នើសុំកម្ជី
@@ -71,15 +71,15 @@ export default async function LoansPage() {
 
       {/* Active Loan Summary */}
       {activeLoan && (
-        <div className="bg-blue-900 text-white rounded-xl p-6 mb-8">
+        <div className="bg-brand-950 text-white rounded-xl p-6 mb-8">
           <div className="flex items-start justify-between mb-4">
             <div>
-              <p className="text-blue-200 text-sm mb-1">កម្ជីសកម្ម</p>
+              <p className="text-brand-200 text-sm mb-1">កម្ជីសកម្ម</p>
               <p className="text-3xl font-bold">{formatMoney(toNumber(activeLoan.amount), normalizeCurrency(activeLoan.currency))}</p>
-              <p className="text-blue-200 text-sm mt-1">{activeLoan.purpose}</p>
+              <p className="text-brand-200 text-sm mt-1">{activeLoan.purpose}</p>
             </div>
             <div className="text-right">
-              <p className="text-blue-200 text-sm mb-1">នៅសល់</p>
+              <p className="text-brand-200 text-sm mb-1">នៅសល់</p>
               <p className="text-2xl font-bold">{formatMoney(remaining, normalizeCurrency(activeLoan.currency))}</p>
             </div>
           </div>
@@ -90,13 +90,13 @@ export default async function LoansPage() {
             />
           </div>
           <div className="flex items-center justify-between text-sm">
-            <span className="text-blue-200">បានបង់៖ {formatMoney(activeLoanPaid, normalizeCurrency(activeLoan.currency))} ({Math.round((activeLoanPaid / toNumber(activeLoan.amount)) * 100)}%)</span>
-            <span className="text-blue-200">ត្រូវសង៖ {activeLoan.due_date ? new Date(activeLoan.due_date).toLocaleDateString('km-KH', { month: 'long', year: 'numeric' }) : 'មិនទាន់កំណត់'}</span>
+            <span className="text-brand-200">បានបង់៖ {formatMoney(activeLoanPaid, normalizeCurrency(activeLoan.currency))} ({Math.round((activeLoanPaid / toNumber(activeLoan.amount)) * 100)}%)</span>
+            <span className="text-brand-200">ត្រូវសង៖ {activeLoan.due_date ? new Date(activeLoan.due_date).toLocaleDateString('km-KH', { month: 'long', year: 'numeric' }) : 'មិនទាន់កំណត់'}</span>
           </div>
           <div className="mt-4 pt-4 border-t border-white/20 flex gap-3">
             <Link
               href="/dashboard/loans/repay"
-              className="inline-flex items-center gap-2 bg-white text-blue-900 px-4 py-2 rounded-lg text-sm font-semibold hover:bg-blue-50 transition-colors"
+              className="inline-flex items-center gap-2 bg-white text-brand-900 px-4 py-2 rounded-lg text-sm font-semibold hover:bg-brand-50 transition-colors"
             >
               សងកម្ជី <ArrowRight className="w-4 h-4" />
             </Link>
@@ -113,8 +113,8 @@ export default async function LoansPage() {
       {/* Stats */}
       <div className="grid sm:grid-cols-3 gap-4 mb-8">
         <Card>
-          <div className="p-2.5 bg-blue-100 rounded-lg inline-flex mb-3">
-            <CreditCard className="w-5 h-5 text-blue-700" />
+          <div className="p-2.5 bg-brand-100 rounded-lg inline-flex mb-3">
+            <CreditCard className="w-5 h-5 text-brand-700" />
           </div>
           <p className="text-2xl font-bold text-gray-900">{loans.filter(l => l.status === 'active').length}</p>
           <p className="text-gray-500 text-sm mt-1">កម្ជីសកម្ម</p>
@@ -124,7 +124,7 @@ export default async function LoansPage() {
             <FileText className="w-5 h-5 text-green-700" />
           </div>
           <p className="text-2xl font-bold text-gray-900">{loans.filter(l => l.status === 'completed').length}</p>
-          <p className="text-gray-500 text-sm mt-1">កម្ជីបានបញ្ចប់</p>
+          <p className="text-gray-500 text-sm mt-1">កម្ជីបានទទួល</p>
         </Card>
         <Card>
           <div className="p-2.5 bg-orange-100 rounded-lg inline-flex mb-3">
@@ -146,7 +146,6 @@ export default async function LoansPage() {
               <tr className="bg-gray-50 border-b border-gray-100">
                 <th className="text-left px-6 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wider">គោលបំណង</th>
                 <th className="text-left px-6 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wider">ចំនួនទឹកប្រាក់</th>
-                <th className="text-left px-6 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wider">អត្រា</th>
                 <th className="text-left px-6 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wider">រយៈពេល</th>
                 <th className="text-left px-6 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wider">បានបើក</th>
                 <th className="text-left px-6 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wider">ស្ថានភាព</th>
@@ -156,7 +155,7 @@ export default async function LoansPage() {
             <tbody className="divide-y divide-gray-100">
               {loans.length === 0 && (
                 <tr>
-                  <td colSpan={7} className="px-6 py-8 text-center text-sm text-gray-500">
+                  <td colSpan={6} className="px-6 py-8 text-center text-sm text-gray-500">
                     មិនទាន់មានកម្ជីដែលបានដាក់ស្នើនៅឡើយ។
                   </td>
                 </tr>
@@ -165,7 +164,6 @@ export default async function LoansPage() {
                 <tr key={loan.id} className="hover:bg-gray-50 transition-colors">
                   <td className="px-6 py-4 text-sm text-gray-900 font-medium">{loan.purpose}</td>
                   <td className="px-6 py-4 text-sm font-semibold text-gray-900">{formatMoney(toNumber(loan.amount), normalizeCurrency(loan.currency))}</td>
-                  <td className="px-6 py-4 text-sm text-gray-500">{loan.interest_rate}%/ខែ</td>
                   <td className="px-6 py-4 text-sm text-gray-500">{loan.term_months} ខែ</td>
                   <td className="px-6 py-4 text-sm text-gray-500">
                     {loan.disbursed_at ? new Date(loan.disbursed_at).toLocaleDateString('km-KH', { month: 'short', day: 'numeric', year: 'numeric' }) : 'រង់ចាំ'}
@@ -177,13 +175,13 @@ export default async function LoansPage() {
                     {loan.status === 'active' && (
                       <Link
                         href="/dashboard/loans/repay"
-                        className="text-blue-700 hover:text-blue-900 text-sm font-medium transition-colors"
+                        className="text-brand-700 hover:text-brand-900 text-sm font-medium transition-colors"
                       >
                         សងវិញ
                       </Link>
                     )}
                     {loan.status === 'completed' && (
-                      <span className="text-gray-400 text-sm">បានបញ្ចប់</span>
+                      <span className="text-gray-400 text-sm">បានទទួល</span>
                     )}
                   </td>
                 </tr>
@@ -195,13 +193,13 @@ export default async function LoansPage() {
 
       {/* No active loan - request prompt */}
       {!activeLoan && (
-        <div className="mt-6 bg-blue-50 border border-blue-100 rounded-xl p-6 text-center">
-          <CreditCard className="w-10 h-10 text-blue-300 mx-auto mb-3" />
-          <h3 className="font-semibold text-blue-900 mb-2">មិនមានកម្ជីសកម្ម</h3>
-          <p className="text-blue-700 text-sm mb-4">ត្រូវការការគាំទ្រហិរញ្ញវត្ថុ? ដាក់ពាក្យសុំកម្ជីសមាជិកថ្ងៃនេះ។</p>
+        <div className="mt-6 bg-brand-50 border border-brand-100 rounded-xl p-6 text-center">
+          <CreditCard className="w-10 h-10 text-brand-300 mx-auto mb-3" />
+          <h3 className="font-semibold text-brand-900 mb-2">មិនមានកម្ជីសកម្ម</h3>
+          <p className="text-brand-700 text-sm mb-4">ត្រូវការការគាំទ្រហិរញ្ញវត្ថុ? ដាក់ពាក្យសុំកម្ជីសមាជិកថ្ងៃនេះ។</p>
           <Link
             href="/dashboard/loans/request"
-            className="inline-flex items-center gap-2 bg-blue-900 text-white px-5 py-2.5 rounded-lg text-sm font-semibold hover:bg-blue-800 transition-colors"
+            className="inline-flex items-center gap-2 bg-brand-950 text-white px-5 py-2.5 rounded-lg text-sm font-semibold hover:bg-brand-800 transition-colors"
           >
             ស្នើសុំកម្ជី <ArrowRight className="w-4 h-4" />
           </Link>

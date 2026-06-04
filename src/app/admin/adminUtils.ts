@@ -29,6 +29,16 @@ export function formatDate(value?: string | null) {
   return `${date.getDate()} ${KHMER_MONTHS[date.getMonth()]} ${date.getFullYear()}`
 }
 
+/** Date + time with fixed formatting (avoids hydration mismatches from toLocaleString). */
+export function formatDateTime(value?: string | null) {
+  if (!value) return null
+  const date = new Date(value)
+  if (Number.isNaN(date.getTime())) return null
+  const hours = String(date.getHours()).padStart(2, '0')
+  const minutes = String(date.getMinutes()).padStart(2, '0')
+  return `${formatDate(value)} ${hours}:${minutes}`
+}
+
 export function relatedMemberName(record: {
   members?: { full_name?: string | null } | { full_name?: string | null }[] | null
 }) {

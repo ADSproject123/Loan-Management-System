@@ -111,7 +111,7 @@ export function RefundSavingButton({
                   minLength={5}
                   disabled={pending}
                   placeholder="ឧ. ភស្តុតាងមិនត្រឹមត្រូវ ឬចំនួនទឹកប្រាក់មិនផ្គូផ្គង..."
-                  className="w-full resize-y rounded-lg border border-gray-300 px-3 py-2.5 text-sm text-gray-900 placeholder:text-gray-400 focus:border-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500/20 disabled:opacity-60"
+                  className="w-full resize-y rounded-lg border border-gray-300 px-3 py-2.5 text-sm text-gray-900 placeholder:text-gray-400 focus:border-brand-600 focus:outline-none focus:ring-2 focus:ring-brand-500/20 disabled:opacity-60"
                 />
                 <p className="mt-1 text-xs text-gray-500">យ៉ាងតិច ៥ តួអក្សរ</p>
               </div>

@@ -115,7 +115,7 @@ export default function AddSavingPage() {
                   placeholder="0.00"
                   min="100"
                   step="100"
-                  className="w-full pl-8 pr-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-lg font-semibold text-gray-900"
+                  className="w-full pl-8 pr-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-500 text-lg font-semibold text-gray-900"
                 />
               </div>
               <CurrencySelect value={currency} onChange={setCurrency} className="shrink-0" />
@@ -129,18 +129,18 @@ export default function AddSavingPage() {
               onChange={(e) => setNotes(e.target.value)}
               rows={3}
               placeholder="ឧ. ការសន្សំប្រចាំខែឧសភា"
-              className="w-full resize-y px-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
+              className="w-full resize-y px-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-500 text-sm"
             />
           </div>
 
           {amount && parseFloat(amount) > 0 && (
-            <div className="bg-blue-50 rounded-lg p-4 mb-5">
+            <div className="bg-brand-50 rounded-lg p-4 mb-5">
               <div className="flex justify-between items-center">
-                <span className="text-blue-700 text-sm">ចំនួនទឹកប្រាក់សន្សំ</span>
-                <span className="text-blue-900 font-semibold">{currencySymbol(currency)}{parseFloat(amount).toLocaleString()}</span>
+                <span className="text-brand-700 text-sm">ចំនួនទឹកប្រាក់សន្សំ</span>
+                <span className="text-brand-900 font-semibold">{currencySymbol(currency)}{parseFloat(amount).toLocaleString()}</span>
               </div>
               <div className="flex justify-between items-center mt-1">
-                <span className="text-blue-700 text-sm">ការប្រាក់ប្រចាំខែ (៣%)</span>
+                <span className="text-brand-700 text-sm">ការប្រាក់ប្រចាំខែ (៣%)</span>
                 <span className="text-green-600 font-semibold">+{currencySymbol(currency)}{(parseFloat(amount) * 0.03).toFixed(2)}</span>
               </div>
             </div>
@@ -156,8 +156,8 @@ export default function AddSavingPage() {
       {step === 2 && (
         <Card>
           <div className="flex items-center gap-3 mb-6">
-            <div className="p-2.5 bg-blue-100 rounded-lg">
-              <QrCode className="w-6 h-6 text-blue-700" />
+            <div className="p-2.5 bg-brand-100 rounded-lg">
+              <QrCode className="w-6 h-6 text-brand-700" />
             </div>
             <div>
               <h2 className="font-semibold text-gray-900">ស្កេន និង បង់ប្រាក់</h2>
@@ -214,11 +214,11 @@ export default function AddSavingPage() {
           </div>
 
           <div className="mb-6">
-            <label className="flex flex-col items-center justify-center w-full h-40 border-2 border-dashed border-gray-300 rounded-xl cursor-pointer hover:border-blue-400 hover:bg-blue-50 transition-colors">
+            <label className="flex flex-col items-center justify-center w-full h-40 border-2 border-dashed border-gray-300 rounded-xl cursor-pointer hover:border-brand-500 hover:bg-brand-50 transition-colors">
               <Upload className="w-10 h-10 text-gray-400 mb-3" />
               {evidence ? (
                 <div className="text-center">
-                  <p className="text-sm font-medium text-blue-700">{evidence.name}</p>
+                  <p className="text-sm font-medium text-brand-700">{evidence.name}</p>
                   <p className="text-xs text-gray-400 mt-1">ចុចដើម្បីប្តូរឯកសារ</p>
                 </div>
               ) : (
@@ -297,7 +297,7 @@ export default function AddSavingPage() {
             <div className="flex gap-3">
               <Link
                 href="/dashboard/savings"
-                className="flex-1 inline-flex items-center justify-center gap-2 bg-blue-900 text-white py-2.5 rounded-lg font-semibold hover:bg-blue-800 transition-colors text-sm"
+                className="flex-1 inline-flex items-center justify-center gap-2 bg-brand-950 text-white py-2.5 rounded-lg font-semibold hover:bg-brand-800 transition-colors text-sm"
               >
                 មើលការសន្សំ
               </Link>

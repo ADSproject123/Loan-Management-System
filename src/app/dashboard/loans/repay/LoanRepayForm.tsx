@@ -83,20 +83,20 @@ export function LoanRepayForm({ activeLoan }: { activeLoan: ActiveLoan }) {
 
       {/* Active Loan Summary */}
       {step < 4 && (
-        <div className="bg-blue-900 text-white rounded-xl p-5 mb-6">
-          <p className="text-blue-200 text-xs uppercase tracking-wider font-semibold mb-2">កម្ជីសកម្ម</p>
+        <div className="bg-brand-950 text-white rounded-xl p-5 mb-6">
+          <p className="text-brand-200 text-xs uppercase tracking-wider font-semibold mb-2">កម្ជីសកម្ម</p>
           <div className="flex justify-between items-start">
             <div>
               <p className="text-2xl font-bold">{currencySymbol(currency)}{activeLoan.remaining.toLocaleString()}</p>
-              <p className="text-blue-200 text-sm mt-1">សមតុល្យនៅសល់</p>
+              <p className="text-brand-200 text-sm mt-1">សមតុល្យនៅសល់</p>
             </div>
             <div className="text-right">
               <p className="text-lg font-semibold">{currencySymbol(currency)}{activeLoan.monthly_payment.toLocaleString()}</p>
-              <p className="text-blue-200 text-sm mt-1">បង់ប្រចាំខែ</p>
+              <p className="text-brand-200 text-sm mt-1">បង់ប្រចាំខែ</p>
             </div>
           </div>
           <div className="mt-3 pt-3 border-t border-white/20">
-            <p className="text-blue-200 text-xs">
+            <p className="text-brand-200 text-xs">
               {activeLoan.purpose}
               {activeLoan.due_date && (
                 <> &bull; ផុតកំណត់ {new Date(activeLoan.due_date).toLocaleDateString('km-KH', { month: 'long', day: 'numeric', year: 'numeric' })}</>
@@ -110,8 +110,8 @@ export function LoanRepayForm({ activeLoan }: { activeLoan: ActiveLoan }) {
       {step === 1 && (
         <Card>
           <div className="flex items-center gap-3 mb-5">
-            <div className="p-2.5 bg-blue-100 rounded-lg">
-              <CreditCard className="w-6 h-6 text-blue-700" />
+            <div className="p-2.5 bg-brand-100 rounded-lg">
+              <CreditCard className="w-6 h-6 text-brand-700" />
             </div>
             <div>
               <h2 className="font-semibold text-gray-900">បញ្ជាក់ចំនួនទឹកប្រាក់សង</h2>
@@ -132,7 +132,7 @@ export function LoanRepayForm({ activeLoan }: { activeLoan: ActiveLoan }) {
                   placeholder="0.00"
                   min="100"
                   max={activeLoan.remaining}
-                  className="w-full pl-8 pr-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-lg font-semibold text-gray-900"
+                  className="w-full pl-8 pr-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-500 text-lg font-semibold text-gray-900"
                 />
               </div>
               <CurrencySelect value={currency} onChange={setCurrency} className="shrink-0" />
@@ -146,8 +146,8 @@ export function LoanRepayForm({ activeLoan }: { activeLoan: ActiveLoan }) {
                 onClick={() => setPayAmount(amt.toString())}
                 className={`flex-1 px-3 py-2 rounded-lg text-xs font-medium transition-colors border ${
                   parseFloat(payAmount) === amt
-                    ? 'bg-blue-900 text-white border-blue-900'
-                    : 'bg-white border-gray-300 text-gray-700 hover:border-blue-400 hover:text-blue-700 hover:bg-blue-50'
+                    ? 'bg-brand-950 text-white border-brand-900'
+                    : 'bg-white border-gray-300 text-gray-700 hover:border-brand-500 hover:text-brand-700 hover:bg-brand-50'
                 }`}
               >
                 {i === 0 ? 'ប្រចាំខែ' : i === 1 ? 'ទ្វេដង' : 'ទាំងអស់'}
@@ -158,19 +158,19 @@ export function LoanRepayForm({ activeLoan }: { activeLoan: ActiveLoan }) {
           </div>
 
           {amount > 0 && (
-            <div className="bg-blue-50 rounded-lg p-4 mb-5">
+            <div className="bg-brand-50 rounded-lg p-4 mb-5">
               <div className="space-y-2 text-sm">
                 <div className="flex justify-between">
-                  <span className="text-blue-700">ចំនួនទឹកប្រាក់បង់</span>
-                  <span className="font-semibold text-blue-900">{currencySymbol(currency)}{amount.toLocaleString()}</span>
+                  <span className="text-brand-700">ចំនួនទឹកប្រាក់បង់</span>
+                  <span className="font-semibold text-brand-900">{currencySymbol(currency)}{amount.toLocaleString()}</span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-blue-700">នៅសល់បច្ចុប្បន្ន</span>
-                  <span className="font-semibold text-blue-900">{currencySymbol(currency)}{activeLoan.remaining.toLocaleString()}</span>
+                  <span className="text-brand-700">នៅសល់បច្ចុប្បន្ន</span>
+                  <span className="font-semibold text-brand-900">{currencySymbol(currency)}{activeLoan.remaining.toLocaleString()}</span>
                 </div>
-                <div className="flex justify-between border-t border-blue-200 pt-2">
-                  <span className="text-blue-700 font-medium">នៅសល់ថ្មី</span>
-                  <span className={`font-bold ${newRemaining <= 0 ? 'text-green-700' : 'text-blue-900'}`}>
+                <div className="flex justify-between border-t border-brand-200 pt-2">
+                  <span className="text-brand-700 font-medium">នៅសល់ថ្មី</span>
+                  <span className={`font-bold ${newRemaining <= 0 ? 'text-green-700' : 'text-brand-900'}`}>
                     {newRemaining <= 0 ? 'បានបង់ពេញ!' : `${currencySymbol(currency)}${newRemaining.toLocaleString()}`}
                   </span>
                 </div>
@@ -188,8 +188,8 @@ export function LoanRepayForm({ activeLoan }: { activeLoan: ActiveLoan }) {
       {step === 2 && (
         <Card>
           <div className="flex items-center gap-3 mb-5">
-            <div className="p-2.5 bg-blue-100 rounded-lg">
-              <QrCode className="w-6 h-6 text-blue-700" />
+            <div className="p-2.5 bg-brand-100 rounded-lg">
+              <QrCode className="w-6 h-6 text-brand-700" />
             </div>
             <div>
               <h2 className="font-semibold text-gray-900">ស្កេន QR Code ដើម្បីបង់ប្រាក់</h2>
@@ -239,11 +239,11 @@ export function LoanRepayForm({ activeLoan }: { activeLoan: ActiveLoan }) {
             </div>
           </div>
 
-          <label className="flex flex-col items-center justify-center w-full h-40 border-2 border-dashed border-gray-300 rounded-xl cursor-pointer hover:border-blue-400 hover:bg-blue-50 transition-colors mb-5">
+          <label className="flex flex-col items-center justify-center w-full h-40 border-2 border-dashed border-gray-300 rounded-xl cursor-pointer hover:border-brand-500 hover:bg-brand-50 transition-colors mb-5">
             <Upload className="w-10 h-10 text-gray-400 mb-3" />
             {evidence ? (
               <div className="text-center">
-                <p className="text-sm font-medium text-blue-700">{evidence.name}</p>
+                <p className="text-sm font-medium text-brand-700">{evidence.name}</p>
                 <p className="text-xs text-gray-400 mt-1">ចុចដើម្បីប្តូរ</p>
               </div>
             ) : (
@@ -318,7 +318,7 @@ export function LoanRepayForm({ activeLoan }: { activeLoan: ActiveLoan }) {
             <div className="flex gap-3 justify-center">
               <Link
                 href="/dashboard/loans"
-                className="inline-flex items-center gap-2 bg-blue-900 text-white px-5 py-2.5 rounded-lg text-sm font-semibold hover:bg-blue-800 transition-colors"
+                className="inline-flex items-center gap-2 bg-brand-950 text-white px-5 py-2.5 rounded-lg text-sm font-semibold hover:bg-brand-800 transition-colors"
               >
                 មើលកម្ជីរបស់ខ្ញុំ
               </Link>

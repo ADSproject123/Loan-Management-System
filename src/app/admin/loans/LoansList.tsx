@@ -31,7 +31,7 @@ const STATUS_FILTER_OPTIONS: { value: string; label: string }[] = [
   { value: 'under_review', label: 'កំពុងពិនិត្យ' },
   { value: 'approved', label: 'បានទទួលយក' },
   { value: 'active', label: 'សកម្ម' },
-  { value: 'completed', label: 'បានបញ្ចប់' },
+  { value: 'completed', label: 'បានទទួល' },
   { value: 'rejected', label: 'បានបដិសេធ' },
 ]
 
@@ -136,7 +136,7 @@ export function LoansList({ loans }: { loans: LoanListItem[] }) {
                   <Link
                     href={`/admin/loans/${loan.id}`}
                     onClick={(e) => e.stopPropagation()}
-                    className="inline-flex items-center justify-center p-2 text-gray-400 transition hover:bg-blue-50 hover:text-blue-700"
+                    className="inline-flex items-center justify-center p-2 text-gray-400 transition hover:bg-brand-50 hover:text-brand-700"
                     aria-label="មើលលម្អិត"
                   >
                     <ChevronRight className="h-5 w-5" />

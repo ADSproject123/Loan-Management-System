@@ -15,7 +15,7 @@ export function Badge({ children, variant = 'default', className = '' }: BadgePr
     success: 'bg-green-100 text-green-700',
     warning: 'bg-yellow-100 text-yellow-700',
     error: 'bg-red-100 text-red-700',
-    info: 'bg-blue-100 text-blue-700',
+    info: 'bg-brand-100 text-brand-700',
   }
 
   return (
@@ -43,7 +43,7 @@ export function LoanStatusBadge({ status }: { status: LoanStatus }) {
     under_review: { label: 'កំពុងពិនិត្យ', variant: 'info' },
     approved: { label: 'បានទទួលយក', variant: 'success' },
     active: { label: 'សកម្ម', variant: 'success' },
-    completed: { label: 'បានបញ្ចប់', variant: 'default' },
+    completed: { label: 'បានទទួល', variant: 'default' },
     rejected: { label: 'បានបដិសេធ', variant: 'error' },
   }
   const { label, variant } = config[status]
@@ -54,7 +54,7 @@ export function SavingStatusBadge({ status }: { status: SavingStatus }) {
   const config: Record<SavingStatus, { label: string; variant: BadgeVariant }> = {
     pending: { label: 'រង់ចាំ', variant: 'warning' },
     verified: { label: 'បានផ្ទៀងផ្ទាត់', variant: 'info' },
-    completed: { label: 'បានបញ្ចប់', variant: 'success' },
+    completed: { label: 'បានទទួល', variant: 'success' },
     refunded: { label: 'បានសងប្រាក់វិញ', variant: 'error' },
   }
   const { label, variant } = config[status]

@@ -17,7 +17,7 @@ export default async function LoanRepayPage() {
   const [loanResult, repaymentsResult] = await Promise.all([
     admin
       .from('loans')
-      .select('id, amount, currency, purpose, term_months, interest_rate, due_date, status, created_at')
+      .select('id, amount, currency, purpose, term_months, due_date, status, created_at')
       .eq('member_id', member.id)
       .eq('status', 'active')
       .order('created_at', { ascending: false })
@@ -45,10 +45,7 @@ export default async function LoanRepayPage() {
   const amount = loan ? toNumber(loan.amount) : 0
   const remaining = Math.max(amount - paid, 0)
   const termMonths = loan ? toNumber(loan.term_months) || 12 : 12
-  const interestRate = loan ? toNumber(loan.interest_rate) : 0
-  const monthlyPayment = loan
-    ? Math.round(amount / termMonths + amount * (interestRate / 100))
-    : 0
+  const monthlyPayment = loan ? Math.round(amount / termMonths) : 0
 
   return (
     <div className="p-6 md:p-8 w-full">
@@ -77,15 +74,15 @@ export default async function LoanRepayPage() {
           }}
         />
       ) : (
-        <div className="bg-blue-50 border border-blue-100 rounded-xl p-8 text-center">
-          <CreditCard className="w-10 h-10 text-blue-300 mx-auto mb-3" />
-          <h3 className="font-semibold text-blue-900 mb-2">មិនមានកម្ជីសកម្ម</h3>
-          <p className="text-blue-700 text-sm mb-4">
+        <div className="bg-brand-50 border border-brand-100 rounded-xl p-8 text-center">
+          <CreditCard className="w-10 h-10 text-brand-300 mx-auto mb-3" />
+          <h3 className="font-semibold text-brand-900 mb-2">មិនមានកម្ជីសកម្ម</h3>
+          <p className="text-brand-700 text-sm mb-4">
             អ្នកមិនមានកម្ជីសកម្មសម្រាប់ការសងនៅពេលនេះទេ។
           </p>
           <Link
             href="/dashboard/loans"
-            className="inline-flex items-center gap-2 bg-blue-900 text-white px-5 py-2.5 rounded-lg text-sm font-semibold hover:bg-blue-800 transition-colors"
+            className="inline-flex items-center gap-2 bg-brand-950 text-white px-5 py-2.5 rounded-lg text-sm font-semibold hover:bg-brand-800 transition-colors"
           >
             មើលកម្ជីរបស់ខ្ញុំ
           </Link>

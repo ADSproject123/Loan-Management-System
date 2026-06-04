@@ -2,26 +2,27 @@ import { createAdminClient } from '@/lib/supabase/admin'
 import { getPrivateFileUrl } from '@/lib/uploads'
 import { SavingsList } from '@/app/admin/savings/SavingsList'
 import { AdminPagination, AdminPanel } from '@/components/admin'
+import { parseAdminListParams } from '@/lib/admin/pagination'
 
 export default async function AdminSavingsLedgerPage({
   searchParams,
 }: {
-  searchParams?: Promise<{ page?: string }>
+  searchParams?: Promise<{ page?: string; size?: string }>
 }) {
   const admin = createAdminClient()
-  const pageSize = 15
   const params = (await searchParams) ?? {}
-  const page = typeof params.page === 'string' ? Math.max(1, Number(params.page)) : 1
-  const from = (page - 1) * pageSize
-  const to = from + pageSize - 1
+  const { page, pageSize, from, to } = parseAdminListParams(params)
 
-  const { data } = await admin
+  const [{ data }, { count: savingsTotal }] = await Promise.all([
+    admin
     .from('savings')
     .select(
       'id, member_id, amount, currency, status, evidence_url, saving_date, created_at, members:members!savings_member_id_fkey(full_name, email)'
     )
-    .order('created_at', { ascending: false })
-    .range(from, to)
+      .order('created_at', { ascending: false })
+      .range(from, to),
+    admin.from('savings').select('id', { count: 'exact', head: true }),
+  ])
 
   const savingRows = await Promise.all(
     (data ?? []).map(async (saving) => ({
@@ -42,8 +43,10 @@ export default async function AdminSavingsLedgerPage({
           <AdminPagination
             basePath="/admin/savings"
             page={page}
+            pageSize={pageSize}
             hasPrev={hasPrev}
             hasNext={hasNext}
+            totalCount={savingsTotal}
           />
         }
       >

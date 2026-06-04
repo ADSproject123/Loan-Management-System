@@ -111,10 +111,10 @@ export function CapitalRequestForm({ memberSavings }: { memberSavings: MemberSav
 
       {/* Current Balance Card */}
       {step < 4 && (
-        <div className="bg-blue-900 text-white rounded-xl p-5 mb-6">
-          <p className="text-blue-200 text-xs uppercase tracking-wider font-semibold mb-2">សមតុល្យសន្សំរបស់អ្នក</p>
+        <div className="bg-brand-950 text-white rounded-xl p-5 mb-6">
+          <p className="text-brand-200 text-xs uppercase tracking-wider font-semibold mb-2">សមតុល្យសន្សំរបស់អ្នក</p>
           <p className="text-3xl font-bold">{sym}{memberSavings.totalBalance.toLocaleString()}</p>
-          <p className="text-blue-200 text-sm mt-1">ការប្រាក់ប្រចាំខែ៖ {sym}{memberSavings.monthlyInterest.toLocaleString()}</p>
+          <p className="text-brand-200 text-sm mt-1">ការប្រាក់ប្រចាំខែ៖ {sym}{memberSavings.monthlyInterest.toLocaleString()}</p>
         </div>
       )}
 
@@ -143,7 +143,7 @@ export function CapitalRequestForm({ memberSavings }: { memberSavings: MemberSav
                 placeholder="0.00"
                 min="100"
                 max={memberSavings.totalBalance}
-                className="w-full pl-8 pr-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-lg font-semibold text-gray-900"
+                className="w-full pl-8 pr-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-500 text-lg font-semibold text-gray-900"
               />
             </div>
             <div className="flex justify-between text-xs text-gray-400 mt-1">
@@ -162,8 +162,8 @@ export function CapitalRequestForm({ memberSavings }: { memberSavings: MemberSav
                     onClick={() => setAmount(amt.toString())}
                     className={`flex-1 px-2 py-2 rounded-lg text-xs font-medium transition-colors border ${
                       parseFloat(amount) === amt
-                        ? 'bg-blue-900 text-white border-blue-900'
-                        : 'bg-white border-gray-300 text-gray-700 hover:border-blue-400 hover:text-blue-700 hover:bg-blue-50'
+                        ? 'bg-brand-950 text-white border-brand-900'
+                        : 'bg-white border-gray-300 text-gray-700 hover:border-brand-500 hover:text-brand-700 hover:bg-brand-50'
                     }`}
                   >
                     {fraction === 1 ? 'ទាំងអស់' : `${fraction * 100}%`}
@@ -192,9 +192,9 @@ export function CapitalRequestForm({ memberSavings }: { memberSavings: MemberSav
             </div>
           )}
 
-          <div className="bg-blue-50 rounded-lg p-3 mb-5 flex items-start gap-2">
-            <Info className="w-4 h-4 text-blue-600 flex-shrink-0 mt-0.5" />
-            <p className="text-blue-700 text-xs">
+          <div className="bg-brand-50 rounded-lg p-3 mb-5 flex items-start gap-2">
+            <Info className="w-4 h-4 text-brand-600 flex-shrink-0 mt-0.5" />
+            <p className="text-brand-700 text-xs">
               ការដកគឺត្រូវការការទទួលយក។ ចំនួនទឹកប្រាក់ដែលបានទទួលយកត្រូវបានដំណើរការក្នុងអំឡុង ២០-២៥ មករា។
             </p>
           </div>
@@ -207,8 +207,8 @@ export function CapitalRequestForm({ memberSavings }: { memberSavings: MemberSav
       {step === 2 && (
         <Card>
           <div className="flex items-center gap-3 mb-5">
-            <div className="p-2.5 bg-blue-100 rounded-lg">
-              <Wallet className="w-6 h-6 text-blue-700" />
+            <div className="p-2.5 bg-brand-100 rounded-lg">
+              <Wallet className="w-6 h-6 text-brand-700" />
             </div>
             <div>
               <h2 className="font-semibold text-gray-900">ព័ត៌មានលម្អិតការដក</h2>
@@ -223,7 +223,7 @@ export function CapitalRequestForm({ memberSavings }: { memberSavings: MemberSav
               onChange={(e) => setReason(e.target.value)}
               placeholder="សូមពិពណ៌នាមូលហេតុដែលអ្នកដកដើមទុនសន្សំរបស់អ្នក..."
               rows={4}
-              className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm resize-none"
+              className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-500 text-sm resize-none"
             />
           </div>
 
@@ -236,12 +236,12 @@ export function CapitalRequestForm({ memberSavings }: { memberSavings: MemberSav
                 onClick={() => setAfterDecision('continue')}
                 className={`w-full flex items-start gap-3 p-4 rounded-xl border-2 text-left transition-colors ${
                   afterDecision === 'continue'
-                    ? 'border-blue-900 bg-blue-50'
+                    ? 'border-brand-900 bg-brand-50'
                     : 'border-gray-200 bg-white hover:border-gray-300 hover:bg-gray-50'
                 }`}
               >
                 <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center flex-shrink-0 mt-0.5 ${
-                  afterDecision === 'continue' ? 'border-blue-900 bg-blue-900' : 'border-gray-300'
+                  afterDecision === 'continue' ? 'border-brand-900 bg-brand-950' : 'border-gray-300'
                 }`}>
                   {afterDecision === 'continue' && <div className="w-2 h-2 bg-white rounded-full" />}
                 </div>
@@ -334,9 +334,9 @@ export function CapitalRequestForm({ memberSavings }: { memberSavings: MemberSav
             ))}
           </div>
 
-          <div className="bg-blue-50 rounded-xl p-4 mb-5">
-            <p className="text-blue-900 text-sm font-semibold mb-2">កាលវិភាគដំណើរការ</p>
-            <div className="flex items-center gap-2 text-blue-700 text-sm">
+          <div className="bg-brand-50 rounded-xl p-4 mb-5">
+            <p className="text-brand-900 text-sm font-semibold mb-2">កាលវិភាគដំណើរការ</p>
+            <div className="flex items-center gap-2 text-brand-700 text-sm">
               <Calendar className="w-4 h-4" />
               <p>
                 ពាក្យសុំត្រូវបានត្រួតពិនិត្យ និង ការជូនដំណឹងផ្ញើក្នុងអំឡុង <strong>ថ្ងៃ ២០-២៥ មករា</strong>។
@@ -385,22 +385,22 @@ export function CapitalRequestForm({ memberSavings }: { memberSavings: MemberSav
               <strong>ថ្ងៃ ២០-២៥ មករា</strong>។ ចំនួនទឹកប្រាក់ដែលទទួលយកនឹងត្រូវផ្ទេរនៅពេលនោះ។
             </p>
 
-            <div className="bg-blue-50 rounded-xl p-5 mb-6 text-left">
-              <p className="text-blue-900 font-semibold text-sm mb-3">ព័ត៌មានលម្អិតពាក្យសុំ</p>
+            <div className="bg-brand-50 rounded-xl p-5 mb-6 text-left">
+              <p className="text-brand-900 font-semibold text-sm mb-3">ព័ត៌មានលម្អិតពាក្យសុំ</p>
               <div className="space-y-2 text-sm">
                 <div className="flex justify-between">
-                  <span className="text-blue-700">ចំនួនទឹកប្រាក់ស្នើសុំ</span>
-                  <span className="font-medium text-blue-900">{sym}{withdrawAmount.toLocaleString()}</span>
+                  <span className="text-brand-700">ចំនួនទឹកប្រាក់ស្នើសុំ</span>
+                  <span className="font-medium text-brand-900">{sym}{withdrawAmount.toLocaleString()}</span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-blue-700">បន្ទាប់ពីការដក</span>
-                  <span className={`font-medium ${afterDecision === 'withdraw' ? 'text-red-600' : 'text-blue-900'}`}>
+                  <span className="text-brand-700">បន្ទាប់ពីការដក</span>
+                  <span className={`font-medium ${afterDecision === 'withdraw' ? 'text-red-600' : 'text-brand-900'}`}>
                     {afterDecision === 'continue' ? 'បន្តសន្សំ' : 'ដកចូលជាសមាជិក'}
                   </span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-blue-700">ស្ថានភាព</span>
-                  <span className="font-medium text-blue-900">កំពុងរង់ចាំការត្រួតពិនិត្យ</span>
+                  <span className="text-brand-700">ស្ថានភាព</span>
+                  <span className="font-medium text-brand-900">កំពុងរង់ចាំការត្រួតពិនិត្យ</span>
                 </div>
               </div>
             </div>
@@ -408,7 +408,7 @@ export function CapitalRequestForm({ memberSavings }: { memberSavings: MemberSav
             <div className="flex gap-3 justify-center">
               <Link
                 href="/dashboard"
-                className="inline-flex items-center gap-2 bg-blue-900 text-white px-5 py-2.5 rounded-lg text-sm font-semibold hover:bg-blue-800 transition-colors"
+                className="inline-flex items-center gap-2 bg-brand-950 text-white px-5 py-2.5 rounded-lg text-sm font-semibold hover:bg-brand-800 transition-colors"
               >
                 ត្រឡប់ទៅផ្ទាំងគ្រប់គ្រង <ArrowRight className="w-4 h-4" />
               </Link>

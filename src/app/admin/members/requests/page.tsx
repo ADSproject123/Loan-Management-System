@@ -1,20 +1,18 @@
-import { Clock, Users } from 'lucide-react'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { approveMember } from '@/app/actions/admin'
 import { MembersList, type MemberListItem } from '@/app/admin/members/MembersList'
-import { AdminPagination, AdminStatCard } from '@/components/admin'
+import { AdminPagination, AdminPanel } from '@/components/admin'
+import { parseAdminListParams } from '@/lib/admin/pagination'
 
 export default async function AdminMembersRequestsPage({
   searchParams,
 }: {
-  searchParams?: { page?: string }
+  searchParams?: { page?: string; size?: string }
 }) {
   const admin = createAdminClient()
-  const pageSize = 10
-  const page =
-    typeof searchParams?.page === 'string' ? Math.max(1, Number(searchParams.page)) : 1
-  const from = (page - 1) * pageSize
-  const to = from + pageSize - 1
+  const { page, pageSize, from, to } = parseAdminListParams(searchParams, {
+    defaultPageSize: 10,
+  })
 
   const [{ data }, { count: pendingTotal }] = await Promise.all([
     admin
@@ -31,20 +29,23 @@ export default async function AdminMembersRequestsPage({
   const hasPrev = page > 1
 
   return (
-    <main className="space-y-8 p-6 md:p-8">
-      <div className="grid gap-4 sm:grid-cols-2">
-        <AdminStatCard label="រង់ចាំអនុម័ត" value={pendingTotal ?? 0} icon={Clock} tone="amber" />
-        <AdminStatCard label="លើទំព័រនេះ" value={members.length} icon={Users} tone="blue" />
-      </div>
-
-      <MembersList members={members} approveAction={approveMember} />
-
-      <AdminPagination
-        basePath="/admin/members/requests"
-        page={page}
-        hasPrev={hasPrev}
-        hasNext={hasNext}
-      />
+    <main className="w-full space-y-8 p-6 md:p-8">
+      <AdminPanel
+        title="ពាក្យសុំចូលរួម"
+        description="សមាជិកថ្មីរង់ចាំអនុម័ត — ពិនិត្យឯកសារ និង ទទួលយកឬបដិសេធ។"
+        footer={
+          <AdminPagination
+            basePath="/admin/members/requests"
+            page={page}
+            pageSize={pageSize}
+            hasPrev={hasPrev}
+            hasNext={hasNext}
+            totalCount={pendingTotal}
+          />
+        }
+      >
+        <MembersList members={members} approveAction={approveMember} />
+      </AdminPanel>
     </main>
   )
 }

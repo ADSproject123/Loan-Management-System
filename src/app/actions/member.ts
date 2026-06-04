@@ -209,7 +209,6 @@ export async function requestLoan(formData: FormData): Promise<ActionResult> {
       currency,
       purpose,
       term_months: termMonths,
-      interest_rate: 2,
       referee_id: refereeId,
       support_document_url: supportDocumentUrl,
       status: 'under_review',

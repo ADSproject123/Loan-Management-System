@@ -16,7 +16,7 @@ export function AdminExternalLink({
       href={href}
       target="_blank"
       rel="noopener noreferrer"
-      className="inline-flex shrink-0 items-center gap-1.5 bg-blue-50 px-3 py-1.5 text-xs font-semibold text-blue-700 ring-1 ring-blue-100 transition hover:bg-blue-100"
+      className="inline-flex shrink-0 items-center gap-1.5 bg-brand-50 px-3 py-1.5 text-xs font-semibold text-brand-700 ring-1 ring-brand-100 transition hover:bg-brand-100"
     >
       <Icon className="h-3.5 w-3.5" />
       {children}

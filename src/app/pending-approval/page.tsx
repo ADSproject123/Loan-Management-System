@@ -27,30 +27,30 @@ export default async function PendingApprovalPage() {
   const statusLabel = STATUS_LABELS[member.status] ?? member.status
 
   return (
-    <main className="min-h-screen bg-slate-50">
+    <main className="min-h-screen bg-background">
       <section className="px-4 py-8 sm:px-6 lg:px-10 lg:py-10">
         <div className="mx-auto w-full max-w-4xl">
           <div className="mb-6 flex items-center justify-between">
             <Link
               href="/"
-              className="inline-flex items-center gap-2 text-2xl font-bold text-blue-900 transition-colors hover:text-blue-700"
+              className="inline-flex items-center gap-2 text-2xl font-bold text-brand-900 transition-colors hover:text-brand-700"
             >
               <Building2 className="w-8 h-8" />
               សន្សំ
             </Link>
           </div>
 
-          <div className="overflow-hidden rounded-3xl border border-white/70 bg-white/95 shadow-2xl shadow-blue-100/50 backdrop-blur-sm">
+          <div className="overflow-hidden rounded-3xl border border-white/70 bg-white/95 shadow-2xl shadow-brand-100/50 backdrop-blur-sm">
             <div
               className={`border-b px-6 py-5 sm:px-8 ${
-                isNegative ? 'border-red-100 bg-red-50' : 'border-blue-100 bg-blue-50'
+                isNegative ? 'border-red-100 bg-red-50' : 'border-brand-100 bg-brand-50'
               }`}
             >
               <div className="flex flex-wrap items-center justify-between gap-3">
                 <div>
                   <p
                     className={`text-sm font-semibold uppercase tracking-wide ${
-                      isNegative ? 'text-red-700' : 'text-blue-700'
+                      isNegative ? 'text-red-700' : 'text-brand-700'
                     }`}
                   >
                     ស្ថានភាពចូលជាសមាជិក
@@ -161,10 +161,10 @@ export default async function PendingApprovalPage() {
                       return (
                         <div
                           key={item.title}
-                          className="rounded-2xl border border-slate-200 bg-slate-50/80 p-4 text-center shadow-xs"
+                          className="rounded-2xl border border-slate-200 bg-background/80 p-4 text-center shadow-xs"
                         >
                           <div className="mx-auto mb-3 flex h-10 w-10 items-center justify-center rounded-xl bg-white ring-1 ring-slate-200">
-                            <Icon className="h-5 w-5 text-blue-800" />
+                            <Icon className="h-5 w-5 text-brand-800" />
                           </div>
                           <p className="font-semibold text-gray-950">{item.title}</p>
                           <p className="mt-2 text-sm text-gray-500">{item.text}</p>
@@ -173,9 +173,9 @@ export default async function PendingApprovalPage() {
                     })}
                   </div>
 
-                  <div className="mt-8 rounded-2xl border border-blue-100 bg-blue-50/80 p-5">
-                    <p className="font-semibold text-blue-950">តើខ្ញុំគួរធ្វើអ្វីឥឡូវនេះ?</p>
-                    <p className="mt-2 text-sm leading-6 text-blue-800">
+                  <div className="mt-8 rounded-2xl border border-brand-100 bg-brand-50/80 p-5">
+                    <p className="font-semibold text-brand-950">តើខ្ញុំគួរធ្វើអ្វីឥឡូវនេះ?</p>
+                    <p className="mt-2 text-sm leading-6 text-brand-800">
                       រង់ចាំការទទួលយកពីអ្នកគ្រប់គ្រង។ ប្រសិនបើការចុះឈ្មោះរបស់អ្នកមានភាពបន្ទាន់ ឬ
                       កំពុងរង់ចាំយូរពេក សូមទាក់ទងអ្នកគ្រប់គ្រងសន្សំ និង បញ្ជាក់ថាឯកសារដែលបានដាក់ស្នើច្បាស់។
                     </p>

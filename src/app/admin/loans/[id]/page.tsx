@@ -28,7 +28,7 @@ export default async function AdminLoanDetailPage({ params }: PageProps) {
   const { data: loan } = await admin
     .from('loans')
     .select(
-      `id, member_id, amount, currency, purpose, term_months, interest_rate, status,
+      `id, member_id, amount, currency, purpose, term_months, status,
       referee_id, referee_verified, support_document_url, hard_copy_submitted, thumbprint_submitted,
       approved_at, disbursed_at, due_date, rejection_reason, rejected_at, created_at, updated_at,
       members:members!loans_member_id_fkey(id, full_name, full_name_kh, email, phone),
@@ -101,7 +101,7 @@ export default async function AdminLoanDetailPage({ params }: PageProps) {
           <div className="shrink-0 bg-gray-50 p-5 ring-1 ring-gray-100 lg:min-w-64">
             <p className="text-xs font-semibold uppercase tracking-wide text-gray-500">សមាជិក</p>
             <Link href={`/admin/members/${loan.member_id}`} className="group mt-2 block">
-              <p className="font-semibold text-gray-900 transition group-hover:text-blue-700">
+              <p className="font-semibold text-gray-900 transition group-hover:text-brand-700">
                 {member?.full_name_kh ?? member?.full_name ?? relatedMemberName({ members: member })}
               </p>
               {member?.email && (
@@ -138,7 +138,6 @@ export default async function AdminLoanDetailPage({ params }: PageProps) {
         <AdminDetailCard title="លក្ខខណ្ឌកម្ជី">
           <dl className="grid gap-4 sm:grid-cols-2">
             <AdminDetailItem label="រយៈពេល" value={`${loan.term_months ?? 0} ខែ`} />
-            <AdminDetailItem label="អត្រាការប្រាក់" value={`${loan.interest_rate ?? 0}% / ខែ`} />
             <AdminDetailItem label="រូបិយប័ណ្ណ" value={currency} />
             <AdminDetailItem
               label="ឯកសារពេញលេញ"
