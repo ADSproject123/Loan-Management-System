@@ -5,7 +5,6 @@ import { createAdminClient } from '@/lib/supabase/admin'
 import { requireAdmin } from '@/lib/auth/member'
 import type { ActionResult } from '@/app/actions/member'
 import { formatMoney } from '@/lib/currency'
-
 function idFrom(formData: FormData) {
   const id = formData.get('id')
   if (typeof id !== 'string' || !id) {

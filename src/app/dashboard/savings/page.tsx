@@ -58,7 +58,7 @@ export default async function SavingsPage() {
           </Link>
           <Link
             href="/dashboard/savings/add"
-            className="inline-flex items-center gap-2 bg-blue-900 text-white px-4 py-2 rounded-lg text-sm font-semibold hover:bg-blue-800 transition-colors"
+            className="inline-flex items-center gap-2 bg-brand-950 text-white px-4 py-2 rounded-lg text-sm font-semibold hover:bg-brand-800 transition-colors"
           >
             <Plus className="w-4 h-4" />
             បន្ថែមការសន្សំ
@@ -76,8 +76,8 @@ export default async function SavingsPage() {
           <p className="text-gray-500 text-sm mt-1">សមតុល្យសន្សំសរុប</p>
         </Card>
         <Card>
-          <div className="p-2.5 bg-blue-100 rounded-lg inline-flex mb-3">
-            <TrendingUp className="w-5 h-5 text-blue-700" />
+          <div className="p-2.5 bg-brand-100 rounded-lg inline-flex mb-3">
+            <TrendingUp className="w-5 h-5 text-brand-700" />
           </div>
           <p className="text-2xl font-bold text-gray-900">{displaySymbol}{monthlyInterest.toLocaleString()}</p>
           <p className="text-gray-500 text-sm mt-1">ការប្រាក់ប្រចាំខែ (៣%)</p>

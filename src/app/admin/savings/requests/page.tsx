@@ -1,22 +1,17 @@
-import { Clock, FileImage, PiggyBank, Wallet } from 'lucide-react'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { getPrivateFileUrl } from '@/lib/uploads'
-import { sumByCurrency } from '@/app/admin/adminUtils'
 import { SavingsList } from '@/app/admin/savings/SavingsList'
-import { AdminPagination, AdminPanel, AdminStatCard } from '@/components/admin'
+import { AdminPagination, AdminPanel } from '@/components/admin'
+import { parseAdminListParams } from '@/lib/admin/pagination'
 
 export default async function AdminSavingsRequestsPage({
   searchParams,
 }: {
-  searchParams?: Promise<{ page?: string }>
+  searchParams?: Promise<{ page?: string; size?: string }>
 }) {
   const admin = createAdminClient()
-  const pageSize = 10
-
   const params = (await searchParams) ?? {}
-  const page = typeof params.page === 'string' ? Math.max(1, Number(params.page)) : 1
-  const from = (page - 1) * pageSize
-  const to = from + pageSize - 1
+  const { page, pageSize, from, to } = parseAdminListParams(params, { defaultPageSize: 10 })
 
   const [{ data }, { count: pendingTotal }] = await Promise.all([
     admin
@@ -39,27 +34,9 @@ export default async function AdminSavingsRequestsPage({
 
   const hasNext = savingRows.length === pageSize
   const hasPrev = page > 1
-  const pageTotals = sumByCurrency(savingRows)
-  const withEvidence = savingRows.filter((row) => row.evidence_url).length
 
   return (
     <main className="w-full space-y-8 p-6 md:p-8">
-      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-        <AdminStatCard
-          label="រង់ចាំផ្ទៀងផ្ទាត់"
-          value={pendingTotal ?? 0}
-          icon={Clock}
-          tone="amber"
-        />
-        <AdminStatCard label="លើទំព័រនេះ" value={savingRows.length} icon={PiggyBank} tone="blue" />
-        <AdminStatCard label="មានភស្តុតាង" value={withEvidence} icon={FileImage} tone="emerald" />
-        <AdminStatCard
-          label="សរុបទំព័រនេះ"
-          currencyTotals={pageTotals}
-          icon={Wallet}
-          tone="slate"
-        />
-      </div>
 
       <AdminPanel
         title="បញ្ជីសំណើសន្សំ"
@@ -67,8 +44,10 @@ export default async function AdminSavingsRequestsPage({
           <AdminPagination
             basePath="/admin/savings/requests"
             page={page}
+            pageSize={pageSize}
             hasPrev={hasPrev}
             hasNext={hasNext}
+            totalCount={pendingTotal}
           />
         }
       >

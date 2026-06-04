@@ -24,7 +24,7 @@ export function AdminSidebar({ adminName }: { adminName: string }) {
   }
 
   return (
-    <aside className="app-sidebar flex w-[17rem] shrink-0 flex-col text-white">
+    <aside className="app-sidebar fixed inset-y-0 left-0 z-40 flex h-screen w-68 flex-col text-white">
       <div className="border-b border-white/10 p-5">
         <Link
           href="/admin"
@@ -35,7 +35,7 @@ export function AdminSidebar({ adminName }: { adminName: string }) {
           </span>
           <div className="min-w-0">
             <p className="truncate text-lg font-bold leading-tight">សន្សំ</p>
-            <p className="text-xs font-medium text-blue-200/90">កុងសូលអ្នកគ្រប់គ្រង</p>
+            <p className="text-xs font-medium text-brand-200/90">កុងសូលអ្នកគ្រប់គ្រង</p>
           </div>
         </Link>
       </div>
@@ -104,14 +104,14 @@ export function AdminSidebar({ adminName }: { adminName: string }) {
 
       <div className="border-t border-white/10 p-4">
         <div className="rounded-2xl bg-white/10 p-4 ring-1 ring-white/10 backdrop-blur-sm">
-          <div className="mb-2 flex items-center gap-2 text-blue-100/90">
+          <div className="mb-2 flex items-center gap-2 text-brand-100/90">
             <BarChart3 className="h-4 w-4" />
             <span className="text-[10px] font-bold uppercase tracking-wider">ចូលជា</span>
           </div>
           <p className="truncate text-sm font-semibold text-white">{adminName}</p>
           <Link
             href="/dashboard"
-            className="mt-3 inline-flex w-full cursor-pointer items-center justify-center gap-2 rounded-xl bg-white/10 px-3 py-2 text-xs font-semibold text-blue-50 ring-1 ring-white/15 transition hover:bg-white/20"
+            className="mt-3 inline-flex w-full cursor-pointer items-center justify-center gap-2 rounded-xl bg-white/10 px-3 py-2 text-xs font-semibold text-brand-50 ring-1 ring-white/15 transition hover:bg-white/20"
           >
             <LayoutDashboard className="h-3.5 w-3.5" />
             វិបផតថលសមាជិក

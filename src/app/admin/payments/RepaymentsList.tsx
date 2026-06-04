@@ -1,7 +1,7 @@
 'use client'
 
 import { useMemo, useState } from 'react'
-import Link from 'next/link'
+import { useRouter } from 'next/navigation'
 import { CreditCard } from 'lucide-react'
 import { SavingStatusBadge } from '@/components/ui/Badge'
 import { AdminActionButton } from '@/app/admin/AdminActionButton'
@@ -46,6 +46,7 @@ export function RepaymentsList({
   showVerifyAction?: boolean
   initialStatusFilter?: string
 }) {
+  const router = useRouter()
   const [query, setQuery] = useState('')
   const [statusFilter, setStatusFilter] = useState(initialStatusFilter)
 
@@ -111,28 +112,22 @@ export function RepaymentsList({
             {repayments.length > 0 && filtered.length === 0 && <AdminTableNoResults colSpan={6} />}
 
             {filtered.map((repayment) => (
-              <tr key={repayment.id} className="transition hover:bg-gray-50/80">
+              <tr
+                key={repayment.id}
+                className="cursor-pointer transition hover:bg-gray-50/80"
+                onClick={() => router.push(`/admin/loans/${repayment.loan_id}`)}
+              >
                 <td className="px-6 py-4 md:px-8">
-                  <Link href={`/admin/members/${repayment.member_id}`} className="group block min-w-0">
-                    <p className="font-semibold text-gray-900 transition group-hover:text-blue-700">
-                      {relatedMemberName(repayment)}
-                    </p>
-                    <p className="truncate text-xs text-gray-500">{relatedMemberEmail(repayment)}</p>
-                  </Link>
+                  <p className="font-semibold text-gray-900">{relatedMemberName(repayment)}</p>
+                  <p className="truncate text-xs text-gray-500">{relatedMemberEmail(repayment)}</p>
                 </td>
                 <td className="px-6 py-4">
                   <p className="text-base font-bold tabular-nums text-gray-900">
                     {money(repayment.amount, (repayment.currency as CurrencyCode) ?? 'USD')}
                   </p>
-                  <Link
-                    href={`/admin/loans/${repayment.loan_id}`}
-                    className="mt-0.5 text-xs text-blue-600 hover:text-blue-800"
-                  >
-                    មើលកម្ជី
-                  </Link>
                 </td>
                 <td className="px-6 py-4 text-gray-600">{formatDate(repayment.payment_date)}</td>
-                <td className="px-6 py-4">
+                <td className="px-6 py-4" onClick={(e) => e.stopPropagation()}>
                   {repayment.evidenceSignedUrl ? (
                     <AdminExternalLink href={repayment.evidenceSignedUrl}>មើលភស្តុតាង</AdminExternalLink>
                   ) : (
@@ -144,7 +139,7 @@ export function RepaymentsList({
                 <td className="px-6 py-4">
                   <SavingStatusBadge status={repayment.status as SavingStatus} />
                 </td>
-                <td className="px-6 py-4 text-right md:px-8">
+                <td className="px-6 py-4 text-right md:px-8" onClick={(e) => e.stopPropagation()}>
                   {showVerifyAction && repayment.status === 'pending' && (
                     <AdminActionButton action={verifyRepayment} id={repayment.id}>
                       ផ្ទៀងផ្ទាត់

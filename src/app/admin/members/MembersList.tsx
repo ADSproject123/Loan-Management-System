@@ -2,12 +2,13 @@
 
 import { useMemo, useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { ChevronDown, Search, Users } from 'lucide-react'
+import { Users } from 'lucide-react'
 import { formatDate } from '@/app/admin/adminUtils'
 import { SuspendMemberButton } from '@/app/admin/SuspendMemberButton'
 import { DenyMemberButton } from '@/app/admin/DenyMemberButton'
 import type { ActionResult } from '@/app/actions/member'
 import type { MemberStatus } from '@/types/database'
+import { AdminListToolbar, AdminTableEmpty, AdminTableNoResults } from '@/components/admin'
 
 export type MemberListItem = {
   id: string
@@ -18,15 +19,13 @@ export type MemberListItem = {
   created_at: string
 }
 
-type FilterKey = 'all' | MemberStatus
-
-const filters: { key: FilterKey; label: string }[] = [
-  { key: 'all', label: 'ទាំងអស់' },
-  { key: 'pending', label: 'រង់ចាំ' },
-  { key: 'active', label: 'សកម្ម' },
-  { key: 'suspended', label: 'ផ្អាក' },
-  { key: 'rejected', label: 'បដិសេធ' },
-  { key: 'withdrawn', label: 'បានដក' },
+const STATUS_FILTER_OPTIONS = [
+  { value: '', label: 'ទាំងអស់' },
+  { value: 'pending', label: 'រង់ចាំ' },
+  { value: 'active', label: 'សកម្ម' },
+  { value: 'suspended', label: 'ផ្អាក' },
+  { value: 'rejected', label: 'បដិសេធ' },
+  { value: 'withdrawn', label: 'បានដក' },
 ]
 
 export function MembersList({
@@ -38,13 +37,14 @@ export function MembersList({
 }) {
   const router = useRouter()
   const [query, setQuery] = useState('')
-  const [filter, setFilter] = useState<FilterKey>('all')
-  const [filterOpen, setFilterOpen] = useState(false)
+  const [statusFilter, setStatusFilter] = useState('')
+
+  const hasActiveFilters = Boolean(query.trim() || statusFilter)
 
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase()
     return members.filter((member) => {
-      if (filter !== 'all' && member.status !== filter) return false
+      if (statusFilter && member.status !== statusFilter) return false
       if (!q) return true
       return (
         member.full_name.toLowerCase().includes(q) ||
@@ -52,182 +52,100 @@ export function MembersList({
         member.email.toLowerCase().includes(q)
       )
     })
-  }, [members, query, filter])
+  }, [members, query, statusFilter])
 
-  const activeFilter = filters.find((item) => item.key === filter) ?? filters[0]
-
-  const counts = useMemo(() => {
-    const tally: Record<FilterKey, number> = {
-      all: members.length,
-      pending: 0,
-      active: 0,
-      suspended: 0,
-      rejected: 0,
-      withdrawn: 0,
-    }
-    for (const member of members) {
-      tally[member.status] += 1
-    }
-    return tally
-  }, [members])
+  function clearFilters() {
+    setQuery('')
+    setStatusFilter('')
+  }
 
   return (
-    <div className="space-y-5">
-      <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
-        <div className="flex flex-1 flex-col gap-3 sm:flex-row sm:items-center">
-          <div className="relative w-full max-w-md flex-1">
-            <Search className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
-            <input
-              type="search"
-              value={query}
-              onChange={(e) => setQuery(e.target.value)}
-              placeholder="ស្វែងរកតាមឈ្មោះ ឬទូរស័ព្ទ..."
-              className="w-full rounded-xl border border-gray-200 bg-white py-2.5 pl-10 pr-4 text-sm text-gray-900 shadow-xs outline-none transition placeholder:text-gray-400 focus:border-blue-400 focus:ring-4 focus:ring-blue-500/15"
-            />
-          </div>
+    <>
+      <AdminListToolbar
+        searchValue={query}
+        onSearchChange={setQuery}
+        searchPlaceholder="ស្វែងរកតាមឈ្មោះ អ៊ីមែល ឬទូរស័ព្ទ..."
+        selectLabel="ស្ថានភាព"
+        selectId="members-status-filter"
+        selectValue={statusFilter}
+        onSelectChange={setStatusFilter}
+        selectOptions={STATUS_FILTER_OPTIONS}
+        showClear={hasActiveFilters}
+        onClear={clearFilters}
+        filterSummary={
+          <>
+            បង្ហាញ <span className="font-semibold text-foreground">{filtered.length}</span> នៃ{' '}
+            <span className="font-semibold text-foreground">{members.length}</span>
+          </>
+        }
+      />
 
-          <div className="relative w-full sm:w-48">
-            <button
-              type="button"
-              onClick={() => setFilterOpen((open) => !open)}
-              aria-haspopup="listbox"
-              aria-expanded={filterOpen}
-              className="flex w-full items-center justify-between gap-2 rounded-xl border border-gray-200 bg-white px-4 py-2.5 text-sm font-semibold text-gray-700 shadow-xs transition hover:bg-gray-50"
-            >
-              <span className="flex items-center gap-1.5">
-                {activeFilter.label}
-                <span className="tabular-nums text-gray-400">({counts[activeFilter.key]})</span>
-              </span>
-              <ChevronDown
-                className={`h-4 w-4 shrink-0 text-gray-400 transition-transform ${filterOpen ? 'rotate-180' : ''}`}
+      <div className="overflow-x-auto">
+        <table className="w-full min-w-160 text-left text-sm">
+          <thead className="border-b border-border bg-surface-muted/80">
+            <tr className="text-xs font-semibold uppercase tracking-wide text-muted">
+              <th className="px-6 py-3.5 md:px-8">ឈ្មោះ</th>
+              <th className="px-6 py-3.5">ថ្ងៃដាក់ស្នើ</th>
+              <th className="px-6 py-3.5">ទូរស័ព្ទ</th>
+              <th className="px-6 py-3.5 text-right md:px-8">សកម្មភាព</th>
+            </tr>
+          </thead>
+          <tbody className="divide-y divide-border">
+            {members.length === 0 && (
+              <AdminTableEmpty
+                colSpan={4}
+                icon={Users}
+                title="មិនមានសមាជិក"
+                description="សមាជិកថ្មីនឹងបង្ហាញនៅទីនេះ។"
               />
-            </button>
-
-            {filterOpen && (
-              <>
-                <button
-                  type="button"
-                  className="fixed inset-0 z-10 cursor-default"
-                  aria-label="បិទ"
-                  onClick={() => setFilterOpen(false)}
-                />
-                <ul
-                  role="listbox"
-                  className="absolute left-0 top-full z-20 mt-2 w-full overflow-hidden rounded-xl border border-gray-200 bg-white py-1 shadow-lg"
-                >
-                  {filters.map((item) => (
-                    <li key={item.key} role="option" aria-selected={filter === item.key}>
-                      <button
-                        type="button"
-                        onClick={() => {
-                          setFilter(item.key)
-                          setFilterOpen(false)
-                        }}
-                        className={`flex w-full items-center justify-between gap-2 px-4 py-2.5 text-sm font-medium transition ${
-                          filter === item.key
-                            ? 'bg-blue-50 text-blue-900'
-                            : 'text-gray-700 hover:bg-gray-50'
-                        }`}
-                      >
-                        {item.label}
-                        <span
-                          className={`tabular-nums ${
-                            filter === item.key ? 'text-blue-400' : 'text-gray-400'
-                          }`}
-                        >
-                          {counts[item.key]}
-                        </span>
-                      </button>
-                    </li>
-                  ))}
-                </ul>
-              </>
             )}
-          </div>
-        </div>
 
-        <p className="text-sm text-gray-500">
-          បង្ហាញ <span className="font-semibold text-gray-900">{filtered.length}</span> នៃ{' '}
-          {members.length} សមាជិក
-        </p>
-      </div>
+            {members.length > 0 && filtered.length === 0 && <AdminTableNoResults colSpan={4} />}
 
-      <div className="overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm">
-        {filtered.length === 0 ? (
-          <div className="flex flex-col items-center justify-center px-6 py-16 text-center">
-            <span className="grid h-14 w-14 place-items-center rounded-2xl bg-gray-100 text-gray-400">
-              <Users className="h-7 w-7" />
-            </span>
-            <p className="mt-4 text-base font-semibold text-gray-900">រកមិនឃើញសមាជិក</p>
-            <p className="mt-1 max-w-sm text-sm text-gray-500">
-              ព្យាយាមផ្លាស់ប្តូរការស្វែងរក ឬជ្រើសរើសតម្រងផ្សេង។
-            </p>
-          </div>
-        ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full min-w-[40rem] text-left text-sm">
-              <thead>
-                <tr className="border-b border-gray-200 bg-gray-50 text-xs font-semibold uppercase tracking-wide text-gray-500">
-                  <th className="px-5 py-3.5 sm:px-6">ឈ្មោះ</th>
-                  <th className="px-5 py-3.5 sm:px-6">ថ្ងៃដាក់ស្នើ</th>
-                  <th className="px-5 py-3.5 sm:px-6">ទូរស័ព្ទ</th>
-                  <th className="px-5 py-3.5 text-right sm:px-6">សកម្មភាព</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-gray-100">
-                {filtered.map((member) => (
-                  <tr
-                    key={member.id}
-                    onClick={() => router.push(`/admin/members/${member.id}`)}
-                    className={`cursor-pointer transition hover:bg-blue-50/50 ${
-                      member.status === 'pending' ? 'bg-amber-50/30 hover:bg-amber-50/50' : ''
-                    }`}
-                  >
-                    <td className="px-5 py-4 font-medium text-gray-900 sm:px-6">
-                      {member.full_name}
-                    </td>
-                    <td className="px-5 py-4 text-gray-600 sm:px-6">
-                      {formatDate(member.created_at)}
-                    </td>
-                    <td className="px-5 py-4 text-gray-600 sm:px-6">
-                      {member.phone ?? '—'}
-                    </td>
-                    <td
-                      className="px-5 py-4 text-right sm:px-6"
-                      onClick={(e) => e.stopPropagation()}
-                    >
-                      <div className="flex flex-wrap items-center justify-end gap-2">
-                        {member.status !== 'active' && (
-                          <QuickActionForm
-                            action={approveAction}
-                            id={member.id}
-                            label="ទទួលយក"
-                          />
-                        )}
-                        {member.status === 'pending' && (
-                          <DenyMemberButton
-                            memberId={member.id}
-                            memberName={member.full_name}
-                            label="បដិសេធ"
-                          />
-                        )}
-                        {member.status !== 'suspended' && member.status !== 'pending' && (
-                          <SuspendMemberButton
-                            memberId={member.id}
-                            memberName={member.full_name}
-                            label="ផ្អាក"
-                          />
-                        )}
-                      </div>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        )}
+            {filtered.map((member) => (
+              <tr
+                key={member.id}
+                onClick={() => router.push(`/admin/members/${member.id}`)}
+                className={`cursor-pointer transition hover:bg-brand-50/50 ${
+                  member.status === 'pending' ? 'bg-amber-50/30 hover:bg-amber-50/50' : ''
+                }`}
+              >
+                <td className="px-6 py-4 font-medium text-foreground md:px-8">
+                  <p>{member.full_name}</p>
+                  <p className="truncate text-xs text-muted">{member.email}</p>
+                </td>
+                <td className="px-6 py-4 text-muted">{formatDate(member.created_at)}</td>
+                <td className="px-6 py-4 text-muted">{member.phone ?? '—'}</td>
+                <td
+                  className="px-6 py-4 text-right md:px-8"
+                  onClick={(e) => e.stopPropagation()}
+                >
+                  <div className="flex flex-wrap items-center justify-end gap-2">
+                    {member.status !== 'active' && (
+                      <QuickActionForm action={approveAction} id={member.id} label="ទទួលយក" />
+                    )}
+                    {member.status === 'pending' && (
+                      <DenyMemberButton
+                        memberId={member.id}
+                        memberName={member.full_name}
+                        label="បដិសេធ"
+                      />
+                    )}
+                    {member.status !== 'suspended' && member.status !== 'pending' && (
+                      <SuspendMemberButton
+                        memberId={member.id}
+                        memberName={member.full_name}
+                        label="ផ្អាក"
+                      />
+                    )}
+                  </div>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
       </div>
-    </div>
+    </>
   )
 }
 
@@ -254,7 +172,7 @@ function QuickActionForm({
         className={`rounded-lg px-3 py-1.5 text-xs font-semibold transition-colors ${
           danger
             ? 'bg-red-600 text-white hover:bg-red-700'
-            : 'bg-blue-900 text-white hover:bg-blue-800'
+            : 'bg-brand-950 text-white hover:bg-brand-800'
         }`}
       >
         {label}

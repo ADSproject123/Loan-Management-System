@@ -239,24 +239,24 @@ export default function RegisterPage() {
   }
 
   return (
-    <div className="min-h-screen bg-slate-50">
+    <div className="min-h-screen bg-background">
       <div className="mx-auto grid min-h-screen w-full max-w-[1400px] grid-cols-1 lg:grid-cols-[440px_1fr]">
         <BrandPanel currentStep={step} />
 
-        <main className="relative flex min-h-screen flex-col bg-slate-50">
+        <main className="relative flex min-h-screen flex-col bg-background">
           <header className="flex items-center justify-between border-b border-slate-200 bg-white/80 px-4 py-4 backdrop-blur-sm sm:px-8 lg:hidden">
             <Link
               href="/"
-              className="inline-flex items-center gap-2 text-lg font-bold text-blue-950"
+              className="inline-flex items-center gap-2 text-lg font-bold text-brand-950"
             >
-              <span className="grid h-9 w-9 place-items-center rounded-xl bg-blue-950 text-white">
+              <span className="grid h-9 w-9 place-items-center rounded-xl bg-brand-950 text-white">
                 <Building2 className="h-5 w-5" />
               </span>
               សន្សំ
             </Link>
             <Link
               href="/login"
-              className="text-sm font-semibold text-blue-900 hover:text-blue-700"
+              className="text-sm font-semibold text-brand-900 hover:text-brand-700"
             >
               ចូលគណនី
             </Link>
@@ -266,7 +266,7 @@ export default function RegisterPage() {
             <span className="mr-4 text-sm text-slate-500">ជាសមាជិករួចហើយ?</span>
             <Link
               href="/login"
-              className="inline-flex items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-blue-900 transition hover:border-blue-200 hover:text-blue-700"
+              className="inline-flex items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-brand-900 transition hover:border-brand-200 hover:text-brand-700"
             >
               ចូលគណនី
             </Link>
@@ -277,7 +277,7 @@ export default function RegisterPage() {
               <MobileStepBar step={step} />
 
               <div className="mb-7">
-                <p className="text-xs font-semibold uppercase tracking-[0.18em] text-blue-700">
+                <p className="text-xs font-semibold uppercase tracking-[0.18em] text-brand-700">
                   {step === 5 ? 'រួចរាល់' : `ជំហានទី ${step} នៃ ${totalSteps}`}
                 </p>
                 <h1 className="mt-2 text-3xl font-bold tracking-tight text-slate-950 sm:text-[34px]">
@@ -290,14 +290,14 @@ export default function RegisterPage() {
                 <div className="mb-6">
                   <div className="h-1.5 w-full overflow-hidden rounded-full bg-slate-200">
                     <div
-                      className="h-full rounded-full bg-blue-800 transition-all duration-500 ease-out"
+                      className="h-full rounded-full bg-brand-800 transition-all duration-500 ease-out"
                       style={{ width: `${progress}%` }}
                     />
                   </div>
                 </div>
               )}
 
-              <div className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm shadow-slate-200/40 sm:p-8">
+              <div className="rounded-3xl border border-border bg-surface p-6 shadow-sm shadow-slate-200/40 sm:p-8">
                 {step === 1 && (
                   <StepAccount
                     formData={formData}
@@ -321,7 +321,7 @@ export default function RegisterPage() {
                     type="button"
                     onClick={handleBack}
                     disabled={loading || step === 1}
-                    className="inline-flex items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white px-5 py-3 text-sm font-semibold text-slate-700 transition hover:border-slate-300 hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50"
+                    className="inline-flex items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white px-5 py-3 text-sm font-semibold text-slate-700 transition hover:border-slate-300 hover:bg-background disabled:cursor-not-allowed disabled:opacity-50"
                   >
                     <ArrowLeft className="h-4 w-4" />
                     ត្រឡប់ក្រោយ
@@ -332,7 +332,7 @@ export default function RegisterPage() {
                       type="button"
                       onClick={handleNext}
                       disabled={loading}
-                      className="inline-flex items-center justify-center gap-2 rounded-xl bg-blue-950 px-6 py-3 text-sm font-semibold text-white shadow-sm shadow-blue-950/10 transition hover:bg-blue-900 disabled:cursor-not-allowed disabled:opacity-60"
+                      className="inline-flex items-center justify-center gap-2 rounded-xl bg-brand-950 px-6 py-3 text-sm font-semibold text-white shadow-sm shadow-brand-950/10 transition hover:bg-brand-950 disabled:cursor-not-allowed disabled:opacity-60"
                     >
                       បន្ត
                       <ArrowRight className="h-4 w-4" />
@@ -342,7 +342,7 @@ export default function RegisterPage() {
                       type="button"
                       onClick={handleSubmit}
                       disabled={loading}
-                      className="inline-flex items-center justify-center gap-2 rounded-xl bg-blue-950 px-6 py-3 text-sm font-semibold text-white shadow-sm shadow-blue-950/10 transition hover:bg-blue-900 disabled:cursor-not-allowed disabled:opacity-60"
+                      className="inline-flex items-center justify-center gap-2 rounded-xl bg-brand-950 px-6 py-3 text-sm font-semibold text-white shadow-sm shadow-brand-950/10 transition hover:bg-brand-950 disabled:cursor-not-allowed disabled:opacity-60"
                     >
                       {loading ? (
                         <>
@@ -393,7 +393,7 @@ export default function RegisterPage() {
 
 function BrandPanel({ currentStep }: { currentStep: StepId }) {
   return (
-    <aside className="relative hidden overflow-hidden bg-blue-950 text-white lg:flex lg:flex-col">
+    <aside className="app-brand-panel relative hidden overflow-hidden lg:flex lg:flex-col">
       <div className="relative flex h-full flex-col px-10 py-10">
         <Link href="/" className="inline-flex w-fit items-center gap-2.5 group">
           <span className="grid h-10 w-10 place-items-center rounded-xl bg-white/10 ring-1 ring-white/15 transition group-hover:bg-white/15">
@@ -406,7 +406,7 @@ function BrandPanel({ currentStep }: { currentStep: StepId }) {
           <h2 className="mt-5 text-[28px] font-bold leading-[1.2]">
             ចូលរួមសហគមន៍ដែលគ្រប់គ្រងដោយសមាជិកដែលអាចទុកចិត្តបាន។
           </h2>
-          <p className="mt-3 text-[15px] leading-7 text-blue-100/85">
+          <p className="mt-3 text-[15px] leading-7 text-brand-100/85">
             បំពេញជំហានខ្លីៗបួនដើម្បីបើកគណនី។
           </p>
         </div>
@@ -431,8 +431,8 @@ function BrandPanel({ currentStep }: { currentStep: StepId }) {
                     isComplete
                       ? 'bg-emerald-400 text-emerald-950'
                       : isCurrent
-                      ? 'bg-white text-blue-950 ring-4 ring-white/15'
-                      : 'bg-white/10 text-blue-100 ring-1 ring-white/15'
+                      ? 'bg-white text-brand-950 ring-4 ring-white/15'
+                      : 'bg-white/10 text-brand-100 ring-1 ring-white/15'
                   }`}
                 >
                   {isComplete ? <Check className="h-4 w-4" /> : step.id}
@@ -440,12 +440,12 @@ function BrandPanel({ currentStep }: { currentStep: StepId }) {
                 <div>
                   <p
                     className={`text-sm font-semibold ${
-                      isCurrent ? 'text-white' : 'text-blue-50'
+                      isCurrent ? 'text-white' : 'text-brand-50'
                     }`}
                   >
                     {step.label}
                   </p>
-                  <p className="mt-0.5 text-xs leading-5 text-blue-200/80">{step.description}</p>
+                  <p className="mt-0.5 text-xs leading-5 text-brand-200/80">{step.description}</p>
                 </div>
               </li>
             )
@@ -454,11 +454,11 @@ function BrandPanel({ currentStep }: { currentStep: StepId }) {
 
         <div className="mt-auto pt-10">
           <div className="rounded-2xl border border-white/10 bg-white/5 p-5 backdrop-blur-sm">
-            <div className="flex items-center gap-2 text-blue-100">
+            <div className="flex items-center gap-2 text-brand-100">
               <ShieldCheck className="h-5 w-5" />
               <p className="text-sm font-semibold">ទិន្នន័យរបស់អ្នកត្រូវបានការពារ</p>
             </div>
-            <p className="mt-2 text-xs leading-5 text-blue-200/85">
+            <p className="mt-2 text-xs leading-5 text-brand-200/85">
               ឯកសារត្រូវបានរក្សាទុកដោយឯកជន និង ត្រួតពិនិត្យតែដោយអ្នកគ្រប់គ្រងសន្សំដែលបានអនុម័ត។
               ការអនុម័តជាធម្មតាចំណាយពេល ១-៣ ថ្ងៃ។
             </p>
@@ -479,7 +479,7 @@ function MobileStepBar({ step }: { step: StepId }) {
           <div
             key={s.id}
             className={`h-1.5 flex-1 rounded-full transition-colors ${
-              isComplete || isCurrent ? 'bg-blue-900' : 'bg-slate-200'
+              isComplete || isCurrent ? 'bg-brand-950' : 'bg-slate-200'
             }`}
           />
         )
@@ -514,7 +514,7 @@ function Field({ label, htmlFor, hint, optional, children }: FieldShellProps) {
 }
 
 const inputBase =
-  'w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-[15px] text-slate-900 shadow-xs outline-none transition placeholder:text-slate-400 hover:border-slate-300 focus:border-blue-500 focus:ring-4 focus:ring-blue-500/15'
+  'app-input shadow-xs'
 
 interface IconInputProps extends React.InputHTMLAttributes<HTMLInputElement> {
   icon: React.ReactNode
@@ -530,7 +530,7 @@ function IconInput({ icon, trailing, className = '', value, ...rest }: IconInput
       <input
         {...rest}
         value={value ?? ''}
-        className={`${inputBase} pl-11 ${trailing ? 'pr-11' : ''} ${className}`}
+        className={`${inputBase} app-input--with-icon ${trailing ? 'app-input--with-trailing' : ''} ${className}`}
       />
       {trailing && (
         <div className="absolute right-2 top-1/2 -translate-y-1/2">{trailing}</div>
@@ -741,14 +741,14 @@ function StepPersonal({ formData, updateField }: StepProps) {
 function StepReferee({ formData, updateField }: StepProps) {
   return (
     <div className="space-y-5">
-      <div className="overflow-hidden rounded-2xl border border-blue-100 bg-blue-50/60">
+      <div className="overflow-hidden rounded-2xl border border-brand-100 bg-brand-50/60">
         <div className="flex items-start gap-3 p-5">
-          <span className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-white text-blue-700 ring-1 ring-blue-100">
+          <span className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-white text-brand-700 ring-1 ring-brand-100">
             <UserCheck className="h-5 w-5" />
           </span>
           <div>
-            <p className="text-sm font-semibold text-blue-950">ហេតុអ្វីបានជាយើងសុំអ្នកធានា</p>
-            <p className="mt-1 text-[13px] leading-6 text-blue-900/80">
+            <p className="text-sm font-semibold text-brand-950">ហេតុអ្វីបានជាយើងសុំអ្នកធានា</p>
+            <p className="mt-1 text-[13px] leading-6 text-brand-900/80">
               អ្នកធានាគឺជាសមាជិកសន្សំដែលមានស្រាប់ដែលធានាជូនពាក្យសុំរបស់អ្នក។ ពួកគេនឹង
               ទទួលបានសំណើផ្ទៀងផ្ទាត់តាមអ៊ីមែល និង បញ្ជាក់ថាពួកគេស្គាល់អ្នក។ អ្នកអាច
               រំលងជំហាននេះ និង បន្ថែមក្រោយ។
@@ -839,13 +839,13 @@ function FileUpload({ label, subtitle, file, onChange, accept }: FileUploadProps
       </div>
 
       {file ? (
-        <div className="flex items-center gap-3 rounded-2xl border border-blue-200 bg-blue-50/60 px-4 py-3.5">
-          <span className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-white text-blue-700 ring-1 ring-blue-100">
+        <div className="flex items-center gap-3 rounded-2xl border border-brand-200 bg-brand-50/60 px-4 py-3.5">
+          <span className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-white text-brand-700 ring-1 ring-brand-100">
             <FileText className="h-5 w-5" />
           </span>
           <div className="min-w-0 flex-1">
-            <p className="truncate text-sm font-semibold text-blue-950">{file.name}</p>
-            <p className="text-xs text-blue-800/80">{formatBytes(file.size)}</p>
+            <p className="truncate text-sm font-semibold text-brand-950">{file.name}</p>
+            <p className="text-xs text-brand-800/80">{formatBytes(file.size)}</p>
           </div>
           <button
             type="button"
@@ -857,8 +857,8 @@ function FileUpload({ label, subtitle, file, onChange, accept }: FileUploadProps
           </button>
         </div>
       ) : (
-        <label className="group flex h-32 cursor-pointer flex-col items-center justify-center gap-1.5 rounded-2xl border-2 border-dashed border-slate-200 bg-slate-50/60 px-4 transition hover:border-blue-300 hover:bg-blue-50/40">
-          <span className="grid h-10 w-10 place-items-center rounded-xl bg-white text-slate-500 ring-1 ring-slate-200 transition group-hover:text-blue-700 group-hover:ring-blue-200">
+        <label className="group flex h-32 cursor-pointer flex-col items-center justify-center gap-1.5 rounded-2xl border-2 border-dashed border-slate-200 bg-background/60 px-4 transition hover:border-brand-300 hover:bg-brand-50/40">
+          <span className="grid h-10 w-10 place-items-center rounded-xl bg-white text-slate-500 ring-1 ring-slate-200 transition group-hover:text-brand-700 group-hover:ring-brand-200">
             <Upload className="h-5 w-5" />
           </span>
           <span className="text-sm font-semibold text-slate-700">ចុចដើម្បីផ្ទុក</span>
@@ -888,7 +888,7 @@ function StepSuccess() {
         ការជូនដំណឹងភ្លាមៗនៅពេលគណនីរបស់អ្នកត្រូវបានអនុម័ត។
       </p>
 
-      <div className="mt-8 rounded-2xl border border-slate-200 bg-slate-50/70 p-5 text-left">
+      <div className="mt-8 rounded-2xl border border-slate-200 bg-background/70 p-5 text-left">
         <p className="text-sm font-semibold text-slate-900">តើនឹងមានអ្វីកើតឡើងបន្ទាប់?</p>
         <ol className="mt-3 space-y-3">
           {[
@@ -898,7 +898,7 @@ function StepSuccess() {
             'ចូលគណនី និង ចាប់ផ្តើមសន្សំជាមួយសន្សំ',
           ].map((item, i) => (
             <li key={item} className="flex items-start gap-3">
-              <span className="grid h-6 w-6 shrink-0 place-items-center rounded-full bg-blue-950 text-xs font-semibold text-white">
+              <span className="grid h-6 w-6 shrink-0 place-items-center rounded-full bg-brand-950 text-xs font-semibold text-white">
                 {i + 1}
               </span>
               <p className="text-sm leading-6 text-slate-700">{item}</p>
@@ -910,13 +910,13 @@ function StepSuccess() {
       <div className="mt-8 flex flex-col items-stretch justify-center gap-3 sm:flex-row">
         <Link
           href="/login"
-          className="inline-flex items-center justify-center gap-2 rounded-xl bg-blue-950 px-6 py-3 text-sm font-semibold text-white transition hover:bg-blue-900"
+          className="inline-flex items-center justify-center gap-2 rounded-xl bg-brand-950 px-6 py-3 text-sm font-semibold text-white transition hover:bg-brand-950"
         >
           ចូលគណនី
         </Link>
         <Link
           href="/"
-          className="inline-flex items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white px-6 py-3 text-sm font-semibold text-slate-700 transition hover:border-slate-300 hover:bg-slate-50"
+          className="inline-flex items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white px-6 py-3 text-sm font-semibold text-slate-700 transition hover:border-slate-300 hover:bg-background"
         >
           ត្រឡប់ទៅទំព័រដើម
         </Link>

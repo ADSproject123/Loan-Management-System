@@ -1,23 +1,19 @@
-import { CheckCircle2, Clock, Landmark, Wallet } from 'lucide-react'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { sumByCurrency } from '@/app/admin/adminUtils'
 import { LoansList } from '@/app/admin/loans/LoansList'
-import { AdminPagination, AdminPanel, AdminStatCard } from '@/components/admin'
+import { AdminPagination, AdminPanel } from '@/components/admin'
+import { parseAdminListParams } from '@/lib/admin/pagination'
 
 export default async function AdminLoansRequestsPage({
   searchParams,
 }: {
-  searchParams?: Promise<{ page?: string }>
+  searchParams?: Promise<{ page?: string; size?: string }>
 }) {
   const admin = createAdminClient()
-  const pageSize = 10
-
   const params = (await searchParams) ?? {}
-  const page = typeof params.page === 'string' ? Math.max(1, Number(params.page)) : 1
-  const from = (page - 1) * pageSize
-  const to = from + pageSize - 1
+  const { page, pageSize, from, to } = parseAdminListParams(params, { defaultPageSize: 10 })
 
-  const [{ data }, { count: underReviewTotal }, { count: approvedTotal }] = await Promise.all([
+  const [{ data }, { count: requestsTotal }] = await Promise.all([
     admin
       .from('loans')
       .select(
@@ -26,8 +22,10 @@ export default async function AdminLoansRequestsPage({
       .in('status', ['under_review', 'approved'])
       .order('created_at', { ascending: false })
       .range(from, to),
-    admin.from('loans').select('id', { count: 'exact', head: true }).eq('status', 'under_review'),
-    admin.from('loans').select('id', { count: 'exact', head: true }).eq('status', 'approved'),
+    admin
+      .from('loans')
+      .select('id', { count: 'exact', head: true })
+      .in('status', ['under_review', 'approved']),
   ])
 
   const loanRows = data ?? []
@@ -44,8 +42,10 @@ export default async function AdminLoansRequestsPage({
           <AdminPagination
             basePath="/admin/loans/requests"
             page={page}
+            pageSize={pageSize}
             hasPrev={hasPrev}
             hasNext={hasNext}
+            totalCount={requestsTotal}
           />
         }
       >

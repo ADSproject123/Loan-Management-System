@@ -4,6 +4,7 @@ import { markReportSent } from '@/app/actions/admin'
 import { AdminActionButton } from '@/app/admin/AdminActionButton'
 import { formatDate, relatedMemberEmail, relatedMemberName } from '@/app/admin/adminUtils'
 import { AdminPagination, AdminPanel } from '@/components/admin'
+import { parseAdminListParams } from '@/lib/admin/pagination'
 
 const REPORT_STATUS_LABEL: Record<string, string> = {
   pending: 'រង់ចាំ',
@@ -14,23 +15,26 @@ const REPORT_STATUS_LABEL: Record<string, string> = {
 export default async function AdminSavingReportsPage({
   searchParams,
 }: {
-  searchParams?: Promise<{ page?: string }>
+  searchParams?: Promise<{ page?: string; size?: string }>
 }) {
   const admin = createAdminClient()
-  const pageSize = 15
   const params = (await searchParams) ?? {}
-  const page = typeof params.page === 'string' ? Math.max(1, Number(params.page)) : 1
-  const from = (page - 1) * pageSize
-  const to = from + pageSize - 1
+  const { page, pageSize, from, to } = parseAdminListParams(params)
 
-  const { data } = await admin
-    .from('report_requests')
-    .select(
-      'id, report_type, period_from, period_to, sent_to_telegram, status, created_at, members:members!report_requests_member_id_fkey(full_name, email)'
-    )
-    .eq('report_type', 'saving')
-    .order('created_at', { ascending: false })
-    .range(from, to)
+  const [{ data }, { count: reportsTotal }] = await Promise.all([
+    admin
+      .from('report_requests')
+      .select(
+        'id, report_type, period_from, period_to, sent_to_telegram, status, created_at, members:members!report_requests_member_id_fkey(full_name, email)'
+      )
+      .eq('report_type', 'saving')
+      .order('created_at', { ascending: false })
+      .range(from, to),
+    admin
+      .from('report_requests')
+      .select('id', { count: 'exact', head: true })
+      .eq('report_type', 'saving'),
+  ])
 
   const reports = data ?? []
   const hasNext = reports.length === pageSize
@@ -45,8 +49,10 @@ export default async function AdminSavingReportsPage({
           <AdminPagination
             basePath="/admin/reports/savings"
             page={page}
+            pageSize={pageSize}
             hasPrev={hasPrev}
             hasNext={hasNext}
+            totalCount={reportsTotal}
           />
         }
       >

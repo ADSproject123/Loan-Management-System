@@ -26,7 +26,7 @@ import {
   UserPlus,
 } from 'lucide-react'
 
-type Tab = 'vision' | 'saving-benefits' | 'loan-rates' | 'membership'
+type Tab = 'vision' | 'saving-benefits' | 'member-loans' | 'membership'
 
 const IMAGES = {
   hero: '/home-hero-cooperative.jpg',
@@ -45,12 +45,12 @@ export default function AboutPage() {
   const tabs: { id: Tab; label: string; icon: React.ElementType }[] = [
     { id: 'vision', label: 'ចក្ខុវិស័យ និង បេសកកម្ម', icon: Eye },
     { id: 'saving-benefits', label: 'អត្ថប្រយោជន៍សន្សំ', icon: PiggyBank },
-    { id: 'loan-rates', label: 'អត្រាការប្រាក់កម្ជី', icon: CreditCard },
+    { id: 'member-loans', label: 'កម្ជីសមាជិក', icon: CreditCard },
     { id: 'membership', label: 'ចូលជាសមាជិក', icon: Users },
   ]
 
   return (
-    <div className="min-h-screen flex flex-col bg-slate-50">
+    <div className="min-h-screen flex flex-col bg-background">
       <Navbar />
 
       <Hero />
@@ -62,7 +62,7 @@ export default function AboutPage() {
       <main className="flex-1">
         {activeTab === 'vision' && <VisionSection />}
         {activeTab === 'saving-benefits' && <SavingsSection />}
-        {activeTab === 'loan-rates' && <LoansSection />}
+        {activeTab === 'member-loans' && <LoansSection />}
         {activeTab === 'membership' && <MembershipSection />}
       </main>
 
@@ -77,15 +77,15 @@ export default function AboutPage() {
 
 function Hero() {
   return (
-    <section className="relative overflow-hidden bg-blue-950 text-white">
+    <section className="relative overflow-hidden bg-brand-950 text-white">
       <div
         className="absolute inset-0 bg-cover bg-center"
         style={{ backgroundImage: `url('${IMAGES.hero}')` }}
       />
-      <div className="absolute inset-0 bg-blue-950/88" />
+      <div className="absolute inset-0 bg-brand-950/88" />
 
       <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-28 pb-20 md:pt-32 md:pb-24">
-        <div className="flex items-center gap-2 text-blue-200/90 text-sm mb-5">
+        <div className="flex items-center gap-2 text-brand-200/90 text-sm mb-5">
           <Link href="/" className="hover:text-white transition-colors">
             ទំព័រដើម
           </Link>
@@ -93,7 +93,7 @@ function Hero() {
           <span className="text-white/80">អំពីសន្សំ</span>
         </div>
 
-        <span className="inline-flex items-center gap-1.5 rounded-full bg-white/10 px-3 py-1 text-xs font-semibold uppercase tracking-wide text-blue-100 ring-1 ring-white/15">
+        <span className="inline-flex items-center gap-1.5 rounded-full bg-white/10 px-3 py-1 text-xs font-semibold uppercase tracking-wide text-brand-100 ring-1 ring-white/15">
           <Sparkles className="h-3.5 w-3.5" />
           សហករណ៍គ្រប់គ្រងដោយសមាជិក
         </span>
@@ -101,7 +101,7 @@ function Hero() {
         <h1 className="mt-5 max-w-3xl text-4xl md:text-5xl lg:text-6xl font-extrabold tracking-tight leading-[1.05]">
           រឿងរ៉ាវរបស់យើង។ បេសកកម្មរបស់យើង។ សហគមន៍របស់យើង។
         </h1>
-        <p className="mt-5 max-w-2xl text-blue-100 text-lg leading-8">
+        <p className="mt-5 max-w-2xl text-brand-100 text-lg leading-8">
           ស្វែងយល់ពីរបៀបដែលសន្សំជួយសមាជិករាប់រយនាក់ក្នុងការសន្សំទៀងទាត់ ស្នើសុំកម្ជី
           ដោយយុត្តិធម៌ និង រីកចម្រើនទៅជាមួយគ្នាជាសហគមន៍ដ៏ខ្លាំង។
         </p>
@@ -118,16 +118,16 @@ function StatsStrip() {
   const stats = [
     { value: '៥០០+', label: 'សមាជិកសកម្ម' },
     { value: '៣%', label: 'ការប្រាក់សន្សំប្រចាំខែ' },
-    { value: '១-២%', label: 'អត្រាការប្រាក់កម្ជី' },
+    { value: '២៤ ខែ', label: 'រយៈពេលកម្ជីអតិបរមា' },
     { value: '១-៣ ថ្ងៃ', label: 'ការទទួលយកពាក្យសុំ' },
   ]
   return (
     <section className="relative -mt-12 z-10">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-px overflow-hidden rounded-2xl bg-slate-200 shadow-xl shadow-blue-950/10 ring-1 ring-slate-200/60">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-px overflow-hidden rounded-2xl bg-slate-200 shadow-xl shadow-brand-950/10 ring-1 ring-slate-200/60">
           {stats.map((stat) => (
             <div key={stat.label} className="bg-white p-6 text-center">
-              <p className="text-2xl md:text-3xl font-extrabold text-blue-900">{stat.value}</p>
+              <p className="text-2xl md:text-3xl font-extrabold text-brand-900">{stat.value}</p>
               <p className="text-gray-500 text-xs md:text-sm mt-1.5">{stat.label}</p>
             </div>
           ))}
@@ -163,14 +163,14 @@ function TabNav({
                 onClick={() => onChange(tab.id)}
                 className={`relative flex items-center gap-2 rounded-lg px-5 py-4 text-sm font-medium whitespace-nowrap transition-colors ${
                   active
-                    ? 'bg-blue-50 text-blue-900'
+                    ? 'bg-brand-50 text-brand-900'
                     : 'bg-gray-50 text-gray-500 hover:bg-gray-100 hover:text-gray-700'
                 }`}
               >
                 <Icon className="w-4 h-4" />
                 {tab.label}
                 {active && (
-                  <span className="absolute inset-x-3 bottom-0 h-0.5 rounded-full bg-blue-900" />
+                  <span className="absolute inset-x-3 bottom-0 h-0.5 rounded-full bg-brand-950" />
                 )}
               </button>
             )
@@ -193,12 +193,12 @@ function VisionSection() {
         <div className="grid lg:grid-cols-2 gap-12 lg:gap-16 items-center">
           <div className="relative">
             <div
-              className="aspect-[4/5] rounded-3xl bg-cover bg-center shadow-2xl shadow-blue-900/20"
+              className="aspect-[4/5] rounded-3xl bg-cover bg-center shadow-2xl shadow-brand-900/20"
               style={{ backgroundImage: `url('${IMAGES.vision}')` }}
             />
-            <div className="absolute -bottom-6 -right-6 hidden md:block rounded-2xl bg-white p-5 shadow-xl shadow-blue-900/10 ring-1 ring-slate-200/60 w-64">
+            <div className="absolute -bottom-6 -right-6 hidden md:block rounded-2xl bg-white p-5 shadow-xl shadow-brand-900/10 ring-1 ring-slate-200/60 w-64">
               <div className="flex items-center gap-3">
-                <span className="grid h-10 w-10 place-items-center rounded-xl bg-blue-50 text-blue-700">
+                <span className="grid h-10 w-10 place-items-center rounded-xl bg-brand-50 text-brand-700">
                   <Heart className="h-5 w-5" />
                 </span>
                 <div>
@@ -210,7 +210,7 @@ function VisionSection() {
           </div>
 
           <div>
-            <p className="text-blue-700 text-sm font-bold uppercase tracking-wide mb-3">ចក្ខុវិស័យរបស់យើង</p>
+            <p className="text-brand-700 text-sm font-bold uppercase tracking-wide mb-3">ចក្ខុវិស័យរបស់យើង</p>
             <h2 className="text-3xl md:text-4xl font-extrabold tracking-tight text-gray-950 leading-tight">
               សហករណ៍ហិរញ្ញវត្ថុដែលផ្លាស់ប្តូរជីវិតគ្រួសារទាំងមូល។
             </h2>
@@ -228,9 +228,9 @@ function VisionSection() {
               ].map((item) => {
                 const Icon = item.icon
                 return (
-                  <div key={item.label} className="flex items-center gap-3 rounded-xl bg-blue-50/60 ring-1 ring-blue-100 px-4 py-3">
-                    <Icon className="h-4 w-4 text-blue-700 shrink-0" />
-                    <span className="text-sm font-semibold text-blue-950">{item.label}</span>
+                  <div key={item.label} className="flex items-center gap-3 rounded-xl bg-brand-50/60 ring-1 ring-brand-100 px-4 py-3">
+                    <Icon className="h-4 w-4 text-brand-700 shrink-0" />
+                    <span className="text-sm font-semibold text-brand-950">{item.label}</span>
                   </div>
                 )
               })}
@@ -241,14 +241,14 @@ function VisionSection() {
 
       {/* Mission */}
       <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="rounded-3xl bg-blue-950 p-8 md:p-12 text-white shadow-2xl shadow-blue-900/30 overflow-hidden relative">
+        <div className="rounded-3xl bg-brand-950 p-8 md:p-12 text-white shadow-2xl shadow-brand-900/30 overflow-hidden relative">
           <div className="relative grid lg:grid-cols-[1fr_1.4fr] gap-10 items-start">
             <div>
               <span className="inline-flex rounded-xl bg-white/10 ring-1 ring-white/15 p-3 mb-5">
-                <Target className="w-7 h-7 text-blue-100" />
+                <Target className="w-7 h-7 text-brand-100" />
               </span>
               <h2 className="text-3xl md:text-4xl font-extrabold tracking-tight">បេសកកម្មរបស់យើង</h2>
-              <p className="text-blue-100 mt-4 leading-7">
+              <p className="text-brand-100 mt-4 leading-7">
                 សន្សំមានគោលបំណងលើកកម្ពស់សុខុមាលភាពហិរញ្ញវត្ថុក្នុងចំណោមសមាជិករបស់យើង
                 តាមរយៈការផ្តល់ជូននូវឱកាស និង ការគាំទ្រ៖
               </p>
@@ -264,7 +264,7 @@ function VisionSection() {
               ].map((item) => (
                 <li key={item} className="flex items-start gap-3 rounded-2xl bg-white/5 ring-1 ring-white/10 p-4">
                   <CheckCircle className="w-5 h-5 text-emerald-300 shrink-0 mt-0.5" />
-                  <span className="text-sm leading-6 text-blue-50">{item}</span>
+                  <span className="text-sm leading-6 text-brand-50">{item}</span>
                 </li>
               ))}
             </ul>
@@ -275,7 +275,7 @@ function VisionSection() {
       {/* Values */}
       <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="max-w-2xl mb-10">
-          <p className="text-blue-700 text-sm font-bold uppercase tracking-wide mb-3">តម្លៃរបស់យើង</p>
+          <p className="text-brand-700 text-sm font-bold uppercase tracking-wide mb-3">តម្លៃរបស់យើង</p>
           <h2 className="text-3xl md:text-4xl font-extrabold tracking-tight text-gray-950">
             គោលការណ៍បីដែលដឹកនាំការងាររបស់យើងប្រចាំថ្ងៃ។
           </h2>
@@ -286,7 +286,7 @@ function VisionSection() {
               icon: Eye,
               title: 'តម្លាភាព',
               description: 'ប្រតិបត្តិការហិរញ្ញវត្ថុទាំងអស់គឺបើកចំហ និង ទទួលខុសត្រូវចំពោះសមាជិកគ្រប់រូប។',
-              accent: 'bg-blue-600',
+              accent: 'bg-brand-600',
             },
             {
               icon: Users,
@@ -303,7 +303,7 @@ function VisionSection() {
           ].map((value) => {
             const Icon = value.icon
             return (
-              <div key={value.title} className="group relative rounded-3xl bg-white p-7 shadow-sm ring-1 ring-slate-200 hover:shadow-xl hover:shadow-blue-900/10 hover:-translate-y-1 transition-all overflow-hidden">
+              <div key={value.title} className="group relative rounded-3xl bg-white p-7 shadow-sm ring-1 ring-slate-200 hover:shadow-xl hover:shadow-brand-900/10 hover:-translate-y-1 transition-all overflow-hidden">
                 <div className={`absolute top-0 inset-x-0 h-1 ${value.accent}`} />
                 <span className={`inline-flex h-12 w-12 items-center justify-center rounded-2xl ${value.accent} text-white shadow-md mb-5`}>
                   <Icon className="h-6 w-6" />
@@ -321,7 +321,7 @@ function VisionSection() {
         <div className="grid lg:grid-cols-[1fr_0.8fr] gap-8 items-stretch">
           <div className="rounded-3xl bg-white ring-1 ring-slate-200 p-8 md:p-10 shadow-sm">
             <div className="flex items-center gap-3 mb-5">
-              <Building2 className="w-7 h-7 text-blue-900" />
+              <Building2 className="w-7 h-7 text-brand-900" />
               <h2 className="text-2xl md:text-3xl font-extrabold tracking-tight text-gray-950">សមាគមន៏សន្សំ</h2>
             </div>
             <p className="text-gray-600 leading-8 mb-7">
@@ -337,8 +337,8 @@ function VisionSection() {
               ].map((item) => {
                 const Icon = item.icon
                 return (
-                  <div key={item.label} className="rounded-2xl bg-slate-50 ring-1 ring-slate-200/70 p-4">
-                    <Icon className="w-5 h-5 text-blue-700 mb-2" />
+                  <div key={item.label} className="rounded-2xl bg-background ring-1 ring-slate-200/70 p-4">
+                    <Icon className="w-5 h-5 text-brand-700 mb-2" />
                     <p className="font-semibold text-gray-900 text-sm">{item.label}</p>
                     <p className="text-gray-500 text-xs mt-0.5">{item.sub}</p>
                   </div>
@@ -348,17 +348,17 @@ function VisionSection() {
           </div>
 
           <div
-            className="relative rounded-3xl overflow-hidden bg-cover bg-center min-h-72 shadow-2xl shadow-blue-900/20"
+            className="relative rounded-3xl overflow-hidden bg-cover bg-center min-h-72 shadow-2xl shadow-brand-900/20"
             style={{ backgroundImage: `url('${IMAGES.community}')` }}
           >
-            <div className="absolute inset-0 bg-blue-950/80" />
+            <div className="absolute inset-0 bg-brand-950/80" />
             <div className="absolute inset-x-0 bottom-0 p-7 text-white">
-              <Quote className="w-8 h-8 text-blue-200/80 mb-3" />
+              <Quote className="w-8 h-8 text-brand-200/80 mb-3" />
               <p className="text-lg leading-7 font-medium">
                 &ldquo;សន្សំជួយយើងសន្សំបានទៀងទាត់ និង ងាយស្រួល ខ្ចីប្រាក់សម្រាប់
                 ហុចគ្រួសារនៅពេលត្រូវការ ដោយគ្មានភាពតានតឹង។&rdquo;
               </p>
-              <p className="mt-4 text-sm text-blue-200">— សមាជិកសន្សំ ដែលបានចូលរួមតាំងពីឆ្នាំ ២០២៣</p>
+              <p className="mt-4 text-sm text-brand-200">— សមាជិកសន្សំ ដែលបានចូលរួមតាំងពីឆ្នាំ ២០២៣</p>
             </div>
           </div>
         </div>
@@ -378,10 +378,10 @@ function SavingsSection() {
       <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="grid lg:grid-cols-[1.1fr_0.9fr] gap-10 items-center">
           <div>
-            <p className="text-blue-700 text-sm font-bold uppercase tracking-wide mb-3">អត្ថប្រយោជន៍សន្សំ</p>
+            <p className="text-brand-700 text-sm font-bold uppercase tracking-wide mb-3">អត្ថប្រយោជន៍សន្សំ</p>
             <h2 className="text-3xl md:text-5xl font-extrabold tracking-tight text-gray-950 leading-[1.05]">
               ការសន្សំរបស់អ្នករកបាន<br />
-              <span className="text-blue-900">៣% ប្រចាំខែ</span> ដោយស្វ័យប្រវត្តិ។
+              <span className="text-brand-900">៣% ប្រចាំខែ</span> ដោយស្វ័យប្រវត្តិ។
             </h2>
             <p className="text-gray-600 leading-8 mt-5 text-lg">
               រាល់បាតដែលអ្នកសន្សំរួមចំណែកដល់កម្លាំងសមូហភាពរបស់សន្សំ។ ការប្រាក់ត្រូវបានឥណពន្ធ
@@ -390,14 +390,14 @@ function SavingsSection() {
             <div className="mt-7 flex flex-wrap gap-3">
               <Link
                 href="/dashboard/savings/add"
-                className="inline-flex items-center gap-2 rounded-xl bg-blue-900 text-white px-5 py-3 text-sm font-semibold hover:bg-blue-800 transition-colors"
+                className="inline-flex items-center gap-2 rounded-xl bg-brand-950 text-white px-5 py-3 text-sm font-semibold hover:bg-brand-800 transition-colors"
               >
                 ចាប់ផ្តើមសន្សំ
                 <ArrowRight className="h-4 w-4" />
               </Link>
               <Link
                 href="/register"
-                className="inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-5 py-3 text-sm font-semibold text-blue-900 hover:border-blue-200 transition-colors"
+                className="inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-5 py-3 text-sm font-semibold text-brand-900 hover:border-brand-200 transition-colors"
               >
                 ក្លាយជាសមាជិក
               </Link>
@@ -406,11 +406,11 @@ function SavingsSection() {
 
           <div className="relative">
             <div
-              className="aspect-square rounded-3xl bg-cover bg-center shadow-2xl shadow-blue-900/20"
+              className="aspect-square rounded-3xl bg-cover bg-center shadow-2xl shadow-brand-900/20"
               style={{ backgroundImage: `url('${IMAGES.savings}')` }}
             />
-            <div className="absolute -bottom-6 -left-6 rounded-2xl bg-white p-5 shadow-xl shadow-blue-900/10 ring-1 ring-slate-200/60">
-              <p className="text-xs font-semibold uppercase tracking-wide text-blue-700">ការប្រាក់ខែនេះ</p>
+            <div className="absolute -bottom-6 -left-6 rounded-2xl bg-white p-5 shadow-xl shadow-brand-900/10 ring-1 ring-slate-200/60">
+              <p className="text-xs font-semibold uppercase tracking-wide text-brand-700">ការប្រាក់ខែនេះ</p>
               <p className="mt-1 text-3xl font-extrabold text-gray-950">+$៣០០</p>
               <p className="text-xs text-gray-500 mt-1">លើការសន្សំ $១០,០០០</p>
             </div>
@@ -447,7 +447,7 @@ function SavingsSection() {
                 key={benefit.title}
                 className={`relative rounded-3xl p-7 transition-all ${
                   benefit.highlight
-                    ? 'bg-blue-950 text-white shadow-xl shadow-blue-900/30 -translate-y-2'
+                    ? 'bg-brand-950 text-white shadow-xl shadow-brand-900/30 -translate-y-2'
                     : 'bg-white text-gray-950 ring-1 ring-slate-200 hover:shadow-lg hover:-translate-y-1'
                 }`}
               >
@@ -457,12 +457,12 @@ function SavingsSection() {
                   </span>
                 )}
                 <span className={`inline-flex h-12 w-12 items-center justify-center rounded-2xl mb-5 ${
-                  benefit.highlight ? 'bg-white/10 ring-1 ring-white/15' : 'bg-blue-50 text-blue-700'
+                  benefit.highlight ? 'bg-white/10 ring-1 ring-white/15' : 'bg-brand-50 text-brand-700'
                 }`}>
-                  <Icon className={`h-6 w-6 ${benefit.highlight ? 'text-blue-100' : ''}`} />
+                  <Icon className={`h-6 w-6 ${benefit.highlight ? 'text-brand-100' : ''}`} />
                 </span>
                 <h3 className="text-xl font-bold mb-3">{benefit.title}</h3>
-                <p className={`text-sm leading-7 ${benefit.highlight ? 'text-blue-100' : 'text-gray-600'}`}>
+                <p className={`text-sm leading-7 ${benefit.highlight ? 'text-brand-100' : 'text-gray-600'}`}>
                   {benefit.description}
                 </p>
               </div>
@@ -474,13 +474,13 @@ function SavingsSection() {
       {/* How It Works - horizontal flow */}
       <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="max-w-2xl mb-10">
-          <p className="text-blue-700 text-sm font-bold uppercase tracking-wide mb-3">របៀបដែលការសន្សំដំណើរការ</p>
+          <p className="text-brand-700 text-sm font-bold uppercase tracking-wide mb-3">របៀបដែលការសន្សំដំណើរការ</p>
           <h2 className="text-3xl md:text-4xl font-extrabold tracking-tight text-gray-950">
             ៥ ជំហានសាមញ្ញដើម្បីសន្សំប្រចាំខែរបស់អ្នក។
           </h2>
         </div>
         <div className="relative">
-          <div className="hidden lg:block absolute top-7 left-0 right-0 h-px bg-blue-300" />
+          <div className="hidden lg:block absolute top-7 left-0 right-0 h-px bg-brand-300" />
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-5 relative">
             {[
               { step: '១', title: 'ចូលគណនី', description: 'ផ្ទៀងផ្ទាត់អត្តសញ្ញាណរបស់អ្នក' },
@@ -490,7 +490,7 @@ function SavingsSection() {
               { step: '៥', title: 'ការបញ្ជាក់', description: 'ការផ្ទៀងផ្ទាត់ដោយអ្នកគ្រប់គ្រង' },
             ].map((s) => (
               <div key={s.step} className="relative bg-white rounded-2xl ring-1 ring-slate-200 p-5 shadow-sm">
-                <div className="grid h-14 w-14 place-items-center rounded-full bg-blue-900 text-white text-lg font-bold shadow-lg shadow-blue-900/30 mb-4 ring-4 ring-white">
+                <div className="grid h-14 w-14 place-items-center rounded-full bg-brand-950 text-white text-lg font-bold shadow-lg shadow-brand-900/30 mb-4 ring-4 ring-white">
                   {s.step}
                 </div>
                 <p className="font-bold text-gray-950">{s.title}</p>
@@ -552,10 +552,10 @@ function LoansSection() {
         <div className="grid lg:grid-cols-2 gap-12 items-center">
           <div className="relative order-2 lg:order-1">
             <div
-              className="aspect-[5/4] rounded-3xl bg-cover bg-center shadow-2xl shadow-blue-900/20"
+              className="aspect-[5/4] rounded-3xl bg-cover bg-center shadow-2xl shadow-brand-900/20"
               style={{ backgroundImage: `url('${IMAGES.loans}')` }}
             />
-            <div className="absolute -top-5 -right-5 hidden md:block rounded-2xl bg-white p-4 shadow-xl shadow-blue-900/10 ring-1 ring-slate-200/60">
+            <div className="absolute -top-5 -right-5 hidden md:block rounded-2xl bg-white p-4 shadow-xl shadow-brand-900/10 ring-1 ring-slate-200/60">
               <div className="flex items-center gap-2 text-emerald-700">
                 <CheckCircle className="h-4 w-4" />
                 <span className="text-xs font-bold uppercase tracking-wide">ទទួលយក</span>
@@ -566,30 +566,29 @@ function LoansSection() {
           </div>
 
           <div className="order-1 lg:order-2">
-            <p className="text-blue-700 text-sm font-bold uppercase tracking-wide mb-3">អត្រាការប្រាក់កម្ជី</p>
+            <p className="text-brand-700 text-sm font-bold uppercase tracking-wide mb-3">កម្ជីសមាជិក</p>
             <h2 className="text-3xl md:text-5xl font-extrabold tracking-tight text-gray-950 leading-[1.05]">
               កម្ជីដោយយុត្តិធម៌។<br />
-              <span className="text-blue-900">តម្លាភាពពេញលេញ។</span>
+              <span className="text-brand-900">តម្លាភាពពេញលេញ។</span>
             </h2>
             <p className="text-gray-600 leading-8 mt-5 text-lg">
-              ទទួលបានកម្ជីដែលរចនាឡើងសម្រាប់សេចក្តីត្រូវការសមាជិក។ អត្រាការប្រាក់ប្រកួតប្រជែង
-              ដំណើរការត្រង់ និង ការទទួលយកលឿន។
+              ទទួលបានកម្ជីដែលរចនាឡើងសម្រាប់សេចក្តីត្រូវការសមាជិក។ ដំណើរការត្រង់
+              ការផ្ទៀងផ្ទាត់អ្នកធានា និង ការទទួលយកលឿន។
             </p>
           </div>
         </div>
 
-        {/* Rate cards */}
         <div className="grid md:grid-cols-3 gap-5 mt-12">
           {[
-            { label: 'អត្រាអប្បបរមា', value: '១%', sub: 'ក្នុងមួយខែ', tone: 'bg-blue-900' },
-            { label: 'អត្រាស្តង់ដារ', value: '២%', sub: 'ក្នុងមួយខែ', tone: 'bg-blue-700' },
-            { label: 'រយៈពេលអតិបរមា', value: '២៤', sub: 'ខែ', tone: 'bg-blue-600' },
+            { label: 'រយៈពេលអតិបរមា', value: '២៤', sub: 'ខែ', tone: 'bg-brand-950' },
+            { label: 'ការទទួលយក', value: '១-៣', sub: 'ថ្ងៃ', tone: 'bg-brand-700' },
+            { label: 'អ្នកធានា', value: '១', sub: 'សមាជិកសកម្ម', tone: 'bg-brand-600' },
           ].map((item) => (
-            <div key={item.label} className={`relative overflow-hidden ${item.tone} text-white rounded-3xl p-7 shadow-lg shadow-blue-900/20`}>
+            <div key={item.label} className={`relative overflow-hidden ${item.tone} text-white rounded-3xl p-7 shadow-lg shadow-brand-900/20`}>
               <div className="absolute -top-8 -right-8 h-32 w-32 rounded-full bg-white/10 blur-2xl" />
-              <p className="relative text-xs uppercase tracking-wide text-blue-200 font-semibold">{item.label}</p>
+              <p className="relative text-xs uppercase tracking-wide text-brand-200 font-semibold">{item.label}</p>
               <p className="relative text-5xl md:text-6xl font-extrabold mt-3">{item.value}</p>
-              <p className="relative text-blue-200 mt-1 text-sm">{item.sub}</p>
+              <p className="relative text-brand-200 mt-1 text-sm">{item.sub}</p>
             </div>
           ))}
         </div>
@@ -599,7 +598,7 @@ function LoansSection() {
       <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="rounded-3xl bg-white ring-1 ring-slate-200 p-8 md:p-10 shadow-sm">
           <div className="flex items-center gap-3 mb-7">
-            <span className="grid h-11 w-11 place-items-center rounded-xl bg-blue-50 text-blue-700">
+            <span className="grid h-11 w-11 place-items-center rounded-xl bg-brand-50 text-brand-700">
               <ShieldCheck className="h-6 w-6" />
             </span>
             <div>
@@ -616,8 +615,8 @@ function LoansSection() {
               'គ្មានកម្ជីដែលមិនទាន់សងនៅឡើយ',
               'ត្រូវដាក់ឯកសារច្បាប់ដើមជាមួយការផ្តិតមេដៃ',
             ].map((req) => (
-              <div key={req} className="flex items-start gap-3 rounded-2xl bg-slate-50 ring-1 ring-slate-200/70 p-4">
-                <CheckCircle className="w-5 h-5 text-blue-700 shrink-0 mt-0.5" />
+              <div key={req} className="flex items-start gap-3 rounded-2xl bg-background ring-1 ring-slate-200/70 p-4">
+                <CheckCircle className="w-5 h-5 text-brand-700 shrink-0 mt-0.5" />
                 <span className="text-gray-800 text-sm leading-6">{req}</span>
               </div>
             ))}
@@ -628,7 +627,7 @@ function LoansSection() {
       {/* Process timeline */}
       <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="max-w-2xl mb-10">
-          <p className="text-blue-700 text-sm font-bold uppercase tracking-wide mb-3">ដំណើរការដាក់ពាក្យ</p>
+          <p className="text-brand-700 text-sm font-bold uppercase tracking-wide mb-3">ដំណើរការដាក់ពាក្យ</p>
           <h2 className="text-3xl md:text-4xl font-extrabold tracking-tight text-gray-950">
             ៦ ជំហានពីការដាក់ពាក្យដល់ការទទួលប្រាក់។
           </h2>
@@ -644,7 +643,7 @@ function LoansSection() {
           ].map((s) => (
             <div key={s.step} className="flex gap-5 rounded-2xl bg-white ring-1 ring-slate-200 p-5 hover:shadow-md transition-shadow">
               <div className="shrink-0">
-                <div className="grid h-12 w-12 place-items-center rounded-xl bg-blue-50 text-blue-900 text-lg font-extrabold ring-1 ring-blue-100">
+                <div className="grid h-12 w-12 place-items-center rounded-xl bg-brand-50 text-brand-900 text-lg font-extrabold ring-1 ring-brand-100">
                   {s.step}
                 </div>
               </div>
@@ -666,7 +665,7 @@ function LoansSection() {
               style={{ backgroundImage: `url('${IMAGES.repayment}')` }}
             />
             <div className="p-8 md:p-10 flex flex-col justify-center">
-              <span className="inline-flex rounded-xl bg-blue-50 p-3 text-blue-700 mb-5 w-fit">
+              <span className="inline-flex rounded-xl bg-brand-50 p-3 text-brand-700 mb-5 w-fit">
                 <Receipt className="w-6 h-6" />
               </span>
               <h3 className="text-2xl md:text-3xl font-extrabold text-gray-950 mb-3">
@@ -676,7 +675,7 @@ function LoansSection() {
                 សងកម្ជីរបស់អ្នកតាមរយៈវិបផតថលសមាជិក។ ការសងនីមួយៗត្រូវការការបង់ប្រាក់
                 តាម QR code ជាមួយការដាក់ភស្តុតាង។ ការផ្ទៀងផ្ទាត់ដោយអ្នកគ្រប់គ្រងក្នុងរយៈពេល ២៤ ម៉ោង។
               </p>
-              <div className="flex items-center gap-2 text-sm font-semibold text-blue-900">
+              <div className="flex items-center gap-2 text-sm font-semibold text-brand-900">
                 <Clock className="w-4 h-4" />
                 ការផ្ទៀងផ្ទាត់ក្នុងរយៈពេល ២៤ ម៉ោង
               </div>
@@ -699,10 +698,10 @@ function MembershipSection() {
       <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="grid lg:grid-cols-[1.1fr_0.9fr] gap-10 items-center">
           <div>
-            <p className="text-blue-700 text-sm font-bold uppercase tracking-wide mb-3">ចូលជាសមាជិក</p>
+            <p className="text-brand-700 text-sm font-bold uppercase tracking-wide mb-3">ចូលជាសមាជិក</p>
             <h2 className="text-3xl md:text-5xl font-extrabold tracking-tight text-gray-950 leading-[1.05]">
               ចូលរួមសហគមន៍សន្សំ។<br />
-              <span className="text-blue-900">សន្សំ ខ្ចី រីកចម្រើនជាមួយគ្នា។</span>
+              <span className="text-brand-900">សន្សំ ខ្ចី រីកចម្រើនជាមួយគ្នា។</span>
             </h2>
             <p className="text-gray-600 leading-8 mt-5 text-lg">
               ចូលជាសមាជិកគឺបើកចំហសម្រាប់អ្នកដែលមានអ្នកធានាដែលបានផ្ទៀងផ្ទាត់។
@@ -710,7 +709,7 @@ function MembershipSection() {
             </p>
           </div>
           <div
-            className="aspect-[5/4] rounded-3xl bg-cover bg-center shadow-2xl shadow-blue-900/20"
+            className="aspect-[5/4] rounded-3xl bg-cover bg-center shadow-2xl shadow-brand-900/20"
             style={{ backgroundImage: `url('${IMAGES.membership}')` }}
           />
         </div>
@@ -719,7 +718,7 @@ function MembershipSection() {
       {/* Two paths */}
       <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="max-w-2xl mb-10">
-          <p className="text-blue-700 text-sm font-bold uppercase tracking-wide mb-3">ផ្លូវចូលរួម</p>
+          <p className="text-brand-700 text-sm font-bold uppercase tracking-wide mb-3">ផ្លូវចូលរួម</p>
           <h2 className="text-3xl md:text-4xl font-extrabold tracking-tight text-gray-950">
             ផ្លូវពីរដើម្បីក្លាយជាសមាជិក។
           </h2>
@@ -731,8 +730,8 @@ function MembershipSection() {
               title: 'តាមរយៈអ្នកធានា',
               desc: 'ឱ្យសមាជិកបច្ចុប្បន្នបន្ថែមអ្នកជាការណែនាំរបស់ពួកគេ បន្ទាប់មកស្នើសុំការផ្ទៀងផ្ទាត់។',
               icon: UserPlus,
-              tone: 'bg-blue-950 text-white',
-              accent: 'text-blue-100',
+              tone: 'bg-brand-950 text-white',
+              accent: 'text-brand-100',
             },
             {
               step: 'ខ',
@@ -745,14 +744,14 @@ function MembershipSection() {
           ].map((path) => {
             const Icon = path.icon
             return (
-              <div key={path.step} className={`relative overflow-hidden rounded-3xl p-7 md:p-8 shadow-sm hover:shadow-xl hover:shadow-blue-900/10 transition-all ${path.tone}`}>
+              <div key={path.step} className={`relative overflow-hidden rounded-3xl p-7 md:p-8 shadow-sm hover:shadow-xl hover:shadow-brand-900/10 transition-all ${path.tone}`}>
                 <div className="flex items-start gap-5">
-                  <span className={`grid h-14 w-14 shrink-0 place-items-center rounded-2xl text-2xl font-extrabold ${path.tone === 'bg-blue-950 text-white' ? 'bg-white/10 ring-1 ring-white/15' : 'bg-blue-50 text-blue-900 ring-1 ring-blue-100'}`}>
+                  <span className={`grid h-14 w-14 shrink-0 place-items-center rounded-2xl text-2xl font-extrabold ${path.tone === 'bg-brand-950 text-white' ? 'bg-white/10 ring-1 ring-white/15' : 'bg-brand-50 text-brand-900 ring-1 ring-brand-100'}`}>
                     {path.step}
                   </span>
                   <div className="flex-1">
                     <div className="flex items-center gap-2 mb-2">
-                      <Icon className={`h-4 w-4 ${path.tone === 'bg-blue-950 text-white' ? 'text-blue-200' : 'text-blue-700'}`} />
+                      <Icon className={`h-4 w-4 ${path.tone === 'bg-brand-950 text-white' ? 'text-brand-200' : 'text-brand-700'}`} />
                       <p className={`text-xs font-semibold uppercase tracking-wide ${path.accent}`}>ផ្លូវ {path.step}</p>
                     </div>
                     <h3 className="text-xl md:text-2xl font-bold mb-2">{path.title}</h3>
@@ -761,7 +760,7 @@ function MembershipSection() {
                 </div>
                 <Link
                   href="/register"
-                  className={`mt-7 inline-flex items-center gap-2 text-sm font-semibold ${path.tone === 'bg-blue-950 text-white' ? 'text-white hover:text-blue-200' : 'text-blue-900 hover:text-blue-700'}`}
+                  className={`mt-7 inline-flex items-center gap-2 text-sm font-semibold ${path.tone === 'bg-brand-950 text-white' ? 'text-white hover:text-brand-200' : 'text-brand-900 hover:text-brand-700'}`}
                 >
                   ចាប់ផ្តើមដំណើរការ <ArrowRight className="h-4 w-4" />
                 </Link>
@@ -812,7 +811,7 @@ function MembershipSection() {
       {/* Benefits summary */}
       <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="max-w-2xl mb-10">
-          <p className="text-blue-700 text-sm font-bold uppercase tracking-wide mb-3">សរុបអត្ថប្រយោជន៍</p>
+          <p className="text-brand-700 text-sm font-bold uppercase tracking-wide mb-3">សរុបអត្ថប្រយោជន៍</p>
           <h2 className="text-3xl md:text-4xl font-extrabold tracking-tight text-gray-950">
             អ្វីដែលអ្នកទទួលបានជាសមាជិក។
           </h2>
@@ -826,10 +825,10 @@ function MembershipSection() {
           ].map((benefit) => {
             const Icon = benefit.icon
             return (
-              <div key={benefit.label} className="group rounded-2xl bg-white ring-1 ring-slate-200 p-5 hover:ring-blue-200 hover:shadow-lg hover:shadow-blue-900/5 transition-all">
-                <Icon className="w-6 h-6 text-blue-900 mb-4 group-hover:scale-110 transition-transform" />
+              <div key={benefit.label} className="group rounded-2xl bg-white ring-1 ring-slate-200 p-5 hover:ring-brand-200 hover:shadow-lg hover:shadow-brand-900/5 transition-all">
+                <Icon className="w-6 h-6 text-brand-900 mb-4 group-hover:scale-110 transition-transform" />
                 <p className="font-bold text-gray-950 text-sm">{benefit.label}</p>
-                <p className="text-blue-700 text-sm mt-1 font-semibold">{benefit.value}</p>
+                <p className="text-brand-700 text-sm mt-1 font-semibold">{benefit.value}</p>
               </div>
             )
           })}
@@ -845,24 +844,24 @@ function MembershipSection() {
 
 function CTAFooter() {
   return (
-    <section className="relative overflow-hidden bg-blue-950 text-white">
+    <section className="relative overflow-hidden bg-brand-950 text-white">
       <div
         className="absolute inset-0 bg-cover bg-center"
         style={{ backgroundImage: `url('${IMAGES.cta}')` }}
       />
-      <div className="absolute inset-0 bg-blue-950/85" />
+      <div className="absolute inset-0 bg-brand-950/85" />
       <div className="relative max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-20 text-center">
         <h2 className="text-3xl md:text-5xl font-extrabold tracking-tight mb-5">
           ត្រៀមរួចហើយដើម្បីចូលរួមជាមួយសន្សំ?
         </h2>
-        <p className="text-blue-100 leading-8 mb-9 max-w-2xl mx-auto">
+        <p className="text-brand-100 leading-8 mb-9 max-w-2xl mx-auto">
           ចាប់ផ្តើមដំណើររបស់អ្នកឆ្ពោះទៅរកសុខុមាលភាពហិរញ្ញវត្ថុល្អប្រសើរថ្ងៃនេះ។
           ការចុះឈ្មោះត្រូវការត្រឹមតែប៉ុន្មាននាទីប៉ុណ្ណោះ។
         </p>
         <div className="flex justify-center gap-3 flex-wrap">
           <Link
             href="/register"
-            className="inline-flex items-center gap-2 bg-white text-blue-900 px-7 py-3.5 rounded-xl font-semibold hover:bg-blue-50 transition-colors"
+            className="inline-flex items-center gap-2 bg-white text-brand-900 px-7 py-3.5 rounded-xl font-semibold hover:bg-brand-50 transition-colors"
           >
             ចុះឈ្មោះឥឡូវនេះ <ArrowRight className="w-4 h-4" />
           </Link>

@@ -2,20 +2,18 @@ import { Clock, Wallet } from 'lucide-react'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { CapitalRequestsList } from '@/app/admin/capital/CapitalRequestsList'
 import { AdminPagination, AdminPanel, AdminStatCard } from '@/components/admin'
+import { parseAdminListParams } from '@/lib/admin/pagination'
 
 export default async function AdminSavingsCapitalPage({
   searchParams,
 }: {
-  searchParams?: Promise<{ page?: string }>
+  searchParams?: Promise<{ page?: string; size?: string }>
 }) {
   const admin = createAdminClient()
-  const pageSize = 15
   const params = (await searchParams) ?? {}
-  const page = typeof params.page === 'string' ? Math.max(1, Number(params.page)) : 1
-  const from = (page - 1) * pageSize
-  const to = from + pageSize - 1
+  const { page, pageSize, from, to } = parseAdminListParams(params)
 
-  const [{ data }, { count: pendingTotal }] = await Promise.all([
+  const [{ data }, { count: pendingTotal }, { count: requestsTotal }] = await Promise.all([
     admin
       .from('capital_requests')
       .select(
@@ -27,6 +25,7 @@ export default async function AdminSavingsCapitalPage({
       .from('capital_requests')
       .select('id', { count: 'exact', head: true })
       .eq('status', 'pending'),
+    admin.from('capital_requests').select('id', { count: 'exact', head: true }),
   ])
 
   const requests = data ?? []
@@ -47,8 +46,10 @@ export default async function AdminSavingsCapitalPage({
           <AdminPagination
             basePath="/admin/savings/capital"
             page={page}
+            pageSize={pageSize}
             hasPrev={hasPrev}
             hasNext={hasNext}
+            totalCount={requestsTotal}
           />
         }
       >

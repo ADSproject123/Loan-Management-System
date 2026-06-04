@@ -66,8 +66,8 @@ export default function SavingReportPage() {
       {!submitted ? (
         <Card>
           <div className="flex items-center gap-3 mb-6">
-            <div className="p-2.5 bg-blue-100 rounded-lg">
-              <FileText className="w-6 h-6 text-blue-700" />
+            <div className="p-2.5 bg-brand-100 rounded-lg">
+              <FileText className="w-6 h-6 text-brand-700" />
             </div>
             <div>
               <h2 className="font-semibold text-gray-900">ជ្រើសរើសរយៈពេលរបាយការណ៍</h2>
@@ -88,8 +88,8 @@ export default function SavingReportPage() {
                   }}
                   className={`px-3 py-2 rounded-lg text-sm font-medium transition-colors border text-left ${
                     periodFrom === period.from && periodTo === period.to
-                      ? 'bg-blue-900 text-white border-blue-900'
-                      : 'bg-white border-gray-300 text-gray-700 hover:border-blue-400 hover:text-blue-700 hover:bg-blue-50'
+                      ? 'bg-brand-950 text-white border-brand-900'
+                      : 'bg-white border-gray-300 text-gray-700 hover:border-brand-500 hover:text-brand-700 hover:bg-brand-50'
                   }`}
                 >
                   {period.label}
@@ -108,7 +108,7 @@ export default function SavingReportPage() {
                 type="date"
                 value={periodFrom}
                 onChange={(e) => setPeriodFrom(e.target.value)}
-                className="w-full px-3 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm text-gray-900"
+                className="w-full px-3 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-500 text-sm text-gray-900"
               />
             </div>
             <div>
@@ -120,15 +120,15 @@ export default function SavingReportPage() {
                 type="date"
                 value={periodTo}
                 onChange={(e) => setPeriodTo(e.target.value)}
-                className="w-full px-3 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm text-gray-900"
+                className="w-full px-3 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-500 text-sm text-gray-900"
               />
             </div>
           </div>
 
           {periodFrom && periodTo && (
-            <div className="bg-blue-50 rounded-lg p-4 mb-5">
-              <p className="text-blue-900 text-sm font-medium mb-1">របាយការណ៍នឹងរួមមាន៖</p>
-              <ul className="text-blue-700 text-sm space-y-1">
+            <div className="bg-brand-50 rounded-lg p-4 mb-5">
+              <p className="text-brand-900 text-sm font-medium mb-1">របាយការណ៍នឹងរួមមាន៖</p>
+              <ul className="text-brand-700 text-sm space-y-1">
                 <li>• ការបរិច្ចាគសន្សំទាំងអស់ចាប់ពី {new Date(periodFrom).toLocaleDateString('km-KH', { day: 'numeric', month: 'long', year: 'numeric' })}</li>
                 <li>• ដល់ {new Date(periodTo).toLocaleDateString('km-KH', { day: 'numeric', month: 'long', year: 'numeric' })}</li>
                 <li>• ចំនួនទឹកប្រាក់សន្សំសរុប ការប្រាក់ដែលរកបាន និង សមតុល្យបច្ចុប្បន្ន</li>
@@ -178,7 +178,7 @@ export default function SavingReportPage() {
               </button>
               <Link
                 href="/dashboard/savings"
-                className="inline-flex items-center gap-2 bg-blue-900 text-white px-5 py-2.5 rounded-lg text-sm font-semibold hover:bg-blue-800 transition-colors"
+                className="inline-flex items-center gap-2 bg-brand-950 text-white px-5 py-2.5 rounded-lg text-sm font-semibold hover:bg-brand-800 transition-colors"
               >
                 ត្រឡប់ទៅការសន្សំ
               </Link>

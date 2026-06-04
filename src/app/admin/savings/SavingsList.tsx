@@ -31,7 +31,7 @@ export type SavingListItem = {
 
 const STATUS_FILTER_OPTIONS = [
   { value: '', label: 'ទាំងអស់' },
-  { value: 'pending', label: 'រង់ផ្ទៀងផ្ទាត់' },
+  { value: 'pending', label: 'សំណើសន្សំ' },
   { value: 'completed', label: 'បានអនុម័ត' },
   { value: 'verified', label: 'verified' },
   { value: 'refunded', label: 'សងប្រាក់វិញ' },
@@ -149,7 +149,7 @@ export function SavingsList({ savings }: { savings: SavingListItem[] }) {
                     href={`/admin/members/${saving.member_id}`}
                     className="group block min-w-0"
                   >
-                    <p className="font-semibold text-gray-900 transition group-hover:text-blue-700">
+                    <p className="font-semibold text-gray-900 transition group-hover:text-brand-700">
                       {relatedMemberName(saving)}
                     </p>
                     <p className="truncate text-xs text-gray-500">{relatedMemberEmail(saving)}</p>

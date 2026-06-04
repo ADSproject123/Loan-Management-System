@@ -3,21 +3,21 @@ import { createAdminClient } from '@/lib/supabase/admin'
 import { getPrivateFileUrl } from '@/lib/uploads'
 import { RepaymentsList } from '@/app/admin/payments/RepaymentsList'
 import { AdminPagination, AdminPanel, AdminStatCard } from '@/components/admin'
+import { parseAdminListParams } from '@/lib/admin/pagination'
 
 export default async function AdminLoansPaymentsLedgerPage({
   searchParams,
 }: {
-  searchParams?: Promise<{ page?: string; status?: string }>
+  searchParams?: Promise<{ page?: string; size?: string; status?: string }>
 }) {
   const admin = createAdminClient()
-  const pageSize = 15
   const params = (await searchParams) ?? {}
-  const page = typeof params.page === 'string' ? Math.max(1, Number(params.page)) : 1
+  const { page, pageSize, from, to } = parseAdminListParams(params)
   const initialStatusFilter = params.status === 'pending' ? 'pending' : ''
-  const from = (page - 1) * pageSize
-  const to = from + pageSize - 1
+  const paginationQuery =
+    initialStatusFilter === 'pending' ? { status: 'pending' } : undefined
 
-  const [{ data }, { count: pendingTotal }] = await Promise.all([
+  const [{ data }, { count: pendingTotal }, { count: repaymentsTotal }] = await Promise.all([
     admin
       .from('loan_repayments')
       .select(
@@ -29,6 +29,7 @@ export default async function AdminLoansPaymentsLedgerPage({
       .from('loan_repayments')
       .select('id', { count: 'exact', head: true })
       .eq('status', 'pending'),
+    admin.from('loan_repayments').select('id', { count: 'exact', head: true }),
   ])
 
   const repaymentRows = await Promise.all(
@@ -55,8 +56,11 @@ export default async function AdminLoansPaymentsLedgerPage({
           <AdminPagination
             basePath="/admin/loans/payments"
             page={page}
+            pageSize={pageSize}
             hasPrev={hasPrev}
             hasNext={hasNext}
+            totalCount={repaymentsTotal}
+            query={paginationQuery}
           />
         }
       >

@@ -9,9 +9,9 @@ export default async function AdminLayout({
   const admin = await requireAdmin()
 
   return (
-    <div className="flex min-h-screen">
+    <div className="min-h-screen">
       <AdminSidebar adminName={admin.full_name} />
-      <main className="app-canvas min-w-0 flex-1 overflow-auto">{children}</main>
+      <main className="app-canvas min-h-screen min-w-0 overflow-auto pl-68">{children}</main>
     </div>
   )
 }

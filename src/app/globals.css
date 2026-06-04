@@ -7,15 +7,39 @@
   --brand-900: #1e3a8a;
   --brand-800: #1e40af;
   --brand-700: #1d4ed8;
+  --brand-600: #2563eb;
+  --brand-500: #3b82f6;
+  --brand-400: #60a5fa;
+  --brand-300: #93c5fd;
+  --brand-200: #bfdbfe;
+  --brand-100: #dbeafe;
+  --brand-50: #eff6ff;
   --surface: #ffffff;
   --surface-muted: #f1f5f9;
   --border: #e2e8f0;
   --ring: #93c5fd;
+  --muted: #64748b;
 }
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
+  --color-brand-950: var(--brand-950);
+  --color-brand-900: var(--brand-900);
+  --color-brand-800: var(--brand-800);
+  --color-brand-700: var(--brand-700);
+  --color-brand-600: var(--brand-600);
+  --color-brand-500: var(--brand-500);
+  --color-brand-400: var(--brand-400);
+  --color-brand-300: var(--brand-300);
+  --color-brand-200: var(--brand-200);
+  --color-brand-100: var(--brand-100);
+  --color-brand-50: var(--brand-50);
+  --color-surface: var(--surface);
+  --color-surface-muted: var(--surface-muted);
+  --color-border: var(--border);
+  --color-ring: var(--ring);
+  --color-muted: var(--muted);
   --font-sans: var(--font-khmer), var(--font-geist-sans);
   --font-mono: var(--font-inter);
   --font-khmer: var(--font-khmer);
@@ -34,13 +58,31 @@ body {
   font-family: var(--font-khmer), var(--font-geist-sans), system-ui, -apple-system, sans-serif;
 }
 
-/* App canvas used by dashboard + admin */
+/* Shared app surfaces */
 .app-canvas {
-  background-color: #f8fafc;
+  background-color: var(--background);
+}
+
+.app-brand-panel {
+  background-color: var(--brand-950);
+  color: #fff;
+}
+
+.app-hero-banner {
+  border-radius: 1rem;
+  background-color: var(--brand-950);
+  color: #fff;
+  box-shadow:
+    0 1px 2px 0 rgb(0 0 0 / 0.05),
+    0 0 0 1px rgb(23 37 84 / 0.12);
+}
+
+.app-accent-bar {
+  background-color: var(--brand-800);
 }
 
 .app-sidebar {
-  background-color: #1e3a8a;
+  background-color: var(--brand-950);
   border-right: 1px solid rgb(255 255 255 / 0.08);
   box-shadow: 4px 0 24px rgb(15 23 42 / 0.12);
 }
@@ -66,10 +108,53 @@ body {
   color: #fff;
 }
 
-/* Focus visible for keyboard users */
-:focus-visible {
+.app-input {
+  width: 100%;
+  border-radius: 0.75rem;
+  border: 1px solid var(--border);
+  background-color: var(--surface);
+  padding-block: 0.75rem;
+  padding-inline: 1rem;
+  font-size: 0.9375rem;
+  color: var(--foreground);
+  outline: none;
+  transition: border-color 150ms, box-shadow 150ms;
+}
+
+.app-input--with-icon {
+  padding-inline-start: 2.75rem;
+}
+
+.app-input--with-trailing {
+  padding-inline-end: 2.75rem;
+}
+
+.app-input::placeholder {
+  color: var(--muted);
+}
+
+.app-input:hover {
+  border-color: #cbd5e1;
+}
+
+.app-input:focus {
+  border-color: var(--brand-500);
+  box-shadow: 0 0 0 4px rgb(59 130 246 / 0.15);
+}
+
+/* Focus visible for keyboard users (skip form fields — they use their own styles) */
+:focus-visible:not(input):not(select):not(textarea):not([contenteditable='true']) {
   outline: 2px solid var(--ring);
   outline-offset: 2px;
+}
+
+input:focus,
+input:focus-visible,
+select:focus,
+select:focus-visible,
+textarea:focus,
+textarea:focus-visible {
+  outline: none;
 }
 
 /* Custom scrollbar */
@@ -78,7 +163,7 @@ body {
   height: 8px;
 }
 ::-webkit-scrollbar-track {
-  background: #f1f5f9;
+  background: var(--surface-muted);
 }
 ::-webkit-scrollbar-thumb {
   background: #cbd5e1;
@@ -136,6 +221,11 @@ body {
 
 .Toastify__toast-container {
   z-index: 9999;
+}
+
+input[type='search'] {
+  -webkit-appearance: none;
+  appearance: none;
 }
 
 input[type='number'] {

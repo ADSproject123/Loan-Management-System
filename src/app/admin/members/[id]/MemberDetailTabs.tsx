@@ -20,6 +20,8 @@ import {
 import { Card } from '@/components/ui/Card'
 import { LoanStatusBadge, MemberStatusBadge, SavingStatusBadge } from '@/components/ui/Badge'
 import { formatDate, money } from '@/app/admin/adminUtils'
+import { normalizeCurrency, type CurrencyCode } from '@/lib/currency'
+import type { AdminCurrencyTotals } from '@/components/admin/types'
 import type { LoanStatus, MemberStatus, SavingStatus } from '@/types/database'
 
 export type TabId = 'profile' | 'documents' | 'referee' | 'savings' | 'loans'
@@ -41,6 +43,7 @@ type ChecklistItem = {
 type SavingRow = {
   id: string
   amount: number | null
+  currency?: string | null
   status: string
   saving_date: string | null
   created_at: string
@@ -49,6 +52,7 @@ type SavingRow = {
 type LoanRow = {
   id: string
   amount: number | null
+  currency?: string | null
   purpose: string | null
   status: string
   term_months: number | null
@@ -76,6 +80,10 @@ export type MemberDetailTabsProps = {
   referee: RefereeRecord | null
   savings: SavingRow[]
   loans: LoanRow[]
+  savingsTotals: AdminCurrencyTotals
+  loanTotals: AdminCurrencyTotals
+  savingsCountByCurrency: Record<CurrencyCode, number>
+  loansCountByCurrency: Record<CurrencyCode, number>
   idDocumentUrl: string | null
   residentBookUrl: string | null
   checklist: ChecklistItem[]
@@ -96,6 +104,10 @@ export function MemberDetailTabs({
   referee,
   savings,
   loans,
+  savingsTotals,
+  loanTotals,
+  savingsCountByCurrency,
+  loansCountByCurrency,
   idDocumentUrl,
   residentBookUrl,
   checklist,
@@ -107,7 +119,7 @@ export function MemberDetailTabs({
   return (
     <div className="w-full space-y-0">
       <nav
-        className="w-full overflow-x-auto rounded-t-2xl border border-b-0 border-gray-200 bg-white shadow-sm"
+        className="w-full overflow-x-auto rounded-t-2xl border border-b-0 border-border bg-surface shadow-sm"
         aria-label="ផ្ទាំងព័ត៌មានសមាជិក"
       >
         <div className="flex w-full min-w-max sm:min-w-0">
@@ -120,11 +132,11 @@ export function MemberDetailTabs({
                 onClick={() => setActiveTab(tab.id)}
                 className={`flex flex-1 items-center justify-center gap-2 border-b-2 px-3 py-4 text-sm font-semibold transition sm:px-5 ${
                   isActive
-                    ? 'border-blue-900 text-blue-900'
-                    : 'border-transparent text-gray-500 hover:border-gray-200 hover:bg-gray-50 hover:text-gray-900'
+                    ? 'border-brand-900 text-brand-900'
+                    : 'border-transparent text-muted hover:border-border hover:bg-surface-muted hover:text-foreground'
                 }`}
               >
-                <span className={isActive ? 'text-blue-900' : 'text-gray-400'}>{tab.icon}</span>
+                <span className={isActive ? 'text-brand-900' : 'text-muted'}>{tab.icon}</span>
                 {tab.label}
               </button>
             )
@@ -132,11 +144,12 @@ export function MemberDetailTabs({
         </div>
       </nav>
 
-      <div className="w-full rounded-b-2xl border border-gray-200 bg-white p-6 shadow-sm md:p-8">
+      <div className="w-full rounded-b-2xl border border-border bg-surface p-6 shadow-sm md:p-8">
         {activeTab === 'profile' && (
-          <div className="w-full">
-            <SectionTitle icon={<User className="h-5 w-5" />} title="ព័ត៌មានផ្ទាល់ខ្លួន" />
-            <div className="mt-6 grid w-full gap-4 sm:grid-cols-2 xl:grid-cols-3">
+          <div className="w-full space-y-8">
+            <div>
+              <SectionTitle icon={<User className="h-5 w-5" />} title="ព័ត៌មានផ្ទាល់ខ្លួន" />
+              <div className="mt-6 grid w-full gap-4 sm:grid-cols-2 xl:grid-cols-3">
               <InfoTile
                 icon={<User className="h-4 w-4" />}
                 label="ឈ្មោះ (ខ្មែរ)"
@@ -175,6 +188,27 @@ export function MemberDetailTabs({
                 value={member.address ?? 'គ្មាន'}
                 className="sm:col-span-2 xl:col-span-3"
               />
+              </div>
+            </div>
+
+            <div>
+              <SectionTitle icon={<PiggyBank className="h-5 w-5" />} title="សង្ខេបហិរញ្ញវត្ថុ" />
+              <div className="mt-5 space-y-5">
+                <CurrencySummaryGroup
+                  currency="USD"
+                  savingsAmount={savingsTotals.USD}
+                  loanAmount={loanTotals.USD}
+                  savingsCount={savingsCountByCurrency.USD}
+                  loansCount={loansCountByCurrency.USD}
+                />
+                <CurrencySummaryGroup
+                  currency="KHR"
+                  savingsAmount={savingsTotals.KHR}
+                  loanAmount={loanTotals.KHR}
+                  savingsCount={savingsCountByCurrency.KHR}
+                  loansCount={loansCountByCurrency.KHR}
+                />
+              </div>
             </div>
           </div>
         )}
@@ -249,7 +283,7 @@ export function MemberDetailTabs({
             {referee ? (
               <div className="mt-5 rounded-xl border border-gray-100 bg-gray-50 p-4">
                 <div className="flex items-start gap-3">
-                  <span className="grid h-11 w-11 shrink-0 place-items-center rounded-lg bg-blue-100 text-sm font-bold text-blue-900">
+                  <span className="grid h-11 w-11 shrink-0 place-items-center rounded-lg bg-brand-100 text-sm font-bold text-brand-900">
                     {referee.full_name
                       .split(' ')
                       .map((p) => p[0])
@@ -277,7 +311,7 @@ export function MemberDetailTabs({
                 </div>
                 <Link
                   href={`/admin/members/${referee.id}`}
-                  className="mt-4 inline-flex w-full items-center justify-center gap-2 rounded-lg bg-white py-2.5 text-sm font-semibold text-blue-700 ring-1 ring-gray-200 transition hover:bg-blue-50"
+                  className="mt-4 inline-flex w-full items-center justify-center gap-2 rounded-lg bg-white py-2.5 text-sm font-semibold text-brand-700 ring-1 ring-gray-200 transition hover:bg-brand-50"
                 >
                   មើលប្រវត្តិអ្នកបញ្ជាក់
                   <ExternalLink className="h-4 w-4" />
@@ -292,52 +326,206 @@ export function MemberDetailTabs({
         )}
 
         {activeTab === 'savings' && (
-          <ActivityCard
-            title="ការសន្សំថ្មីៗ"
-            icon={<PiggyBank className="h-5 w-5 text-blue-700" />}
-            empty="មិនមានការសន្សំទេ។"
-            isEmpty={savings.length === 0}
-          >
-            {savings.map((saving) => (
-              <li key={saving.id} className="flex items-center justify-between gap-4 px-5 py-4">
-                <div>
-                  <p className="font-semibold text-gray-900">{money(saving.amount)}</p>
-                  <p className="text-sm text-gray-500">
-                    {formatDate(saving.saving_date ?? saving.created_at)}
-                  </p>
-                </div>
-                <SavingStatusBadge status={saving.status as SavingStatus} />
-              </li>
-            ))}
-          </ActivityCard>
+          <div className="w-full overflow-hidden rounded-xl border border-border bg-surface">
+            <div className="flex items-center gap-2 border-b border-border px-5 py-4 md:px-6">
+              <PiggyBank className="h-5 w-5 text-brand-700" />
+              <h3 className="text-lg font-semibold text-foreground">ការសន្សំថ្មីៗ</h3>
+            </div>
+            <div className="overflow-x-auto">
+              <table className="w-full min-w-138 text-left text-sm">
+                <thead className="border-b border-border bg-surface-muted/80">
+                  <tr className="text-xs font-semibold uppercase tracking-wide text-muted">
+                    <th className="px-5 py-3.5 md:px-6">ចំនួនទឹកប្រាក់</th>
+                    <th className="px-5 py-3.5">ថ្ងៃសន្សំ</th>
+                    <th className="px-5 py-3.5">ដាក់ស្នើ</th>
+                    <th className="px-5 py-3.5 md:px-6">ស្ថានភាព</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-border">
+                  {savings.length === 0 ? (
+                    <tr>
+                      <td colSpan={4} className="px-5 py-12 text-center text-sm text-muted md:px-6">
+                        មិនមានការសន្សំទេ។
+                      </td>
+                    </tr>
+                  ) : (
+                    savings.map((saving) => (
+                      <tr key={saving.id} className="transition hover:bg-surface-muted/50">
+                        <td className="px-5 py-4 md:px-6">
+                          <p className="font-bold tabular-nums text-foreground">
+                            {money(saving.amount, normalizeCurrency(saving.currency))}
+                          </p>
+                        </td>
+                        <td className="px-5 py-4 text-foreground">
+                          {formatDate(saving.saving_date)}
+                        </td>
+                        <td className="px-5 py-4 text-muted">{formatDate(saving.created_at)}</td>
+                        <td className="px-5 py-4 md:px-6">
+                          <SavingStatusBadge status={saving.status as SavingStatus} />
+                        </td>
+                      </tr>
+                    ))
+                  )}
+                </tbody>
+              </table>
+            </div>
+          </div>
         )}
 
         {activeTab === 'loans' && (
-          <ActivityCard
-            title="កម្ជីថ្មីៗ"
-            icon={<CreditCard className="h-5 w-5 text-blue-700" />}
-            empty="មិនមានកម្ជីទេ។"
-            isEmpty={loans.length === 0}
-          >
-            {loans.map((loan) => (
-              <li key={loan.id}>
-                <Link
-                  href={`/admin/loans/${loan.id}`}
-                  className="flex items-center justify-between gap-4 px-5 py-4 transition hover:bg-gray-50/80"
-                >
-                  <div className="min-w-0">
-                    <p className="font-semibold text-gray-900">{money(loan.amount)}</p>
-                    <p className="truncate text-sm text-gray-500">{loan.purpose ?? 'គ្មានគោលបំណង'}</p>
-                    <p className="text-xs text-gray-400">
-                      {loan.term_months ?? 0} ខែ · {formatDate(loan.created_at)}
-                    </p>
-                  </div>
-                  <LoanStatusBadge status={loan.status as LoanStatus} />
-                </Link>
-              </li>
-            ))}
-          </ActivityCard>
+          <div className="w-full overflow-hidden rounded-xl border border-border bg-surface">
+            <div className="flex items-center gap-2 border-b border-border px-5 py-4 md:px-6">
+              <CreditCard className="h-5 w-5 text-brand-700" />
+              <h3 className="text-lg font-semibold text-foreground">កម្ជីថ្មីៗ</h3>
+            </div>
+            <div className="overflow-x-auto">
+              <table className="w-full min-w-3xl text-left text-sm">
+                <thead className="border-b border-border bg-surface-muted/80">
+                  <tr className="text-xs font-semibold uppercase tracking-wide text-muted">
+                    <th className="px-5 py-3.5 md:px-6">ចំនួនទឹកប្រាក់</th>
+                    <th className="px-5 py-3.5">គោលបំណង</th>
+                    <th className="px-5 py-3.5">រយៈពេល</th>
+                    <th className="px-5 py-3.5">ដាក់ស្នើ</th>
+                    <th className="px-5 py-3.5">ស្ថានភាព</th>
+                    <th className="w-12 px-5 py-3.5 md:px-6" aria-label="មើលលម្អិត" />
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-border">
+                  {loans.length === 0 ? (
+                    <tr>
+                      <td colSpan={6} className="px-5 py-12 text-center text-sm text-muted md:px-6">
+                        មិនមានកម្ជីទេ។
+                      </td>
+                    </tr>
+                  ) : (
+                    loans.map((loan) => (
+                      <tr key={loan.id} className="transition hover:bg-surface-muted/50">
+                        <td className="px-5 py-4 md:px-6">
+                          <p className="font-bold tabular-nums text-foreground">
+                            {money(loan.amount, normalizeCurrency(loan.currency))}
+                          </p>
+                        </td>
+                        <td className="max-w-56 px-5 py-4 text-foreground">
+                          <p className="line-clamp-2">{loan.purpose ?? 'គ្មានគោលបំណង'}</p>
+                        </td>
+                        <td className="px-5 py-4 text-foreground">
+                          {loan.term_months ?? 0} ខែ
+                        </td>
+                        <td className="px-5 py-4 text-muted">{formatDate(loan.created_at)}</td>
+                        <td className="px-5 py-4">
+                          <LoanStatusBadge status={loan.status as LoanStatus} />
+                        </td>
+                        <td className="px-5 py-4 text-right md:px-6">
+                          <Link
+                            href={`/admin/loans/${loan.id}`}
+                            className="inline-flex items-center justify-center rounded-lg p-2 text-muted transition hover:bg-brand-50 hover:text-brand-700"
+                            aria-label="មើលលម្អិត"
+                          >
+                            <ExternalLink className="h-4 w-4" />
+                          </Link>
+                        </td>
+                      </tr>
+                    ))
+                  )}
+                </tbody>
+              </table>
+            </div>
+          </div>
         )}
+
+      </div>
+    </div>
+  )
+}
+
+function CurrencySummaryGroup({
+  currency,
+  savingsAmount,
+  loanAmount,
+  savingsCount,
+  loansCount,
+}: {
+  currency: CurrencyCode
+  savingsAmount: number
+  loanAmount: number
+  savingsCount: number
+  loansCount: number
+}) {
+  const isUsd = currency === 'USD'
+
+  return (
+    <div className="overflow-hidden rounded-2xl border border-border bg-surface-muted/40">
+      <div
+        className={`flex items-center justify-between gap-3 border-b border-border px-5 py-3 ${
+          isUsd ? 'bg-brand-50' : 'bg-amber-50'
+        }`}
+      >
+        <p className={`text-sm font-semibold ${isUsd ? 'text-brand-900' : 'text-amber-950'}`}>
+          {isUsd ? 'រូបិយប័ណ្ណ USD' : 'រូបិយប័ណ្ណ KHR'}
+        </p>
+        <span
+          className={`rounded-md px-2.5 py-1 text-xs font-bold tracking-wide ${
+            isUsd ? 'bg-brand-100 text-brand-800' : 'bg-amber-100 text-amber-900'
+          }`}
+        >
+          {currency}
+        </span>
+      </div>
+      <div className="grid gap-px bg-border sm:grid-cols-2">
+        <FinancialStatCard
+          label="សន្សំសរុប"
+          amount={savingsAmount}
+          currency={currency}
+          subtitle={`${savingsCount} ការសន្សំបានអនុម័ត`}
+          icon={PiggyBank}
+          tone="emerald"
+        />
+        <FinancialStatCard
+          label="កម្ជីសកម្ម"
+          amount={loanAmount}
+          currency={currency}
+          subtitle={`${loansCount} កម្ជីកំពុងដំណើរការ`}
+          icon={CreditCard}
+          tone="blue"
+        />
+      </div>
+    </div>
+  )
+}
+
+function FinancialStatCard({
+  label,
+  amount,
+  currency,
+  subtitle,
+  icon: Icon,
+  tone,
+}: {
+  label: string
+  amount: number
+  currency: CurrencyCode
+  subtitle: string
+  icon: React.ComponentType<{ className?: string }>
+  tone: 'emerald' | 'blue'
+}) {
+  const toneClasses =
+    tone === 'emerald'
+      ? 'bg-emerald-50/80 text-emerald-900'
+      : 'bg-brand-50/80 text-brand-900'
+  const iconClasses =
+    tone === 'emerald' ? 'bg-emerald-100 text-emerald-700' : 'bg-brand-100 text-brand-700'
+
+  return (
+    <div className={`p-5 ${toneClasses}`}>
+      <div className="flex items-start justify-between gap-4">
+        <div className="min-w-0 flex-1">
+          <p className="text-xs font-semibold uppercase tracking-wide opacity-70">{label}</p>
+          <p className="mt-3 text-2xl font-bold tabular-nums">{money(amount, currency)}</p>
+          <p className="mt-4 text-sm opacity-80">{subtitle}</p>
+        </div>
+        <span className={`grid h-11 w-11 shrink-0 place-items-center rounded-xl ${iconClasses}`}>
+          <Icon className="h-5 w-5" />
+        </span>
       </div>
     </div>
   )
@@ -345,8 +533,8 @@ export function MemberDetailTabs({
 
 function SectionTitle({ icon, title }: { icon: React.ReactNode; title: string }) {
   return (
-    <h3 className="flex items-center gap-2 text-lg font-semibold text-gray-900">
-      <span className="text-blue-700">{icon}</span>
+    <h3 className="flex items-center gap-2 text-lg font-semibold text-foreground">
+      <span className="text-brand-700">{icon}</span>
       {title}
     </h3>
   )
@@ -365,41 +553,13 @@ function InfoTile({
 }) {
   return (
     <div
-      className={`rounded-xl border border-gray-100 bg-gray-50/80 p-4 transition hover:border-gray-200 hover:bg-gray-50 ${className}`}
+      className={`rounded-xl border border-border bg-surface-muted/80 p-4 transition hover:border-border hover:bg-surface-muted ${className}`}
     >
-      <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-gray-500">
-        <span className="text-blue-600/70">{icon}</span>
+      <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-muted">
+        <span className="text-brand-600/70">{icon}</span>
         {label}
       </div>
-      <p className="mt-2 text-sm font-medium text-gray-900 wrap-break-word">{value}</p>
-    </div>
-  )
-}
-
-function ActivityCard({
-  title,
-  icon,
-  empty,
-  isEmpty,
-  children,
-}: {
-  title: string
-  icon: React.ReactNode
-  empty: string
-  isEmpty: boolean
-  children: React.ReactNode
-}) {
-  return (
-    <div className="w-full overflow-hidden rounded-xl border border-gray-200 bg-gray-50/50">
-      <div className="flex items-center gap-2 border-b border-gray-100 bg-white px-5 py-4 md:px-6">
-        {icon}
-        <h3 className="text-lg font-semibold text-gray-900">{title}</h3>
-      </div>
-      {isEmpty ? (
-        <p className="px-5 py-12 text-center text-sm text-gray-500 md:px-6">{empty}</p>
-      ) : (
-        <ul className="divide-y divide-gray-100 bg-white">{children}</ul>
-      )}
+      <p className="mt-2 text-sm font-medium text-foreground wrap-break-word">{value}</p>
     </div>
   )
 }
@@ -482,7 +642,7 @@ function DocHeader({
           href={url}
           target="_blank"
           rel="noopener noreferrer"
-          className="inline-flex items-center gap-1.5 rounded-lg bg-white px-2.5 py-1.5 text-xs font-semibold text-blue-700 ring-1 ring-gray-200 transition hover:bg-blue-50"
+          className="inline-flex items-center gap-1.5 rounded-lg bg-white px-2.5 py-1.5 text-xs font-semibold text-brand-700 ring-1 ring-gray-200 transition hover:bg-brand-50"
         >
           បើកផ្ទាំងថ្មី
           <ExternalLink className="h-3.5 w-3.5" />

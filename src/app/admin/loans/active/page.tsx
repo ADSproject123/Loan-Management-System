@@ -3,18 +3,16 @@ import { createAdminClient } from '@/lib/supabase/admin'
 import { sumByCurrency } from '@/app/admin/adminUtils'
 import { LoansList } from '@/app/admin/loans/LoansList'
 import { AdminPagination, AdminPanel, AdminStatCard } from '@/components/admin'
+import { parseAdminListParams } from '@/lib/admin/pagination'
 
 export default async function AdminActiveLoansPage({
   searchParams,
 }: {
-  searchParams?: Promise<{ page?: string }>
+  searchParams?: Promise<{ page?: string; size?: string }>
 }) {
   const admin = createAdminClient()
-  const pageSize = 15
   const params = (await searchParams) ?? {}
-  const page = typeof params.page === 'string' ? Math.max(1, Number(params.page)) : 1
-  const from = (page - 1) * pageSize
-  const to = from + pageSize - 1
+  const { page, pageSize, from, to } = parseAdminListParams(params)
 
   const [{ data }, { count: activeTotal }] = await Promise.all([
     admin
@@ -47,8 +45,10 @@ export default async function AdminActiveLoansPage({
           <AdminPagination
             basePath="/admin/loans/active"
             page={page}
+            pageSize={pageSize}
             hasPrev={hasPrev}
             hasNext={hasNext}
+            totalCount={activeTotal}
           />
         }
       >

@@ -22,10 +22,10 @@ export function Button({
     'inline-flex cursor-pointer items-center justify-center font-semibold rounded-xl transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 disabled:opacity-60 disabled:cursor-not-allowed'
 
   const variantClasses = {
-    primary: 'bg-blue-900 text-white hover:bg-blue-800 focus:ring-blue-500 active:bg-blue-950',
-    secondary: 'bg-blue-100 text-blue-900 hover:bg-blue-200 focus:ring-blue-500',
-    outline: 'bg-white border-2 border-blue-900 text-blue-900 hover:bg-blue-50 focus:ring-blue-500',
-    ghost: 'bg-slate-100 text-blue-900 hover:bg-blue-50 focus:ring-blue-500',
+    primary: 'bg-brand-950 text-white hover:bg-brand-900 focus:ring-brand-500 active:bg-brand-950',
+    secondary: 'bg-brand-100 text-brand-900 hover:bg-brand-200 focus:ring-brand-500',
+    outline: 'bg-surface border-2 border-brand-950 text-brand-900 hover:bg-brand-50 focus:ring-brand-500',
+    ghost: 'bg-surface-muted text-brand-900 hover:bg-brand-50 focus:ring-brand-500',
     danger: 'bg-red-600 text-white hover:bg-red-700 focus:ring-red-500',
   }
 

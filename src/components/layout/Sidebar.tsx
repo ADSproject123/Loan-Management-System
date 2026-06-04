@@ -86,7 +86,7 @@ export function Sidebar({ memberName = 'សមាជិក', isAdmin = false }: 
   }
 
   return (
-    <aside className="app-sidebar flex w-[17rem] shrink-0 flex-col text-white">
+    <aside className="app-sidebar fixed inset-y-0 left-0 z-40 flex h-screen w-68 flex-col text-white">
       <div className="border-b border-white/10 p-5">
         <Link
           href="/"
@@ -97,7 +97,7 @@ export function Sidebar({ memberName = 'សមាជិក', isAdmin = false }: 
           </span>
           <div className="min-w-0">
             <p className="truncate text-lg font-bold leading-tight">សន្សំ</p>
-            <p className="truncate text-xs font-medium text-blue-200/90">{memberName}</p>
+            <p className="truncate text-xs font-medium text-brand-200/90">{memberName}</p>
           </div>
         </Link>
       </div>

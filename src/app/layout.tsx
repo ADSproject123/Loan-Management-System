@@ -28,7 +28,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="km" className={`${geistSans.variable} ${notoKhmer.variable} h-full antialiased`}>
-      <body className="min-h-full bg-gray-50">
+      <body className="min-h-full bg-background text-foreground">
         {children}
         <ToastProvider />
       </body>

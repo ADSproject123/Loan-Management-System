@@ -57,7 +57,6 @@ export interface Loan {
   amount: number
   purpose?: string
   term_months?: number
-  interest_rate?: number
   currency?: CurrencyCode
   status: LoanStatus
   referee_id?: string
