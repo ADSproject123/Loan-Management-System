@@ -31,7 +31,9 @@ function getAuthUserId(member: { auth_user_id?: string }) {
   return member.auth_user_id
 }
 
-export async function registerMember(formData: FormData): Promise<ActionResult> {
+export type RegisterResult = ActionResult & { connectToken?: string }
+
+export async function registerMember(formData: FormData): Promise<RegisterResult> {
   const admin = createAdminClient()
 
   try {
@@ -100,6 +102,10 @@ export async function registerMember(formData: FormData): Promise<ActionResult> 
       asFile(formData, 'resident_book')
     )
 
+    // One-time token the member uses to link their Telegram chat. The bot's
+    // /start deep link carries this token; the webhook maps it back to this row.
+    const connectToken = crypto.randomUUID()
+
     const { error: memberError } = await admin.from('members').insert({
       auth_user_id: authUserId,
       full_name: fullName,
@@ -114,16 +120,35 @@ export async function registerMember(formData: FormData): Promise<ActionResult> 
       referee_id: refereeId,
       id_document_url: idDocumentUrl,
       resident_book_url: residentBookUrl,
+      telegram_connect_token: connectToken,
       status: 'pending',
     })
 
     if (memberError) throw memberError
 
-    return { success: true }
+    return { success: true, connectToken }
   } catch (error) {
     const message = error instanceof Error ? error.message : 'ការចុះឈ្មោះបរាជ័យ។ សូមព្យាយាមម្តងទៀត។'
     return { success: false, error: message }
   }
+}
+
+/**
+ * Polled by the registration screen (user not yet logged in) to detect when the
+ * Telegram webhook has linked their chat. The webhook keeps the token in place
+ * (linking is idempotent), so we look the row up by token and report whether a
+ * chat id has been captured yet.
+ */
+export async function checkTelegramConnected(connectToken: string): Promise<boolean> {
+  if (!connectToken) return false
+  const admin = createAdminClient()
+  const { data } = await admin
+    .from('members')
+    .select('telegram_chat_id')
+    .eq('telegram_connect_token', connectToken)
+    .maybeSingle()
+
+  return Boolean(data?.telegram_chat_id)
 }
 
 export async function addSaving(formData: FormData): Promise<ActionResult> {

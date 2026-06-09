@@ -23,6 +23,7 @@ export interface Member {
   resident_book_url?: string
   is_admin: boolean
   telegram_chat_id?: string
+  telegram_connect_token?: string | null
   suspension_reason?: string | null
   suspended_at?: string | null
   rejection_reason?: string | null
