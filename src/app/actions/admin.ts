@@ -5,6 +5,7 @@ import { createAdminClient } from '@/lib/supabase/admin'
 import { requireAdmin } from '@/lib/auth/member'
 import type { ActionResult } from '@/app/actions/member'
 import { formatMoney } from '@/lib/currency'
+import { sendTelegramMessage } from '@/lib/telegram'
 function idFrom(formData: FormData) {
   const id = formData.get('id')
   if (typeof id !== 'string' || !id) {
@@ -21,6 +22,19 @@ async function notify(memberId: string, title: string, message: string) {
     message,
     type: 'info',
   })
+
+  // Mirror the in-app notification to Telegram when the member has linked their
+  // chat. Best-effort: sendTelegramMessage never throws, so a Telegram failure
+  // can't roll back the admin action that triggered this.
+  const { data: member } = await admin
+    .from('members')
+    .select('telegram_chat_id')
+    .eq('id', memberId)
+    .maybeSingle()
+
+  if (member?.telegram_chat_id) {
+    await sendTelegramMessage(member.telegram_chat_id, `<b>${title}</b>\n${message}`)
+  }
 }
 
 export async function approveMember(formData: FormData): Promise<ActionResult> {

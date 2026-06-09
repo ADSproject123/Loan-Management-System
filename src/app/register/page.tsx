@@ -17,17 +17,17 @@ import {
   Mail,
   MapPin,
   Phone,
+  Send,
   ShieldCheck,
-  Sparkles,
   Upload,
   User,
   UserCheck,
   X,
 } from 'lucide-react'
-import { registerMember } from '@/app/actions/member'
+import { registerMember, checkTelegramConnected } from '@/app/actions/member'
 import { showError } from '@/lib/toast'
 
-type StepId = 1 | 2 | 3 | 4 | 5
+type StepId = 1 | 2 | 3 | 4 | 5 | 6
 
 interface StepDefinition {
   id: StepId
@@ -63,6 +63,12 @@ const STEPS: StepDefinition[] = [
   },
   {
     id: 5,
+    label: 'ភ្ជាប់តេលេក្រាម',
+    description: 'ទទួលការជូនដំណឹង',
+    hint: 'ភ្ជាប់តេលេក្រាមដើម្បីទទួលបានការជូនដំណឹងភ្លាមៗ នៅពេលគណនី ការសន្សំ និង កម្ជីរបស់អ្នកមានការផ្លាស់ប្តូរ។',
+  },
+  {
+    id: 6,
     label: 'រួចរាល់',
     description: 'បានដាក់ស្នើរួចហើយ',
     hint: 'ពាក្យសុំរបស់អ្នកត្រូវបានដាក់ស្នើ។ យើងនឹងជូនដំណឹងអ្នកនៅពេលដែលត្រូវបានត្រួតពិនិត្យ។',
@@ -127,6 +133,7 @@ export default function RegisterPage() {
   const [loading, setLoading] = useState(false)
   const [showPassword, setShowPassword] = useState(false)
   const [showConfirmPassword, setShowConfirmPassword] = useState(false)
+  const [connectToken, setConnectToken] = useState<string | null>(null)
   const [formData, setFormData] = useState<FormData>(() => normalizeFormData(INITIAL_FORM))
 
   const updateField = <K extends keyof FormData>(field: K, value: FormData[K]) => {
@@ -229,6 +236,7 @@ export default function RegisterPage() {
         return
       }
 
+      setConnectToken(result.connectToken ?? null)
       setStep(5)
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : 'ការចុះឈ្មោះបរាជ័យ។ សូមព្យាយាមម្តងទៀត។'
@@ -278,10 +286,10 @@ export default function RegisterPage() {
 
               <div className="mb-7">
                 <p className="text-xs font-semibold uppercase tracking-[0.18em] text-brand-700">
-                  {step === 5 ? 'រួចរាល់' : `ជំហានទី ${step} នៃ ${totalSteps}`}
+                  {step >= 5 ? currentStep.label : `ជំហានទី ${step} នៃ ${totalSteps}`}
                 </p>
                 <h1 className="mt-2 text-3xl font-bold tracking-tight text-slate-950 sm:text-[34px]">
-                  {step === 5 ? 'ពាក្យសុំត្រូវបានដាក់ស្នើ' : currentStep.label}
+                  {step === 6 ? 'ពាក្យសុំត្រូវបានដាក់ស្នើ' : currentStep.label}
                 </h1>
                 <p className="mt-2 text-[15px] leading-6 text-slate-600">{currentStep.hint}</p>
               </div>
@@ -312,7 +320,10 @@ export default function RegisterPage() {
                 {step === 2 && <StepPersonal formData={formData} updateField={updateField} />}
                 {step === 3 && <StepReferee formData={formData} updateField={updateField} />}
                 {step === 4 && <StepDocuments formData={formData} updateField={updateField} />}
-                {step === 5 && <StepSuccess />}
+                {step === 5 && (
+                  <StepTelegram connectToken={connectToken} onDone={() => setStep(6)} />
+                )}
+                {step === 6 && <StepSuccess />}
               </div>
 
               {step < 5 && (
@@ -870,6 +881,109 @@ function FileUpload({ label, subtitle, file, onChange, accept }: FileUploadProps
             onChange={(e) => onChange(e.target.files?.[0] ?? null)}
           />
         </label>
+      )}
+    </div>
+  )
+}
+
+interface StepTelegramProps {
+  connectToken: string | null
+  onDone: () => void
+}
+
+function StepTelegram({ connectToken, onDone }: StepTelegramProps) {
+  const [connected, setConnected] = useState(false)
+  const botUsername = process.env.NEXT_PUBLIC_TELEGRAM_BOT_USERNAME
+
+  const deepLink =
+    botUsername && connectToken
+      ? `https://t.me/${botUsername}?start=${connectToken}`
+      : null
+
+  // Poll the server until the webhook captures the user's chat. We stop as soon
+  // as the link is confirmed or the component unmounts.
+  useEffect(() => {
+    if (!connectToken || connected) return
+    let active = true
+    const interval = setInterval(async () => {
+      try {
+        const isConnected = await checkTelegramConnected(connectToken)
+        if (active && isConnected) {
+          setConnected(true)
+          clearInterval(interval)
+        }
+      } catch {
+        // transient — keep polling
+      }
+    }, 3000)
+    return () => {
+      active = false
+      clearInterval(interval)
+    }
+  }, [connectToken, connected])
+
+  if (connected) {
+    return (
+      <div className="py-4 text-center">
+        <div className="mx-auto grid h-20 w-20 place-items-center rounded-full bg-emerald-100 ring-8 ring-emerald-50">
+          <CheckCircle2 className="h-10 w-10 text-emerald-600" />
+        </div>
+        <h2 className="mt-6 text-2xl font-bold text-slate-950">តេលេក្រាមត្រូវបានភ្ជាប់</h2>
+        <p className="mx-auto mt-3 max-w-md text-[15px] leading-7 text-slate-600">
+          អ្នកនឹងទទួលបានការជូនដំណឹងពីសមាគមន៏សន្សំតាមតេលេក្រាមនៅពេលគណនីរបស់អ្នកមានការផ្លាស់ប្តូរ។
+        </p>
+        <button
+          type="button"
+          onClick={onDone}
+          className="mt-8 inline-flex items-center justify-center gap-2 rounded-xl bg-brand-950 px-6 py-3 text-sm font-semibold text-white transition hover:bg-brand-950"
+        >
+          បន្ត
+          <ArrowRight className="h-4 w-4" />
+        </button>
+      </div>
+    )
+  }
+
+  return (
+    <div className="space-y-6">
+      <div className="flex items-start gap-3 rounded-2xl border border-sky-100 bg-sky-50/70 p-5">
+        <span className="grid h-11 w-11 shrink-0 place-items-center rounded-xl bg-white text-sky-600 ring-1 ring-sky-100">
+          <Send className="h-5 w-5" />
+        </span>
+        <div>
+          <p className="text-sm font-semibold text-slate-900">ហេតុអ្វីបានជាភ្ជាប់តេលេក្រាម?</p>
+          <p className="mt-1 text-[13px] leading-6 text-slate-600">
+            យើងផ្ញើការជូនដំណឹងតាមតេលេក្រាមនៅពេលគណនីរបស់អ្នកត្រូវបានអនុម័ត ការសន្សំត្រូវបានផ្ទៀងផ្ទាត់
+            និង កម្ជីមានការផ្លាស់ប្តូរ។ បើកតេលេក្រាម ចុច <strong>Start</strong> រួចត្រឡប់មកទំព័រនេះវិញ។
+          </p>
+        </div>
+      </div>
+
+      {deepLink ? (
+        <>
+          <a
+            href={deepLink}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-[#229ED9] px-6 py-3.5 text-sm font-semibold text-white shadow-sm transition hover:bg-[#1c8dc2]"
+          >
+            <Send className="h-4 w-4" />
+            បើកតេលេក្រាម និង ភ្ជាប់
+          </a>
+
+          <div className="flex items-center justify-center gap-2 text-xs text-slate-500">
+            <span className="inline-block h-2 w-2 animate-pulse rounded-full bg-sky-500" />
+            កំពុងរង់ចាំការភ្ជាប់... ទំព័រនេះនឹងធ្វើបច្ចុប្បន្នភាពដោយស្វ័យប្រវត្តិ។
+          </div>
+
+          <p className="text-center text-xs text-slate-400">
+            ការភ្ជាប់តេលេក្រាមត្រូវបានទាមទារដើម្បីបញ្ចប់ការចុះឈ្មោះ។
+          </p>
+        </>
+      ) : (
+        <div className="rounded-xl border border-amber-200 bg-amber-50/70 px-4 py-3 text-[13px] leading-6 text-amber-800">
+          តេលេក្រាមមិនទាន់ត្រូវបានកំណត់រចនាសម្ព័ន្ធនៅឡើយទេ។ សូមទាក់ទងអ្នកគ្រប់គ្រង។
+        </div>
       )}
     </div>
   )
