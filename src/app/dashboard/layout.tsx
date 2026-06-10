@@ -9,13 +9,17 @@ export default async function DashboardLayout({
 }) {
   const member = await requireMember()
 
+  if (member.is_admin) {
+    redirect('/admin')
+  }
+
   if (member.status !== 'active') {
     redirect('/pending-approval')
   }
 
   return (
     <div className="min-h-screen">
-      <Sidebar memberName={member.full_name} isAdmin={member.is_admin} />
+      <Sidebar memberName={member.full_name} />
       <main className="app-canvas min-h-screen min-w-0 overflow-auto pl-68">{children}</main>
     </div>
   )

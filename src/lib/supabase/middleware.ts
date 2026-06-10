@@ -21,12 +21,44 @@ export async function updateSession(request: NextRequest) {
     }
   )
 
-  const { data: { session } } = await supabase.auth.getSession()
+  const pathname = request.nextUrl.pathname
+  const isProtectedRoute = pathname.startsWith('/dashboard') || pathname.startsWith('/admin')
+  const { data: { user } } = await supabase.auth.getUser()
 
-  if (!session && (request.nextUrl.pathname.startsWith('/dashboard') || request.nextUrl.pathname.startsWith('/admin'))) {
+  if (!user && isProtectedRoute) {
     const url = request.nextUrl.clone()
     url.pathname = '/login'
     return NextResponse.redirect(url)
+  }
+
+  if (user && isProtectedRoute) {
+    const { data: member } = await supabase
+      .from('members')
+      .select('status, is_admin')
+      .eq('auth_user_id', user.id)
+      .maybeSingle()
+
+    if (pathname.startsWith('/admin')) {
+      if (!member?.is_admin || member.status !== 'active') {
+        const url = request.nextUrl.clone()
+        url.pathname = member?.status === 'active' ? '/dashboard' : '/pending-approval'
+        return NextResponse.redirect(url)
+      }
+    }
+
+    if (pathname.startsWith('/dashboard')) {
+      if (member?.is_admin && member.status === 'active') {
+        const url = request.nextUrl.clone()
+        url.pathname = '/admin'
+        return NextResponse.redirect(url)
+      }
+
+      if (member && member.status !== 'active') {
+        const url = request.nextUrl.clone()
+        url.pathname = '/pending-approval'
+        return NextResponse.redirect(url)
+      }
+    }
   }
 
   return supabaseResponse
