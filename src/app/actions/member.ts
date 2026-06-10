@@ -9,6 +9,7 @@ import { normalizeCurrency } from '@/lib/currency'
 export type ActionResult = {
   success: boolean
   error?: string
+  redirectTo?: string
 }
 
 function asString(formData: FormData, key: string) {
@@ -29,6 +30,15 @@ function asFile(formData: FormData, key: string) {
 function getAuthUserId(member: { auth_user_id?: string }) {
   if (!member.auth_user_id) throw new Error('សមាជិកមិនត្រូវបានភ្ជាប់ជាមួយគណនីចូល។')
   return member.auth_user_id
+}
+
+/** Whole months between two YYYY-MM-DD dates, floored, minimum 1. */
+function monthsBetween(start: string, end: string) {
+  const s = new Date(start)
+  const e = new Date(end)
+  let months = (e.getFullYear() - s.getFullYear()) * 12 + (e.getMonth() - s.getMonth())
+  if (e.getDate() < s.getDate()) months -= 1
+  return Math.max(1, months)
 }
 
 export type RegisterResult = ActionResult & { connectToken?: string }
@@ -200,13 +210,24 @@ export async function requestLoan(formData: FormData): Promise<ActionResult> {
     const member = await requireActiveMember()
     const amount = asNumber(formData, 'amount')
     const purpose = asString(formData, 'purpose')
-    const termMonths = asNumber(formData, 'term_months') || 12
+    const startDate = asString(formData, 'start_date')
+    const endDate = asString(formData, 'end_date')
     const refereeEmail = asString(formData, 'referee_email').toLowerCase()
     const currency = normalizeCurrency(asString(formData, 'currency'))
 
     if (amount <= 0 || !purpose) {
       return { success: false, error: 'សូមបញ្ចូលចំនួនទឹកប្រាក់កម្ជី និង គោលបំណងត្រឹមត្រូវ។' }
     }
+
+    if (
+      !/^\d{4}-\d{2}-\d{2}$/.test(startDate) ||
+      !/^\d{4}-\d{2}-\d{2}$/.test(endDate) ||
+      endDate <= startDate
+    ) {
+      return { success: false, error: 'សូមជ្រើសរើសកាលបរិច្ឆេទចាប់ផ្តើម និង បញ្ចប់នៃកម្ជីត្រឹមត្រូវ។' }
+    }
+
+    const termMonths = monthsBetween(startDate, endDate)
 
     const admin = createAdminClient()
     let refereeId: string | null = null
@@ -234,6 +255,8 @@ export async function requestLoan(formData: FormData): Promise<ActionResult> {
       currency,
       purpose,
       term_months: termMonths,
+      start_date: startDate,
+      end_date: endDate,
       referee_id: refereeId,
       support_document_url: supportDocumentUrl,
       status: 'under_review',

@@ -13,6 +13,7 @@ const navLinks = [
       { label: 'ចក្ខុវិស័យ និង បេសកកម្ម', href: '/about#vision' },
       { label: 'អត្ថប្រយោជន៍នៃការសន្សំ', href: '/about#saving-benefits' },
       { label: 'កម្ជីសមាជិក', href: '/about#member-loans' },
+      { label: 'ចូលជាសមាជិក', href: '/about#membership' },
     ],
   },
   { label: 'ចូលជាសមាជិក', href: '/register' },

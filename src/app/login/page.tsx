@@ -38,7 +38,7 @@ export default function LoginPage() {
         return
       }
 
-      router.push('/dashboard')
+      router.push(result.redirectTo ?? '/dashboard')
       router.refresh()
     } catch {
       showError('មិនអាចចូលគណនីបានទេនៅពេលនេះ។ សូមព្យាយាមម្តងទៀត។')

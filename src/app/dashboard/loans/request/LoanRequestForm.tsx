@@ -32,9 +32,27 @@ interface LoanFormData {
   amount: string
   currency: CurrencyCode
   purpose: string
-  term_months: string
+  start_date: string
+  end_date: string
   referee_email: string
   support_document: File | null
+}
+
+/** YYYY-MM-DD for a date offset from today by the given number of months. */
+function dateFromToday(monthsAhead: number) {
+  const d = new Date()
+  d.setMonth(d.getMonth() + monthsAhead)
+  return d.toISOString().slice(0, 10)
+}
+
+/** Whole months between two YYYY-MM-DD dates, floored, minimum 1. */
+function monthsBetween(start: string, end: string) {
+  if (!start || !end) return 0
+  const s = new Date(start)
+  const e = new Date(end)
+  let months = (e.getFullYear() - s.getFullYear()) * 12 + (e.getMonth() - s.getMonth())
+  if (e.getDate() < s.getDate()) months -= 1
+  return Math.max(1, months)
 }
 
 export function LoanRequestForm() {
@@ -44,7 +62,8 @@ export function LoanRequestForm() {
     amount: '',
     currency: 'USD',
     purpose: '',
-    term_months: '12',
+    start_date: dateFromToday(0),
+    end_date: dateFromToday(12),
     referee_email: '',
     support_document: null,
   })
@@ -64,9 +83,12 @@ export function LoanRequestForm() {
         showError('សូមពិពណ៌នាគោលបំណងនៃកម្ជីរបស់អ្នក។')
         return false
       }
-      const term = parseInt(formData.term_months)
-      if (!formData.term_months || isNaN(term) || term <= 0) {
-        showError('សូមបញ្ចូលរយៈពេលកម្ជីត្រឹមត្រូវ (ខែ)។')
+      if (!formData.start_date || !formData.end_date) {
+        showError('សូមជ្រើសរើសកាលបរិច្ឆេទចាប់ផ្តើម និង បញ្ចប់នៃកម្ជី។')
+        return false
+      }
+      if (formData.end_date <= formData.start_date) {
+        showError('កាលបរិច្ឆេទបញ្ចប់ត្រូវនៅក្រោយកាលបរិច្ឆេទចាប់ផ្តើម។')
         return false
       }
     }
@@ -89,7 +111,8 @@ export function LoanRequestForm() {
     payload.append('amount', formData.amount)
     payload.append('currency', formData.currency)
     payload.append('purpose', formData.purpose)
-    payload.append('term_months', formData.term_months)
+    payload.append('start_date', formData.start_date)
+    payload.append('end_date', formData.end_date)
     payload.append('referee_email', formData.referee_email)
     if (formData.support_document) {
       payload.append('support_document', formData.support_document)
@@ -107,7 +130,7 @@ export function LoanRequestForm() {
   }
 
   const loanAmount = parseFloat(formData.amount) || 0
-  const termMonths = parseInt(formData.term_months || '12', 10) || 12
+  const termMonths = monthsBetween(formData.start_date, formData.end_date) || 12
   const monthlyPayment = loanAmount / termMonths
   const totalRepayment = loanAmount
 
@@ -183,19 +206,31 @@ export function LoanRequestForm() {
 
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">រយៈពេលកម្ជី</label>
-              <div className="relative">
-                <input
-                  type="number"
-                  value={formData.term_months}
-                  onChange={(e) => update('term_months', e.target.value)}
-                  onWheel={(e) => e.currentTarget.blur()}
-                  placeholder="12"
-                  min="1"
-                  step="1"
-                  className="w-full pr-12 pl-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-500 text-lg font-semibold text-gray-900"
-                />
-                <span className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-500 font-medium">ខែ</span>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div>
+                  <span className="block text-xs text-gray-500 mb-1">ចាប់ផ្តើម</span>
+                  <input
+                    type="date"
+                    value={formData.start_date}
+                    max={formData.end_date || undefined}
+                    onChange={(e) => update('start_date', e.target.value)}
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-500 text-base font-medium text-gray-900"
+                  />
+                </div>
+                <div>
+                  <span className="block text-xs text-gray-500 mb-1">បញ្ចប់</span>
+                  <input
+                    type="date"
+                    value={formData.end_date}
+                    min={formData.start_date || undefined}
+                    onChange={(e) => update('end_date', e.target.value)}
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-500 text-base font-medium text-gray-900"
+                  />
+                </div>
               </div>
+              {termMonths > 0 && formData.end_date > formData.start_date && (
+                <p className="text-gray-400 text-xs mt-1.5">រយៈពេលប្រមាណ {termMonths} ខែ</p>
+              )}
             </div>
           </div>
 
@@ -353,7 +388,7 @@ export function LoanRequestForm() {
             {[
               { label: 'ចំនួនទឹកប្រាក់កម្ជី', value: `${currencySymbol(formData.currency)}${loanAmount.toLocaleString()}` },
               { label: 'គោលបំណង', value: formData.purpose },
-              { label: 'រយៈពេល', value: `${formData.term_months} ខែ` },
+              { label: 'រយៈពេល', value: `${formData.start_date} → ${formData.end_date} (${termMonths} ខែ)` },
               { label: 'ឯកសារគាំទ្រ', value: formData.support_document?.name || 'មិនបានផ្ទុក' },
               { label: 'អ៊ីមែលអ្នកធានា', value: formData.referee_email },
             ].map((item) => (

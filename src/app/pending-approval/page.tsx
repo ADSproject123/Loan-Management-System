@@ -1,7 +1,7 @@
 import Link from 'next/link'
 import { redirect } from 'next/navigation'
 import { Building2, CheckCircle, FileSearch, ShieldAlert, ShieldCheck } from 'lucide-react'
-import { requireMember } from '@/lib/auth/member'
+import { getMemberHomePath, requireMember } from '@/lib/auth/member'
 import { MemberStatusBadge } from '@/components/ui/Badge'
 import { formatDate } from '@/app/admin/adminUtils'
 
@@ -9,7 +9,7 @@ export default async function PendingApprovalPage() {
   const member = await requireMember()
 
   if (member.status === 'active') {
-    redirect('/dashboard')
+    redirect(getMemberHomePath(member))
   }
 
   const isPending = member.status === 'pending'

@@ -8,7 +8,6 @@ import {
   PiggyBank,
   CreditCard,
   Wallet,
-  ShieldCheck,
   ChevronDown,
   ChevronRight,
   Building2,
@@ -57,22 +56,12 @@ const navItems: NavItem[] = [
 
 interface SidebarProps {
   memberName?: string
-  isAdmin?: boolean
 }
 
-export function Sidebar({ memberName = 'សមាជិក', isAdmin = false }: SidebarProps) {
+export function Sidebar({ memberName = 'សមាជិក' }: SidebarProps) {
   const pathname = usePathname()
   const [expandedItems, setExpandedItems] = useState<string[]>(['ការសន្សំ', 'កម្ជី'])
-  const items: NavItem[] = isAdmin
-    ? [
-        ...navItems,
-        {
-          label: 'អ្នកគ្រប់គ្រង',
-          href: '/admin',
-          icon: ShieldCheck,
-        },
-      ]
-    : navItems
+  const items = navItems
 
   const toggleExpand = (label: string) => {
     setExpandedItems((prev) =>

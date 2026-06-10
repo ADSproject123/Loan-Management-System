@@ -1,6 +1,7 @@
 'use server'
 
 import { createClient } from '@/lib/supabase/server'
+import { getMemberHomePath } from '@/lib/auth/member'
 import type { ActionResult } from '@/app/actions/member'
 
 export async function signInMember(email: string, password: string): Promise<ActionResult> {
@@ -21,7 +22,7 @@ export async function signInMember(email: string, password: string): Promise<Act
 
     const { data: member, error: memberError } = await supabase
       .from('members')
-      .select('id')
+      .select('id, status, is_admin')
       .eq('auth_user_id', data.user.id)
       .maybeSingle()
 
@@ -38,7 +39,7 @@ export async function signInMember(email: string, password: string): Promise<Act
       }
     }
 
-    return { success: true }
+    return { success: true, redirectTo: getMemberHomePath(member) }
   } catch (error) {
     const message = error instanceof Error ? error.message : 'មិនអាចចូលគណនីបានទេនៅពេលនេះ។ សូមព្យាយាមម្តងទៀត។'
     return { success: false, error: message }

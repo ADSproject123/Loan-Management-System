@@ -38,6 +38,11 @@ export default function HomePage() {
       title: 'កម្ជីសមាជិក',
       description: 'ដាក់ពាក្យសុំកម្ជីជាសមាជិកដោយយុត្តិធម៌ ការផ្ទៀងផ្ទាត់អ្នកធានា និង ការទទួលយកពីគណៈកម្មាធិការ។',
     },
+    {
+      icon: Wallet,
+      title: 'ដកដើមទុន',
+      description: 'ស្នើសុំដកដើមទុនក្នុងអំឡុងពេលប្រចាំឆ្នាំ តាមលក្ខខណ្ឌ និង កាលបរិច្ឆេទដែលសហករណ៍កំណត់។',
+    },
   ]
 
   return (
@@ -118,49 +123,32 @@ export default function HomePage() {
       </section>
 
       <section id="about-sansam" className="min-h-screen flex items-center py-16 md:py-20 bg-white border-y border-gray-100">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <ScrollReveal animation="fade-up" className="max-w-2xl mb-12">
-            <h2 className="text-3xl md:text-4xl font-extrabold tracking-tight text-gray-950">
-              អ្វីៗដែលសមាជិកត្រូវយល់ដឹងមុនពេលចូលរួម។
+        <div className="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <ScrollReveal animation="fade-up" className="max-w-3xl mb-12">
+            <h2 className="text-3xl md:text-4xl font-extrabold tracking-tight text-gray-950 mb-4">
+              ស្វែងយល់អំពីសន្សំ
             </h2>
-            <p className="text-gray-600 mt-4 leading-7">
-              ស្វែងយល់អំពីបេសកកម្ម ជម្រើសចូលជាសមាជិក អត្ថប្រយោជន៍សន្សំ កម្ជីសមាជិក និង
-              ជម្រើសដកដើមទុនមុនបើកគណនីសមាជិករបស់អ្នក។
+            <p className="text-gray-600 text-lg leading-7">
+              បេសកកម្ម ជម្រើសចូលជាសមាជិក អត្ថប្រយោជន៍សន្សំ កម្ជីសមាជិក និង ជម្រើសដកដើមទុន
+              មុនពេលអ្នកបើកគណនីសមាជិក។
             </p>
           </ScrollReveal>
 
-          <div className="grid lg:grid-cols-[0.9fr_1.1fr] gap-8 items-stretch">
-            <ScrollReveal animation="fade-right" className="h-full">
-              <div
-                className="h-full min-h-96 lg:min-h-0 rounded-3xl bg-cover bg-center shadow-xl shadow-brand-900/10 relative overflow-hidden"
-                style={{ backgroundImage: "url('/home-about-community.jpg')" }}
-              >
-                <div className="absolute inset-0 bg-brand-950/75" />
-                <div className="absolute bottom-0 left-0 right-0 p-6 text-white">
-                  <p className="text-sm font-semibold text-brand-100">ហិរញ្ញវត្ថុដែលផ្តោតលើសហគមន៍</p>
-                  <p className="mt-2 text-2xl font-extrabold leading-tight">
-                    សមាជិកសន្សំ ខ្ចី និង រីកចម្រើនជាមួយការគាំទ្រដ៏តម្លាភាព។
-                  </p>
-                </div>
-              </div>
-            </ScrollReveal>
-
-            <div className="grid md:grid-cols-2 gap-5">
-              {aboutItems.map((item, index) => {
-                const Icon = item.icon
-                return (
-                  <ScrollReveal key={item.title} animation="fade-up" delay={index * 90}>
-                    <div className="group rounded-2xl border border-gray-200 bg-white p-6 shadow-sm hover:border-brand-200 hover:shadow-lg transition-all h-full">
-                      <div className="inline-flex rounded-xl bg-brand-50 p-3 text-brand-800 mb-5 group-hover:bg-brand-950 group-hover:text-white transition-colors">
-                        <Icon className="w-6 h-6" />
-                      </div>
-                      <h3 className="text-lg font-bold text-gray-950 mb-3">{item.title}</h3>
-                      <p className="text-gray-600 text-sm leading-6">{item.description}</p>
+          <div className="grid md:grid-cols-2 xl:grid-cols-3 gap-5">
+            {aboutItems.map((item, index) => {
+              const Icon = item.icon
+              return (
+                <ScrollReveal key={item.title} animation="fade-up" delay={index * 90}>
+                  <div className="group rounded-2xl border border-gray-200 bg-white p-6 shadow-sm hover:border-brand-200 hover:shadow-lg transition-all h-full">
+                    <div className="inline-flex rounded-xl bg-brand-50 p-3 text-brand-800 mb-5 group-hover:bg-brand-950 group-hover:text-white transition-colors">
+                      <Icon className="w-6 h-6" />
                     </div>
-                  </ScrollReveal>
-                )
-              })}
-            </div>
+                    <h3 className="text-lg font-bold text-gray-950 mb-3">{item.title}</h3>
+                    <p className="text-gray-600 text-sm leading-6">{item.description}</p>
+                  </div>
+                </ScrollReveal>
+              )
+            })}
           </div>
         </div>
       </section>

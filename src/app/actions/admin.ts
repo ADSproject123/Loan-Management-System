@@ -299,8 +299,23 @@ export async function activateLoan(formData: FormData): Promise<ActionResult> {
     await requireAdmin()
     const id = idFrom(formData)
     const admin = createAdminClient()
-    const dueDate = new Date()
-    dueDate.setMonth(dueDate.getMonth() + 12)
+
+    // Honor the member's chosen end date as the due date; fall back to the term
+    // length (or 12 months) for older loans that predate the date range.
+    const { data: loan } = await admin
+      .from('loans')
+      .select('end_date, term_months')
+      .eq('id', id)
+      .maybeSingle()
+
+    let dueDate: string
+    if (loan?.end_date) {
+      dueDate = loan.end_date
+    } else {
+      const d = new Date()
+      d.setMonth(d.getMonth() + (loan?.term_months ?? 12))
+      dueDate = d.toISOString().slice(0, 10)
+    }
 
     const { data, error } = await admin
       .from('loans')
@@ -309,7 +324,7 @@ export async function activateLoan(formData: FormData): Promise<ActionResult> {
         hard_copy_submitted: true,
         thumbprint_submitted: true,
         disbursed_at: new Date().toISOString(),
-        due_date: dueDate.toISOString().slice(0, 10),
+        due_date: dueDate,
       })
       .eq('id', id)
       .select('member_id, amount, currency')

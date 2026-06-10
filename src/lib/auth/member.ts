@@ -21,6 +21,18 @@ export async function getCurrentMember(): Promise<Member | null> {
   return data as Member | null
 }
 
+export function getMemberHomePath(member: Pick<Member, 'status' | 'is_admin'>): string {
+  if (member.is_admin && member.status === 'active') {
+    return '/admin'
+  }
+
+  if (member.status === 'active') {
+    return '/dashboard'
+  }
+
+  return '/pending-approval'
+}
+
 export async function requireMember(): Promise<Member> {
   const member = await getCurrentMember()
 
@@ -34,6 +46,10 @@ export async function requireMember(): Promise<Member> {
 export async function requireActiveMember(): Promise<Member> {
   const member = await requireMember()
 
+  if (member.is_admin) {
+    redirect('/admin')
+  }
+
   if (member.status !== 'active') {
     redirect('/pending-approval')
   }
@@ -45,6 +61,10 @@ export async function requireAdmin(): Promise<Member> {
   const member = await requireMember()
 
   if (!member.is_admin || member.status !== 'active') {
+    if (member.status === 'active') {
+      redirect('/dashboard')
+    }
+
     redirect('/pending-approval')
   }
 
