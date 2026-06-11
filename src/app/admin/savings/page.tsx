@@ -35,10 +35,9 @@ export default async function AdminSavingsLedgerPage({
   const hasPrev = page > 1
 
   return (
-    <main className="w-full p-6 md:p-8">
+    <main>
       <AdminPanel
         title="បញ្ជីការសន្សំទាំងអស់"
-        description="ប្រវត្តិការដាក់សន្សំ — ស្វែងរក តម្រងតាមស្ថានភាព និង ថ្ងៃខែ។"
         footer={
           <AdminPagination
             basePath="/admin/savings"

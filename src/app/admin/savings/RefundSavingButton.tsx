@@ -2,8 +2,9 @@
 
 import { useState, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
-import { AlertTriangle, X } from 'lucide-react'
+import { AlertTriangle, X, type LucideIcon } from 'lucide-react'
 import { refundSaving } from '@/app/actions/admin'
+import { adminMenuItemClass, AdminMenuItemIcon } from '@/components/admin/AdminActionsMenu'
 import { showError, showSuccess } from '@/lib/toast'
 
 type RefundSavingButtonProps = {
@@ -12,6 +13,8 @@ type RefundSavingButtonProps = {
   amountLabel?: string
   label?: string
   className?: string
+  menuItem?: boolean
+  icon?: LucideIcon
 }
 
 export function RefundSavingButton({
@@ -20,6 +23,8 @@ export function RefundSavingButton({
   amountLabel,
   label = 'សងប្រាក់',
   className = '',
+  menuItem = false,
+  icon,
 }: RefundSavingButtonProps) {
   const router = useRouter()
   const [open, setOpen] = useState(false)
@@ -55,9 +60,15 @@ export function RefundSavingButton({
       <button
         type="button"
         onClick={() => setOpen(true)}
-        className={`rounded-lg border border-red-200 bg-white px-3 py-1.5 text-xs font-semibold text-red-700 transition hover:bg-red-50 disabled:opacity-60 ${className}`}
+        disabled={pending}
+        className={
+          menuItem
+            ? `${adminMenuItemClass(true)} ${className}`
+            : `rounded-lg border border-red-200 bg-white px-3 py-1.5 text-xs font-semibold text-red-700 transition hover:bg-red-50 disabled:opacity-60 ${className}`
+        }
       >
-        {label}
+        {menuItem && icon ? <AdminMenuItemIcon icon={icon} destructive /> : null}
+        <span>{label}</span>
       </button>
 
       {open && (
@@ -111,7 +122,7 @@ export function RefundSavingButton({
                   minLength={5}
                   disabled={pending}
                   placeholder="ឧ. ភស្តុតាងមិនត្រឹមត្រូវ ឬចំនួនទឹកប្រាក់មិនផ្គូផ្គង..."
-                  className="w-full resize-y rounded-lg border border-gray-300 px-3 py-2.5 text-sm text-gray-900 placeholder:text-gray-400 focus:border-brand-600 focus:outline-none focus:ring-2 focus:ring-brand-500/20 disabled:opacity-60"
+                  className="w-full resize-y rounded-xl border border-gray-300 px-3 py-2.5 text-sm text-gray-900 placeholder:text-gray-400 focus:border-brand-600 focus:outline-none focus:ring-2 focus:ring-brand-500/20 disabled:opacity-60"
                 />
                 <p className="mt-1 text-xs text-gray-500">យ៉ាងតិច ៥ តួអក្សរ</p>
               </div>
@@ -121,7 +132,7 @@ export function RefundSavingButton({
                   type="button"
                   onClick={close}
                   disabled={pending}
-                  className="rounded-lg border border-gray-300 bg-white px-4 py-2 text-sm font-semibold text-gray-700 transition hover:bg-gray-50 disabled:opacity-60"
+                  className="rounded-xl border border-gray-300 bg-white px-4 py-2 text-sm font-semibold text-gray-700 transition hover:bg-gray-50 disabled:opacity-60"
                 >
                   បោះបង់
                 </button>

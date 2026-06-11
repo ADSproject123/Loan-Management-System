@@ -17,7 +17,7 @@ type SelectProps = {
 }
 
 const defaultTriggerClassName =
-  'flex w-full cursor-pointer items-center justify-between gap-2 rounded-lg border border-border bg-surface px-3 py-2.5 text-sm text-foreground shadow-xs outline-none ring-0 transition hover:bg-surface-muted focus:border-border focus:shadow-xs focus:outline-none focus:ring-0 focus-visible:border-border focus-visible:shadow-xs focus-visible:outline-none focus-visible:ring-0'
+  'flex w-full cursor-pointer items-center justify-between gap-2 rounded-xl border border-border bg-surface px-3 py-2.5 text-sm text-foreground shadow-xs outline-none ring-0 transition hover:bg-surface-muted focus:border-border focus:shadow-xs focus:outline-none focus:ring-0 focus-visible:border-border focus-visible:shadow-xs focus-visible:outline-none focus-visible:ring-0'
 
 export function Select({
   id,
@@ -74,7 +74,7 @@ export function Select({
           <ul
             role="listbox"
             aria-labelledby={id}
-            className={`absolute left-0 right-0 top-full z-20 mt-1 max-h-60 overflow-y-auto rounded-lg border border-border bg-surface py-1 shadow-lg ${menuClassName}`}
+            className={`absolute left-0 right-0 top-full z-20 mt-1 max-h-60 overflow-y-auto rounded-xl border border-border bg-surface py-1 shadow-lg ${menuClassName}`}
           >
             {options.map((option) => {
               const isSelected = option.value === value

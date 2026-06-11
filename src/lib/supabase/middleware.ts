@@ -31,33 +31,19 @@ export async function updateSession(request: NextRequest) {
     return NextResponse.redirect(url)
   }
 
-  if (user && isProtectedRoute) {
+  // Admin routes need a member check at the edge. Dashboard member status is
+  // enforced in the dashboard layout to avoid a duplicate DB query on every nav.
+  if (user && pathname.startsWith('/admin')) {
     const { data: member } = await supabase
       .from('members')
       .select('status, is_admin')
       .eq('auth_user_id', user.id)
       .maybeSingle()
 
-    if (pathname.startsWith('/admin')) {
-      if (!member?.is_admin || member.status !== 'active') {
-        const url = request.nextUrl.clone()
-        url.pathname = member?.status === 'active' ? '/dashboard' : '/pending-approval'
-        return NextResponse.redirect(url)
-      }
-    }
-
-    if (pathname.startsWith('/dashboard')) {
-      if (member?.is_admin && member.status === 'active') {
-        const url = request.nextUrl.clone()
-        url.pathname = '/admin'
-        return NextResponse.redirect(url)
-      }
-
-      if (member && member.status !== 'active') {
-        const url = request.nextUrl.clone()
-        url.pathname = '/pending-approval'
-        return NextResponse.redirect(url)
-      }
+    if (!member?.is_admin || member.status !== 'active') {
+      const url = request.nextUrl.clone()
+      url.pathname = member?.status === 'active' ? '/dashboard' : '/pending-approval'
+      return NextResponse.redirect(url)
     }
   }
 

@@ -1,8 +1,27 @@
 export type MemberStatus = 'pending' | 'active' | 'suspended' | 'withdrawn' | 'rejected'
+export type MemberRole = 'founder' | 'comember' | 'member'
 export type LoanStatus = 'pending' | 'under_review' | 'approved' | 'active' | 'completed' | 'rejected'
 export type CapitalRequestStatus = 'pending' | 'approved' | 'rejected'
 export type SavingStatus = 'pending' | 'verified' | 'completed' | 'refunded'
-export type CurrencyCode = 'KHR' | 'USD'
+export type CurrencyCode = 'USD'
+
+export interface LoanInterestPlan {
+  id: string
+  name: string
+  monthly_rate: number
+  description?: string | null
+  is_active: boolean
+  created_at?: string
+  updated_at?: string
+}
+
+export interface InterestSettings {
+  id: number
+  monthly_saving_interest_rate: number
+  monthly_loan_interest_rate: number
+  updated_at?: string
+  updated_by?: string
+}
 
 export interface Member {
   id: string
@@ -16,6 +35,7 @@ export interface Member {
   resident_book_number?: string
   address?: string
   status: MemberStatus
+  role: MemberRole
   auth_user_id?: string
   referee_id?: string
   referee_verified: boolean
@@ -24,6 +44,7 @@ export interface Member {
   is_admin: boolean
   telegram_chat_id?: string
   telegram_connect_token?: string | null
+  loan_interest_plan_id?: string | null
   suspension_reason?: string | null
   suspended_at?: string | null
   rejection_reason?: string | null
@@ -58,11 +79,15 @@ export interface Loan {
   amount: number
   purpose?: string
   term_months?: number
+  monthly_interest_rate?: number | null
   start_date?: string
   end_date?: string
   currency?: CurrencyCode
   status: LoanStatus
   referee_id?: string
+  referee_name?: string | null
+  referee_phone?: string | null
+  referee_email?: string | null
   referee_verified: boolean
   support_document_url?: string
   hard_copy_submitted: boolean

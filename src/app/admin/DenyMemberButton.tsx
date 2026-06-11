@@ -1,9 +1,11 @@
 'use client'
 
 import { useState, useTransition } from 'react'
+import { createPortal } from 'react-dom'
 import { useRouter } from 'next/navigation'
-import { UserX, X } from 'lucide-react'
+import { UserX, X, type LucideIcon } from 'lucide-react'
 import { denyMember } from '@/app/actions/admin'
+import { adminMenuItemClass, AdminMenuItemIcon } from '@/components/admin/AdminActionsMenu'
 import { showError, showSuccess } from '@/lib/toast'
 
 type DenyMemberButtonProps = {
@@ -11,6 +13,8 @@ type DenyMemberButtonProps = {
   memberName?: string
   label?: string
   className?: string
+  menuItem?: boolean
+  icon?: LucideIcon
 }
 
 export function DenyMemberButton({
@@ -18,6 +22,8 @@ export function DenyMemberButton({
   memberName,
   label = 'បដិសេធ',
   className = '',
+  menuItem = false,
+  icon,
 }: DenyMemberButtonProps) {
   const router = useRouter()
   const [open, setOpen] = useState(false)
@@ -53,12 +59,18 @@ export function DenyMemberButton({
       <button
         type="button"
         onClick={() => setOpen(true)}
-        className={`rounded-lg border border-red-200 bg-white px-3 py-1.5 text-xs font-semibold text-red-700 transition-colors hover:bg-red-50 disabled:opacity-60 ${className}`}
+        disabled={pending}
+        className={
+          menuItem
+            ? `${adminMenuItemClass(true)} ${className}`
+            : `rounded-lg border border-red-200 bg-white px-3 py-1.5 text-xs font-semibold text-red-700 transition-colors hover:bg-red-50 disabled:opacity-60 ${className}`
+        }
       >
-        {label}
+        {menuItem && icon ? <AdminMenuItemIcon icon={icon} destructive /> : null}
+        <span>{label}</span>
       </button>
 
-      {open && (
+      {open && createPortal(
         <div
           className="fixed inset-0 z-50 flex items-center justify-center p-4"
           role="dialog"
@@ -107,7 +119,7 @@ export function DenyMemberButton({
                   minLength={5}
                   disabled={pending}
                   placeholder="ពិពណ៌នាមូលហេតុដែលការចុះឈ្មោះត្រូវបានបដិសេធ..."
-                  className="w-full resize-y rounded-lg border border-gray-300 px-3 py-2.5 text-sm text-gray-900 placeholder:text-gray-400 focus:border-brand-600 focus:outline-none focus:ring-2 focus:ring-brand-500/20 disabled:opacity-60"
+                  className="w-full resize-y rounded-xl border border-gray-300 px-3 py-2.5 text-sm text-gray-900 placeholder:text-gray-400 focus:border-brand-600 focus:outline-none focus:ring-2 focus:ring-brand-500/20 disabled:opacity-60"
                 />
                 <p className="mt-1 text-xs text-gray-500">យ៉ាងតិច ៥ តួអក្សរ</p>
               </div>
@@ -117,7 +129,7 @@ export function DenyMemberButton({
                   type="button"
                   onClick={close}
                   disabled={pending}
-                  className="rounded-lg border border-gray-300 bg-white px-4 py-2 text-sm font-semibold text-gray-700 transition hover:bg-gray-50 disabled:opacity-60"
+                  className="rounded-xl border border-gray-300 bg-white px-4 py-2 text-sm font-semibold text-gray-700 transition hover:bg-gray-50 disabled:opacity-60"
                 >
                   បោះបង់
                 </button>
@@ -131,7 +143,8 @@ export function DenyMemberButton({
               </div>
             </form>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
     </>
   )

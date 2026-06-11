@@ -2,8 +2,10 @@
 
 import { useState, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
-import { AlertTriangle, X } from 'lucide-react'
+import { AlertTriangle, X, type LucideIcon } from 'lucide-react'
 import type { ActionResult } from '@/app/actions/member'
+import { adminMenuItemClass } from '@/components/admin/AdminActionsMenu'
+import { AdminMenuItemIcon } from '@/components/admin/AdminActionsMenu'
 import { showError, showSuccess } from '@/lib/toast'
 
 type AdminReasonDialogButtonProps = {
@@ -18,6 +20,9 @@ type AdminReasonDialogButtonProps = {
   successMessage?: string
   extraFields?: Record<string, string>
   className?: string
+  menuItem?: boolean
+  icon?: LucideIcon
+  destructive?: boolean
 }
 
 export function AdminReasonDialogButton({
@@ -32,6 +37,9 @@ export function AdminReasonDialogButton({
   successMessage = 'បានធ្វើបច្ចុប្នភាពដោយជោគជ័យ។',
   extraFields,
   className = '',
+  menuItem = false,
+  icon,
+  destructive = true,
 }: AdminReasonDialogButtonProps) {
   const router = useRouter()
   const [open, setOpen] = useState(false)
@@ -72,9 +80,15 @@ export function AdminReasonDialogButton({
       <button
         type="button"
         onClick={() => setOpen(true)}
-        className={`rounded-lg border border-red-200 bg-white px-3 py-1.5 text-xs font-semibold text-red-700 transition-colors hover:bg-red-50 disabled:opacity-60 ${className}`}
+        disabled={pending}
+        className={
+          menuItem
+            ? `${adminMenuItemClass(destructive)} ${className}`
+            : `rounded-lg border border-red-200 bg-white px-3 py-1.5 text-xs font-semibold text-red-700 transition-colors hover:bg-red-50 disabled:opacity-60 ${className}`
+        }
       >
-        {label}
+        {menuItem && icon ? <AdminMenuItemIcon icon={icon} destructive={destructive} /> : null}
+        <span>{label}</span>
       </button>
 
       {open && (
@@ -121,7 +135,7 @@ export function AdminReasonDialogButton({
                   minLength={5}
                   disabled={pending}
                   placeholder={reasonPlaceholder}
-                  className="w-full resize-y rounded-lg border border-gray-300 px-3 py-2.5 text-sm text-gray-900 placeholder:text-gray-400 focus:border-brand-600 focus:outline-none focus:ring-2 focus:ring-brand-500/20 disabled:opacity-60"
+                  className="w-full resize-y rounded-xl border border-gray-300 px-3 py-2.5 text-sm text-gray-900 placeholder:text-gray-400 focus:border-brand-600 focus:outline-none focus:ring-2 focus:ring-brand-500/20 disabled:opacity-60"
                 />
                 <p className="mt-1 text-xs text-gray-500">យ៉ាងតិច ៥ តួអក្សរ</p>
               </div>
@@ -131,7 +145,7 @@ export function AdminReasonDialogButton({
                   type="button"
                   onClick={close}
                   disabled={pending}
-                  className="rounded-lg border border-gray-300 bg-white px-4 py-2 text-sm font-semibold text-gray-700 transition hover:bg-gray-50 disabled:opacity-60"
+                  className="rounded-xl border border-gray-300 bg-white px-4 py-2 text-sm font-semibold text-gray-700 transition hover:bg-gray-50 disabled:opacity-60"
                 >
                   បោះបង់
                 </button>

@@ -2,13 +2,15 @@
 
 import { useMemo, useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { Users } from 'lucide-react'
+import { Ban, UserCheck, Users, UserX } from 'lucide-react'
 import { formatDate } from '@/app/admin/adminUtils'
+import { AcceptMemberButton } from '@/app/admin/AcceptMemberButton'
+import { MemberRoleSelect } from '@/app/admin/members/MemberRoleSelect'
 import { SuspendMemberButton } from '@/app/admin/SuspendMemberButton'
 import { DenyMemberButton } from '@/app/admin/DenyMemberButton'
-import type { ActionResult } from '@/app/actions/member'
-import type { MemberStatus } from '@/types/database'
-import { AdminListToolbar, AdminTableEmpty, AdminTableNoResults } from '@/components/admin'
+import { MemberStatusBadge } from '@/components/ui/Badge'
+import type { MemberRole, MemberStatus } from '@/types/database'
+import { AdminActionsMenu, AdminListToolbar, AdminTableEmpty, AdminTableNoResults, adminTable, adminTableRowClass } from '@/components/admin'
 
 export type MemberListItem = {
   id: string
@@ -16,6 +18,7 @@ export type MemberListItem = {
   email: string
   phone: string | null
   status: MemberStatus
+  role: MemberRole
   created_at: string
 }
 
@@ -30,16 +33,12 @@ const STATUS_FILTER_OPTIONS = [
 
 export function MembersList({
   members,
-  approveAction,
 }: {
   members: MemberListItem[]
-  approveAction: (formData: FormData) => Promise<ActionResult>
 }) {
   const router = useRouter()
   const [query, setQuery] = useState('')
   const [statusFilter, setStatusFilter] = useState('')
-
-  const hasActiveFilters = Boolean(query.trim() || statusFilter)
 
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase()
@@ -54,11 +53,6 @@ export function MembersList({
     })
   }, [members, query, statusFilter])
 
-  function clearFilters() {
-    setQuery('')
-    setStatusFilter('')
-  }
-
   return (
     <>
       <AdminListToolbar
@@ -70,8 +64,6 @@ export function MembersList({
         selectValue={statusFilter}
         onSelectChange={setStatusFilter}
         selectOptions={STATUS_FILTER_OPTIONS}
-        showClear={hasActiveFilters}
-        onClear={clearFilters}
         filterSummary={
           <>
             បង្ហាញ <span className="font-semibold text-foreground">{filtered.length}</span> នៃ{' '}
@@ -80,55 +72,66 @@ export function MembersList({
         }
       />
 
-      <div className="overflow-x-auto">
-        <table className="w-full min-w-160 text-left text-sm">
-          <thead className="border-b border-border bg-surface-muted/80">
-            <tr className="text-xs font-semibold uppercase tracking-wide text-muted">
-              <th className="px-6 py-3.5 md:px-8">ឈ្មោះ</th>
-              <th className="px-6 py-3.5">ថ្ងៃដាក់ស្នើ</th>
-              <th className="px-6 py-3.5">ទូរស័ព្ទ</th>
-              <th className="px-6 py-3.5 text-right md:px-8">សកម្មភាព</th>
+      <div className={adminTable.wrap}>
+        <table className={adminTable.table}>
+          <thead className={adminTable.thead}>
+            <tr className={adminTable.thRow}>
+              <th className={adminTable.thFirst}>ឈ្មោះ</th>
+              <th className={adminTable.th}>ថ្ងៃដាក់ស្នើ</th>
+              <th className={adminTable.th}>ទូរស័ព្ទ</th>
+              <th className={adminTable.th}>តួនាទី</th>
+              <th className={adminTable.th}>ស្ថានភាព</th>
+              <th className={adminTable.thLast}>សកម្មភាព</th>
             </tr>
           </thead>
-          <tbody className="divide-y divide-border">
+          <tbody className={adminTable.tbody}>
             {members.length === 0 && (
               <AdminTableEmpty
-                colSpan={4}
+                colSpan={6}
                 icon={Users}
                 title="មិនមានសមាជិក"
                 description="សមាជិកថ្មីនឹងបង្ហាញនៅទីនេះ។"
               />
             )}
 
-            {members.length > 0 && filtered.length === 0 && <AdminTableNoResults colSpan={4} />}
+            {members.length > 0 && filtered.length === 0 && <AdminTableNoResults colSpan={6} />}
 
             {filtered.map((member) => (
               <tr
                 key={member.id}
                 onClick={() => router.push(`/admin/members/${member.id}`)}
-                className={`cursor-pointer transition hover:bg-brand-50/50 ${
-                  member.status === 'pending' ? 'bg-amber-50/30 hover:bg-amber-50/50' : ''
-                }`}
+                className={adminTableRowClass({ pending: member.status === 'pending', clickable: true })}
               >
-                <td className="px-6 py-4 font-medium text-foreground md:px-8">
+                <td className={`${adminTable.tdFirst} ${adminTable.namePrimary}`}>
                   <p>{member.full_name}</p>
-                  <p className="truncate text-xs text-muted">{member.email}</p>
+                  <p className={adminTable.nameSecondary}>{member.email}</p>
                 </td>
-                <td className="px-6 py-4 text-muted">{formatDate(member.created_at)}</td>
-                <td className="px-6 py-4 text-muted">{member.phone ?? '—'}</td>
-                <td
-                  className="px-6 py-4 text-right md:px-8"
-                  onClick={(e) => e.stopPropagation()}
-                >
-                  <div className="flex flex-wrap items-center justify-end gap-2">
-                    {member.status !== 'active' && (
-                      <QuickActionForm action={approveAction} id={member.id} label="ទទួលយក" />
+                <td className={adminTable.tdMuted}>{formatDate(member.created_at)}</td>
+                <td className={adminTable.tdMuted}>{member.phone ?? '—'}</td>
+                <td className={adminTable.td} onClick={(event) => event.stopPropagation()}>
+                  <MemberRoleSelect memberId={member.id} role={member.role} />
+                </td>
+                <td className={adminTable.td}>
+                  <MemberStatusBadge status={member.status} plain />
+                </td>
+                <td className={adminTable.tdLast} onClick={(event) => event.stopPropagation()}>
+                  <AdminActionsMenu>
+                    {member.status !== 'active' && member.status !== 'rejected' && (
+                      <AcceptMemberButton
+                        memberId={member.id}
+                        memberName={member.full_name}
+                        label="ទទួលយក"
+                        menuItem
+                        icon={UserCheck}
+                      />
                     )}
                     {member.status === 'pending' && (
                       <DenyMemberButton
                         memberId={member.id}
                         memberName={member.full_name}
                         label="បដិសេធ"
+                        menuItem
+                        icon={UserX}
                       />
                     )}
                     {member.status !== 'suspended' && member.status !== 'pending' && (
@@ -136,9 +139,11 @@ export function MembersList({
                         memberId={member.id}
                         memberName={member.full_name}
                         label="ផ្អាក"
+                        menuItem
+                        icon={Ban}
                       />
                     )}
-                  </div>
+                  </AdminActionsMenu>
                 </td>
               </tr>
             ))}
@@ -146,37 +151,5 @@ export function MembersList({
         </table>
       </div>
     </>
-  )
-}
-
-function QuickActionForm({
-  action,
-  id,
-  label,
-  danger = false,
-}: {
-  action: (formData: FormData) => Promise<ActionResult>
-  id: string
-  label: string
-  danger?: boolean
-}) {
-  return (
-    <form
-      action={async (formData) => {
-        await action(formData)
-      }}
-    >
-      <input type="hidden" name="id" value={id} />
-      <button
-        type="submit"
-        className={`rounded-lg px-3 py-1.5 text-xs font-semibold transition-colors ${
-          danger
-            ? 'bg-red-600 text-white hover:bg-red-700'
-            : 'bg-brand-950 text-white hover:bg-brand-800'
-        }`}
-      >
-        {label}
-      </button>
-    </form>
   )
 }

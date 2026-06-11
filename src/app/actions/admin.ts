@@ -37,15 +37,31 @@ async function notify(memberId: string, title: string, message: string) {
   }
 }
 
+const MEMBER_ROLES = ['founder', 'comember', 'member'] as const
+type MemberRoleValue = (typeof MEMBER_ROLES)[number]
+
+const MEMBER_ROLE_LABELS: Record<MemberRoleValue, string> = {
+  founder: 'Founder',
+  comember: 'Co-member',
+  member: 'Member',
+}
+
+function roleFrom(formData: FormData): MemberRoleValue {
+  const role = formData.get('role')
+  return MEMBER_ROLES.includes(role as MemberRoleValue) ? (role as MemberRoleValue) : 'member'
+}
+
 export async function approveMember(formData: FormData): Promise<ActionResult> {
   try {
     await requireAdmin()
     const id = idFrom(formData)
+    const role = roleFrom(formData)
     const admin = createAdminClient()
     const { data, error } = await admin
       .from('members')
       .update({
         status: 'active',
+        role,
         suspension_reason: null,
         suspended_at: null,
         rejection_reason: null,
@@ -65,6 +81,28 @@ export async function approveMember(formData: FormData): Promise<ActionResult> {
     return { success: true }
   } catch (error) {
     return { success: false, error: error instanceof Error ? error.message : 'មិនអាចទទួលយកសមាជិកបានទេ។' }
+  }
+}
+
+export async function updateMemberRole(formData: FormData): Promise<ActionResult> {
+  try {
+    await requireAdmin()
+    const id = idFrom(formData)
+    const role = roleFrom(formData)
+    const admin = createAdminClient()
+    const { error } = await admin.from('members').update({ role }).eq('id', id)
+
+    if (error) throw error
+    await notify(
+      id,
+      'តួនាទីត្រូវបានធ្វើបច្ចុប្បន្នភាព',
+      `តួនាទីរបស់អ្នកត្រូវបានកំណត់ជា ${MEMBER_ROLE_LABELS[role]}។`
+    )
+    revalidatePath('/admin/members')
+    revalidatePath(`/admin/members/${id}`)
+    return { success: true }
+  } catch (error) {
+    return { success: false, error: error instanceof Error ? error.message : 'មិនអាចប្តូរតួនាទីបានទេ។' }
   }
 }
 
@@ -167,12 +205,12 @@ export async function approveSaving(formData: FormData): Promise<ActionResult> {
 
     if (error) throw error
     if (!data) {
-      return { success: false, error: 'សំណើនេះមិនអាចអនុម័តបានទេ ឬត្រូវបានដំណើរការរួចហើយ។' }
+      return { success: false, error: 'សំណើនេះមិនអាចទទួលបានទេ ឬត្រូវបានដំណើរការរួចហើយ។' }
     }
     await notify(
       data.member_id,
-      'ការសន្សំត្រូវបានអនុម័ត',
-      `ការសន្សំរបស់អ្នកចំនួន ${formatMoney(data.amount, data.currency ?? 'USD')} ត្រូវបានអនុម័តដោយជោគជ័យ។`
+      'ការសន្សំត្រូវបានទទួល',
+      `ការសន្សំរបស់អ្នកចំនួន ${formatMoney(data.amount, data.currency ?? 'USD')} ត្រូវបានទទួលដោយជោគជ័យ។`
     )
     revalidatePath('/admin')
     revalidatePath('/admin/savings')
@@ -181,7 +219,7 @@ export async function approveSaving(formData: FormData): Promise<ActionResult> {
     revalidatePath('/dashboard/savings')
     return { success: true }
   } catch (error) {
-    return { success: false, error: error instanceof Error ? error.message : 'មិនអាចអនុម័តការសន្សំបានទេ។' }
+    return { success: false, error: error instanceof Error ? error.message : 'មិនអាចទទួលការសន្សំបានទេ។' }
   }
 }
 
@@ -254,7 +292,7 @@ export async function verifyRepayment(formData: FormData): Promise<ActionResult>
       .single()
 
     if (error) throw error
-    await notify(data.member_id, 'ការសងបានផ្ទៀងផ្ទាត់', `ការសងរបស់អ្នកចំនួន ${formatMoney(data.amount, data.currency ?? 'USD')} ត្រូវបានផ្ទៀងផ្ទាត់។`)
+    await notify(data.member_id, 'ការសងត្រូវបានទទួល', `ការសងរបស់អ្នកចំនួន ${formatMoney(data.amount, data.currency ?? 'USD')} ត្រូវបានទទួល។`)
     revalidatePath('/admin')
     revalidatePath('/admin/loans/payments')
     revalidatePath('/admin/loans/payments/requests')
@@ -264,7 +302,7 @@ export async function verifyRepayment(formData: FormData): Promise<ActionResult>
     revalidatePath('/dashboard/loans')
     return { success: true }
   } catch (error) {
-    return { success: false, error: error instanceof Error ? error.message : 'មិនអាចផ្ទៀងផ្ទាត់ការសងបានទេ។' }
+    return { success: false, error: error instanceof Error ? error.message : 'មិនអាចទទួលការសងបានទេ។' }
   }
 }
 
@@ -424,6 +462,159 @@ export async function decideCapitalRequest(formData: FormData): Promise<ActionRe
     return { success: true }
   } catch (error) {
     return { success: false, error: error instanceof Error ? error.message : 'មិនអាចធ្វើបច្ចុប្បន្នភាពការស្នើសុំដើមទុនបានទេ។' }
+  }
+}
+
+function parseInterestRate(formData: FormData, field: string) {
+  const raw = formData.get(field)
+  const value = typeof raw === 'string' ? Number(raw) : NaN
+  if (!Number.isFinite(value) || value < 0 || value > 100) {
+    throw new Error('សូមបញ្ចូលអត្រាការប្រាក់ពី ០ ដល់ ១០០ ភាគរយ។')
+  }
+  return Math.round(value * 100) / 100
+}
+
+export async function updateInterestSettings(formData: FormData): Promise<ActionResult> {
+  try {
+    const adminMember = await requireAdmin()
+    const monthlySavingInterestRate = parseInterestRate(formData, 'monthly_saving_interest_rate')
+    const monthlyLoanInterestRate = parseInterestRate(formData, 'monthly_loan_interest_rate')
+
+    const admin = createAdminClient()
+    const { error } = await admin
+      .from('interest_settings')
+      .update({
+        monthly_saving_interest_rate: monthlySavingInterestRate,
+        monthly_loan_interest_rate: monthlyLoanInterestRate,
+        updated_at: new Date().toISOString(),
+        updated_by: adminMember.id,
+      })
+      .eq('id', 1)
+
+    if (error) throw error
+
+    revalidatePath('/admin/settings')
+    revalidatePath('/admin/settings/loan-plans')
+    revalidatePath('/dashboard')
+    revalidatePath('/dashboard/savings')
+    revalidatePath('/dashboard/savings/add')
+    revalidatePath('/dashboard/loans')
+    revalidatePath('/dashboard/loans/request')
+    revalidatePath('/dashboard/loans/repay')
+    revalidatePath('/dashboard/capital')
+    return { success: true }
+  } catch (error) {
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : 'មិនអាចរក្សាទុកការកំណត់បានទេ។',
+    }
+  }
+}
+
+function optionalText(formData: FormData, field: string) {
+  const raw = formData.get(field)
+  if (typeof raw !== 'string') return null
+  const trimmed = raw.trim()
+  return trimmed.length > 0 ? trimmed : null
+}
+
+export async function saveLoanInterestPlan(formData: FormData): Promise<ActionResult> {
+  try {
+    await requireAdmin()
+    const admin = createAdminClient()
+    const planId = optionalText(formData, 'plan_id')
+    const name = optionalText(formData, 'name')
+    const monthlyRate = parseInterestRate(formData, 'monthly_rate')
+    const description = optionalText(formData, 'description')
+    const isActive = formData.get('is_active') === 'true'
+    const rawRole = optionalText(formData, 'applies_to_role')
+    const appliesToRole = MEMBER_ROLES.includes(rawRole as MemberRoleValue)
+      ? (rawRole as MemberRoleValue)
+      : null
+
+    if (!name) {
+      throw new Error('សូមបញ្ចូលឈ្មោះអត្រាកម្ជី។')
+    }
+
+    const payload = {
+      name,
+      monthly_rate: monthlyRate,
+      description,
+      is_active: isActive,
+      applies_to_role: appliesToRole,
+      updated_at: new Date().toISOString(),
+    }
+
+    const { error } = planId
+      ? await admin.from('loan_interest_plans').update(payload).eq('id', planId)
+      : await admin.from('loan_interest_plans').insert(payload)
+
+    if (error) throw error
+
+    revalidatePath('/admin/settings')
+    revalidatePath('/admin/settings/loan-plans')
+    revalidatePath('/dashboard/loans/request')
+    return { success: true }
+  } catch (error) {
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : 'មិនអាចរក្សាទុកអត្រាកម្ជីបានទេ។',
+    }
+  }
+}
+
+export async function deleteLoanInterestPlan(formData: FormData): Promise<ActionResult> {
+  try {
+    await requireAdmin()
+    const planId = idFrom(formData)
+    const admin = createAdminClient()
+    const { error } = await admin.from('loan_interest_plans').delete().eq('id', planId)
+
+    if (error) throw error
+
+    revalidatePath('/admin/settings')
+    revalidatePath('/admin/settings/loan-plans')
+    revalidatePath('/dashboard/loans/request')
+    return { success: true }
+  } catch (error) {
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : 'មិនអាចលុបអត្រាកម្ជីបានទេ។',
+    }
+  }
+}
+
+export async function assignMemberLoanInterestPlan(formData: FormData): Promise<ActionResult> {
+  try {
+    await requireAdmin()
+    const memberId = idFrom(formData)
+    const rawPlanId = formData.get('loan_interest_plan_id')
+    const planId =
+      typeof rawPlanId === 'string' && rawPlanId.trim().length > 0 ? rawPlanId.trim() : null
+
+    const admin = createAdminClient()
+    const { error } = await admin
+      .from('members')
+      .update({ loan_interest_plan_id: planId })
+      .eq('id', memberId)
+
+    if (error) throw error
+
+    await notify(
+      memberId,
+      'អត្រាការប្រាក់កម្ជីត្រូវបានធ្វើបច្ចុប្បន្នភាព',
+      planId
+        ? 'អត្រាការប្រាក់កម្ជីរបស់អ្នកត្រូវបានធ្វើបច្ចុប្បន្នភាពដោយអ្នកគ្រប់គ្រង។'
+        : 'អត្រាការប្រាក់កម្ជីរបស់អ្នកត្រូវបានកំណត់ឡើងវិញទៅអត្រាទូទៅ។'
+    )
+    revalidatePath(`/admin/members/${memberId}`)
+    revalidatePath('/dashboard/loans/request')
+    return { success: true }
+  } catch (error) {
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : 'មិនអាចកំណត់អត្រាកម្ជីសម្រាប់សមាជិកបានទេ។',
+    }
   }
 }
 

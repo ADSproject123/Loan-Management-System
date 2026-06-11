@@ -2,8 +2,10 @@
 
 import { useTransition } from 'react'
 import { useRouter } from 'next/navigation'
+import type { LucideIcon } from 'lucide-react'
 import type { ActionResult } from '@/app/actions/member'
 import { Button } from '@/components/ui/Button'
+import { adminMenuItemClass, AdminMenuItemIcon } from '@/components/admin/AdminActionsMenu'
 import { showError, showSuccess } from '@/lib/toast'
 
 type AdminActionButtonProps = {
@@ -11,10 +13,13 @@ type AdminActionButtonProps = {
   id: string
   children: React.ReactNode
   decision?: string
-  variant?: 'primary' | 'secondary' | 'outline' | 'danger'
+  variant?: 'primary' | 'secondary' | 'outline' | 'ghost' | 'danger'
   successMessage?: string
   className?: string
   size?: 'sm' | 'md' | 'lg'
+  menuItem?: boolean
+  icon?: LucideIcon
+  destructive?: boolean
 }
 
 /** @deprecated Use `variant` instead */
@@ -34,12 +39,16 @@ export function AdminActionButton({
   successMessage = 'បានធ្វើបច្ចុប្នភាពដោយជោគជ័យ។',
   className = '',
   size = 'sm',
+  menuItem = false,
+  icon,
+  destructive = false,
 }: LegacyProps) {
   const router = useRouter()
   const [pending, startTransition] = useTransition()
 
   const resolvedVariant =
     variant ?? (danger ? 'danger' : secondary ? 'outline' : 'primary')
+  const isDestructive = destructive || danger || resolvedVariant === 'danger'
 
   function handleClick() {
     const formData = new FormData()
@@ -55,6 +64,20 @@ export function AdminActionButton({
       }
       showError(result.error ?? 'មានបញ្ហាកើតឡើង។ សូមព្យាយាមម្តងទៀត។')
     })
+  }
+
+  if (menuItem) {
+    return (
+      <button
+        type="button"
+        onClick={handleClick}
+        disabled={pending}
+        className={`${adminMenuItemClass(isDestructive)} ${className}`}
+      >
+        {icon ? <AdminMenuItemIcon icon={icon} destructive={isDestructive} /> : null}
+        <span>{pending ? 'កំពុងដំណើរការ...' : children}</span>
+      </button>
+    )
   }
 
   return (

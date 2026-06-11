@@ -143,7 +143,7 @@ export function CapitalRequestForm({ memberSavings }: { memberSavings: MemberSav
                 placeholder="0.00"
                 min="100"
                 max={memberSavings.totalBalance}
-                className="w-full pl-8 pr-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-500 text-lg font-semibold text-gray-900"
+                className="w-full pl-8 pr-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-brand-500 text-lg font-semibold text-gray-900"
               />
             </div>
             <div className="flex justify-between text-xs text-gray-400 mt-1">
@@ -151,29 +151,6 @@ export function CapitalRequestForm({ memberSavings }: { memberSavings: MemberSav
               <span>អតិបរមា៖ {sym}{memberSavings.totalBalance.toLocaleString()}</span>
             </div>
           </div>
-
-          {memberSavings.totalBalance > 0 && (
-            <div className="flex gap-2 mb-5">
-              {[0.25, 0.5, 0.75, 1].map((fraction, i) => {
-                const amt = Math.round(memberSavings.totalBalance * fraction)
-                return (
-                  <button
-                    key={i}
-                    onClick={() => setAmount(amt.toString())}
-                    className={`flex-1 px-2 py-2 rounded-lg text-xs font-medium transition-colors border ${
-                      parseFloat(amount) === amt
-                        ? 'bg-brand-950 text-white border-brand-900'
-                        : 'bg-white border-gray-300 text-gray-700 hover:border-brand-500 hover:text-brand-700 hover:bg-brand-50'
-                    }`}
-                  >
-                    {fraction === 1 ? 'ទាំងអស់' : `${fraction * 100}%`}
-                    <br />
-                    {sym}{amt.toLocaleString()}
-                  </button>
-                )
-              })}
-            </div>
-          )}
 
           {withdrawAmount > 0 && (
             <div className="bg-purple-50 rounded-lg p-4 mb-5">
@@ -223,7 +200,7 @@ export function CapitalRequestForm({ memberSavings }: { memberSavings: MemberSav
               onChange={(e) => setReason(e.target.value)}
               placeholder="សូមពិពណ៌នាមូលហេតុដែលអ្នកដកដើមទុនសន្សំរបស់អ្នក..."
               rows={4}
-              className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-500 text-sm resize-none"
+              className="w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-brand-500 text-sm resize-none"
             />
           </div>
 
@@ -272,7 +249,7 @@ export function CapitalRequestForm({ memberSavings }: { memberSavings: MemberSav
                 <div>
                   <div className="flex items-center gap-2 mb-1">
                     <XCircle className="w-4 h-4 text-red-600" />
-                    <p className="font-medium text-gray-900">ដកចូលជាសមាជិក</p>
+                    <p className="font-medium text-gray-900">ឈប់ចូលជាសមាជិក</p>
                   </div>
                   <p className="text-gray-500 text-sm">
                     ដកដើមទុន និង បញ្ចប់ចូលជាសមាជិកសន្សំរបស់ខ្ញុំ។ សមតុល្យទាំងអស់នឹងត្រូវបានដោះស្រាយ។
@@ -287,7 +264,7 @@ export function CapitalRequestForm({ memberSavings }: { memberSavings: MemberSav
               <div className="flex items-start gap-2">
                 <AlertTriangle className="w-4 h-4 text-red-600 flex-shrink-0 mt-0.5" />
                 <p className="text-red-700 text-sm">
-                  <strong>ការព្រមាន៖</strong> ការដកចូលជាសមាជិកគឺអចិន្ត្រៃយ៍។ អ្នកនឹងបាត់បង់ការចូលប្រើ
+                  ការឈប់ចូលជាសមាជិកគឺអចិន្ត្រៃយ៍។ អ្នកនឹងបាត់បង់ការចូលប្រើ
                   សេវាសន្សំទាំងអស់រួមទាំងកម្មវិធីកម្ជី និង សន្សំ។ ដើម្បីចូលរួមឡើងវិញ អ្នកត្រូវ
                   ឆ្លងកាត់ដំណើរការចុះឈ្មោះពេញលេញម្តងទៀត។
                 </p>
@@ -321,7 +298,7 @@ export function CapitalRequestForm({ memberSavings }: { memberSavings: MemberSav
               { label: 'សមតុល្យបច្ចុប្បន្ន', value: `${sym}${memberSavings.totalBalance.toLocaleString()}` },
               { label: 'នៅសល់បន្ទាប់ពីដក', value: `${sym}${(memberSavings.totalBalance - withdrawAmount).toLocaleString()}` },
               { label: 'មូលហេតុ', value: reason },
-              { label: 'បន្ទាប់ពីការដក', value: afterDecision === 'continue' ? 'បន្តសន្សំ' : 'ដកចូលជាសមាជិក' },
+              { label: 'បន្ទាប់ពីការដក', value: afterDecision === 'continue' ? 'បន្តសន្សំ' : 'ឈប់ចូលជាសមាជិក' },
             ].map((item) => (
               <div key={item.label} className="flex items-start justify-between py-2.5 border-b border-gray-100">
                 <span className="text-gray-500 text-sm">{item.label}</span>
@@ -349,7 +326,7 @@ export function CapitalRequestForm({ memberSavings }: { memberSavings: MemberSav
             <div className="bg-red-50 border border-red-200 rounded-lg p-4 mb-5">
               <p className="text-red-800 text-sm font-medium mb-1">បញ្ជាក់ការបញ្ចប់ចូលជាសមាជិក</p>
               <p className="text-red-700 text-sm">
-                ដោយដាក់ស្នើ អ្នកបញ្ជាក់ថាអ្នកចង់ដកចូលជាសមាជិកសន្សំរបស់អ្នកអចិន្ត្រៃយ៍
+                ដោយដាក់ស្នើ អ្នកបញ្ជាក់ថាអ្នកចង់ឈប់ចូលជាសមាជិកសន្សំរបស់អ្នកអចិន្ត្រៃយ៍
                 បន្ទាប់ពីការដកដើមទុន។ សកម្មភាពនេះមិនអាចលុបបានទេ។
               </p>
             </div>
@@ -363,7 +340,7 @@ export function CapitalRequestForm({ memberSavings }: { memberSavings: MemberSav
               variant={afterDecision === 'withdraw' ? 'danger' : 'primary'}
               className="flex-1"
             >
-              {afterDecision === 'withdraw' ? 'ដាក់ស្នើ និង ដកចូលជាសមាជិក' : 'ដាក់ស្នើពាក្យសុំ'}
+              {afterDecision === 'withdraw' ? 'ដាក់ស្នើ និង ឈប់ចូលជាសមាជិក' : 'ដាក់ស្នើពាក្យសុំ'}
             </Button>
           </div>
         </Card>
@@ -395,7 +372,7 @@ export function CapitalRequestForm({ memberSavings }: { memberSavings: MemberSav
                 <div className="flex justify-between">
                   <span className="text-brand-700">បន្ទាប់ពីការដក</span>
                   <span className={`font-medium ${afterDecision === 'withdraw' ? 'text-red-600' : 'text-brand-900'}`}>
-                    {afterDecision === 'continue' ? 'បន្តសន្សំ' : 'ដកចូលជាសមាជិក'}
+                    {afterDecision === 'continue' ? 'បន្តសន្សំ' : 'ឈប់ចូលជាសមាជិក'}
                   </span>
                 </div>
                 <div className="flex justify-between">

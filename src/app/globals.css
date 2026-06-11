@@ -19,6 +19,7 @@
   --border: #e2e8f0;
   --ring: #93c5fd;
   --muted: #64748b;
+  --input-radius: 0.75rem;
 }
 
 @theme inline {
@@ -110,7 +111,7 @@ body {
 
 .app-input {
   width: 100%;
-  border-radius: 0.75rem;
+  border-radius: var(--input-radius);
   border: 1px solid var(--border);
   background-color: var(--surface);
   padding-block: 0.75rem;
@@ -119,6 +120,10 @@ body {
   color: var(--foreground);
   outline: none;
   transition: border-color 150ms, box-shadow 150ms;
+}
+
+.app-field {
+  border-radius: var(--input-radius);
 }
 
 .app-input--with-icon {
@@ -221,6 +226,12 @@ textarea:focus-visible {
 
 .Toastify__toast-container {
   z-index: 9999;
+}
+
+input:not([type='checkbox']):not([type='radio']):not([type='file']):not([type='hidden']):not([type='button']):not([type='submit']):not([type='reset']):not([type='image']):not([type='range']):not([type='color']),
+textarea,
+select {
+  border-radius: var(--input-radius);
 }
 
 input[type='search'] {

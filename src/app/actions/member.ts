@@ -4,7 +4,9 @@ import { revalidatePath } from 'next/cache'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { requireActiveMember } from '@/lib/auth/member'
 import { uploadPrivateFile } from '@/lib/uploads'
-import { normalizeCurrency } from '@/lib/currency'
+import { MIN_SAVING_AMOUNT, normalizeCurrency } from '@/lib/currency'
+import { fetchMemberLoanInterestRate, getInterestSettings } from '@/lib/interest'
+import { fetchMemberLoanEligibility, validateLoanRequestAmount } from '@/lib/loanEligibility'
 
 export type ActionResult = {
   success: boolean
@@ -30,6 +32,39 @@ function asFile(formData: FormData, key: string) {
 function getAuthUserId(member: { auth_user_id?: string }) {
   if (!member.auth_user_id) throw new Error('សមាជិកមិនត្រូវបានភ្ជាប់ជាមួយគណនីចូល។')
   return member.auth_user_id
+}
+
+function actionErrorMessage(error: unknown, fallback: string) {
+  const raw =
+    error && typeof error === 'object' && 'message' in error
+      ? String((error as { message: unknown }).message)
+      : error instanceof Error
+        ? error.message
+        : ''
+
+  if (!raw) return fallback
+
+  if (
+    raw.includes('referee_name') ||
+    raw.includes('referee_phone') ||
+    raw.includes('referee_email')
+  ) {
+    return 'មូលដ្ឋានទិន្នន័យមិនទាន់ធ្វើបច្ចុប្បន្នភាពសម្រាប់ព័ត៌មានអ្នកធានា។ សូមដំណើរការ migration 016_loan_referee_contact.sql ក្នុង Supabase។'
+  }
+
+  if (raw.includes('start_date') || raw.includes('end_date')) {
+    return 'មូលដ្ឋានទិន្នន័យមិនទាន់ធ្វើបច្ចុប្បន្នភាពសម្រាប់កាលបរិច្ឆេទកម្ជី។ សូមដំណើរការ migration 014_loan_term_dates.sql ក្នុង Supabase។'
+  }
+
+  if (raw.includes('loan_interest_plan') || raw.includes('loan_interest_plan_id')) {
+    return 'មូលដ្ឋានទិន្នន័យមិនទាន់ធ្វើបច្ចុប្បន្នភាពសម្រាប់អត្រាកម្ជីជាក្រុម។ សូមដំណើរការ migration 018_loan_interest_plans.sql ក្នុង Supabase។'
+  }
+
+  if (raw.includes('monthly_interest_rate') || raw.includes('interest_settings')) {
+    return 'មូលដ្ឋានទិន្នន័យមិនទាន់ធ្វើបច្ចុប្បន្នភាពសម្រាប់អត្រាការប្រាក់។ សូមដំណើរការ migration 015_interest_settings.sql ក្នុង Supabase។'
+  }
+
+  return raw
 }
 
 /** Whole months between two YYYY-MM-DD dates, floored, minimum 1. */
@@ -168,8 +203,11 @@ export async function addSaving(formData: FormData): Promise<ActionResult> {
     const notes = asString(formData, 'notes')
     const currency = normalizeCurrency(asString(formData, 'currency'))
 
-    if (amount <= 0) {
-      return { success: false, error: 'សូមបញ្ចូលចំនួនទឹកប្រាក់សន្សំត្រឹមត្រូវ។' }
+    if (amount < MIN_SAVING_AMOUNT) {
+      return {
+        success: false,
+        error: `ចំនួនទឹកប្រាក់សន្សំអប្បបរមាគឺ $${MIN_SAVING_AMOUNT}។`,
+      }
     }
 
     const evidenceUrl = await uploadPrivateFile(
@@ -212,11 +250,20 @@ export async function requestLoan(formData: FormData): Promise<ActionResult> {
     const purpose = asString(formData, 'purpose')
     const startDate = asString(formData, 'start_date')
     const endDate = asString(formData, 'end_date')
+    const refereeName = asString(formData, 'referee_name')
+    const refereePhone = asString(formData, 'referee_phone')
     const refereeEmail = asString(formData, 'referee_email').toLowerCase()
     const currency = normalizeCurrency(asString(formData, 'currency'))
 
     if (amount <= 0 || !purpose) {
       return { success: false, error: 'សូមបញ្ចូលចំនួនទឹកប្រាក់កម្ជី និង គោលបំណងត្រឹមត្រូវ។' }
+    }
+
+    if (!refereeName || !refereePhone) {
+      return {
+        success: false,
+        error: 'សូមបញ្ចូលឈ្មោះពេញ និង លេខទូរស័ព្ទរបស់អ្នកធានា។',
+      }
     }
 
     if (
@@ -230,6 +277,12 @@ export async function requestLoan(formData: FormData): Promise<ActionResult> {
     const termMonths = monthsBetween(startDate, endDate)
 
     const admin = createAdminClient()
+    const eligibility = await fetchMemberLoanEligibility(admin, member.id)
+    const amountCheck = validateLoanRequestAmount(amount, eligibility)
+    if (!amountCheck.valid) {
+      return { success: false, error: amountCheck.error }
+    }
+
     let refereeId: string | null = null
     if (refereeEmail) {
       const { data: referee } = await admin
@@ -242,11 +295,10 @@ export async function requestLoan(formData: FormData): Promise<ActionResult> {
       refereeId = referee?.id ?? null
     }
 
-    const supportDocumentUrl = await uploadPrivateFile(
-      'loan-documents',
-      getAuthUserId(member),
-      'support',
-      asFile(formData, 'support_document')
+    const interestSettings = await getInterestSettings()
+    const loanInterestRate = await fetchMemberLoanInterestRate(
+      member.id,
+      interestSettings.monthlyLoanInterestRate
     )
 
     const { error } = await admin.from('loans').insert({
@@ -255,21 +307,31 @@ export async function requestLoan(formData: FormData): Promise<ActionResult> {
       currency,
       purpose,
       term_months: termMonths,
+      monthly_interest_rate: loanInterestRate,
       start_date: startDate,
       end_date: endDate,
       referee_id: refereeId,
-      support_document_url: supportDocumentUrl,
+      referee_name: refereeName,
+      referee_phone: refereePhone,
+      referee_email: refereeEmail || null,
       status: 'under_review',
     })
 
-    if (error) throw error
+    if (error) {
+      return {
+        success: false,
+        error: actionErrorMessage(error, 'មិនអាចដាក់ស្នើពាក្យសុំកម្ជីបានទេ។'),
+      }
+    }
 
     revalidatePath('/dashboard')
     revalidatePath('/dashboard/loans')
     return { success: true }
   } catch (error) {
-    const message = error instanceof Error ? error.message : 'មិនអាចដាក់ស្នើពាក្យសុំកម្ជីបានទេ។'
-    return { success: false, error: message }
+    return {
+      success: false,
+      error: actionErrorMessage(error, 'មិនអាចដាក់ស្នើពាក្យសុំកម្ជីបានទេ។'),
+    }
   }
 }
 
@@ -323,6 +385,7 @@ export async function repayLoan(formData: FormData): Promise<ActionResult> {
 
     revalidatePath('/dashboard')
     revalidatePath('/dashboard/loans')
+    revalidatePath('/dashboard/loans/repay')
     return { success: true }
   } catch (error) {
     const message = error instanceof Error ? error.message : 'មិនអាចដាក់ស្នើការសងបានទេ។'

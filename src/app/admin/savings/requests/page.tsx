@@ -36,8 +36,7 @@ export default async function AdminSavingsRequestsPage({
   const hasPrev = page > 1
 
   return (
-    <main className="w-full space-y-8 p-6 md:p-8">
-
+    <main>
       <AdminPanel
         title="បញ្ជីសំណើសន្សំ"
         footer={

@@ -1,5 +1,4 @@
-import { format, startOfMonth, subMonths } from 'date-fns'
-import { normalizeCurrency } from '@/lib/currency'
+import { addMonths, format, startOfMonth, subMonths } from 'date-fns'
 
 const KHMER_MONTHS = [
   'មករា',
@@ -29,8 +28,7 @@ export type SavingChartSourceRow = {
 export type MonthlySavingsChartPoint = {
   key: string
   label: string
-  usd: number
-  khr: number
+  amount: number
 }
 
 export function isVerifiedSavingForChart(row: SavingChartSourceRow) {
@@ -48,19 +46,49 @@ function monthLabelFromKey(key: string) {
   return `${KHMER_MONTHS[monthIndex]} ${year}`
 }
 
+export type MonthRangeOptions = {
+  monthsBack?: number
+  fromKey?: string
+  toKey?: string
+}
+
+function keyToDate(key: string) {
+  const [year, month] = key.split('-').map(Number)
+  if (!year || !month || month < 1 || month > 12) return null
+  return new Date(year, month - 1, 1)
+}
+
+export function resolveMonthKeys(options?: MonthRangeOptions): string[] {
+  const fromDate = options?.fromKey ? keyToDate(options.fromKey) : null
+  const toDate = options?.toKey ? keyToDate(options.toKey) : null
+
+  if (fromDate && toDate) {
+    const start = startOfMonth(fromDate <= toDate ? fromDate : toDate)
+    const end = startOfMonth(fromDate <= toDate ? toDate : fromDate)
+    const keys: string[] = []
+    let cursor = start
+    while (cursor <= end && keys.length < 120) {
+      keys.push(format(cursor, 'yyyy-MM'))
+      cursor = addMonths(cursor, 1)
+    }
+    return keys
+  }
+
+  const monthsBack = options?.monthsBack ?? 12
+  const anchor = startOfMonth(new Date())
+  const keys: string[] = []
+  for (let i = monthsBack - 1; i >= 0; i--) {
+    keys.push(format(subMonths(anchor, i), 'yyyy-MM'))
+  }
+  return keys
+}
+
 export function buildMonthlySavingsChartData(
   rows: SavingChartSourceRow[],
-  monthsBack = 12
+  options?: MonthRangeOptions
 ): MonthlySavingsChartPoint[] {
   const verified = rows.filter(isVerifiedSavingForChart)
-  const anchor = startOfMonth(new Date())
-  const buckets = new Map<string, { usd: number; khr: number }>()
-
-  for (let i = monthsBack - 1; i >= 0; i--) {
-    const monthDate = subMonths(anchor, i)
-    const key = format(monthDate, 'yyyy-MM')
-    buckets.set(key, { usd: 0, khr: 0 })
-  }
+  const buckets = new Map<string, number>(resolveMonthKeys(options).map((key) => [key, 0]))
 
   for (const row of verified) {
     const dateStr = row.saving_date ?? row.created_at
@@ -68,21 +96,17 @@ export function buildMonthlySavingsChartData(
     if (Number.isNaN(date.getTime())) continue
 
     const key = format(startOfMonth(date), 'yyyy-MM')
-    const bucket = buckets.get(key)
-    if (!bucket) continue
+    if (!buckets.has(key)) continue
 
-    const currency = normalizeCurrency(row.currency)
     const amount = Number(row.amount ?? 0)
     if (!Number.isFinite(amount)) continue
 
-    if (currency === 'KHR') bucket.khr += amount
-    else bucket.usd += amount
+    buckets.set(key, (buckets.get(key) ?? 0) + amount)
   }
 
-  return Array.from(buckets.entries()).map(([key, totals]) => ({
+  return Array.from(buckets.entries()).map(([key, amount]) => ({
     key,
     label: monthLabelFromKey(key),
-    usd: totals.usd,
-    khr: totals.khr,
+    amount,
   }))
 }

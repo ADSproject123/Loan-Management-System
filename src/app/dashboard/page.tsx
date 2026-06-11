@@ -4,6 +4,8 @@ import { MemberStatusBadge } from '@/components/ui/Badge'
 import { requireMember } from '@/lib/auth/member'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { currencySymbol, predominantCurrency } from '@/lib/currency'
+import { getInterestSettings, monthlySavingInterest } from '@/lib/interest'
+import { getLoanEligibility, sumCommittedLoanPrincipal } from '@/lib/loanEligibility'
 import {
   PiggyBank,
   CreditCard,
@@ -29,7 +31,7 @@ function formatDate(value: string) {
 
 const STATUS_LABELS: Record<string, string> = {
   pending: 'រង់ចាំ',
-  verified: 'បានផ្ទៀងផ្ទាត់',
+  verified: 'បានទទួល',
   completed: 'បានទទួល',
   active: 'សកម្ម',
   approved: 'បានទទួលយក',
@@ -86,11 +88,13 @@ export default async function DashboardPage() {
     const status = effectiveSavingStatus(saving)
     return status === 'verified' || status === 'completed'
   })
+  const interestSettings = await getInterestSettings()
   const totalSavings = verifiedSavings.reduce((sum, saving) => sum + toNumber(saving.amount), 0)
-  const monthlyInterest = totalSavings * 0.03
+  const monthlyInterest = monthlySavingInterest(totalSavings, interestSettings.monthlySavingInterestRate)
   const activeLoans = loans.filter((loan) => loan.status === 'active')
   const activeLoanAmount = activeLoans.reduce((sum, loan) => sum + toNumber(loan.amount), 0)
-  const availableCredit = Math.max(totalSavings - activeLoanAmount, 0)
+  const loanEligibility = getLoanEligibility(totalSavings, sumCommittedLoanPrincipal(loans))
+  const availableCredit = loanEligibility.availableLoanAmount
   const savingsSymbol = currencySymbol(predominantCurrency(verifiedSavings))
   const loanSymbol = currencySymbol(predominantCurrency(activeLoans))
   const activity = [
@@ -180,7 +184,7 @@ export default async function DashboardPage() {
           </div>
           <p className="text-2xl font-bold text-gray-900">{savingsSymbol}{monthlyInterest.toLocaleString()}</p>
           <p className="text-gray-500 text-sm mt-1">ការប្រាក់ប្រចាំខែ</p>
-          <p className="text-brand-600 text-xs mt-2 font-medium">៣% ក្នុងមួយខែ</p>
+          <p className="text-brand-600 text-xs mt-2 font-medium">{interestSettings.monthlySavingInterestRate}% ក្នុងមួយខែ</p>
         </Card>
 
         <Card>
@@ -199,9 +203,12 @@ export default async function DashboardPage() {
             <Wallet className="w-5 h-5 text-purple-700" />
           </div>
           <p className="text-2xl font-bold text-gray-900">{savingsSymbol}{availableCredit.toLocaleString()}</p>
-          <p className="text-gray-500 text-sm mt-1">កម្ជីដែលអាចទទួលបាន</p>
-          <Link href="/dashboard/loans/request" className="text-purple-600 text-xs mt-2 font-medium hover:text-purple-700 inline-flex items-center gap-1">
-            ស្នើសុំកម្ជី <ChevronRight className="w-3 h-3" />
+          <p className="text-gray-500 text-sm mt-1">កម្ជីដែលអាចស្នើសុំបាន</p>
+          <Link
+            href={loanEligibility.canRequestLoan ? '/dashboard/loans/request' : '/dashboard/savings/add'}
+            className="text-purple-600 text-xs mt-2 font-medium hover:text-purple-700 inline-flex items-center gap-1"
+          >
+            {loanEligibility.canRequestLoan ? 'ស្នើសុំកម្ជី' : 'ដាក់ស្នើការសន្សំជាមុន'} <ChevronRight className="w-3 h-3" />
           </Link>
         </Card>
       </div>

@@ -4,6 +4,8 @@ import { LoanStatusBadge } from '@/components/ui/Badge'
 import { requireMember } from '@/lib/auth/member'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { formatMoney, normalizeCurrency } from '@/lib/currency'
+import { getInterestSettings, loanRepaymentSummary, resolveLoanInterestRate } from '@/lib/interest'
+import { getLoanEligibility, sumCommittedLoanPrincipal, sumVerifiedSavings } from '@/lib/loanEligibility'
 import { CreditCard, Plus, FileText, ArrowRight, AlertTriangle } from 'lucide-react'
 
 function toNumber(value: unknown) {
@@ -14,18 +16,23 @@ function toNumber(value: unknown) {
 export default async function LoansPage() {
   const member = await requireMember()
   const admin = createAdminClient()
-  const [loansResult, repaymentsResult] = await Promise.all([
+  const [loansResult, repaymentsResult, savingsResult] = await Promise.all([
     admin
       .from('loans')
-      .select('id, amount, currency, purpose, term_months, status, disbursed_at, due_date, created_at')
+      .select('id, amount, currency, purpose, term_months, monthly_interest_rate, status, disbursed_at, due_date, created_at')
       .eq('member_id', member.id)
       .order('created_at', { ascending: false }),
     admin
       .from('loan_repayments')
       .select('loan_id, amount, status')
       .eq('member_id', member.id),
+    admin
+      .from('savings')
+      .select('amount, status, verified_at, verified_by')
+      .eq('member_id', member.id),
   ])
 
+  const interestSettings = await getInterestSettings()
   const loans = loansResult.data ?? []
   const repayments = repaymentsResult.data ?? []
   const paidByLoan = new Map<string, number>()
@@ -41,7 +48,17 @@ export default async function LoansPage() {
 
   const activeLoan = loans.find((loan) => loan.status === 'active')
   const activeLoanPaid = activeLoan ? paidByLoan.get(activeLoan.id) ?? 0 : 0
-  const remaining = activeLoan ? Math.max(toNumber(activeLoan.amount) - activeLoanPaid, 0) : 0
+  const activeLoanPrincipal = activeLoan ? toNumber(activeLoan.amount) : 0
+  const activeLoanTerm = activeLoan ? toNumber(activeLoan.term_months) || 12 : 12
+  const activeLoanRate = activeLoan
+    ? resolveLoanInterestRate(activeLoan, interestSettings.monthlyLoanInterestRate)
+    : interestSettings.monthlyLoanInterestRate
+  const activeLoanTotalOwed = activeLoan
+    ? loanRepaymentSummary(activeLoanPrincipal, activeLoanTerm, activeLoanRate).totalRepayment
+    : 0
+  const remaining = activeLoan ? Math.max(activeLoanTotalOwed - activeLoanPaid, 0) : 0
+  const totalSavings = sumVerifiedSavings(savingsResult.data ?? [])
+  const loanEligibility = getLoanEligibility(totalSavings, sumCommittedLoanPrincipal(loans))
 
   return (
     <div className="p-6 md:p-8 max-w-7xl mx-auto">
@@ -59,15 +76,36 @@ export default async function LoansPage() {
             <FileText className="w-4 h-4" />
             របាយការណ៍
           </Link>
-          <Link
-            href="/dashboard/loans/request"
-            className="inline-flex items-center gap-2 bg-brand-950 text-white px-4 py-2 rounded-lg text-sm font-semibold hover:bg-brand-800 transition-colors"
-          >
-            <Plus className="w-4 h-4" />
-            ស្នើសុំកម្ជី
-          </Link>
+          {loanEligibility.canRequestLoan ? (
+            <Link
+              href="/dashboard/loans/request"
+              className="inline-flex items-center gap-2 bg-brand-950 text-white px-4 py-2 rounded-lg text-sm font-semibold hover:bg-brand-800 transition-colors"
+            >
+              <Plus className="w-4 h-4" />
+              ស្នើសុំកម្ជី
+            </Link>
+          ) : (
+            <Link
+              href={totalSavings <= 0 ? '/dashboard/savings/add' : '/dashboard/savings'}
+              className="inline-flex items-center gap-2 bg-white border border-gray-300 text-gray-700 px-4 py-2 rounded-lg text-sm font-medium hover:bg-gray-50 transition-colors"
+            >
+              <Plus className="w-4 h-4" />
+              {totalSavings <= 0 ? 'ដាក់ស្នើការសន្សំ' : 'មើលសមតុល្យសន្សំ'}
+            </Link>
+          )}
         </div>
       </div>
+
+      {!loanEligibility.canRequestLoan && (
+        <div className="mb-8 flex items-start gap-3 rounded-xl border border-amber-200 bg-amber-50 p-4">
+          <AlertTriangle className="mt-0.5 h-5 w-5 shrink-0 text-amber-600" />
+          <p className="text-sm text-amber-800">
+            {totalSavings <= 0
+              ? 'អ្នកត្រូវមានការសន្សំដែលបានផ្ទៀងផ្ទាត់មុនពេលអាចស្នើសុំកម្ជីបាន។'
+              : 'អ្នកបានឈានដល់ដែនកំណត់កម្ជីអតិបរមា (៥ ដងនៃសមតុល្យសន្សំ) រួចហើយ។'}
+          </p>
+        </div>
+      )}
 
       {/* Active Loan Summary */}
       {activeLoan && (
@@ -86,11 +124,11 @@ export default async function LoansPage() {
           <div className="bg-white/20 rounded-full h-2 mb-4">
             <div
               className="bg-white rounded-full h-2 transition-all"
-              style={{ width: `${(activeLoanPaid / toNumber(activeLoan.amount)) * 100}%` }}
+              style={{ width: `${activeLoanTotalOwed > 0 ? (activeLoanPaid / activeLoanTotalOwed) * 100 : 0}%` }}
             />
           </div>
           <div className="flex items-center justify-between text-sm">
-            <span className="text-brand-200">បានបង់៖ {formatMoney(activeLoanPaid, normalizeCurrency(activeLoan.currency))} ({Math.round((activeLoanPaid / toNumber(activeLoan.amount)) * 100)}%)</span>
+            <span className="text-brand-200">បានបង់៖ {formatMoney(activeLoanPaid, normalizeCurrency(activeLoan.currency))} ({activeLoanTotalOwed > 0 ? Math.round((activeLoanPaid / activeLoanTotalOwed) * 100) : 0}%)</span>
             <span className="text-brand-200">ត្រូវសង៖ {activeLoan.due_date ? new Date(activeLoan.due_date).toLocaleDateString('km-KH', { month: 'long', year: 'numeric' }) : 'មិនទាន់កំណត់'}</span>
           </div>
           <div className="mt-4 pt-4 border-t border-white/20 flex gap-3">
@@ -190,21 +228,6 @@ export default async function LoansPage() {
           </table>
         </div>
       </Card>
-
-      {/* No active loan - request prompt */}
-      {!activeLoan && (
-        <div className="mt-6 bg-brand-50 border border-brand-100 rounded-xl p-6 text-center">
-          <CreditCard className="w-10 h-10 text-brand-300 mx-auto mb-3" />
-          <h3 className="font-semibold text-brand-900 mb-2">មិនមានកម្ជីសកម្ម</h3>
-          <p className="text-brand-700 text-sm mb-4">ត្រូវការការគាំទ្រហិរញ្ញវត្ថុ? ដាក់ពាក្យសុំកម្ជីសមាជិកថ្ងៃនេះ។</p>
-          <Link
-            href="/dashboard/loans/request"
-            className="inline-flex items-center gap-2 bg-brand-950 text-white px-5 py-2.5 rounded-lg text-sm font-semibold hover:bg-brand-800 transition-colors"
-          >
-            ស្នើសុំកម្ជី <ArrowRight className="w-4 h-4" />
-          </Link>
-        </div>
-      )}
     </div>
   )
 }

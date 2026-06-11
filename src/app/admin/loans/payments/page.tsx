@@ -1,8 +1,7 @@
-import { Clock, CreditCard } from 'lucide-react'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { getPrivateFileUrl } from '@/lib/uploads'
 import { RepaymentsList } from '@/app/admin/payments/RepaymentsList'
-import { AdminPagination, AdminPanel, AdminStatCard } from '@/components/admin'
+import { AdminPagination, AdminPanel } from '@/components/admin'
 import { parseAdminListParams } from '@/lib/admin/pagination'
 
 export default async function AdminLoansPaymentsLedgerPage({
@@ -17,7 +16,7 @@ export default async function AdminLoansPaymentsLedgerPage({
   const paginationQuery =
     initialStatusFilter === 'pending' ? { status: 'pending' } : undefined
 
-  const [{ data }, { count: pendingTotal }, { count: repaymentsTotal }] = await Promise.all([
+  const [{ data }, { count: repaymentsTotal }] = await Promise.all([
     admin
       .from('loan_repayments')
       .select(
@@ -25,10 +24,6 @@ export default async function AdminLoansPaymentsLedgerPage({
       )
       .order('created_at', { ascending: false })
       .range(from, to),
-    admin
-      .from('loan_repayments')
-      .select('id', { count: 'exact', head: true })
-      .eq('status', 'pending'),
     admin.from('loan_repayments').select('id', { count: 'exact', head: true }),
   ])
 
@@ -43,15 +38,9 @@ export default async function AdminLoansPaymentsLedgerPage({
   const hasPrev = page > 1
 
   return (
-    <main className="w-full space-y-6 p-6 md:p-8">
-      <div className="grid gap-4 sm:grid-cols-2">
-        <AdminStatCard label="រង់ផ្ទៀងផ្ទាត់" value={pendingTotal ?? 0} icon={Clock} tone="amber" />
-        <AdminStatCard label="លើទំព័រនេះ" value={repaymentRows.length} icon={CreditCard} tone="blue" />
-      </div>
-
+    <main>
       <AdminPanel
         title="បញ្ជីការសងកម្ជី"
-        description="ប្រវត្តិការសងប្រាក់ — តម្រង «រង់ផ្ទៀងផ្ទាត់» ដើម្បីផ្ទៀងផ្ទាត់ ឬ ស្វែងរកតាមសមាជិក។"
         footer={
           <AdminPagination
             basePath="/admin/loans/payments"

@@ -1,5 +1,5 @@
 import { money } from '@/app/admin/adminUtils'
-import type { AdminCurrencyTotals, AdminStatTone } from '@/components/admin/types'
+import type { AdminStatTone } from '@/components/admin/types'
 
 const TONE_CLASSES: Record<AdminStatTone, string> = {
   blue: 'bg-brand-50 text-brand-900 ring-brand-100',
@@ -18,7 +18,7 @@ const ICON_TONE_CLASSES: Record<AdminStatTone, string> = {
 type AdminStatCardProps = {
   label: string
   value?: number | string
-  currencyTotals?: AdminCurrencyTotals
+  amountTotal?: number
   subtitle?: React.ReactNode
   icon: React.ComponentType<{ className?: string }>
   tone: AdminStatTone
@@ -28,7 +28,7 @@ type AdminStatCardProps = {
 export function AdminStatCard({
   label,
   value,
-  currencyTotals,
+  amountTotal,
   subtitle,
   icon: Icon,
   tone,
@@ -45,15 +45,10 @@ export function AdminStatCard({
           <p className="text-xs font-semibold uppercase tracking-wide opacity-70">{label}</p>
           <div className="mt-2 min-h-22">
             {hasValue && <p className="text-3xl font-bold tabular-nums">{value}</p>}
-            {currencyTotals && (
-              <div className={hasValue ? 'mt-2 space-y-1' : 'space-y-1'}>
-                <p className="text-lg font-bold tabular-nums leading-tight">
-                  {money(currencyTotals.USD, 'USD')}
-                </p>
-                <p className="text-lg font-bold tabular-nums leading-tight">
-                  {money(currencyTotals.KHR, 'KHR')}
-                </p>
-              </div>
+            {amountTotal !== undefined && (
+              <p className={`${hasValue ? 'mt-2' : ''} text-lg font-bold tabular-nums leading-tight`}>
+                {money(amountTotal)}
+              </p>
             )}
           </div>
           {subtitle ? <p className="mt-auto text-sm opacity-80">{subtitle}</p> : null}

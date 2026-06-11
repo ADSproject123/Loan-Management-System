@@ -2,18 +2,21 @@
 
 import { useMemo, useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { CreditCard } from 'lucide-react'
+import { CreditCard, CheckCircle2 } from 'lucide-react'
 import { SavingStatusBadge } from '@/components/ui/Badge'
-import { AdminActionButton } from '@/app/admin/AdminActionButton'
 import { verifyRepayment } from '@/app/actions/admin'
 import { formatDate, money, relatedMemberEmail, relatedMemberName } from '@/app/admin/adminUtils'
 import type { CurrencyCode } from '@/lib/currency'
 import type { SavingStatus } from '@/types/database'
 import {
+  AdminActionButton,
+  AdminActionsMenu,
   AdminExternalLink,
   AdminListToolbar,
   AdminTableEmpty,
   AdminTableNoResults,
+  adminTable,
+  adminTableRowClass,
 } from '@/components/admin'
 
 export type RepaymentListItem = {
@@ -32,8 +35,8 @@ export type RepaymentListItem = {
 
 const STATUS_OPTIONS = [
   { value: '', label: 'ទាំងអស់' },
-  { value: 'pending', label: 'រង់ផ្ទៀងផ្ទាត់' },
-  { value: 'completed', label: 'បានផ្ទៀងផ្ទាត់' },
+  { value: 'pending', label: 'រង់ចាំ' },
+  { value: 'completed', label: 'បានទទួល' },
   { value: 'verified', label: 'verified' },
 ]
 
@@ -49,8 +52,6 @@ export function RepaymentsList({
   const router = useRouter()
   const [query, setQuery] = useState('')
   const [statusFilter, setStatusFilter] = useState(initialStatusFilter)
-
-  const hasActiveFilters = Boolean(query.trim() || statusFilter)
 
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase()
@@ -75,32 +76,27 @@ export function RepaymentsList({
         selectValue={statusFilter}
         onSelectChange={setStatusFilter}
         selectOptions={STATUS_OPTIONS}
-        showClear={hasActiveFilters}
-        onClear={() => {
-          setQuery('')
-          setStatusFilter('')
-        }}
         filterSummary={
           <>
-            បង្ហាញ <span className="font-semibold text-gray-900">{filtered.length}</span> នៃ{' '}
-            <span className="font-semibold text-gray-900">{repayments.length}</span>
+            បង្ហាញ <span className="font-semibold text-foreground">{filtered.length}</span> នៃ{' '}
+            <span className="font-semibold text-foreground">{repayments.length}</span>
           </>
         }
       />
 
-      <div className="overflow-x-auto">
-        <table className="w-full min-w-208 text-left text-sm">
-          <thead className="border-b border-gray-100 bg-gray-50/80">
-            <tr className="text-xs font-semibold uppercase tracking-wide text-gray-500">
-              <th className="px-6 py-3.5 md:px-8">សមាជិក</th>
-              <th className="px-6 py-3.5">ចំនួនទឹកប្រាក់</th>
-              <th className="px-6 py-3.5">ថ្ងៃបង់</th>
-              <th className="px-6 py-3.5">ភស្តុតាង</th>
-              <th className="px-6 py-3.5">ស្ថានភាព</th>
-              <th className="px-6 py-3.5 text-right md:px-8">សកម្មភាព</th>
+      <div className={adminTable.wrap}>
+        <table className={`${adminTable.table} min-w-208`}>
+          <thead className={adminTable.thead}>
+            <tr className={adminTable.thRow}>
+              <th className={adminTable.thFirst}>សមាជិក</th>
+              <th className={adminTable.th}>ចំនួនទឹកប្រាក់</th>
+              <th className={adminTable.th}>ថ្ងៃបង់</th>
+              <th className={adminTable.th}>ភស្តុតាង</th>
+              <th className={adminTable.th}>ស្ថានភាព</th>
+              <th className={adminTable.thLast}>សកម្មភាព</th>
             </tr>
           </thead>
-          <tbody className="divide-y divide-gray-100">
+          <tbody className={adminTable.tbody}>
             {repayments.length === 0 && (
               <AdminTableEmpty
                 colSpan={6}
@@ -114,36 +110,48 @@ export function RepaymentsList({
             {filtered.map((repayment) => (
               <tr
                 key={repayment.id}
-                className="cursor-pointer transition hover:bg-gray-50/80"
+                className={adminTableRowClass({
+                  pending: repayment.status === 'pending',
+                  clickable: true,
+                })}
                 onClick={() => router.push(`/admin/loans/${repayment.loan_id}`)}
               >
-                <td className="px-6 py-4 md:px-8">
-                  <p className="font-semibold text-gray-900">{relatedMemberName(repayment)}</p>
-                  <p className="truncate text-xs text-gray-500">{relatedMemberEmail(repayment)}</p>
+                <td className={adminTable.tdFirst}>
+                  <p className={adminTable.namePrimary}>{relatedMemberName(repayment)}</p>
+                  <p className={adminTable.nameSecondary}>{relatedMemberEmail(repayment)}</p>
                 </td>
-                <td className="px-6 py-4">
-                  <p className="text-base font-bold tabular-nums text-gray-900">
+                <td className={adminTable.td}>
+                  <p className={adminTable.amountPrimary}>
                     {money(repayment.amount, (repayment.currency as CurrencyCode) ?? 'USD')}
                   </p>
                 </td>
-                <td className="px-6 py-4 text-gray-600">{formatDate(repayment.payment_date)}</td>
-                <td className="px-6 py-4" onClick={(e) => e.stopPropagation()}>
+                <td className={adminTable.tdMuted}>{formatDate(repayment.payment_date)}</td>
+                <td className={adminTable.td} onClick={(event) => event.stopPropagation()}>
                   {repayment.evidenceSignedUrl ? (
                     <AdminExternalLink href={repayment.evidenceSignedUrl}>មើលភស្តុតាង</AdminExternalLink>
                   ) : (
-                    <span className="inline-flex bg-gray-100 px-3 py-1.5 text-xs font-medium text-gray-500">
+                    <span className={adminTable.missingText}>
                       {repayment.evidence_url ? 'មិនអាចបង្ហាញ' : 'មិនមាន'}
                     </span>
                   )}
                 </td>
-                <td className="px-6 py-4">
-                  <SavingStatusBadge status={repayment.status as SavingStatus} />
+                <td className={adminTable.td}>
+                  <SavingStatusBadge status={repayment.status as SavingStatus} plain />
                 </td>
-                <td className="px-6 py-4 text-right md:px-8" onClick={(e) => e.stopPropagation()}>
-                  {showVerifyAction && repayment.status === 'pending' && (
-                    <AdminActionButton action={verifyRepayment} id={repayment.id}>
-                      ផ្ទៀងផ្ទាត់
-                    </AdminActionButton>
+                <td className={adminTable.tdLast} onClick={(event) => event.stopPropagation()}>
+                  {showVerifyAction && repayment.status === 'pending' ? (
+                    <AdminActionsMenu>
+                      <AdminActionButton
+                        action={verifyRepayment}
+                        id={repayment.id}
+                        menuItem
+                        icon={CheckCircle2}
+                      >
+                        បានទទួល
+                      </AdminActionButton>
+                    </AdminActionsMenu>
+                  ) : (
+                    <span className="text-xs text-muted">—</span>
                   )}
                 </td>
               </tr>

@@ -1,88 +1,44 @@
 import Link from 'next/link'
 import { ArrowLeft, CreditCard } from 'lucide-react'
-import { requireMember } from '@/lib/auth/member'
-import { createAdminClient } from '@/lib/supabase/admin'
-import { normalizeCurrency } from '@/lib/currency'
-import { LoanRepayForm } from './LoanRepayForm'
-
-function toNumber(value: unknown) {
-  const numberValue = Number(value ?? 0)
-  return Number.isFinite(numberValue) ? numberValue : 0
-}
+import { Card } from '@/components/ui/Card'
+import { LoanPaymentSchedule } from '@/components/loans/LoanPaymentSchedule'
+import { getRepayContext } from './getRepayContext'
 
 export default async function LoanRepayPage() {
-  const member = await requireMember()
-  const admin = createAdminClient()
-
-  const [loanResult, repaymentsResult] = await Promise.all([
-    admin
-      .from('loans')
-      .select('id, amount, currency, purpose, term_months, due_date, status, created_at')
-      .eq('member_id', member.id)
-      .eq('status', 'active')
-      .order('created_at', { ascending: false })
-      .limit(1)
-      .maybeSingle(),
-    admin
-      .from('loan_repayments')
-      .select('loan_id, amount, status')
-      .eq('member_id', member.id),
-  ])
-
-  const loan = loanResult.data
-  const repayments = repaymentsResult.data ?? []
-
-  const paid = loan
-    ? repayments
-        .filter(
-          (repayment) =>
-            repayment.loan_id === loan.id &&
-            (repayment.status === 'verified' || repayment.status === 'completed')
-        )
-        .reduce((sum, repayment) => sum + toNumber(repayment.amount), 0)
-    : 0
-
-  const amount = loan ? toNumber(loan.amount) : 0
-  const remaining = Math.max(amount - paid, 0)
-  const termMonths = loan ? toNumber(loan.term_months) || 12 : 12
-  const monthlyPayment = loan ? Math.round(amount / termMonths) : 0
+  const context = await getRepayContext()
 
   return (
-    <div className="p-6 md:p-8 w-full">
+    <div className="w-full p-6 md:p-8">
       <div className="mb-6">
         <Link
           href="/dashboard/loans"
-          className="inline-flex items-center gap-2 text-gray-500 hover:text-gray-700 text-sm mb-4 transition-colors"
+          className="mb-4 inline-flex items-center gap-2 text-sm text-gray-500 transition-colors hover:text-gray-700"
         >
-          <ArrowLeft className="w-4 h-4" />
+          <ArrowLeft className="h-4 w-4" />
           ត្រឡប់ទៅកម្ជី
         </Link>
         <h1 className="text-2xl font-bold text-gray-900">សងកម្ជី</h1>
-        <p className="text-gray-500 text-sm mt-1">បង់ប្រាក់សម្រាប់កម្ជីសកម្មរបស់អ្នក</p>
+        <p className="mt-1 text-sm text-gray-500">ជ្រើសរើសខែដើម្បីបង់ប្រាក់សម្រាប់កម្ជីសកម្មរបស់អ្នក</p>
       </div>
 
-      {loan ? (
-        <LoanRepayForm
-          activeLoan={{
-            id: loan.id,
-            amount,
-            remaining,
-            monthly_payment: Math.min(monthlyPayment, remaining) || remaining,
-            currency: normalizeCurrency(loan.currency),
-            purpose: loan.purpose ?? '',
-            due_date: loan.due_date ?? null,
-          }}
-        />
+      {context ? (
+        <Card>
+          <LoanPaymentSchedule
+            schedule={context.paymentSchedule}
+            currency={context.loan.currency}
+            showRowPayButton
+          />
+        </Card>
       ) : (
-        <div className="bg-brand-50 border border-brand-100 rounded-xl p-8 text-center">
-          <CreditCard className="w-10 h-10 text-brand-300 mx-auto mb-3" />
-          <h3 className="font-semibold text-brand-900 mb-2">មិនមានកម្ជីសកម្ម</h3>
-          <p className="text-brand-700 text-sm mb-4">
+        <div className="rounded-xl border border-brand-100 bg-brand-50 p-8 text-center">
+          <CreditCard className="mx-auto mb-3 h-10 w-10 text-brand-300" />
+          <h3 className="mb-2 font-semibold text-brand-900">មិនមានកម្ជីសកម្ម</h3>
+          <p className="mb-4 text-sm text-brand-700">
             អ្នកមិនមានកម្ជីសកម្មសម្រាប់ការសងនៅពេលនេះទេ។
           </p>
           <Link
             href="/dashboard/loans"
-            className="inline-flex items-center gap-2 bg-brand-950 text-white px-5 py-2.5 rounded-lg text-sm font-semibold hover:bg-brand-800 transition-colors"
+            className="inline-flex items-center gap-2 rounded-lg bg-brand-950 px-5 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-brand-800"
           >
             មើលកម្ជីរបស់ខ្ញុំ
           </Link>

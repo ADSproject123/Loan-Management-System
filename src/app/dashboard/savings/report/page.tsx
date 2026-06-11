@@ -108,7 +108,7 @@ export default function SavingReportPage() {
                 type="date"
                 value={periodFrom}
                 onChange={(e) => setPeriodFrom(e.target.value)}
-                className="w-full px-3 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-500 text-sm text-gray-900"
+                className="w-full px-3 py-2.5 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-brand-500 text-sm text-gray-900"
               />
             </div>
             <div>
@@ -120,7 +120,7 @@ export default function SavingReportPage() {
                 type="date"
                 value={periodTo}
                 onChange={(e) => setPeriodTo(e.target.value)}
-                className="w-full px-3 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-500 text-sm text-gray-900"
+                className="w-full px-3 py-2.5 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-brand-500 text-sm text-gray-900"
               />
             </div>
           </div>

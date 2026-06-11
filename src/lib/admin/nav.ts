@@ -4,6 +4,7 @@ import {
   FileText,
   LayoutDashboard,
   PiggyBank,
+  Settings,
   Users,
 } from 'lucide-react'
 
@@ -62,6 +63,7 @@ export const adminNav: AdminNavItem[] = [
       { label: 'របាយការណ៍សន្សំ', href: '/admin/reports/savings' },
     ],
   },
+  { label: 'ការកំណត់', href: '/admin/settings', icon: Settings },
 ]
 
 /** First path segment under a section that is not a list/detail id */
@@ -93,7 +95,11 @@ export function isAdminChildActive(pathname: string, href: string) {
 }
 
 export function isAdminParentActive(pathname: string, item: AdminNavItem) {
-  if (item.href) return pathname === item.href
+  if (item.href) {
+    if (pathname === item.href) return true
+    if (item.href === '/admin/settings' && pathname.startsWith('/admin/settings/')) return true
+    return false
+  }
   if (item.basePath && pathname.startsWith(item.basePath)) return true
   if (item.basePath === '/admin/savings' && pathname.startsWith('/admin/capital')) return true
   if (item.basePath === '/admin/loans' && pathname.startsWith('/admin/payments')) return true

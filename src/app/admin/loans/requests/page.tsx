@@ -1,5 +1,4 @@
 import { createAdminClient } from '@/lib/supabase/admin'
-import { sumByCurrency } from '@/app/admin/adminUtils'
 import { LoansList } from '@/app/admin/loans/LoansList'
 import { AdminPagination, AdminPanel } from '@/components/admin'
 import { parseAdminListParams } from '@/lib/admin/pagination'
@@ -31,13 +30,11 @@ export default async function AdminLoansRequestsPage({
   const loanRows = data ?? []
   const hasNext = loanRows.length === pageSize
   const hasPrev = page > 1
-  const pageTotals = sumByCurrency(loanRows)
 
   return (
-    <main className="w-full space-y-8 p-6 md:p-8">
+    <main>
       <AdminPanel
         title="បញ្ជីពាក្យសុំកម្ជី"
-        description={`លើទំព័រនេះ ${loanRows.length} កម្ជី • ទំព័រ ${page} · ចុចជួរដើម្បីមើលលម្អិត`}
         footer={
           <AdminPagination
             basePath="/admin/loans/requests"
@@ -49,7 +46,7 @@ export default async function AdminLoansRequestsPage({
           />
         }
       >
-        <LoansList loans={loanRows} />
+        <LoansList loans={loanRows} variant="requests" />
       </AdminPanel>
     </main>
   )

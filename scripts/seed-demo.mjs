@@ -305,8 +305,8 @@ async function seedSavings(ids, adminId) {
     })),
     ...Array.from({ length: 8 }, (_, index) => ({
       member_id: ids.sokha,
-      amount: 180000 + index * 25000,
-      currency: 'KHR',
+      amount: 180 + index * 25,
+      currency: 'USD',
       saving_date: monthStartMonthsAgo(7 - index),
       status: 'verified',
       verified_by: adminId,
@@ -334,8 +334,8 @@ async function seedSavings(ids, adminId) {
     },
     {
       member_id: ids.dara,
-      amount: 3200000,
-      currency: 'KHR',
+      amount: 800,
+      currency: 'USD',
       saving_date: monthStartMonthsAgo(3),
       status: 'verified',
       verified_by: adminId,
@@ -363,8 +363,8 @@ async function seedSavings(ids, adminId) {
     },
     {
       member_id: ids.bopha,
-      amount: 5200000,
-      currency: 'KHR',
+      amount: 1300,
+      currency: 'USD',
       saving_date: monthStartMonthsAgo(5),
       status: 'verified',
       verified_by: adminId,
@@ -411,8 +411,8 @@ async function seedLoans(ids, adminId) {
     {
       key: 'daraActive',
       member_id: ids.dara,
-      amount: 4000000,
-      currency: 'KHR',
+      amount: 1000,
+      currency: 'USD',
       purpose: 'ទិញសម្ភារៈសម្រាប់ហាងទំនិញ',
       term_months: 18,
       status: 'active',
@@ -520,8 +520,8 @@ async function seedRepayments(ids, loanIds, adminId) {
     {
       loan_id: loanIds.daraActive,
       member_id: ids.dara,
-      amount: 500000,
-      currency: 'KHR',
+      amount: 125,
+      currency: 'USD',
       payment_date: dateDaysAgo(25),
       status: 'verified',
       verified_by: adminId,
@@ -531,8 +531,8 @@ async function seedRepayments(ids, loanIds, adminId) {
     {
       loan_id: loanIds.daraActive,
       member_id: ids.dara,
-      amount: 500000,
-      currency: 'KHR',
+      amount: 125,
+      currency: 'USD',
       payment_date: dateDaysAgo(3),
       status: 'pending',
       created_at: daysAgo(3),
@@ -568,8 +568,8 @@ async function seedCapitalRequests(ids, adminId) {
     },
     {
       member_id: ids.dara,
-      amount: 2000000,
-      currency: 'KHR',
+      amount: 500,
+      currency: 'USD',
       reason: 'ដកដើមទុនបន្តិចដើម្បីបន្តសន្សំ',
       continue_saving: true,
       remove_membership: false,
@@ -662,7 +662,7 @@ async function seedNotifications(ids) {
     {
       member_id: ids.dara,
       title: 'កម្ជីថ្មីបានទទួល',
-      message: 'ពាក្យសុំកម្ជី KHR 4,000,000 របស់អ្នកកំពុងសកម្ម។',
+      message: 'ពាក្យសុំកម្ជី $1,000 USD របស់អ្នកកំពុងសកម្ម។',
       type: 'info',
       read: true,
       created_at: daysAgo(58),
@@ -678,7 +678,7 @@ async function seedNotifications(ids) {
     {
       member_id: ids.chann,
       title: 'ពាក្យសុំកំពុងពិនិត្យ',
-      message: 'គណនីរបស់អ្នកកំពុងរង់ចាំការអនុម័តពីអ្នកគ្រប់គ្រង។',
+      message: 'គណនីរបស់អ្នកកំពុងរង់ចាំការទទួលពីអ្នកគ្រប់គ្រង។',
       type: 'info',
       read: false,
       created_at: daysAgo(3),
@@ -698,7 +698,7 @@ function printSummary() {
   console.log(`  ${`admin${DEMO_EMAIL_DOMAIN}`}\n`)
   console.log('Active members (member dashboard):')
   console.log(`  ${`sokha${DEMO_EMAIL_DOMAIN}`}  — savings, active loan, pending items`)
-  console.log(`  ${`dara${DEMO_EMAIL_DOMAIN}`}   — USD/KHR savings, active KHR loan`)
+  console.log(`  ${`dara${DEMO_EMAIL_DOMAIN}`}   — USD savings, active USD loan`)
   console.log(`  ${`bopha${DEMO_EMAIL_DOMAIN}`}  — senior member / referee\n`)
   console.log('Pending approval queue:')
   console.log(`  ${`chann${DEMO_EMAIL_DOMAIN}`}, ${`vanna${DEMO_EMAIL_DOMAIN}`}\n`)

@@ -1,11 +1,10 @@
 'use client'
 
 import { Search } from 'lucide-react'
-import { Button } from '@/components/ui/Button'
 import { Select, type SelectOption } from '@/components/ui/Select'
 
 export const adminFieldClassName =
-  'w-full border border-border bg-surface text-sm text-foreground shadow-xs outline-none ring-0 transition placeholder:text-muted focus:border-border focus:shadow-xs focus:outline-none focus:ring-0 focus-visible:border-border focus-visible:shadow-xs focus-visible:outline-none focus-visible:ring-0'
+  'app-field w-full rounded-xl border border-border bg-surface text-sm text-foreground shadow-xs outline-none ring-0 transition placeholder:text-muted focus:border-border focus:shadow-xs focus:outline-none focus:ring-0 focus-visible:border-border focus-visible:shadow-xs focus-visible:outline-none focus-visible:ring-0'
 
 export type { SelectOption }
 
@@ -18,8 +17,6 @@ type AdminListToolbarProps = {
   selectValue?: string
   onSelectChange?: (value: string) => void
   selectOptions?: SelectOption[]
-  showClear: boolean
-  onClear: () => void
   filterSummary?: React.ReactNode
   extra?: React.ReactNode
 }
@@ -33,8 +30,6 @@ export function AdminListToolbar({
   selectValue,
   onSelectChange,
   selectOptions,
-  showClear,
-  onClear,
   filterSummary,
   extra,
 }: AdminListToolbarProps) {
@@ -73,13 +68,7 @@ export function AdminListToolbar({
           </div>
         )}
 
-        {showClear && (
-          <Button type="button" variant="outline" size="sm" onClick={onClear} className="xl:mb-0">
-            លុបចម្រោះ
-          </Button>
-        )}
-
-        {showClear && filterSummary && (
+        {filterSummary && (
           <p className="text-sm text-muted xl:ml-auto xl:shrink-0">{filterSummary}</p>
         )}
       </div>
