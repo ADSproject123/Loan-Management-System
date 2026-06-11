@@ -1,42 +1,16 @@
-import { formatMoney, normalizeCurrency, type CurrencyCode } from '@/lib/currency'
-import type { AdminCurrencyTotals } from '@/components/admin/types'
+import { formatKhmerDate, formatKhmerDateTime } from '@/lib/dates'
+import { formatMoney, type CurrencyCode } from '@/lib/currency'
 
 export function money(value: unknown, currency: CurrencyCode = 'USD') {
   return formatMoney(value, currency)
 }
 
-const KHMER_MONTHS = [
-  'មករា',
-  'កុម្ភៈ',
-  'មីនា',
-  'មេសា',
-  'ឧសភា',
-  'មិថុនា',
-  'កក្កដា',
-  'សីហា',
-  'កញ្ញា',
-  'តុលា',
-  'វិច្ឆិកា',
-  'ធ្នូ',
-]
-
 export function formatDate(value?: string | null) {
-  if (!value) return 'មិនកំណត់'
-  const date = new Date(value)
-  if (Number.isNaN(date.getTime())) return 'មិនកំណត់'
-  // Format manually with a fixed Khmer month table so server and client
-  // render identically regardless of the runtime's ICU locale support.
-  return `${date.getDate()} ${KHMER_MONTHS[date.getMonth()]} ${date.getFullYear()}`
+  return formatKhmerDate(value)
 }
 
-/** Date + time with fixed formatting (avoids hydration mismatches from toLocaleString). */
 export function formatDateTime(value?: string | null) {
-  if (!value) return null
-  const date = new Date(value)
-  if (Number.isNaN(date.getTime())) return null
-  const hours = String(date.getHours()).padStart(2, '0')
-  const minutes = String(date.getMinutes()).padStart(2, '0')
-  return `${formatDate(value)} ${hours}:${minutes}`
+  return formatKhmerDateTime(value)
 }
 
 export function relatedMemberName(record: {
@@ -53,13 +27,10 @@ export function relatedMemberEmail(record: {
   return member?.email ?? 'គ្មានអ៊ីមែល'
 }
 
-export function sumByCurrency(
-  rows: { amount?: number | null; currency?: string | null }[]
-): AdminCurrencyTotals {
-  const totals: AdminCurrencyTotals = { USD: 0, KHR: 0 }
+export function sumAmounts(rows: { amount?: number | null }[]) {
+  let total = 0
   for (const row of rows) {
-    const currency = normalizeCurrency(row.currency)
-    totals[currency] += Number(row.amount ?? 0)
+    total += Number(row.amount ?? 0)
   }
-  return totals
+  return total
 }

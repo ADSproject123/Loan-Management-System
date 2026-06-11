@@ -1,9 +1,11 @@
 'use client'
 
 import { useState, useTransition } from 'react'
+import { createPortal } from 'react-dom'
 import { useRouter } from 'next/navigation'
-import { AlertTriangle, X } from 'lucide-react'
+import { AlertTriangle, X, type LucideIcon } from 'lucide-react'
 import { suspendMember } from '@/app/actions/admin'
+import { adminMenuItemClass, AdminMenuItemIcon } from '@/components/admin/AdminActionsMenu'
 import { showError, showSuccess } from '@/lib/toast'
 
 type SuspendMemberButtonProps = {
@@ -11,6 +13,8 @@ type SuspendMemberButtonProps = {
   memberName?: string
   label?: string
   className?: string
+  menuItem?: boolean
+  icon?: LucideIcon
 }
 
 export function SuspendMemberButton({
@@ -18,6 +22,8 @@ export function SuspendMemberButton({
   memberName,
   label = 'ផ្អាកគណនី',
   className = '',
+  menuItem = false,
+  icon,
 }: SuspendMemberButtonProps) {
   const router = useRouter()
   const [open, setOpen] = useState(false)
@@ -53,12 +59,18 @@ export function SuspendMemberButton({
       <button
         type="button"
         onClick={() => setOpen(true)}
-        className={`rounded-lg bg-red-600 px-3 py-1.5 text-xs font-semibold text-white transition-colors hover:bg-red-700 disabled:opacity-60 ${className}`}
+        disabled={pending}
+        className={
+          menuItem
+            ? `${adminMenuItemClass(true)} ${className}`
+            : `rounded-lg bg-red-600 px-3 py-1.5 text-xs font-semibold text-white transition-colors hover:bg-red-700 disabled:opacity-60 ${className}`
+        }
       >
-        {label}
+        {menuItem && icon ? <AdminMenuItemIcon icon={icon} destructive /> : null}
+        <span>{label}</span>
       </button>
 
-      {open && (
+      {open && createPortal(
         <div
           className="fixed inset-0 z-50 flex items-center justify-center p-4"
           role="dialog"
@@ -107,7 +119,7 @@ export function SuspendMemberButton({
                   minLength={5}
                   disabled={pending}
                   placeholder="ពិពណ៌នាមូលហេតុដែលគណនីត្រូវបានផ្អាក..."
-                  className="w-full resize-y rounded-lg border border-gray-300 px-3 py-2.5 text-sm text-gray-900 placeholder:text-gray-400 focus:border-brand-600 focus:outline-none focus:ring-2 focus:ring-brand-500/20 disabled:opacity-60"
+                  className="w-full resize-y rounded-xl border border-gray-300 px-3 py-2.5 text-sm text-gray-900 placeholder:text-gray-400 focus:border-brand-600 focus:outline-none focus:ring-2 focus:ring-brand-500/20 disabled:opacity-60"
                 />
                 <p className="mt-1 text-xs text-gray-500">យ៉ាងតិច ៥ តួអក្សរ</p>
               </div>
@@ -117,7 +129,7 @@ export function SuspendMemberButton({
                   type="button"
                   onClick={close}
                   disabled={pending}
-                  className="rounded-lg border border-gray-300 bg-white px-4 py-2 text-sm font-semibold text-gray-700 transition hover:bg-gray-50 disabled:opacity-60"
+                  className="rounded-xl border border-gray-300 bg-white px-4 py-2 text-sm font-semibold text-gray-700 transition hover:bg-gray-50 disabled:opacity-60"
                 >
                   បោះបង់
                 </button>
@@ -131,7 +143,8 @@ export function SuspendMemberButton({
               </div>
             </form>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
     </>
   )

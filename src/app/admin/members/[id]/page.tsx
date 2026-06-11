@@ -1,15 +1,16 @@
 import { notFound } from 'next/navigation'
-import { AdminBackLink } from '@/components/admin'
+import { AdminBackLink, AdminPanel } from '@/components/admin'
 import { createAdminClient } from '@/lib/supabase/admin'
-import { approveMember } from '@/app/actions/admin'
-import { AdminActionButton } from '@/app/admin/AdminActionButton'
+import { AcceptMemberButton } from '@/app/admin/AcceptMemberButton'
 import { SuspendMemberButton } from '@/app/admin/SuspendMemberButton'
 import { DenyMemberButton } from '@/app/admin/DenyMemberButton'
-import { formatDate, sumByCurrency } from '@/app/admin/adminUtils'
+import { MemberRoleBadge } from '@/components/ui/Badge'
+import { formatDate, sumAmounts } from '@/app/admin/adminUtils'
+import { getInterestSettings, getLoanInterestPlans } from '@/lib/interest'
+import { MemberLoanInterestForm } from './MemberLoanInterestForm'
 import { isVerifiedSavingForChart } from '@/lib/admin/savingsChartData'
-import { normalizeCurrency, type CurrencyCode } from '@/lib/currency'
 import { getPrivateFileUrl } from '@/lib/uploads'
-import type { MemberStatus } from '@/types/database'
+import type { MemberRole, MemberStatus } from '@/types/database'
 import { MemberDetailTabs, type TabId } from './MemberDetailTabs'
 
 interface PageProps {
@@ -31,12 +32,17 @@ export default async function AdminMemberDetailPage({ params }: PageProps) {
   const { data: member } = await admin
     .from('members')
     .select(
-      'id, full_name, full_name_kh, full_name_en, email, phone, date_of_birth, address, status, id_number, resident_book_number, id_document_url, resident_book_url, referee_id, referee_verified, is_admin, telegram_chat_id, suspension_reason, suspended_at, rejection_reason, rejected_at, joined_at, created_at, updated_at, referee:referee_id(id, full_name, full_name_kh, full_name_en, email, phone, status)'
+      'id, full_name, full_name_kh, full_name_en, email, phone, date_of_birth, address, status, role, id_number, resident_book_number, id_document_url, resident_book_url, referee_id, referee_verified, is_admin, telegram_chat_id, loan_interest_plan_id, suspension_reason, suspended_at, rejection_reason, rejected_at, joined_at, created_at, updated_at, referee:referee_id(id, full_name, full_name_kh, full_name_en, email, phone, status)'
     )
     .eq('id', id)
     .maybeSingle()
 
   if (!member) notFound()
+
+  const [interestSettings, loanInterestPlans] = await Promise.all([
+    getInterestSettings(),
+    getLoanInterestPlans(true),
+  ])
 
   const [{ data: allSavings }, { data: allLoans }] = await Promise.all([
     admin
@@ -58,10 +64,10 @@ export default async function AdminMemberDetailPage({ params }: PageProps) {
 
   const verifiedSavings = savings.filter(isVerifiedSavingForChart)
   const activeLoans = loans.filter((loan) => loan.status === 'active' || loan.status === 'approved')
-  const savingsTotals = sumByCurrency(verifiedSavings)
-  const loanTotals = sumByCurrency(activeLoans)
-  const savingsCountByCurrency = countByCurrency(verifiedSavings)
-  const loansCountByCurrency = countByCurrency(activeLoans)
+  const savingsTotal = sumAmounts(verifiedSavings)
+  const loanTotal = sumAmounts(activeLoans)
+  const savingsCount = verifiedSavings.length
+  const loansCount = activeLoans.length
 
   const [idDocumentUrl, residentBookUrl] = await Promise.all([
     getPrivateFileUrl(member.id_document_url),
@@ -86,7 +92,7 @@ export default async function AdminMemberDetailPage({ params }: PageProps) {
       detail: hasResidentBook ? 'បានផ្ទុក' : 'មិនបានផ្ទុក',
     },
     {
-      label: 'អ្នកបញ្ជាក់',
+      label: 'អ្នកធានា',
       done: Boolean(referee),
       detail: referee
         ? member.referee_verified
@@ -99,25 +105,31 @@ export default async function AdminMemberDetailPage({ params }: PageProps) {
   const defaultTab: TabId = member.status === 'pending' ? 'documents' : 'profile'
 
   return (
-    <main className="w-full space-y-6 p-6 md:p-8">
-      <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
-        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:gap-4">
-          <AdminBackLink href="/admin/members">ត្រឡប់ទៅបញ្ជីសមាជិក</AdminBackLink>
-          <div className="hidden h-6 w-px bg-border sm:block" aria-hidden />
-          <p className="text-sm text-muted">
-            ព័ត៌មានលម្អិតសមាជិក · ចូលរួម {formatDate(member.joined_at ?? member.created_at)}
-          </p>
-        </div>
+    <main>
+      <AdminPanel title={member.full_name_kh ?? member.full_name}>
+        <div className="flex flex-col gap-4 border-b border-border px-6 py-4 md:flex-row md:items-center md:justify-between md:px-8">
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:gap-4">
+            <AdminBackLink href="/admin/members">ត្រឡប់ទៅបញ្ជីសមាជិក</AdminBackLink>
+            <div className="hidden h-6 w-px bg-border sm:block" aria-hidden />
+            <p className="text-sm text-muted">
+              ព័ត៌មានលម្អិតសមាជិក · ចូលរួម {formatDate(member.joined_at ?? member.created_at)}
+            </p>
+          </div>
 
-        <div className="flex flex-wrap gap-2">
+          <div className="flex flex-wrap items-center gap-2">
+          {member.status === 'active' && (
+            <MemberRoleBadge role={(member.role ?? 'member') as MemberRole} />
+          )}
           {member.status !== 'active' && member.status !== 'rejected' && (
-            <AdminActionButton
-              action={approveMember}
-              id={member.id}
-              successMessage="បានទទួលយកសមាជិកដោយជោគជ័យ។"
-            >
-              ទទួលយកសមាជិក
-            </AdminActionButton>
+            <AcceptMemberButton memberId={member.id} memberName={member.full_name} />
+          )}
+          {member.status === 'active' && (
+            <AcceptMemberButton
+              mode="role"
+              memberId={member.id}
+              memberName={member.full_name}
+              currentRole={(member.role ?? 'member') as MemberRole}
+            />
           )}
           {member.status === 'pending' && (
             <DenyMemberButton memberId={member.id} memberName={member.full_name} />
@@ -129,7 +141,7 @@ export default async function AdminMemberDetailPage({ params }: PageProps) {
       </div>
 
       {member.status === 'suspended' && member.suspension_reason && (
-        <div className="w-full rounded-xl border border-red-200 bg-red-50 px-5 py-4 md:px-6">
+        <div className="mx-6 mt-4 rounded-xl border border-red-200 bg-red-50 px-5 py-4 md:mx-8">
           <p className="text-sm font-semibold text-red-950">មូលហេតុផ្អាក</p>
           <p className="mt-2 whitespace-pre-wrap text-sm leading-6 text-red-900">{member.suspension_reason}</p>
           {member.suspended_at && (
@@ -139,7 +151,7 @@ export default async function AdminMemberDetailPage({ params }: PageProps) {
       )}
 
       {member.status === 'rejected' && member.rejection_reason && (
-        <div className="w-full rounded-xl border border-red-200 bg-red-50 px-5 py-4 md:px-6">
+        <div className="mx-6 mt-4 rounded-xl border border-red-200 bg-red-50 px-5 py-4 md:mx-8">
           <p className="text-sm font-semibold text-red-950">មូលហេតុបដិសេធ</p>
           <p className="mt-2 whitespace-pre-wrap text-sm leading-6 text-red-900">{member.rejection_reason}</p>
           {member.rejected_at && (
@@ -170,15 +182,24 @@ export default async function AdminMemberDetailPage({ params }: PageProps) {
         referee={referee}
         savings={recentSavings}
         loans={recentLoans}
-        savingsTotals={savingsTotals}
-        loanTotals={loanTotals}
-        savingsCountByCurrency={savingsCountByCurrency}
-        loansCountByCurrency={loansCountByCurrency}
+        savingsTotal={savingsTotal}
+        loanTotal={loanTotal}
+        savingsCount={savingsCount}
+        loansCount={loansCount}
         idDocumentUrl={idDocumentUrl}
         residentBookUrl={residentBookUrl}
         checklist={checklist}
         docsComplete={docsComplete}
+        memberLoanInterestForm={
+          <MemberLoanInterestForm
+            memberId={member.id}
+            assignedPlanId={member.loan_interest_plan_id ?? null}
+            plans={loanInterestPlans}
+            globalMonthlyLoanInterestRate={interestSettings.monthlyLoanInterestRate}
+          />
+        }
       />
+      </AdminPanel>
     </main>
   )
 }
@@ -188,13 +209,3 @@ function normalizeReferee(value: RefereeRecord | RefereeRecord[] | null): Refere
   return Array.isArray(value) ? (value[0] ?? null) : value
 }
 
-function countByCurrency(rows: { currency?: string | null }[]): Record<CurrencyCode, number> {
-  return rows.reduce(
-    (counts, row) => {
-      const currency = normalizeCurrency(row.currency)
-      counts[currency] += 1
-      return counts
-    },
-    { USD: 0, KHR: 0 }
-  )
-}

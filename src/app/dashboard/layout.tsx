@@ -1,21 +1,12 @@
 import { Sidebar } from '@/components/layout/Sidebar'
-import { requireMember } from '@/lib/auth/member'
-import { redirect } from 'next/navigation'
+import { requireActiveMember } from '@/lib/auth/member'
 
 export default async function DashboardLayout({
   children,
 }: {
   children: React.ReactNode
 }) {
-  const member = await requireMember()
-
-  if (member.is_admin) {
-    redirect('/admin')
-  }
-
-  if (member.status !== 'active') {
-    redirect('/pending-approval')
-  }
+  const member = await requireActiveMember()
 
   return (
     <div className="min-h-screen">

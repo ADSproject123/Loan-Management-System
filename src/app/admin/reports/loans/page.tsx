@@ -1,16 +1,9 @@
-import { Badge } from '@/components/ui/Badge'
+import { ReportRequestStatusBadge } from '@/components/ui/Badge'
 import { createAdminClient } from '@/lib/supabase/admin'
-import { markReportSent } from '@/app/actions/admin'
-import { AdminActionButton } from '@/app/admin/AdminActionButton'
 import { formatDate, relatedMemberEmail, relatedMemberName } from '@/app/admin/adminUtils'
-import { AdminPagination, AdminPanel } from '@/components/admin'
+import { ReportRequestActions } from '@/app/admin/reports/ReportRequestActions'
+import { AdminPagination, AdminPanel, adminTable, adminTableRowClass } from '@/components/admin'
 import { parseAdminListParams } from '@/lib/admin/pagination'
-
-const REPORT_STATUS_LABEL: Record<string, string> = {
-  pending: 'រង់ចាំ',
-  sent: 'បានផ្ញើ',
-  failed: 'បរាជ័យ',
-}
 
 export default async function AdminLoanReportsPage({
   searchParams,
@@ -41,10 +34,9 @@ export default async function AdminLoanReportsPage({
   const hasPrev = page > 1
 
   return (
-    <main className="w-full p-6 md:p-8">
+    <main>
       <AdminPanel
         title="របាយការណ៍កម្ជី"
-        description="ពាក្យសុំរបាយការណ៍កម្ជី — ផ្ញើតាម Telegram រួចសម្គាល់ថាបានផ្ញើ។"
         footer={
           <AdminPagination
             basePath="/admin/reports/loans"
@@ -56,54 +48,43 @@ export default async function AdminLoanReportsPage({
           />
         }
       >
-        <div className="overflow-x-auto">
-          <table className="w-full">
-            <thead className="bg-gray-50">
-              <tr className="text-left text-xs font-semibold uppercase tracking-wide text-gray-500">
-                <th className="px-6 py-4">សមាជិក</th>
-                <th className="px-6 py-4">រយៈពេល</th>
-                <th className="px-6 py-4">ស្ថានភាព</th>
-                <th className="px-6 py-4">បានស្នើ</th>
-                <th className="px-6 py-4">សកម្មភាព</th>
+        <div className={adminTable.wrap}>
+          <table className={adminTable.table}>
+            <thead className={adminTable.thead}>
+              <tr className={adminTable.thRow}>
+                <th className={adminTable.thFirst}>សមាជិក</th>
+                <th className={adminTable.th}>រយៈពេល</th>
+                <th className={adminTable.th}>ស្ថានភាព</th>
+                <th className={adminTable.th}>បានស្នើ</th>
+                <th className={adminTable.thLast}>សកម្មភាព</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-gray-100">
+            <tbody className={adminTable.tbody}>
               {reports.length === 0 && (
                 <tr>
-                  <td colSpan={5} className="px-6 py-10 text-center text-sm text-gray-500">
+                  <td colSpan={5} className="px-6 py-10 text-center text-sm text-muted md:px-8">
                     រកមិនឃើញពាក្យសុំរបាយការណ៍កម្ជី។
                   </td>
                 </tr>
               )}
               {reports.map((report) => (
-                <tr key={report.id}>
-                  <td className="px-6 py-4">
-                    <p className="text-sm font-medium text-gray-900">{relatedMemberName(report)}</p>
-                    <p className="text-xs text-gray-500">{relatedMemberEmail(report)}</p>
+                <tr
+                  key={report.id}
+                  className={adminTableRowClass({ pending: report.status === 'pending' })}
+                >
+                  <td className={adminTable.tdFirst}>
+                    <p className={adminTable.namePrimary}>{relatedMemberName(report)}</p>
+                    <p className={adminTable.nameSecondary}>{relatedMemberEmail(report)}</p>
                   </td>
-                  <td className="px-6 py-4 text-sm text-gray-500">
+                  <td className={adminTable.tdMuted}>
                     {formatDate(report.period_from)} - {formatDate(report.period_to)}
                   </td>
-                  <td className="px-6 py-4">
-                    <Badge
-                      variant={
-                        report.status === 'sent'
-                          ? 'success'
-                          : report.status === 'failed'
-                            ? 'error'
-                            : 'warning'
-                      }
-                    >
-                      {REPORT_STATUS_LABEL[report.status] ?? report.status}
-                    </Badge>
+                  <td className={adminTable.td}>
+                    <ReportRequestStatusBadge status={report.status} />
                   </td>
-                  <td className="px-6 py-4 text-sm text-gray-500">{formatDate(report.created_at)}</td>
-                  <td className="px-6 py-4">
-                    {report.status === 'pending' && (
-                      <AdminActionButton action={markReportSent} id={report.id}>
-                        សម្គាល់ថាបានផ្ញើ
-                      </AdminActionButton>
-                    )}
+                  <td className={adminTable.tdMuted}>{formatDate(report.created_at)}</td>
+                  <td className={adminTable.tdLast}>
+                    <ReportRequestActions reportId={report.id} status={report.status} />
                   </td>
                 </tr>
               ))}

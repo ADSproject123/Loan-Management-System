@@ -1,8 +1,6 @@
-import { Landmark } from 'lucide-react'
 import { createAdminClient } from '@/lib/supabase/admin'
-import { sumByCurrency } from '@/app/admin/adminUtils'
 import { LoansList } from '@/app/admin/loans/LoansList'
-import { AdminPagination, AdminPanel, AdminStatCard } from '@/components/admin'
+import { AdminPagination, AdminPanel } from '@/components/admin'
 import { parseAdminListParams } from '@/lib/admin/pagination'
 
 export default async function AdminActiveLoansPage({
@@ -29,18 +27,11 @@ export default async function AdminActiveLoansPage({
   const loanRows = data ?? []
   const hasNext = loanRows.length === pageSize
   const hasPrev = page > 1
-  const pageTotals = sumByCurrency(loanRows)
 
   return (
-    <main className="w-full space-y-6 p-6 md:p-8">
-      <div className="grid gap-4 sm:grid-cols-2">
-        <AdminStatCard label="កម្ជីសកម្មសរុប" value={activeTotal ?? 0} icon={Landmark} tone="emerald" />
-        <AdminStatCard label="សរុបទំព័រនេះ" currencyTotals={pageTotals} icon={Landmark} tone="blue" />
-      </div>
-
+    <main>
       <AdminPanel
         title="កម្ជីកំពុងដំណើរការ"
-        description="កម្ជីដែលបានបើកប្រាក់ហើយ — តាមដានការសង និង កាលបរិច្ឆេទបង់។"
         footer={
           <AdminPagination
             basePath="/admin/loans/active"
@@ -52,7 +43,7 @@ export default async function AdminActiveLoansPage({
           />
         }
       >
-        <LoansList loans={loanRows} />
+        <LoansList loans={loanRows} variant="active" />
       </AdminPanel>
     </main>
   )

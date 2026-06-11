@@ -14,6 +14,8 @@ import {
   AdminListToolbar,
   AdminTableEmpty,
   AdminTableNoResults,
+  adminTable,
+  adminTableRowClass,
 } from '@/components/admin'
 
 export type SavingListItem = {
@@ -32,7 +34,7 @@ export type SavingListItem = {
 const STATUS_FILTER_OPTIONS = [
   { value: '', label: 'ទាំងអស់' },
   { value: 'pending', label: 'សំណើសន្សំ' },
-  { value: 'completed', label: 'បានអនុម័ត' },
+  { value: 'completed', label: 'បានទទួល' },
   { value: 'verified', label: 'verified' },
   { value: 'refunded', label: 'សងប្រាក់វិញ' },
 ]
@@ -42,8 +44,6 @@ export function SavingsList({ savings }: { savings: SavingListItem[] }) {
   const [statusFilter, setStatusFilter] = useState('')
   const [dateFrom, setDateFrom] = useState('')
   const [dateTo, setDateTo] = useState('')
-
-  const hasActiveFilters = Boolean(query.trim() || statusFilter || dateFrom || dateTo)
 
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase()
@@ -73,13 +73,6 @@ export function SavingsList({ savings }: { savings: SavingListItem[] }) {
     })
   }, [savings, query, statusFilter, dateFrom, dateTo])
 
-  function clearFilters() {
-    setQuery('')
-    setStatusFilter('')
-    setDateFrom('')
-    setDateTo('')
-  }
-
   return (
     <>
       <AdminListToolbar
@@ -91,8 +84,6 @@ export function SavingsList({ savings }: { savings: SavingListItem[] }) {
         selectValue={statusFilter}
         onSelectChange={setStatusFilter}
         selectOptions={STATUS_FILTER_OPTIONS}
-        showClear={hasActiveFilters}
-        onClear={clearFilters}
         extra={
           <div className="flex flex-wrap items-end gap-2 sm:gap-3">
             <AdminDateField
@@ -112,25 +103,25 @@ export function SavingsList({ savings }: { savings: SavingListItem[] }) {
         }
         filterSummary={
           <>
-            បង្ហាញ <span className="font-semibold text-gray-900">{filtered.length}</span> នៃ{' '}
-            <span className="font-semibold text-gray-900">{savings.length}</span>
+            បង្ហាញ <span className="font-semibold text-foreground">{filtered.length}</span> នៃ{' '}
+            <span className="font-semibold text-foreground">{savings.length}</span>
           </>
         }
       />
 
-      <div className="overflow-x-auto">
-        <table className="w-full min-w-208 text-left text-sm">
-          <thead className="border-b border-gray-100 bg-gray-50/80">
-            <tr className="text-xs font-semibold uppercase tracking-wide text-gray-500">
-              <th className="px-6 py-3.5 md:px-8">សមាជិក</th>
-              <th className="px-6 py-3.5">ចំនួនទឹកប្រាក់</th>
-              <th className="px-6 py-3.5">ថ្ងៃសន្សំ</th>
-              <th className="px-6 py-3.5">ភស្តុតាង</th>
-              <th className="px-6 py-3.5">ស្ថានភាព</th>
-              <th className="px-6 py-3.5 text-right md:px-8">សកម្មភាព</th>
+      <div className={adminTable.wrap}>
+        <table className={`${adminTable.table} min-w-208`}>
+          <thead className={adminTable.thead}>
+            <tr className={adminTable.thRow}>
+              <th className={adminTable.thFirst}>សមាជិក</th>
+              <th className={adminTable.th}>ចំនួនទឹកប្រាក់</th>
+              <th className={adminTable.th}>ថ្ងៃសន្សំ</th>
+              <th className={adminTable.th}>ភស្តុតាង</th>
+              <th className={adminTable.th}>ស្ថានភាព</th>
+              <th className={adminTable.thLast}>សកម្មភាព</th>
             </tr>
           </thead>
-          <tbody className="divide-y divide-gray-100">
+          <tbody className={adminTable.tbody}>
             {savings.length === 0 && (
               <AdminTableEmpty
                 colSpan={6}
@@ -143,40 +134,43 @@ export function SavingsList({ savings }: { savings: SavingListItem[] }) {
             {savings.length > 0 && filtered.length === 0 && <AdminTableNoResults colSpan={6} />}
 
             {filtered.map((saving) => (
-              <tr key={saving.id} className="transition hover:bg-gray-50/80">
-                <td className="px-6 py-4 md:px-8">
+              <tr
+                key={saving.id}
+                className={adminTableRowClass({ pending: saving.status === 'pending' })}
+              >
+                <td className={adminTable.tdFirst}>
                   <Link
                     href={`/admin/members/${saving.member_id}`}
                     className="group block min-w-0"
                   >
-                    <p className="font-semibold text-gray-900 transition group-hover:text-brand-700">
+                    <p className={`${adminTable.namePrimary} transition group-hover:text-brand-700`}>
                       {relatedMemberName(saving)}
                     </p>
-                    <p className="truncate text-xs text-gray-500">{relatedMemberEmail(saving)}</p>
+                    <p className={adminTable.nameSecondary}>{relatedMemberEmail(saving)}</p>
                   </Link>
                 </td>
-                <td className="px-6 py-4">
-                  <p className="text-base font-bold tabular-nums text-gray-900">
+                <td className={adminTable.td}>
+                  <p className={adminTable.amountPrimary}>
                     {money(saving.amount, (saving.currency as CurrencyCode) ?? 'USD')}
                   </p>
-                  <p className="mt-0.5 text-xs text-gray-400">
+                  <p className={adminTable.amountSecondary}>
                     ដាក់ស្នើ {formatDate(saving.created_at)}
                   </p>
                 </td>
-                <td className="px-6 py-4 text-gray-600">{formatDate(saving.saving_date)}</td>
-                <td className="px-6 py-4">
+                <td className={adminTable.tdMuted}>{formatDate(saving.saving_date)}</td>
+                <td className={adminTable.td}>
                   {saving.evidenceSignedUrl ? (
                     <AdminExternalLink href={saving.evidenceSignedUrl}>មើលភស្តុតាង</AdminExternalLink>
                   ) : (
-                    <span className="inline-flex bg-gray-100 px-3 py-1.5 text-xs font-medium text-gray-500">
+                    <span className={adminTable.missingText}>
                       {saving.evidence_url ? 'មិនអាចបង្ហាញ' : 'មិនមាន'}
                     </span>
                   )}
                 </td>
-                <td className="px-6 py-4">
-                  <SavingStatusBadge status={saving.status as SavingStatus} />
+                <td className={adminTable.td}>
+                  <SavingStatusBadge status={saving.status as SavingStatus} plain />
                 </td>
-                <td className="px-6 py-4 text-right md:px-8">
+                <td className={adminTable.tdLast} onClick={(event) => event.stopPropagation()}>
                   <SavingActions
                     savingId={saving.id}
                     memberName={relatedMemberName(saving)}

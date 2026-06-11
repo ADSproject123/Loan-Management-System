@@ -195,7 +195,7 @@ export default async function PendingApprovalPage() {
               <div className="mt-8 flex flex-wrap justify-center gap-3">
                 <Link
                   href="/"
-                  className="rounded-lg border border-gray-300 bg-white px-5 py-2.5 text-sm font-semibold text-gray-700 hover:bg-gray-50"
+                  className="rounded-xl border border-gray-300 bg-white px-5 py-2.5 text-sm font-semibold text-gray-700 hover:bg-gray-50"
                 >
                   ត្រឡប់ទៅទំព័រដើម
                 </Link>

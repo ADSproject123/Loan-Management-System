@@ -1,7 +1,6 @@
-import { Clock, Wallet } from 'lucide-react'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { CapitalRequestsList } from '@/app/admin/capital/CapitalRequestsList'
-import { AdminPagination, AdminPanel, AdminStatCard } from '@/components/admin'
+import { AdminPagination, AdminPanel } from '@/components/admin'
 import { parseAdminListParams } from '@/lib/admin/pagination'
 
 export default async function AdminSavingsCapitalPage({
@@ -13,7 +12,7 @@ export default async function AdminSavingsCapitalPage({
   const params = (await searchParams) ?? {}
   const { page, pageSize, from, to } = parseAdminListParams(params)
 
-  const [{ data }, { count: pendingTotal }, { count: requestsTotal }] = await Promise.all([
+  const [{ data }, { count: requestsTotal }] = await Promise.all([
     admin
       .from('capital_requests')
       .select(
@@ -21,10 +20,6 @@ export default async function AdminSavingsCapitalPage({
       )
       .order('created_at', { ascending: false })
       .range(from, to),
-    admin
-      .from('capital_requests')
-      .select('id', { count: 'exact', head: true })
-      .eq('status', 'pending'),
     admin.from('capital_requests').select('id', { count: 'exact', head: true }),
   ])
 
@@ -33,15 +28,9 @@ export default async function AdminSavingsCapitalPage({
   const hasPrev = page > 1
 
   return (
-    <main className="w-full space-y-6 p-6 md:p-8">
-      <div className="grid gap-4 sm:grid-cols-2">
-        <AdminStatCard label="រង់ចាំសម្រេច" value={pendingTotal ?? 0} icon={Clock} tone="amber" />
-        <AdminStatCard label="លើទំព័រនេះ" value={requests.length} icon={Wallet} tone="blue" />
-      </div>
-
+    <main>
       <AdminPanel
         title="ស្នើសុំដកដើមទុន"
-        description="ពិនិត្យ ទទួលយក ឬ បដិសេធ — តម្រង «រង់ចាំ» ដើម្បីមើលតែពាក្យសុំដែលត្រូវដោះស្រាយ។"
         footer={
           <AdminPagination
             basePath="/admin/savings/capital"

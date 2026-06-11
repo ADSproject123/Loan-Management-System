@@ -168,7 +168,7 @@ export default function HomePage() {
               <div className="grid sm:grid-cols-2 gap-4 mb-7">
                 {[
                   { title: 'ក្លាយជាសមាជិក', text: 'ចុះឈ្មោះតាមអនឡាញ និង រង់ចាំការទទួលយកគណនី។' },
-                  { title: 'ដកចូលជាសមាជិក', text: 'ស្នើសុំដកដើមទុនក្នុងអំឡុងពេលប្រចាំឆ្នាំ។' },
+                  { title: 'ឈប់ចូលជាសមាជិក', text: 'ស្នើសុំដកដើមទុនក្នុងអំឡុងពេលប្រចាំឆ្នាំ។' },
                 ].map((item) => (
                   <div key={item.title} className="rounded-2xl bg-brand-50 p-5">
                     <p className="font-bold text-brand-950">{item.title}</p>

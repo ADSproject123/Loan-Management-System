@@ -1,10 +1,11 @@
 import 'server-only'
 
+import { cache } from 'react'
 import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
 import type { Member } from '@/types/database'
 
-export async function getCurrentMember(): Promise<Member | null> {
+export const getCurrentMember = cache(async (): Promise<Member | null> => {
   const supabase = await createClient()
   const {
     data: { user },
@@ -19,7 +20,7 @@ export async function getCurrentMember(): Promise<Member | null> {
     .maybeSingle()
 
   return data as Member | null
-}
+})
 
 export function getMemberHomePath(member: Pick<Member, 'status' | 'is_admin'>): string {
   if (member.is_admin && member.status === 'active') {

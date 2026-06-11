@@ -7,7 +7,6 @@ import {
   LayoutDashboard,
   PiggyBank,
   CreditCard,
-  Wallet,
   ChevronDown,
   ChevronRight,
   Building2,
@@ -34,6 +33,7 @@ const navItems: NavItem[] = [
     children: [
       { label: 'ទិដ្ឋភាពទូទៅ', href: '/dashboard/savings' },
       { label: 'ស្នើសុំការសន្សំ', href: '/dashboard/savings/add' },
+      { label: 'ស្នើសុំដើមទុន', href: '/dashboard/capital' },
       { label: 'របាយការណ៍សន្សំ', href: '/dashboard/savings/report' },
     ],
   },
@@ -46,11 +46,6 @@ const navItems: NavItem[] = [
       { label: 'សងកម្ជី', href: '/dashboard/loans/repay' },
       { label: 'របាយការណ៍កម្ជី', href: '/dashboard/loans/report' },
     ],
-  },
-  {
-    label: 'ស្នើសុំដើមទុន',
-    href: '/dashboard/capital',
-    icon: Wallet,
   },
 ]
 
@@ -123,6 +118,7 @@ export function Sidebar({ memberName = 'សមាជិក' }: SidebarProps) {
                       <Link
                         key={child.href}
                         href={child.href}
+                        prefetch
                         className={`block cursor-pointer rounded-lg px-3 py-2 text-sm transition-colors duration-200 ${
                           pathname === child.href
                             ? 'app-sidebar-nav-child-active'
@@ -142,6 +138,7 @@ export function Sidebar({ memberName = 'សមាជិក' }: SidebarProps) {
             <Link
               key={item.href}
               href={item.href!}
+              prefetch
               className={`flex cursor-pointer items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition-colors duration-200 ${
                 isActive ? 'app-sidebar-nav-active' : 'app-sidebar-nav-idle'
               }`}
@@ -156,6 +153,7 @@ export function Sidebar({ memberName = 'សមាជិក' }: SidebarProps) {
       <div className="space-y-1 border-t border-white/10 p-3">
         <Link
           href="/dashboard/notifications"
+          prefetch
           className="app-sidebar-nav-idle flex cursor-pointer items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition-colors duration-200"
         >
           <Bell className="h-5 w-5 shrink-0" />

@@ -72,6 +72,7 @@ export function AdminSidebar({ adminName }: { adminName: string }) {
                       <Link
                         key={child.href}
                         href={child.href}
+                        prefetch
                         className={`block cursor-pointer rounded-lg px-3 py-2 text-sm transition-colors duration-200 ${
                           isAdminChildActive(pathname, child.href)
                             ? 'app-sidebar-nav-child-active'
@@ -91,8 +92,9 @@ export function AdminSidebar({ adminName }: { adminName: string }) {
             <Link
               key={item.href}
               href={item.href!}
+              prefetch
               className={`flex cursor-pointer items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition-colors duration-200 ${
-                pathname === item.href ? 'app-sidebar-nav-active' : 'app-sidebar-nav-idle'
+                isAdminParentActive(pathname, item) ? 'app-sidebar-nav-active' : 'app-sidebar-nav-idle'
               }`}
             >
               <Icon className="h-5 w-5 shrink-0 opacity-90" />

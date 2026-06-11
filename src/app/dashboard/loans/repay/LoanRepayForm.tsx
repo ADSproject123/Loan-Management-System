@@ -8,7 +8,7 @@ import { Card } from '@/components/ui/Card'
 import { repayLoan } from '@/app/actions/member'
 import { showError } from '@/lib/toast'
 import { currencySymbol, type CurrencyCode } from '@/lib/currency'
-import { CurrencySelect } from '@/components/ui/CurrencySelect'
+import { formatKhmerDate } from '@/lib/dates'
 import { CreditCard, QrCode, Upload, CheckCircle, Info } from 'lucide-react'
 
 const STEPS = [
@@ -28,10 +28,19 @@ export type ActiveLoan = {
   due_date: string | null
 }
 
-export function LoanRepayForm({ activeLoan }: { activeLoan: ActiveLoan }) {
+export function LoanRepayForm({
+  activeLoan,
+  scheduleMonth,
+  defaultAmount,
+}: {
+  activeLoan: ActiveLoan
+  scheduleMonth?: number
+  defaultAmount?: number
+}) {
+  const initialAmount = defaultAmount ?? activeLoan.monthly_payment
   const [step, setStep] = useState(1)
-  const [payAmount, setPayAmount] = useState(activeLoan.monthly_payment.toString())
-  const [currency, setCurrency] = useState<CurrencyCode>(activeLoan.currency)
+  const [payAmount, setPayAmount] = useState(initialAmount.toString())
+  const currency: CurrencyCode = 'USD'
   const [evidence, setEvidence] = useState<File | null>(null)
   const [loading, setLoading] = useState(false)
   const handleConfirmAmount = () => {
@@ -84,22 +93,26 @@ export function LoanRepayForm({ activeLoan }: { activeLoan: ActiveLoan }) {
       {/* Active Loan Summary */}
       {step < 4 && (
         <div className="bg-brand-950 text-white rounded-xl p-5 mb-6">
-          <p className="text-brand-200 text-xs uppercase tracking-wider font-semibold mb-2">កម្ជីសកម្ម</p>
+          <p className="text-brand-200 text-xs uppercase tracking-wider font-semibold mb-2">
+            {scheduleMonth ? `បង់ប្រាក់ខែ ${scheduleMonth}` : 'កម្ជីសកម្ម'}
+          </p>
           <div className="flex justify-between items-start">
             <div>
               <p className="text-2xl font-bold">{currencySymbol(currency)}{activeLoan.remaining.toLocaleString()}</p>
               <p className="text-brand-200 text-sm mt-1">សមតុល្យនៅសល់</p>
             </div>
             <div className="text-right">
-              <p className="text-lg font-semibold">{currencySymbol(currency)}{activeLoan.monthly_payment.toLocaleString()}</p>
-              <p className="text-brand-200 text-sm mt-1">បង់ប្រចាំខែ</p>
+              <p className="text-lg font-semibold">{currencySymbol(currency)}{initialAmount.toLocaleString()}</p>
+              <p className="text-brand-200 text-sm mt-1">
+                {scheduleMonth ? 'ចំនួនត្រូវបង់ខែនេះ' : 'បង់ប្រចាំខែ'}
+              </p>
             </div>
           </div>
           <div className="mt-3 pt-3 border-t border-white/20">
             <p className="text-brand-200 text-xs">
               {activeLoan.purpose}
               {activeLoan.due_date && (
-                <> &bull; ផុតកំណត់ {new Date(activeLoan.due_date).toLocaleDateString('km-KH', { month: 'long', day: 'numeric', year: 'numeric' })}</>
+                <> &bull; ផុតកំណត់ {formatKhmerDate(activeLoan.due_date)}</>
               )}
             </p>
           </div>
@@ -120,41 +133,20 @@ export function LoanRepayForm({ activeLoan }: { activeLoan: ActiveLoan }) {
           </div>
 
           <div className="mb-5">
-            <label className="block text-sm font-medium text-gray-700 mb-1.5">ចំនួនទឹកប្រាក់បង់ ({currency})</label>
-            <div className="flex gap-2">
-              <div className="relative flex-1">
-                <span className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500 font-medium">{currencySymbol(currency)}</span>
-                <input
-                  type="number"
-                  value={payAmount}
-                  onChange={(e) => setPayAmount(e.target.value)}
-                  onWheel={(e) => e.currentTarget.blur()}
-                  placeholder="0.00"
-                  min="100"
-                  max={activeLoan.remaining}
-                  className="w-full pl-8 pr-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-500 text-lg font-semibold text-gray-900"
-                />
-              </div>
-              <CurrencySelect value={currency} onChange={setCurrency} className="shrink-0" />
+            <label className="block text-sm font-medium text-gray-700 mb-1.5">ចំនួនទឹកប្រាក់បង់ (USD)</label>
+            <div className="relative">
+              <span className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500 font-medium">{currencySymbol()}</span>
+              <input
+                type="number"
+                value={payAmount}
+                onChange={(e) => setPayAmount(e.target.value)}
+                onWheel={(e) => e.currentTarget.blur()}
+                placeholder="0.00"
+                min="100"
+                max={activeLoan.remaining}
+                className="w-full pl-8 pr-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-brand-500 text-lg font-semibold text-gray-900"
+              />
             </div>
-          </div>
-
-          <div className="flex gap-2 mb-5">
-            {[activeLoan.monthly_payment, activeLoan.monthly_payment * 2, activeLoan.remaining].map((amt, i) => (
-              <button
-                key={i}
-                onClick={() => setPayAmount(amt.toString())}
-                className={`flex-1 px-3 py-2 rounded-lg text-xs font-medium transition-colors border ${
-                  parseFloat(payAmount) === amt
-                    ? 'bg-brand-950 text-white border-brand-900'
-                    : 'bg-white border-gray-300 text-gray-700 hover:border-brand-500 hover:text-brand-700 hover:bg-brand-50'
-                }`}
-              >
-                {i === 0 ? 'ប្រចាំខែ' : i === 1 ? 'ទ្វេដង' : 'ទាំងអស់'}
-                <br />
-                {currencySymbol(currency)}{amt.toLocaleString()}
-              </button>
-            ))}
           </div>
 
           {amount > 0 && (
@@ -211,7 +203,7 @@ export function LoanRepayForm({ activeLoan }: { activeLoan: ActiveLoan }) {
             <div className="flex items-start gap-2">
               <Info className="w-4 h-4 text-yellow-600 flex-shrink-0 mt-0.5" />
               <div className="text-xs text-yellow-700 space-y-1">
-                <p>ផ្ទេរចំនួនពិតប្រាកដ <strong>{currencySymbol(currency)}{amount.toLocaleString()}</strong> — ចំនួនមួយផ្នែកនឹងបណ្តាលឱ្យពន្យារពេលផ្ទៀងផ្ទាត់។</p>
+                <p>ផ្ទេរចំនួនពិតប្រាកដ <strong>{currencySymbol(currency)}{amount.toLocaleString()}</strong> — ចំនួនមួយផ្នែកនឹងបណ្តាលឱ្យពន្យារពេលទទួល។</p>
                 <p>ថតរូបអេក្រង់នៃការបញ្ជាក់មុនបិទទំព័រនេះ។</p>
               </div>
             </div>
@@ -292,7 +284,7 @@ export function LoanRepayForm({ activeLoan }: { activeLoan: ActiveLoan }) {
               ការសងរបស់អ្នកចំនួន <strong>{currencySymbol(currency)}{amount.toLocaleString()}</strong> ត្រូវបានទទួល។
             </p>
             <p className="text-gray-500 text-sm mb-6">
-              អ្នកគ្រប់គ្រងនឹងផ្ទៀងផ្ទាត់ការបង់ប្រាក់របស់អ្នកក្នុងរយៈពេល ២៤ ម៉ោង និង ធ្វើបច្ចុប្បន្នភាពសមតុល្យកម្ជីរបស់អ្នក។
+              អ្នកគ្រប់គ្រងនឹងទទួលការបង់ប្រាក់របស់អ្នកក្នុងរយៈពេល ២៤ ម៉ោង និង ធ្វើបច្ចុប្បន្នភាពសមតុល្យកម្ជីរបស់អ្នក។
             </p>
 
             <div className="bg-green-50 rounded-xl p-4 mb-6 text-left">
@@ -304,7 +296,7 @@ export function LoanRepayForm({ activeLoan }: { activeLoan: ActiveLoan }) {
                 </div>
                 <div className="flex justify-between">
                   <span className="text-green-700">ស្ថានភាព</span>
-                  <span className="font-medium text-green-900">កំពុងរង់ចាំការផ្ទៀងផ្ទាត់</span>
+                  <span className="font-medium text-green-900">កំពុងរង់ចាំការទទួល</span>
                 </div>
                 {newRemaining > 0 && (
                   <div className="flex justify-between">
@@ -317,16 +309,16 @@ export function LoanRepayForm({ activeLoan }: { activeLoan: ActiveLoan }) {
 
             <div className="flex gap-3 justify-center">
               <Link
-                href="/dashboard/loans"
+                href="/dashboard/loans/repay"
                 className="inline-flex items-center gap-2 bg-brand-950 text-white px-5 py-2.5 rounded-lg text-sm font-semibold hover:bg-brand-800 transition-colors"
               >
-                មើលកម្ជីរបស់ខ្ញុំ
+                ត្រឡប់ទៅតារាបង់ប្រចាំខែ
               </Link>
               <Link
-                href="/dashboard"
+                href="/dashboard/loans"
                 className="inline-flex items-center gap-2 bg-white border border-gray-300 text-gray-700 px-5 py-2.5 rounded-lg text-sm font-semibold hover:bg-gray-50 transition-colors"
               >
-                ផ្ទាំងគ្រប់គ្រង
+                មើលកម្ជីរបស់ខ្ញុំ
               </Link>
             </div>
           </div>

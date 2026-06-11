@@ -1,18 +1,21 @@
 'use client'
 
 import { useMemo, useState } from 'react'
-import { Wallet } from 'lucide-react'
+import { CheckCircle2, Trash2, Wallet } from 'lucide-react'
 import { CapitalRequestStatusBadge } from '@/components/ui/Badge'
-import { AdminActionButton } from '@/app/admin/AdminActionButton'
 import { decideCapitalRequest } from '@/app/actions/admin'
-import { AdminReasonDialogButton } from '@/components/admin/AdminReasonDialogButton'
-import { formatDate, money, relatedMemberEmail, relatedMemberName } from '@/app/admin/adminUtils'
-import type { CapitalRequestStatus } from '@/types/database'
 import {
+  AdminActionButton,
+  AdminActionsMenu,
   AdminListToolbar,
+  AdminReasonDialogButton,
   AdminTableEmpty,
   AdminTableNoResults,
+  adminTable,
+  adminTableRowClass,
 } from '@/components/admin'
+import { formatDate, money, relatedMemberEmail, relatedMemberName } from '@/app/admin/adminUtils'
+import type { CapitalRequestStatus } from '@/types/database'
 
 export type CapitalRequestListItem = {
   id: string
@@ -37,8 +40,6 @@ export function CapitalRequestsList({ requests }: { requests: CapitalRequestList
   const [query, setQuery] = useState('')
   const [statusFilter, setStatusFilter] = useState('')
 
-  const hasActiveFilters = Boolean(query.trim() || statusFilter)
-
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase()
     return requests.filter((row) => {
@@ -62,70 +63,79 @@ export function CapitalRequestsList({ requests }: { requests: CapitalRequestList
         selectValue={statusFilter}
         onSelectChange={setStatusFilter}
         selectOptions={STATUS_OPTIONS}
-        showClear={hasActiveFilters}
-        onClear={() => {
-          setQuery('')
-          setStatusFilter('')
-        }}
         filterSummary={
           <>
-            បង្ហាញ <span className="font-semibold text-gray-900">{filtered.length}</span> នៃ{' '}
-            <span className="font-semibold text-gray-900">{requests.length}</span>
+            បង្ហាញ <span className="font-semibold text-foreground">{filtered.length}</span> នៃ{' '}
+            <span className="font-semibold text-foreground">{requests.length}</span>
           </>
         }
       />
 
-      <div className="overflow-x-auto">
-        <table className="w-full min-w-208 text-left text-sm">
-          <thead className="border-b border-gray-100 bg-gray-50/80">
-            <tr className="text-xs font-semibold uppercase tracking-wide text-gray-500">
-              <th className="px-6 py-3.5 md:px-8">សមាជិក</th>
-              <th className="px-6 py-3.5">ចំនួនទឹកប្រាក់</th>
-              <th className="px-6 py-3.5">មូលហេតុ</th>
-              <th className="px-6 py-3.5">បន្ទាប់ពីដក</th>
-              <th className="px-6 py-3.5">ស្ថានភាព</th>
-              <th className="px-6 py-3.5 text-right md:px-8">សកម្មភាព</th>
+      <div className={adminTable.wrap}>
+        <table className={`${adminTable.table} min-w-208`}>
+          <thead className={adminTable.thead}>
+            <tr className={adminTable.thRow}>
+              <th className={adminTable.thFirst}>សមាជិក</th>
+              <th className={adminTable.th}>ដាក់ស្នើ</th>
+              <th className={adminTable.th}>ចំនួនទឹកប្រាក់</th>
+              <th className={adminTable.th}>មូលហេតុ</th>
+              <th className={adminTable.th}>បន្ទាប់ពីដក</th>
+              <th className={adminTable.th}>ស្ថានភាព</th>
+              <th className={adminTable.thLast}>សកម្មភាព</th>
             </tr>
           </thead>
-          <tbody className="divide-y divide-gray-100">
+          <tbody className={adminTable.tbody}>
             {requests.length === 0 && (
               <AdminTableEmpty
-                colSpan={6}
+                colSpan={7}
                 icon={Wallet}
                 title="មិនមានស្នើសុំ"
                 description="ស្នើសុំដកដើមទុនរបស់សមាជិកនឹងបង្ហាញនៅទីនេះ។"
               />
             )}
-            {requests.length > 0 && filtered.length === 0 && <AdminTableNoResults colSpan={6} />}
+            {requests.length > 0 && filtered.length === 0 && <AdminTableNoResults colSpan={7} />}
 
             {filtered.map((request) => (
-              <tr key={request.id} className="transition hover:bg-gray-50/80">
-                <td className="px-6 py-4 md:px-8">
-                  <p className="font-semibold text-gray-900">{relatedMemberName(request)}</p>
-                  <p className="truncate text-xs text-gray-500">{relatedMemberEmail(request)}</p>
-                  <p className="mt-1 text-xs text-gray-400">ដាក់ស្នើ {formatDate(request.created_at)}</p>
+              <tr
+                key={request.id}
+                className={adminTableRowClass({ pending: request.status === 'pending' })}
+              >
+                <td className={adminTable.tdFirst}>
+                  <p className={adminTable.namePrimary}>{relatedMemberName(request)}</p>
+                  <p className={adminTable.nameSecondary}>{relatedMemberEmail(request)}</p>
                 </td>
-                <td className="px-6 py-4 font-bold tabular-nums text-gray-900">{money(request.amount)}</td>
-                <td className="max-w-xs px-6 py-4 text-gray-600">{request.reason ?? '—'}</td>
-                <td className="px-6 py-4 text-gray-600">
-                  {request.remove_membership ? 'ដកចូលជាសមាជិក' : 'បន្តសន្សំ'}
+                <td className={adminTable.tdMuted}>{formatDate(request.created_at)}</td>
+                <td className={adminTable.td}>
+                  <p className={adminTable.amountPrimary}>{money(request.amount)}</p>
                 </td>
-                <td className="px-6 py-4">
-                  <CapitalRequestStatusBadge status={request.status as CapitalRequestStatus} />
+                <td className={`max-w-xs ${adminTable.tdMuted}`}>{request.reason ?? '—'}</td>
+                <td className={adminTable.tdMuted}>
+                  {request.remove_membership ? 'ឈប់ចូលជាសមាជិក' : 'បន្តសន្សំ'}
+                </td>
+                <td className={adminTable.td}>
+                  <CapitalRequestStatusBadge status={request.status as CapitalRequestStatus} plain />
                   {request.status === 'rejected' && request.rejection_reason && (
-                    <p className="mt-2 max-w-xs text-xs text-red-700">{request.rejection_reason}</p>
+                    <p className="mt-1 max-w-xs text-xs text-red-700">{request.rejection_reason}</p>
                   )}
                 </td>
-                <td className="px-6 py-4 text-right md:px-8">
-                  {request.status === 'pending' && (
-                    <div className="flex flex-wrap justify-end gap-2">
-                      <AdminActionButton action={decideCapitalRequest} id={request.id} decision="approved">
+                <td className={adminTable.tdLast}>
+                  {request.status === 'pending' ? (
+                    <AdminActionsMenu>
+                      <AdminActionButton
+                        action={decideCapitalRequest}
+                        id={request.id}
+                        decision="approved"
+                        menuItem
+                        icon={CheckCircle2}
+                      >
                         ទទួលយក
                       </AdminActionButton>
                       <AdminReasonDialogButton
                         action={decideCapitalRequest}
                         id={request.id}
                         label="បដិសេធ"
+                        menuItem
+                        icon={Trash2}
                         extraFields={{ decision: 'rejected' }}
                         dialogTitle="បដិសេធស្នើសុំដកដើមទុន"
                         dialogDescription="សមាជិកនឹងទទួលការជូនដំណឹងជាមួយមូលហេតុបដិសេធ។"
@@ -134,7 +144,9 @@ export function CapitalRequestsList({ requests }: { requests: CapitalRequestList
                         confirmLabel="បញ្ជាក់បដិសេធ"
                         successMessage="បានបដិសេធស្នើសុំដើមទុន។"
                       />
-                    </div>
+                    </AdminActionsMenu>
+                  ) : (
+                    <span className="text-xs text-muted">—</span>
                   )}
                 </td>
               </tr>

@@ -5,6 +5,7 @@ import { requireMember } from '@/lib/auth/member'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { PiggyBank, Plus, FileText, TrendingUp, ChevronRight } from 'lucide-react'
 import { currencySymbol, predominantCurrency } from '@/lib/currency'
+import { getInterestSettings, monthlySavingInterest } from '@/lib/interest'
 
 function toNumber(value: unknown) {
   const numberValue = Number(value ?? 0)
@@ -35,8 +36,9 @@ export default async function SavingsPage() {
     const status = effectiveStatus(saving)
     return status === 'verified' || status === 'completed'
   })
+  const interestSettings = await getInterestSettings()
   const totalSavings = verifiedSavings.reduce((sum, saving) => sum + toNumber(saving.amount), 0)
-  const monthlyInterest = totalSavings * 0.03
+  const monthlyInterest = monthlySavingInterest(totalSavings, interestSettings.monthlySavingInterestRate)
   const displayCurrency = predominantCurrency(verifiedSavings)
   const displaySymbol = currencySymbol(displayCurrency)
 
@@ -80,7 +82,7 @@ export default async function SavingsPage() {
             <TrendingUp className="w-5 h-5 text-brand-700" />
           </div>
           <p className="text-2xl font-bold text-gray-900">{displaySymbol}{monthlyInterest.toLocaleString()}</p>
-          <p className="text-gray-500 text-sm mt-1">ការប្រាក់ប្រចាំខែ (៣%)</p>
+          <p className="text-gray-500 text-sm mt-1">ការប្រាក់ប្រចាំខែ ({interestSettings.monthlySavingInterestRate}%)</p>
         </Card>
         <Card>
           <div className="p-2.5 bg-purple-100 rounded-lg inline-flex mb-3">

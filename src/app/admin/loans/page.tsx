@@ -28,10 +28,9 @@ export default async function AdminLoansLedgerPage({
   const hasPrev = page > 1
 
   return (
-    <main className="w-full p-6 md:p-8">
+    <main>
       <AdminPanel
         title="បញ្ជីកម្ជីទាំងអស់"
-        description="ពាក្យសុំកម្ជីគ្រប់ស្ថានភាព — ចុចជួរដើម្បីមើលលម្អិត និង ដំណើរការ។"
         footer={
           <AdminPagination
             basePath="/admin/loans"

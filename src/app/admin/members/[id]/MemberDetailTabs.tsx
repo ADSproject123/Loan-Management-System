@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, type ReactNode } from 'react'
 import Link from 'next/link'
 import {
   Calendar,
@@ -20,8 +20,7 @@ import {
 import { Card } from '@/components/ui/Card'
 import { LoanStatusBadge, MemberStatusBadge, SavingStatusBadge } from '@/components/ui/Badge'
 import { formatDate, money } from '@/app/admin/adminUtils'
-import { normalizeCurrency, type CurrencyCode } from '@/lib/currency'
-import type { AdminCurrencyTotals } from '@/components/admin/types'
+import { normalizeCurrency } from '@/lib/currency'
 import type { LoanStatus, MemberStatus, SavingStatus } from '@/types/database'
 
 export type TabId = 'profile' | 'documents' | 'referee' | 'savings' | 'loans'
@@ -80,21 +79,22 @@ export type MemberDetailTabsProps = {
   referee: RefereeRecord | null
   savings: SavingRow[]
   loans: LoanRow[]
-  savingsTotals: AdminCurrencyTotals
-  loanTotals: AdminCurrencyTotals
-  savingsCountByCurrency: Record<CurrencyCode, number>
-  loansCountByCurrency: Record<CurrencyCode, number>
+  savingsTotal: number
+  loanTotal: number
+  savingsCount: number
+  loansCount: number
   idDocumentUrl: string | null
   residentBookUrl: string | null
   checklist: ChecklistItem[]
   docsComplete: boolean
+  memberLoanInterestForm?: ReactNode
   defaultTab?: TabId
 }
 
 const TABS: { id: TabId; label: string; icon: React.ReactNode }[] = [
   { id: 'profile', label: 'ព័ត៌មាន', icon: <User className="h-4 w-4" /> },
   { id: 'documents', label: 'ឯកសារ', icon: <ShieldCheck className="h-4 w-4" /> },
-  { id: 'referee', label: 'អ្នកបញ្ជាក់', icon: <UserCheck className="h-4 w-4" /> },
+  { id: 'referee', label: 'អ្នកធានា', icon: <UserCheck className="h-4 w-4" /> },
   { id: 'savings', label: 'សន្សំ', icon: <PiggyBank className="h-4 w-4" /> },
   { id: 'loans', label: 'កម្ជី', icon: <CreditCard className="h-4 w-4" /> },
 ]
@@ -104,14 +104,15 @@ export function MemberDetailTabs({
   referee,
   savings,
   loans,
-  savingsTotals,
-  loanTotals,
-  savingsCountByCurrency,
-  loansCountByCurrency,
+  savingsTotal,
+  loanTotal,
+  savingsCount,
+  loansCount,
   idDocumentUrl,
   residentBookUrl,
   checklist,
   docsComplete,
+  memberLoanInterestForm,
   defaultTab = 'profile',
 }: MemberDetailTabsProps) {
   const [activeTab, setActiveTab] = useState<TabId>(defaultTab)
@@ -193,20 +194,12 @@ export function MemberDetailTabs({
 
             <div>
               <SectionTitle icon={<PiggyBank className="h-5 w-5" />} title="សង្ខេបហិរញ្ញវត្ថុ" />
-              <div className="mt-5 space-y-5">
-                <CurrencySummaryGroup
-                  currency="USD"
-                  savingsAmount={savingsTotals.USD}
-                  loanAmount={loanTotals.USD}
-                  savingsCount={savingsCountByCurrency.USD}
-                  loansCount={loansCountByCurrency.USD}
-                />
-                <CurrencySummaryGroup
-                  currency="KHR"
-                  savingsAmount={savingsTotals.KHR}
-                  loanAmount={loanTotals.KHR}
-                  savingsCount={savingsCountByCurrency.KHR}
-                  loansCount={loansCountByCurrency.KHR}
+              <div className="mt-5">
+                <FinancialSummary
+                  savingsAmount={savingsTotal}
+                  loanAmount={loanTotal}
+                  savingsCount={savingsCount}
+                  loansCount={loansCount}
                 />
               </div>
             </div>
@@ -221,10 +214,10 @@ export function MemberDetailTabs({
                   <div>
                     <h3 className="flex items-center gap-2 font-semibold text-amber-950">
                       <ShieldCheck className="h-5 w-5" />
-                      បញ្ជីពិនិត្យមុនអនុម័ត
+                      បញ្ជីពិនិត្យមុនទទួល
                     </h3>
                     <p className="mt-1 text-sm text-amber-800">
-                      ពិនិត្យឯកសារ និងអ្នកបញ្ជាក់ មុនពេលទទួលយកគណនីសមាជិក។
+                      ពិនិត្យឯកសារ និងអ្នកធានា មុនពេលទទួលយកគណនីសមាជិក។
                     </p>
                   </div>
                   <div className="flex flex-wrap gap-2">
@@ -279,7 +272,7 @@ export function MemberDetailTabs({
 
         {activeTab === 'referee' && (
           <div className="w-full">
-            <SectionTitle icon={<UserCheck className="h-5 w-5" />} title="អ្នកបញ្ជាក់" />
+            <SectionTitle icon={<UserCheck className="h-5 w-5" />} title="អ្នកធានា" />
             {referee ? (
               <div className="mt-5 rounded-xl border border-gray-100 bg-gray-50 p-4">
                 <div className="flex items-start gap-3">
@@ -313,13 +306,13 @@ export function MemberDetailTabs({
                   href={`/admin/members/${referee.id}`}
                   className="mt-4 inline-flex w-full items-center justify-center gap-2 rounded-lg bg-white py-2.5 text-sm font-semibold text-brand-700 ring-1 ring-gray-200 transition hover:bg-brand-50"
                 >
-                  មើលប្រវត្តិអ្នកបញ្ជាក់
+                  មើលប្រវត្តិអ្នកធានា
                   <ExternalLink className="h-4 w-4" />
                 </Link>
               </div>
             ) : (
               <div className="mt-5 rounded-xl border border-dashed border-gray-200 bg-gray-50 px-4 py-10 text-center text-sm text-gray-500">
-                មិនមានអ្នកបញ្ជាក់ត្រូវបានដាក់បញ្ជើទេ។
+                មិនមានអ្នកធានាត្រូវបានដាក់បញ្ជើទេ។
               </div>
             )}
           </div>
@@ -373,7 +366,9 @@ export function MemberDetailTabs({
         )}
 
         {activeTab === 'loans' && (
-          <div className="w-full overflow-hidden rounded-xl border border-border bg-surface">
+          <div className="w-full space-y-6">
+            {memberLoanInterestForm}
+            <div className="w-full overflow-hidden rounded-xl border border-border bg-surface">
             <div className="flex items-center gap-2 border-b border-border px-5 py-4 md:px-6">
               <CreditCard className="h-5 w-5 text-brand-700" />
               <h3 className="text-lg font-semibold text-foreground">កម្ជីថ្មីៗ</h3>
@@ -431,6 +426,7 @@ export function MemberDetailTabs({
               </table>
             </div>
           </div>
+          </div>
         )}
 
       </div>
@@ -438,52 +434,30 @@ export function MemberDetailTabs({
   )
 }
 
-function CurrencySummaryGroup({
-  currency,
+function FinancialSummary({
   savingsAmount,
   loanAmount,
   savingsCount,
   loansCount,
 }: {
-  currency: CurrencyCode
   savingsAmount: number
   loanAmount: number
   savingsCount: number
   loansCount: number
 }) {
-  const isUsd = currency === 'USD'
-
   return (
     <div className="overflow-hidden rounded-2xl border border-border bg-surface-muted/40">
-      <div
-        className={`flex items-center justify-between gap-3 border-b border-border px-5 py-3 ${
-          isUsd ? 'bg-brand-50' : 'bg-amber-50'
-        }`}
-      >
-        <p className={`text-sm font-semibold ${isUsd ? 'text-brand-900' : 'text-amber-950'}`}>
-          {isUsd ? 'រូបិយប័ណ្ណ USD' : 'រូបិយប័ណ្ណ KHR'}
-        </p>
-        <span
-          className={`rounded-md px-2.5 py-1 text-xs font-bold tracking-wide ${
-            isUsd ? 'bg-brand-100 text-brand-800' : 'bg-amber-100 text-amber-900'
-          }`}
-        >
-          {currency}
-        </span>
-      </div>
       <div className="grid gap-px bg-border sm:grid-cols-2">
         <FinancialStatCard
           label="សន្សំសរុប"
           amount={savingsAmount}
-          currency={currency}
-          subtitle={`${savingsCount} ការសន្សំបានអនុម័ត`}
+          subtitle={`${savingsCount} ការសន្សំបានទទួល`}
           icon={PiggyBank}
           tone="emerald"
         />
         <FinancialStatCard
           label="កម្ជីសកម្ម"
           amount={loanAmount}
-          currency={currency}
           subtitle={`${loansCount} កម្ជីកំពុងដំណើរការ`}
           icon={CreditCard}
           tone="blue"
@@ -496,14 +470,12 @@ function CurrencySummaryGroup({
 function FinancialStatCard({
   label,
   amount,
-  currency,
   subtitle,
   icon: Icon,
   tone,
 }: {
   label: string
   amount: number
-  currency: CurrencyCode
   subtitle: string
   icon: React.ComponentType<{ className?: string }>
   tone: 'emerald' | 'blue'
@@ -520,7 +492,7 @@ function FinancialStatCard({
       <div className="flex items-start justify-between gap-4">
         <div className="min-w-0 flex-1">
           <p className="text-xs font-semibold uppercase tracking-wide opacity-70">{label}</p>
-          <p className="mt-3 text-2xl font-bold tabular-nums">{money(amount, currency)}</p>
+          <p className="mt-3 text-2xl font-bold tabular-nums">{money(amount)}</p>
           <p className="mt-4 text-sm opacity-80">{subtitle}</p>
         </div>
         <span className={`grid h-11 w-11 shrink-0 place-items-center rounded-xl ${iconClasses}`}>
