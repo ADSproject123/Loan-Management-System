@@ -25,6 +25,7 @@ export type SavingListItem = {
   currency: string | null
   status: string
   evidence_url: string | null
+  qr_code_ref?: string | null
   saving_date: string | null
   created_at: string
   evidenceSignedUrl: string | null
@@ -161,6 +162,10 @@ export function SavingsList({ savings }: { savings: SavingListItem[] }) {
                 <td className={adminTable.td}>
                   {saving.evidenceSignedUrl ? (
                     <AdminExternalLink href={saving.evidenceSignedUrl}>មើលភស្តុតាង</AdminExternalLink>
+                  ) : saving.qr_code_ref?.startsWith('KHQR-') ? (
+                    <span className="inline-flex items-center rounded-full bg-green-50 px-2 py-0.5 text-xs font-medium text-green-700 ring-1 ring-green-200">
+                      បានបញ្ជាក់ដោយ Bakong
+                    </span>
                   ) : (
                     <span className={adminTable.missingText}>
                       {saving.evidence_url ? 'មិនអាចបង្ហាញ' : 'មិនមាន'}

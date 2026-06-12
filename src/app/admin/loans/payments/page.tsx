@@ -20,7 +20,7 @@ export default async function AdminLoansPaymentsLedgerPage({
     admin
       .from('loan_repayments')
       .select(
-        'id, loan_id, member_id, amount, currency, status, evidence_url, payment_date, created_at, members:members!loan_repayments_member_id_fkey(full_name, email)'
+        'id, loan_id, member_id, amount, currency, status, evidence_url, qr_code_ref, payment_date, created_at, members:members!loan_repayments_member_id_fkey(full_name, email)'
       )
       .order('created_at', { ascending: false })
       .range(from, to),

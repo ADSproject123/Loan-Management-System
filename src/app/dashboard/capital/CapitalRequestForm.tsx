@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/Button'
 import { Card } from '@/components/ui/Card'
 import { Steps } from '@/components/ui/Steps'
 import { requestCapitalWithdrawal } from '@/app/actions/member'
+import { TelegramVerification } from '@/components/ui/TelegramVerification'
 import { showError } from '@/lib/toast'
 import { currencySymbol, type CurrencyCode } from '@/lib/currency'
 import {
@@ -17,6 +18,7 @@ import {
   ArrowRight,
   PiggyBank,
   XCircle,
+  ShieldCheck,
 } from 'lucide-react'
 
 const STEPS = [
@@ -43,6 +45,7 @@ export function CapitalRequestForm({ memberSavings }: { memberSavings: MemberSav
   const [reason, setReason] = useState('')
   const [afterDecision, setAfterDecision] = useState<'continue' | 'withdraw' | null>(null)
   const [loading, setLoading] = useState(false)
+  const [otpVerified, setOtpVerified] = useState(false)
   const handleStep1Next = () => {
     const amt = parseFloat(amount)
     if (!amount || isNaN(amt) || amt <= 0) {
@@ -332,11 +335,27 @@ export function CapitalRequestForm({ memberSavings }: { memberSavings: MemberSav
             </div>
           )}
 
+          {/* Telegram OTP gate before the request can be submitted */}
+          <div className="border border-gray-200 rounded-xl p-5 mb-5">
+            {otpVerified ? (
+              <div className="flex items-center gap-2 text-green-700 text-sm font-medium">
+                <ShieldCheck className="w-5 h-5" />
+                អត្តសញ្ញាណត្រូវបានផ្ទៀងផ្ទាត់តាម Telegram
+              </div>
+            ) : (
+              <TelegramVerification
+                action="capital_request"
+                onVerified={() => setOtpVerified(true)}
+              />
+            )}
+          </div>
+
           <div className="flex gap-3">
             <Button variant="outline" onClick={() => setStep(2)} disabled={loading} className="flex-1">ត្រឡប់ក្រោយ</Button>
             <Button
               onClick={handleSubmit}
               loading={loading}
+              disabled={!otpVerified}
               variant={afterDecision === 'withdraw' ? 'danger' : 'primary'}
               className="flex-1"
             >

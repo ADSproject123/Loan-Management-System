@@ -7,6 +7,9 @@ import { uploadPrivateFile } from '@/lib/uploads'
 import { MIN_SAVING_AMOUNT, normalizeCurrency } from '@/lib/currency'
 import { fetchMemberLoanInterestRate, getInterestSettings } from '@/lib/interest'
 import { fetchMemberLoanEligibility, validateLoanRequestAmount } from '@/lib/loanEligibility'
+import { hasRecentVerification } from '@/lib/verification'
+
+const VERIFICATION_REQUIRED_ERROR = 'សូមផ្ទៀងផ្ទាត់អត្តសញ្ញាណតាម Telegram ជាមុនសិន។'
 
 export type ActionResult = {
   success: boolean
@@ -199,6 +202,9 @@ export async function checkTelegramConnected(connectToken: string): Promise<bool
 export async function addSaving(formData: FormData): Promise<ActionResult> {
   try {
     const member = await requireActiveMember()
+    if (!(await hasRecentVerification(member.id, 'saving_add'))) {
+      return { success: false, error: VERIFICATION_REQUIRED_ERROR }
+    }
     const amount = asNumber(formData, 'amount')
     const notes = asString(formData, 'notes')
     const currency = normalizeCurrency(asString(formData, 'currency'))
@@ -246,6 +252,9 @@ export async function addSaving(formData: FormData): Promise<ActionResult> {
 export async function requestLoan(formData: FormData): Promise<ActionResult> {
   try {
     const member = await requireActiveMember()
+    if (!(await hasRecentVerification(member.id, 'loan_request'))) {
+      return { success: false, error: VERIFICATION_REQUIRED_ERROR }
+    }
     const amount = asNumber(formData, 'amount')
     const purpose = asString(formData, 'purpose')
     const startDate = asString(formData, 'start_date')
@@ -338,6 +347,9 @@ export async function requestLoan(formData: FormData): Promise<ActionResult> {
 export async function repayLoan(formData: FormData): Promise<ActionResult> {
   try {
     const member = await requireActiveMember()
+    if (!(await hasRecentVerification(member.id, 'loan_repay'))) {
+      return { success: false, error: VERIFICATION_REQUIRED_ERROR }
+    }
     const amount = asNumber(formData, 'amount')
     const currency = normalizeCurrency(asString(formData, 'currency'))
 
@@ -427,6 +439,9 @@ export async function requestReport(formData: FormData): Promise<ActionResult> {
 export async function requestCapitalWithdrawal(formData: FormData): Promise<ActionResult> {
   try {
     const member = await requireActiveMember()
+    if (!(await hasRecentVerification(member.id, 'capital_request'))) {
+      return { success: false, error: VERIFICATION_REQUIRED_ERROR }
+    }
     const amount = asNumber(formData, 'amount')
     const reason = asString(formData, 'reason')
     const afterDecision = asString(formData, 'after_decision')
