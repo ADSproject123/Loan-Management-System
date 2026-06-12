@@ -1,11 +1,14 @@
 'use client'
 
-import React, { useState } from 'react'
+import React, { useCallback, useEffect, useState } from 'react'
 import Link from 'next/link'
 import { Steps } from '@/components/ui/Steps'
 import { Button } from '@/components/ui/Button'
 import { Card } from '@/components/ui/Card'
+import { KhqrPaymentCard } from '@/components/loans/KhqrPaymentCard'
+import { TelegramVerification } from '@/components/ui/TelegramVerification'
 import { addSaving } from '@/app/actions/member'
+import { createSavingKhqr, checkSavingKhqr } from '@/app/actions/bakong'
 import { showError } from '@/lib/toast'
 import { currencySymbol, MIN_SAVING_AMOUNT } from '@/lib/currency'
 import { monthlySavingInterest } from '@/lib/interestCalculations'
@@ -16,12 +19,15 @@ import {
   CheckCircle,
   ArrowLeft,
   Info,
+  Loader2,
+  RefreshCw,
+  ShieldCheck,
 } from 'lucide-react'
 
 const STEPS = [
   { id: 1, label: 'ចំនួនទឹកប្រាក់', description: 'បញ្ចូលចំនួន' },
-  { id: 2, label: 'QR Code', description: 'ស្កេន និង បង់' },
-  { id: 3, label: 'ភស្តុតាង', description: 'ផ្ទុកភស្តុតាង' },
+  { id: 2, label: 'ផ្ទៀងផ្ទាត់', description: 'កូដ Telegram' },
+  { id: 3, label: 'QR Code', description: 'ស្កេន បង់ និង ភស្តុតាង' },
   { id: 4, label: 'រួចរាល់', description: 'បានបញ្ជាក់' },
 ]
 
@@ -32,8 +38,57 @@ export function AddSavingForm({ monthlySavingInterestRate }: { monthlySavingInte
   const [notes, setNotes] = useState('')
   const [evidence, setEvidence] = useState<File | null>(null)
   const [loading, setLoading] = useState(false)
+  const [khqr, setKhqr] = useState<{
+    qrImage: string
+    md5: string
+    expiresAt: number
+    merchantName: string
+    currency: 'USD' | 'KHR'
+  } | null>(null)
+  const [khqrLoading, setKhqrLoading] = useState(false)
+  const [khqrError, setKhqrError] = useState<string | null>(null)
+  const [khqrExpired, setKhqrExpired] = useState(false)
+  const [bakongVerified, setBakongVerified] = useState(false)
   const parsedAmount = parseFloat(amount) || 0
   const estimatedInterest = monthlySavingInterest(parsedAmount, monthlySavingInterestRate)
+
+  const generateKhqr = useCallback(async (amt: number) => {
+    setKhqr(null)
+    setKhqrError(null)
+    setKhqrExpired(false)
+    setKhqrLoading(true)
+    const result = await createSavingKhqr(amt)
+    setKhqrLoading(false)
+    if (!result.success) {
+      setKhqrError(result.error)
+      return
+    }
+    setKhqr({
+      qrImage: result.qrImage,
+      md5: result.md5,
+      expiresAt: result.expiresAt,
+      merchantName: result.merchantName,
+      currency: result.currency,
+    })
+  }, [])
+
+  // Poll Bakong while the QR is on screen; once the transfer settles the
+  // saving is recorded server-side and we jump straight to the done step.
+  useEffect(() => {
+    if (step !== 3 || !khqr || khqrExpired) return
+    let active = true
+    const interval = setInterval(async () => {
+      const result = await checkSavingKhqr(khqr.md5, notes)
+      if (!active || !result.success || !result.paid) return
+      clearInterval(interval)
+      setBakongVerified(true)
+      setStep(4)
+    }, 4000)
+    return () => {
+      active = false
+      clearInterval(interval)
+    }
+  }, [step, khqr, khqrExpired, notes])
 
   const handleAmountNext = () => {
     const num = parseFloat(amount)
@@ -149,26 +204,93 @@ export function AddSavingForm({ monthlySavingInterestRate }: { monthlySavingInte
         </Card>
       )}
 
+      {/* Step 2: Telegram verification */}
       {step === 2 && (
+        <Card>
+          <div className="flex items-center gap-3 mb-6">
+            <div className="p-2.5 bg-brand-100 rounded-lg">
+              <ShieldCheck className="w-6 h-6 text-brand-700" />
+            </div>
+            <div>
+              <h2 className="font-semibold text-gray-900">ផ្ទៀងផ្ទាត់អត្តសញ្ញាណ</h2>
+              <p className="text-gray-500 text-sm">បញ្ជាក់ថាជាអ្នកពិតប្រាកដមុនពេលបង់ប្រាក់</p>
+            </div>
+          </div>
+
+          <TelegramVerification
+            action="saving_add"
+            onVerified={() => {
+              setStep(3)
+              void generateKhqr(parsedAmount)
+            }}
+          />
+
+          <div className="mt-5">
+            <Button variant="outline" onClick={() => setStep(1)} className="w-full">
+              ត្រឡប់ក្រោយ
+            </Button>
+          </div>
+        </Card>
+      )}
+
+      {/* Step 3: QR Code + evidence */}
+      {step === 3 && (
         <Card>
           <div className="flex items-center gap-3 mb-6">
             <div className="p-2.5 bg-brand-100 rounded-lg">
               <QrCode className="w-6 h-6 text-brand-700" />
             </div>
             <div>
-              <h2 className="font-semibold text-gray-900">ស្កេន និង បង់ប្រាក់</h2>
-              <p className="text-gray-500 text-sm">ស្កេន QR code ដើម្បីផ្ទេរចំនួនទឹកប្រាក់សន្សំ</p>
+              <h2 className="font-semibold text-gray-900">ស្កេន KHQR ដើម្បីបង់ប្រាក់</h2>
+              <p className="text-gray-500 text-sm">ស្កេនជាមួយកម្មវិធីធនាគារដែលគាំទ្រ KHQR</p>
             </div>
           </div>
 
-          <div className="text-center mb-6">
-            <div className="bg-gray-100 rounded-xl p-8 inline-block mb-4">
-              <div className="w-48 h-48 bg-white rounded-lg flex items-center justify-center border-2 border-gray-300">
-                <QrCode className="w-32 h-32 text-gray-400" />
+          <div className="mb-6">
+            {khqrLoading && (
+              <div className="flex flex-col items-center justify-center gap-3 py-16">
+                <Loader2 className="w-8 h-8 text-brand-700 animate-spin" />
+                <p className="text-sm text-gray-500">កំពុងបង្កើត KHQR...</p>
               </div>
-            </div>
-            <p className="font-semibold text-gray-900 text-lg">{currencySymbol()}{parsedAmount.toLocaleString()}</p>
-            <p className="text-gray-500 text-sm mt-1">ផ្ទេរចំនួនពិតប្រាកដនេះ</p>
+            )}
+
+            {!khqrLoading && khqrError && (
+              <div className="text-center py-10">
+                <p className="text-sm text-red-600 mb-4">{khqrError}</p>
+                <Button variant="outline" onClick={() => generateKhqr(parsedAmount)}>
+                  <RefreshCw className="w-4 h-4 mr-2" />
+                  ព្យាយាមម្តងទៀត
+                </Button>
+              </div>
+            )}
+
+            {!khqrLoading && khqr && (
+              <>
+                <KhqrPaymentCard
+                  key={khqr.md5}
+                  merchantName={khqr.merchantName}
+                  amount={parsedAmount}
+                  currency={khqr.currency}
+                  qrImage={khqr.qrImage}
+                  expiresAt={khqr.expiresAt}
+                  expired={khqrExpired}
+                  onExpired={() => setKhqrExpired(true)}
+                />
+                <div className="mt-4 text-center">
+                  {khqrExpired ? (
+                    <Button variant="outline" onClick={() => generateKhqr(parsedAmount)}>
+                      <RefreshCw className="w-4 h-4 mr-2" />
+                      បង្កើត QR ថ្មី
+                    </Button>
+                  ) : (
+                    <p className="inline-flex items-center gap-2 text-sm text-gray-500">
+                      <Loader2 className="w-4 h-4 animate-spin" />
+                      កំពុងរង់ចាំការបង់ប្រាក់ — នឹងបញ្ជាក់ដោយស្វ័យប្រវត្តិបន្ទាប់ពីបង់រួច
+                    </p>
+                  )}
+                </div>
+              </>
+            )}
           </div>
 
           <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 mb-6">
@@ -177,38 +299,17 @@ export function AddSavingForm({ monthlySavingInterestRate }: { monthlySavingInte
               <div className="text-sm text-yellow-700">
                 <p className="font-medium mb-1">សំខាន់៖</p>
                 <ul className="space-y-1 list-disc list-inside text-xs">
-                  <li>ផ្ទេរចំនួនពិតប្រាកដ <strong>{currencySymbol()}{parsedAmount.toLocaleString()}</strong></li>
-                  <li>ថតរូបអេក្រង់នៃការបញ្ជាក់ការផ្ទេរ</li>
-                  <li>កុំបិទទំព័រនេះរហូតដល់អ្នកមានរូបអេក្រង់</li>
+                  <li>ផ្ទេរចំនួនពិតប្រាកដ <strong>{currencySymbol()}{parsedAmount.toLocaleString()}</strong> — ចំនួនត្រូវបានចាក់សោក្នុង QR រួចហើយ</li>
+                  <li>បន្ទាប់ពីបង់រួច ប្រព័ន្ធនឹងបញ្ជាក់ដោយស្វ័យប្រវត្តិ</li>
+                  <li>បើមិនបញ្ជាក់ សូមផ្ទុកភស្តុតាងខាងក្រោម ហើយចុច «ដាក់ស្នើភស្តុតាង»</li>
                 </ul>
               </div>
             </div>
           </div>
 
-          <div className="flex gap-3">
-            <Button variant="outline" onClick={() => setStep(1)} className="flex-1">
-              ត្រឡប់ក្រោយ
-            </Button>
-            <Button onClick={() => setStep(3)} className="flex-1">
-              ខ្ញុំបានផ្ទេររួចហើយ
-            </Button>
-          </div>
-        </Card>
-      )}
-
-      {step === 3 && (
-        <Card>
-          <div className="flex items-center gap-3 mb-6">
-            <div className="p-2.5 bg-orange-100 rounded-lg">
-              <Upload className="w-6 h-6 text-orange-700" />
-            </div>
-            <div>
-              <h2 className="font-semibold text-gray-900">ដាក់ស្នើភស្តុតាងបង់ប្រាក់</h2>
-              <p className="text-gray-500 text-sm">ផ្ទុករូបអេក្រង់នៃការបញ្ជាក់ការផ្ទេររបស់អ្នក</p>
-            </div>
-          </div>
-
+          {/* Evidence upload (fallback when Bakong doesn't auto-confirm) */}
           <div className="mb-6">
+            <p className="text-sm font-medium text-gray-700 mb-2">ផ្ទុកភស្តុតាងបង់ប្រាក់</p>
             <label className="flex flex-col items-center justify-center w-full h-40 border-2 border-dashed border-gray-300 rounded-xl cursor-pointer hover:border-brand-500 hover:bg-brand-50 transition-colors">
               <Upload className="w-10 h-10 text-gray-400 mb-3" />
               {evidence ? (
@@ -245,7 +346,7 @@ export function AddSavingForm({ monthlySavingInterestRate }: { monthlySavingInte
           </div>
 
           <div className="flex gap-3">
-            <Button variant="outline" onClick={() => setStep(2)} className="flex-1" disabled={loading}>
+            <Button variant="outline" onClick={() => setStep(1)} className="flex-1" disabled={loading}>
               ត្រឡប់ក្រោយ
             </Button>
             <Button onClick={handleSubmitEvidence} loading={loading} className="flex-1">
@@ -255,15 +356,22 @@ export function AddSavingForm({ monthlySavingInterestRate }: { monthlySavingInte
         </Card>
       )}
 
+      {/* Step 4: Success */}
       {step === 4 && (
         <Card>
           <div className="text-center py-6">
             <div className="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-5">
               <CheckCircle className="w-10 h-10 text-green-500" />
             </div>
-            <h2 className="text-2xl font-bold text-gray-900 mb-2">ការសន្សំបានដាក់ស្នើ!</h2>
+            <h2 className="text-2xl font-bold text-gray-900 mb-2">
+              {bakongVerified ? 'ការបង់ប្រាក់ជោគជ័យ!' : 'ការសន្សំបានដាក់ស្នើ!'}
+            </h2>
             <p className="text-gray-600 mb-2">
-              ការសន្សំរបស់អ្នកចំនួន <strong>{currencySymbol()}{parsedAmount.toLocaleString()}</strong> ត្រូវបានដាក់ស្នើដោយជោគជ័យ។
+              {bakongVerified ? (
+                <>ការសន្សំចំនួន <strong>{currencySymbol()}{parsedAmount.toLocaleString()}</strong> ត្រូវបានបញ្ជាក់ដោយ Bakong (KHQR)។</>
+              ) : (
+                <>ការសន្សំរបស់អ្នកចំនួន <strong>{currencySymbol()}{parsedAmount.toLocaleString()}</strong> ត្រូវបានដាក់ស្នើដោយជោគជ័យ។</>
+              )}
             </p>
             <p className="text-gray-500 text-sm mb-6">
               អ្នកគ្រប់គ្រងនឹងទទួលភស្តុតាងបង់ប្រាក់របស់អ្នកក្នុងរយៈពេល ២៤ ម៉ោង។
@@ -279,7 +387,9 @@ export function AddSavingForm({ monthlySavingInterestRate }: { monthlySavingInte
                 </div>
                 <div className="flex justify-between text-sm">
                   <span className="text-green-700">ស្ថានភាព</span>
-                  <span className="font-medium text-green-900">កំពុងរង់ចាំការទទួល</span>
+                  <span className="font-medium text-green-900">
+                    {bakongVerified ? 'បានបញ្ជាក់ដោយ Bakong — រង់ចាំការទទួល' : 'កំពុងរង់ចាំការទទួល'}
+                  </span>
                 </div>
                 <div className="flex justify-between text-sm">
                   <span className="text-green-700">ការទទួលដែលរំពឹងទុក</span>
