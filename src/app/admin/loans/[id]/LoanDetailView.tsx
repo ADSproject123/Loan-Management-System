@@ -54,6 +54,8 @@ type MemberSummary = {
 type RefereeSummary = {
   id: string
   full_name: string
+  full_name_kh?: string | null
+  full_name_en?: string | null
   email?: string
   phone?: string | null
 }
@@ -69,7 +71,8 @@ type LoanDetailViewProps = {
   member?: MemberSummary | null
   referee?: RefereeSummary | null
   approver?: ApproverSummary | null
-  refereeName: string | null
+  refereeNameKh: string | null
+  refereeNameEn: string | null
   refereePhone: string | null
   refereeEmail: string | null
   hasRefereeInfo: boolean
@@ -96,7 +99,8 @@ export function LoanDetailView({
   member,
   referee,
   approver,
-  refereeName,
+  refereeNameKh,
+  refereeNameEn,
   refereePhone,
   refereeEmail,
   hasRefereeInfo,
@@ -371,15 +375,22 @@ export function LoanDetailView({
                 <DetailSection title="អ្នកធានា">
                   <div className="rounded-xl border border-border bg-surface-muted/30 p-4">
                     <div className="flex items-start justify-between gap-3">
-                      <div className="min-w-0">
-                        <p className="font-medium text-foreground">
-                          {referee?.full_name ?? refereeName}
-                        </p>
-                        <p className="mt-1 text-xs text-muted">
+                      <div className="min-w-0 space-y-1">
+                        {(referee?.full_name_kh || refereeNameKh) && (
+                          <p className="font-medium text-foreground">
+                            {referee?.full_name_kh ?? refereeNameKh}
+                          </p>
+                        )}
+                        {(referee?.full_name_en || referee?.full_name || refereeNameEn) && (
+                          <p className="text-sm text-muted">
+                            {referee?.full_name_en ?? referee?.full_name ?? refereeNameEn}
+                          </p>
+                        )}
+                        <p className="text-xs text-muted">
                           {referee?.phone ?? refereePhone ?? 'គ្មានទូរស័ព្ទ'}
                         </p>
                         {(referee?.email || refereeEmail) && (
-                          <p className="mt-1 text-xs text-muted">
+                          <p className="text-xs text-muted">
                             {referee?.email ?? refereeEmail}
                           </p>
                         )}

@@ -186,6 +186,108 @@ export async function denyMember(formData: FormData): Promise<ActionResult> {
   }
 }
 
+export async function deleteMember(formData: FormData): Promise<ActionResult> {
+  try {
+    const currentAdmin = await requireAdmin()
+    const id = idFrom(formData)
+
+    if (id === currentAdmin.id) {
+      return { success: false, error: 'អ្នកមិនអាចលុបគណនីរបស់ខ្លួនឯងបានទេ។' }
+    }
+
+    const admin = createAdminClient()
+    const { data: target, error: targetError } = await admin
+      .from('members')
+      .select('id, full_name, auth_user_id, is_admin, telegram_chat_id')
+      .eq('id', id)
+      .maybeSingle()
+
+    if (targetError) {
+      console.error('[deleteMember] fetch target failed:', targetError)
+      return { success: false, error: `ទាញយកទិន្នន័យបរាជ័យ: ${targetError.message}` }
+    }
+    if (!target) {
+      return { success: false, error: 'រកមិនឃើញសមាជិក។' }
+    }
+    if (target.is_admin) {
+      return {
+        success: false,
+        error: 'មិនអាចលុបគណនីអ្នកគ្រប់គ្រងបានទេ។ សូមដកសិទ្ធិអ្នកគ្រប់គ្រងជាមុនសិន។',
+      }
+    }
+
+    // These columns reference members(id) without ON DELETE CASCADE, so they
+    // must be cleared first or the delete is blocked by the foreign keys.
+    const referenceCleanups: Array<[string, string]> = [
+      ['members', 'referee_id'],
+      ['loans', 'referee_id'],
+      ['loans', 'approved_by'],
+      ['savings', 'verified_by'],
+      ['savings', 'refunded_by'],
+      ['loan_repayments', 'verified_by'],
+      ['capital_requests', 'approved_by'],
+    ]
+    for (const [table, column] of referenceCleanups) {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const { error } = await (admin.from(table as any) as any)
+        .update({ [column]: null })
+        .eq(column, id)
+      if (error) {
+        console.error(`[deleteMember] cleanup ${table}.${column} failed:`, error)
+        return { success: false, error: `លុបបរាជ័យ (${table}.${column}): ${error.message}` }
+      }
+    }
+
+    if (target.auth_user_id) {
+      // Deleting the auth user cascades to the member row, which in turn
+      // cascades to all member-owned records (savings, loans, repayments, …).
+      const { error: authError } = await admin.auth.admin.deleteUser(target.auth_user_id)
+      if (authError) {
+        // If the auth user is already gone (e.g. manually purged), fall back to
+        // deleting the member row directly so the record is still cleaned up.
+        const isNotFound =
+          authError.message?.toLowerCase().includes('not found') ||
+          authError.message?.toLowerCase().includes('user not found') ||
+          ('status' in authError && (authError as { status?: number }).status === 404)
+
+        if (isNotFound) {
+          console.warn('[deleteMember] auth user not found, deleting member row directly')
+          const { error: deleteError } = await admin.from('members').delete().eq('id', id)
+          if (deleteError) {
+            console.error('[deleteMember] fallback members.delete failed:', deleteError)
+            return { success: false, error: `លុបសមាជិកបរាជ័យ: ${deleteError.message}` }
+          }
+        } else {
+          console.error('[deleteMember] auth.admin.deleteUser failed:', authError)
+          return { success: false, error: `លុបគណនីចូលបរាជ័យ: ${authError.message}` }
+        }
+      }
+    } else {
+      const { error: deleteError } = await admin.from('members').delete().eq('id', id)
+      if (deleteError) {
+        console.error('[deleteMember] members.delete failed:', deleteError)
+        return { success: false, error: `លុបសមាជិកបរាជ័យ: ${deleteError.message}` }
+      }
+    }
+
+    if (target.telegram_chat_id) {
+      await sendTelegramMessage(
+        target.telegram_chat_id,
+        '<b>គណនីត្រូវបានលុប</b>\nគណនីសមាជិករបស់អ្នកត្រូវបានលុបចេញពីប្រព័ន្ធដោយអ្នកគ្រប់គ្រង។'
+      )
+    }
+
+    revalidatePath('/admin')
+    revalidatePath('/admin/members')
+    revalidatePath('/admin/members/requests')
+    return { success: true }
+  } catch (error) {
+    console.error('[deleteMember] unexpected error:', error)
+    const msg = error instanceof Error ? error.message : String(error)
+    return { success: false, error: `លុបបរាជ័យ: ${msg}` }
+  }
+}
+
 export async function approveSaving(formData: FormData): Promise<ActionResult> {
   try {
     const approver = await requireAdmin()

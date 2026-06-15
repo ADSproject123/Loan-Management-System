@@ -67,7 +67,7 @@ export function RepaymentsList({
   }, [repayments, query, statusFilter])
 
   return (
-    <>
+    <div className="flex flex-col flex-1 min-h-0">
       <AdminListToolbar
         searchValue={query}
         onSearchChange={setQuery}
@@ -164,6 +164,6 @@ export function RepaymentsList({
           </tbody>
         </table>
       </div>
-    </>
+    </div>
   )
 }

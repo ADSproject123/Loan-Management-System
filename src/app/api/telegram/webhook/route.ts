@@ -65,7 +65,7 @@ export async function POST(request: NextRequest) {
   const admin = createAdminClient()
   const { data: member } = await admin
     .from('members')
-    .select('id, full_name_kh, full_name_en')
+    .select('id, full_name_kh, full_name_en, telegram_chat_id')
     .eq('telegram_connect_token', token)
     .maybeSingle()
 
@@ -78,18 +78,40 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ ok: true })
   }
 
-  // Link (or re-link) this chat to the member. We keep the token so the
-  // registration page can still confirm the link by polling; re-pressing Start
-  // simply rewrites the same chat id.
+  // If this member already has this exact chat linked, it's a no-op (idempotent re-link).
+  // But if a DIFFERENT member already owns this chat id, block the connection.
+  if (member.telegram_chat_id !== String(chatId)) {
+    const { data: existing } = await admin
+      .from('members')
+      .select('id')
+      .eq('telegram_chat_id', String(chatId))
+      .neq('id', member.id)
+      .maybeSingle()
+
+    if (existing) {
+      await sendTelegramMessage(
+        String(chatId),
+        '⛔ គណនី Telegram នេះត្រូវបានភ្ជាប់ជាមួយសមាជិកដទៃរួចហើយ។\n\n' +
+          'This Telegram account is already linked to another member. Please contact the admin.'
+      )
+      return NextResponse.json({ ok: true })
+    }
+  }
+
   const { error } = await admin
     .from('members')
     .update({ telegram_chat_id: String(chatId) })
     .eq('id', member.id)
 
   if (error) {
+    // Unique constraint violation — another member already owns this chat.
+    const isDuplicate =
+      error.code === '23505' || error.message?.includes('members_telegram_chat_id_unique')
     await sendTelegramMessage(
       String(chatId),
-      '❌ មានបញ្ហាក្នុងការភ្ជាប់។ សូមព្យាយាមម្តងទៀតពេលក្រោយ។\n\nSomething went wrong linking your account. Please try again later.'
+      isDuplicate
+        ? '⛔ គណនី Telegram នេះត្រូវបានភ្ជាប់ជាមួយសមាជិកដទៃរួចហើយ។\n\nThis Telegram account is already linked to another member. Please contact the admin.'
+        : '❌ មានបញ្ហាក្នុងការភ្ជាប់។ សូមព្យាយាមម្តងទៀតពេលក្រោយ។\n\nSomething went wrong linking your account. Please try again later.'
     )
     return NextResponse.json({ ok: true })
   }

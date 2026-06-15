@@ -17,10 +17,11 @@ export default async function AdminMembersRequestsPage({
     admin
       .from('members')
       .select('id, full_name, email, phone, status, role, created_at')
+      .eq('is_admin', false)
       .eq('status', 'pending')
       .order('created_at', { ascending: true })
       .range(from, to),
-    admin.from('members').select('id', { count: 'exact', head: true }).eq('status', 'pending'),
+    admin.from('members').select('id', { count: 'exact', head: true }).eq('is_admin', false).eq('status', 'pending'),
   ])
 
   const members = (data ?? []) as MemberListItem[]

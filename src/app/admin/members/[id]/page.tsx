@@ -4,6 +4,7 @@ import { createAdminClient } from '@/lib/supabase/admin'
 import { AcceptMemberButton } from '@/app/admin/AcceptMemberButton'
 import { SuspendMemberButton } from '@/app/admin/SuspendMemberButton'
 import { DenyMemberButton } from '@/app/admin/DenyMemberButton'
+import { DeleteMemberButton } from '@/app/admin/DeleteMemberButton'
 import { MemberRoleBadge } from '@/components/ui/Badge'
 import { formatDate, sumAmounts } from '@/app/admin/adminUtils'
 import { getInterestSettings, getLoanInterestPlans } from '@/lib/interest'
@@ -137,6 +138,11 @@ export default async function AdminMemberDetailPage({ params }: PageProps) {
           {member.status !== 'suspended' && member.status !== 'pending' && member.status !== 'rejected' && (
             <SuspendMemberButton memberId={member.id} memberName={member.full_name} />
           )}
+          <DeleteMemberButton
+            memberId={member.id}
+            memberName={member.full_name}
+            redirectTo="/admin/members"
+          />
         </div>
       </div>
 

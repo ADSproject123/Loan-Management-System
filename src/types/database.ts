@@ -86,6 +86,8 @@ export interface Loan {
   status: LoanStatus
   referee_id?: string
   referee_name?: string | null
+  referee_name_kh?: string | null
+  referee_name_en?: string | null
   referee_phone?: string | null
   referee_email?: string | null
   referee_verified: boolean

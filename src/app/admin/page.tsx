@@ -24,8 +24,8 @@ export default async function AdminPage() {
     loansTotalCount,
     loansActiveCount,
   ] = await Promise.all([
-    admin.from('members').select('id', { count: 'exact', head: true }).eq('status', 'active'),
-    admin.from('members').select('id', { count: 'exact', head: true }).eq('status', 'pending'),
+    admin.from('members').select('id', { count: 'exact', head: true }).eq('is_admin', false).eq('status', 'active'),
+    admin.from('members').select('id', { count: 'exact', head: true }).eq('is_admin', false).eq('status', 'pending'),
     admin
       .from('savings')
       .select('amount, currency, status, verified_at, verified_by, saving_date, created_at'),
@@ -129,7 +129,7 @@ export default async function AdminPage() {
 
   return (
     <main className="flex min-h-screen flex-col">
-      <AdminPanel title="ផ្ទាំងគ្រប់គ្រង" fill>
+      <AdminPanel title="ផ្ទាំងគ្រប់គ្រង">
         <div className="flex min-h-0 flex-1 flex-col px-6 py-6 md:px-8">
           <DashboardCharts
             overview={overviewStats}

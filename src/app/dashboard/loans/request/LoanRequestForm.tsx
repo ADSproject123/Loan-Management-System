@@ -41,7 +41,8 @@ interface LoanFormData {
   purpose: string
   start_date: string
   end_date: string
-  referee_name: string
+  referee_name_kh: string
+  referee_name_en: string
   referee_phone: string
   referee_email: string
 }
@@ -76,12 +77,14 @@ export function LoanRequestForm({
   const [step, setStep] = useState(1)
   const [loading, setLoading] = useState(false)
   const [otpVerified, setOtpVerified] = useState(false)
+  const [showVerification, setShowVerification] = useState(false)
   const [formData, setFormData] = useState<LoanFormData>({
     amount: '',
     purpose: '',
     start_date: dateFromToday(0),
     end_date: dateFromToday(12),
-    referee_name: '',
+    referee_name_kh: '',
+    referee_name_en: '',
     referee_phone: '',
     referee_email: '',
   })
@@ -116,8 +119,12 @@ export function LoanRequestForm({
       }
     }
     if (step === 2) {
-      if (!formData.referee_name.trim()) {
-        showError('សូមបញ្ចូលឈ្មោះពេញរបស់អ្នកធានា។')
+      if (!formData.referee_name_kh.trim()) {
+        showError('សូមបញ្ចូលឈ្មោះអ្នកធានាជាអក្សរខ្មែរ។')
+        return false
+      }
+      if (!formData.referee_name_en.trim()) {
+        showError('សូមបញ្ចូលឈ្មោះអ្នកធានាជាអក្សរឡាតាំង។')
         return false
       }
       if (!formData.referee_phone.trim()) {
@@ -142,7 +149,8 @@ export function LoanRequestForm({
     payload.append('purpose', formData.purpose)
     payload.append('start_date', formData.start_date)
     payload.append('end_date', formData.end_date)
-    payload.append('referee_name', formData.referee_name)
+    payload.append('referee_name_kh', formData.referee_name_kh)
+    payload.append('referee_name_en', formData.referee_name_en)
     payload.append('referee_phone', formData.referee_phone)
     payload.append('referee_email', formData.referee_email)
 
@@ -383,15 +391,31 @@ export function LoanRequestForm({
           <div className="space-y-4 mb-5">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1.5">
-                ឈ្មោះពេញអ្នកធានា <span className="text-red-500">*</span>
+                ឈ្មោះអ្នកធានា (ខ្មែរ) <span className="text-red-500">*</span>
               </label>
               <div className="relative">
                 <User className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
                 <input
                   type="text"
-                  value={formData.referee_name}
-                  onChange={(e) => update('referee_name', e.target.value)}
-                  placeholder="ឈ្មោះពេញអ្នកធានា"
+                  value={formData.referee_name_kh}
+                  onChange={(e) => update('referee_name_kh', e.target.value)}
+                  placeholder="ឈ្មោះជាអក្សរខ្មែរ"
+                  className="w-full pl-10 pr-4 py-2.5 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-brand-500 text-sm"
+                />
+              </div>
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1.5">
+                ឈ្មោះអ្នកធានា (អង់គ្លេស) <span className="text-red-500">*</span>
+              </label>
+              <div className="relative">
+                <User className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+                <input
+                  type="text"
+                  value={formData.referee_name_en}
+                  onChange={(e) => update('referee_name_en', e.target.value)}
+                  placeholder="Full name in English"
                   className="w-full pl-10 pr-4 py-2.5 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-brand-500 text-sm"
                 />
               </div>
@@ -458,7 +482,8 @@ export function LoanRequestForm({
               { label: 'ចំនួនទឹកប្រាក់កម្ជី', value: `${sym}${loanAmount.toLocaleString()}` },
               { label: 'គោលបំណង', value: formData.purpose },
               { label: 'រយៈពេល', value: `${formData.start_date} → ${formData.end_date} (${termMonths} ខែ)` },
-              { label: 'ឈ្មោះអ្នកធានា', value: formData.referee_name },
+              { label: 'ឈ្មោះអ្នកធានា (ខ្មែរ)', value: formData.referee_name_kh },
+              { label: 'ឈ្មោះអ្នកធានា (អង់គ្លេស)', value: formData.referee_name_en },
               { label: 'ទូរស័ព្ទអ្នកធានា', value: formData.referee_phone },
               { label: 'អ៊ីមែលអ្នកធានា', value: formData.referee_email || '—' },
             ].map((item) => (
@@ -488,19 +513,31 @@ export function LoanRequestForm({
           </div>
 
           {/* Telegram OTP gate before the request can be submitted */}
-          <div className="border border-gray-200 rounded-xl p-5 mb-5">
+          <div className="border border-gray-200 rounded-xl p-4 mb-5">
             {otpVerified ? (
               <div className="flex items-center gap-2 text-green-700 text-sm font-medium">
                 <ShieldCheck className="w-5 h-5" />
                 អត្តសញ្ញាណត្រូវបានផ្ទៀងផ្ទាត់តាម Telegram
               </div>
             ) : (
-              <TelegramVerification
-                action="loan_request"
-                onVerified={() => setOtpVerified(true)}
-              />
+              <button
+                type="button"
+                onClick={() => setShowVerification(true)}
+                className="flex w-full items-center gap-3 rounded-lg bg-brand-50 px-4 py-3 text-sm font-semibold text-brand-900 transition hover:bg-brand-100"
+              >
+                <ShieldCheck className="w-5 h-5 text-brand-700 shrink-0" />
+                ផ្ទៀងផ្ទាត់អត្តសញ្ញាណតាម Telegram
+              </button>
             )}
           </div>
+
+          {showVerification && (
+            <TelegramVerification
+              action="loan_request"
+              onVerified={() => { setOtpVerified(true); setShowVerification(false) }}
+              onCancel={() => setShowVerification(false)}
+            />
+          )}
 
           <div className="flex gap-3">
             <Button variant="outline" onClick={() => setStep(2)} className="flex-1" disabled={loading}>ត្រឡប់ក្រោយ</Button>

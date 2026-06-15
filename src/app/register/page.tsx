@@ -87,6 +87,9 @@ interface FormData {
   address: string
   id_number: string
   resident_book_number: string
+  referee_name_kh: string
+  referee_name_en: string
+  referee_phone: string
   referee_email: string
   id_document: File | null
   resident_book: File | null
@@ -103,6 +106,9 @@ const INITIAL_FORM: FormData = {
   address: '',
   id_number: '',
   resident_book_number: '',
+  referee_name_kh: '',
+  referee_name_en: '',
+  referee_phone: '',
   referee_email: '',
   id_document: null,
   resident_book: null,
@@ -123,6 +129,9 @@ function normalizeFormData(data: Partial<FormData> & { full_name?: string }): Fo
     address: merged.address ?? '',
     id_number: merged.id_number ?? '',
     resident_book_number: merged.resident_book_number ?? '',
+    referee_name_kh: merged.referee_name_kh ?? '',
+    referee_name_en: merged.referee_name_en ?? '',
+    referee_phone: merged.referee_phone ?? '',
     referee_email: merged.referee_email ?? '',
     id_document: merged.id_document ?? null,
     resident_book: merged.resident_book ?? null,
@@ -202,6 +211,10 @@ export default function RegisterPage() {
     }
     if (formData.date_of_birth > new Date().toISOString().slice(0, 10)) {
       showError('ថ្ងៃខែឆ្នាំកំណើតមិនអាចនៅពេលអនាគតបានទេ។')
+      return false
+    }
+    if (!/^\d{9}$/.test(formData.id_number)) {
+      showError('លេខអត្តសញ្ញាណប័ណ្ណត្រូវមាន ៩ ខ្ទង់។')
       return false
     }
     return true
@@ -697,12 +710,13 @@ function StepPersonal({ formData, updateField }: StepProps) {
             icon={<CreditCard className="h-4.5 w-4.5" />}
             type="text"
             inputMode="numeric"
+            maxLength={9}
             value={formData.id_number}
-            onChange={(e) => updateField('id_number', e.target.value)}
-            placeholder="លេខអត្តសញ្ញាណប័ណ្ណ ១៣ ខ្ទង់"
+            onChange={(e) => updateField('id_number', e.target.value.replace(/\D/g, '').slice(0, 9))}
+            placeholder="លេខអត្តសញ្ញាណប័ណ្ណ ៩ ខ្ទង់"
           />
         </Field>
-        <Field label="លេខសៀវភៅគ្រួសារ" htmlFor="resident_book_number" optional>
+        <Field label="លេខសៀវភៅគ្រួសារ/លេខសៀវភៅស្នាក់នៅ" htmlFor="resident_book_number" optional>
           <IconInput
             id="resident_book_number"
             icon={<FileText className="h-4.5 w-4.5" />}
@@ -749,6 +763,43 @@ function StepReferee({ formData, updateField }: StepProps) {
           </div>
         </div>
       </div>
+
+      <div className="grid gap-5 sm:grid-cols-2">
+        <Field label="ឈ្មោះអ្នកធានា (ខ្មែរ)" htmlFor="referee_name_kh" optional>
+          <IconInput
+            id="referee_name_kh"
+            icon={<User className="h-4.5 w-4.5" />}
+            type="text"
+            autoComplete="off"
+            value={formData.referee_name_kh}
+            onChange={(e) => updateField('referee_name_kh', e.target.value)}
+            placeholder="ឈ្មោះជាអក្សរខ្មែរ"
+          />
+        </Field>
+        <Field label="ឈ្មោះអ្នកធានា (អង់គ្លេស)" htmlFor="referee_name_en" optional>
+          <IconInput
+            id="referee_name_en"
+            icon={<User className="h-4.5 w-4.5" />}
+            type="text"
+            autoComplete="off"
+            value={formData.referee_name_en}
+            onChange={(e) => updateField('referee_name_en', e.target.value)}
+            placeholder="Full name in English"
+          />
+        </Field>
+      </div>
+
+      <Field label="លេខទូរស័ព្ទអ្នកធានា" htmlFor="referee_phone" optional>
+        <IconInput
+          id="referee_phone"
+          icon={<Phone className="h-4.5 w-4.5" />}
+          type="tel"
+          autoComplete="off"
+          value={formData.referee_phone}
+          onChange={(e) => updateField('referee_phone', e.target.value)}
+          placeholder="0812345678"
+        />
+      </Field>
 
       <Field
         label="អាសយដ្ឋានអ៊ីមែលអ្នកធានា"
@@ -875,6 +926,7 @@ interface StepTelegramProps {
 
 function StepTelegram({ connectToken, onDone }: StepTelegramProps) {
   const [connected, setConnected] = useState(false)
+  const [checking, setChecking] = useState(true)
   const botUsername = process.env.NEXT_PUBLIC_TELEGRAM_BOT_USERNAME
 
   const deepLink =
@@ -882,11 +934,25 @@ function StepTelegram({ connectToken, onDone }: StepTelegramProps) {
       ? `https://t.me/${botUsername}?start=${connectToken}`
       : null
 
-  // Poll the server until the webhook captures the user's chat. We stop as soon
-  // as the link is confirmed or the component unmounts.
   useEffect(() => {
-    if (!connectToken || connected) return
+    if (!connectToken) {
+      setChecking(false)
+      return
+    }
     let active = true
+
+    // Immediate check on mount — detects if the user already connected before landing here.
+    checkTelegramConnected(connectToken)
+      .then((isConnected) => {
+        if (!active) return
+        if (isConnected) setConnected(true)
+      })
+      .catch(() => {})
+      .finally(() => {
+        if (active) setChecking(false)
+      })
+
+    // Continue polling so we detect connections made after the page loads.
     const interval = setInterval(async () => {
       try {
         const isConnected = await checkTelegramConnected(connectToken)
@@ -898,11 +964,20 @@ function StepTelegram({ connectToken, onDone }: StepTelegramProps) {
         // transient — keep polling
       }
     }, 3000)
+
     return () => {
       active = false
       clearInterval(interval)
     }
-  }, [connectToken, connected])
+  }, [connectToken])
+
+  if (checking) {
+    return (
+      <div className="flex items-center justify-center py-12">
+        <LoadingSpinner size="md" color="brand" />
+      </div>
+    )
+  }
 
   if (connected) {
     return (
@@ -912,7 +987,7 @@ function StepTelegram({ connectToken, onDone }: StepTelegramProps) {
         </div>
         <h2 className="mt-6 text-2xl font-bold text-slate-950">តេលេក្រាមត្រូវបានភ្ជាប់</h2>
         <p className="mx-auto mt-3 max-w-md text-[15px] leading-7 text-slate-600">
-          អ្នកនឹងទទួលបានការជូនដំណឹងពីសមាគមន៏សន្សំតាមតេលេក្រាមនៅពេលគណនីរបស់អ្នកមានការផ្លាស់ប្តូរ។
+          អ្នកបានភ្ជាប់តេលេក្រាមជាមួយប៊ូតនេះរួចហើយ។ អ្នកនឹងទទួលបានការជូនដំណឹងពីសមាគមន៏សន្សំនៅពេលគណនីរបស់អ្នកមានការផ្លាស់ប្តូរ។
         </p>
         <button
           type="button"
