@@ -1,7 +1,9 @@
 import Link from 'next/link'
 import { notFound, redirect } from 'next/navigation'
 import { ArrowLeft } from 'lucide-react'
+import { Card } from '@/components/ui/Card'
 import { formatKhmerDate } from '@/lib/dates'
+import { LoanPaymentSchedule } from '@/components/loans/LoanPaymentSchedule'
 import { LoanRepayForm } from '../LoanRepayForm'
 import { getRepayContext } from '../getRepayContext'
 
@@ -44,19 +46,33 @@ export default async function LoanRepayMonthPage({ params }: PageProps) {
         </p>
       </div>
 
-      <LoanRepayForm
-        activeLoan={{
-          id: context.loan.id,
-          amount: context.loan.amount,
-          remaining: context.remaining,
-          monthly_payment: dueForMonth,
-          currency: context.loan.currency,
-          purpose: context.loan.purpose,
-          due_date: context.loan.due_date,
-        }}
-        scheduleMonth={monthNumber}
-        defaultAmount={dueForMonth}
-      />
+      <div className="grid gap-6 lg:grid-cols-[1fr_420px]">
+        {/* Schedule table */}
+        <Card>
+          <LoanPaymentSchedule
+            schedule={context.paymentSchedule}
+            currency={context.loan.currency}
+            showRowPayButton
+          />
+        </Card>
+
+        {/* Repay form */}
+        <div>
+          <LoanRepayForm
+            activeLoan={{
+              id: context.loan.id,
+              amount: context.loan.amount,
+              remaining: context.remaining,
+              monthly_payment: dueForMonth,
+              currency: context.loan.currency,
+              purpose: context.loan.purpose,
+              due_date: context.loan.due_date,
+            }}
+            scheduleMonth={monthNumber}
+            defaultAmount={dueForMonth}
+          />
+        </div>
+      </div>
     </div>
   )
 }

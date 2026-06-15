@@ -102,7 +102,7 @@ export function LoansList({
   const openLoan = (loanId: string) => router.push(`/admin/loans/${loanId}`)
 
   return (
-    <>
+    <div className="flex flex-col flex-1 min-h-0">
       <AdminListToolbar
         searchValue={query}
         onSearchChange={setQuery}
@@ -229,7 +229,7 @@ export function LoansList({
           </tbody>
         </table>
       </div>
-    </>
+    </div>
   )
 }
 

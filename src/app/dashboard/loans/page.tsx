@@ -207,7 +207,7 @@ export default async function LoansPage() {
                     {loan.disbursed_at ? new Date(loan.disbursed_at).toLocaleDateString('km-KH', { month: 'short', day: 'numeric', year: 'numeric' }) : 'រង់ចាំ'}
                   </td>
                   <td className="px-6 py-4">
-                    <LoanStatusBadge status={loan.status} />
+                    <LoanStatusBadge status={loan.status} plain />
                   </td>
                   <td className="px-6 py-4">
                     {loan.status === 'active' && (

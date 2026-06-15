@@ -2,12 +2,13 @@
 
 import { useMemo, useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { Ban, UserCheck, Users, UserX } from 'lucide-react'
+import { Ban, Trash2, UserCheck, Users, UserX } from 'lucide-react'
 import { formatDate } from '@/app/admin/adminUtils'
 import { AcceptMemberButton } from '@/app/admin/AcceptMemberButton'
 import { MemberRoleSelect } from '@/app/admin/members/MemberRoleSelect'
 import { SuspendMemberButton } from '@/app/admin/SuspendMemberButton'
 import { DenyMemberButton } from '@/app/admin/DenyMemberButton'
+import { DeleteMemberButton } from '@/app/admin/DeleteMemberButton'
 import { MemberStatusBadge } from '@/components/ui/Badge'
 import type { MemberRole, MemberStatus } from '@/types/database'
 import { AdminActionsMenu, AdminListToolbar, AdminTableEmpty, AdminTableNoResults, adminTable, adminTableRowClass } from '@/components/admin'
@@ -54,7 +55,7 @@ export function MembersList({
   }, [members, query, statusFilter])
 
   return (
-    <>
+    <div className="flex flex-col flex-1 min-h-0">
       <AdminListToolbar
         searchValue={query}
         onSearchChange={setQuery}
@@ -143,6 +144,13 @@ export function MembersList({
                         icon={Ban}
                       />
                     )}
+                    <DeleteMemberButton
+                      memberId={member.id}
+                      memberName={member.full_name}
+                      label="លុប"
+                      menuItem
+                      icon={Trash2}
+                    />
                   </AdminActionsMenu>
                 </td>
               </tr>
@@ -150,6 +158,6 @@ export function MembersList({
           </tbody>
         </table>
       </div>
-    </>
+    </div>
   )
 }

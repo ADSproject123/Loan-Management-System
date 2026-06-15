@@ -53,7 +53,7 @@ export function CapitalRequestsList({ requests }: { requests: CapitalRequestList
   }, [requests, query, statusFilter])
 
   return (
-    <>
+    <div className="flex flex-col flex-1 min-h-0">
       <AdminListToolbar
         searchValue={query}
         onSearchChange={setQuery}
@@ -154,6 +154,6 @@ export function CapitalRequestsList({ requests }: { requests: CapitalRequestList
           </tbody>
         </table>
       </div>
-    </>
+    </div>
   )
 }

@@ -75,7 +75,7 @@ export function SavingsList({ savings }: { savings: SavingListItem[] }) {
   }, [savings, query, statusFilter, dateFrom, dateTo])
 
   return (
-    <>
+    <div className="flex flex-col flex-1 min-h-0">
       <AdminListToolbar
         searchValue={query}
         onSearchChange={setQuery}
@@ -189,7 +189,7 @@ export function SavingsList({ savings }: { savings: SavingListItem[] }) {
           </tbody>
         </table>
       </div>
-    </>
+    </div>
   )
 }
 

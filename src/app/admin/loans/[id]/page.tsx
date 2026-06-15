@@ -40,13 +40,21 @@ export default async function AdminLoanDetailPage({ params }: PageProps) {
   const member = Array.isArray(loan.members) ? loan.members[0] : loan.members
   const referee = Array.isArray(loan.referee) ? loan.referee[0] : loan.referee
   const approver = Array.isArray(loan.approver) ? loan.approver[0] : loan.approver
-  const refereeName =
-    'referee_name' in loan && typeof loan.referee_name === 'string' ? loan.referee_name : null
+  const refereeNameKh =
+    'referee_name_kh' in loan && typeof loan.referee_name_kh === 'string'
+      ? loan.referee_name_kh
+      : null
+  const refereeNameEn =
+    'referee_name_en' in loan && typeof loan.referee_name_en === 'string'
+      ? loan.referee_name_en
+      : 'referee_name' in loan && typeof loan.referee_name === 'string'
+        ? loan.referee_name
+        : null
   const refereePhone =
     'referee_phone' in loan && typeof loan.referee_phone === 'string' ? loan.referee_phone : null
   const refereeEmail =
     'referee_email' in loan && typeof loan.referee_email === 'string' ? loan.referee_email : null
-  const hasRefereeInfo = Boolean(referee || refereeName)
+  const hasRefereeInfo = Boolean(referee || refereeNameKh || refereeNameEn)
 
   const docChecklist = [
     {
@@ -102,7 +110,8 @@ export default async function AdminLoanDetailPage({ params }: PageProps) {
       member={member}
       referee={referee}
       approver={approver}
-      refereeName={refereeName}
+      refereeNameKh={refereeNameKh}
+      refereeNameEn={refereeNameEn}
       refereePhone={refereePhone}
       refereeEmail={refereeEmail}
       hasRefereeInfo={hasRefereeInfo}

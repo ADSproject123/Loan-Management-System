@@ -15,9 +15,10 @@ export default async function AdminMembersPage({
     admin
       .from('members')
       .select('id, full_name, email, phone, status, role, created_at')
+      .eq('is_admin', false)
       .order('created_at', { ascending: false })
       .range(from, to),
-    admin.from('members').select('id', { count: 'exact', head: true }),
+    admin.from('members').select('id', { count: 'exact', head: true }).eq('is_admin', false),
   ])
 
   const members = (data ?? []) as MemberListItem[]

@@ -1,5 +1,5 @@
 export const adminTable = {
-  wrap: 'overflow-x-auto',
+  wrap: 'flex-1 overflow-auto min-h-0',
   table: 'w-full min-w-160 text-left text-sm',
   thead: 'sticky top-0 z-10 border-b border-border bg-surface-muted/95 backdrop-blur-sm',
   thRow: 'text-xs font-semibold uppercase tracking-wide text-muted',

@@ -49,10 +49,12 @@ function actionErrorMessage(error: unknown, fallback: string) {
 
   if (
     raw.includes('referee_name') ||
+    raw.includes('referee_name_kh') ||
+    raw.includes('referee_name_en') ||
     raw.includes('referee_phone') ||
     raw.includes('referee_email')
   ) {
-    return 'មូលដ្ឋានទិន្នន័យមិនទាន់ធ្វើបច្ចុប្បន្នភាពសម្រាប់ព័ត៌មានអ្នកធានា។ សូមដំណើរការ migration 016_loan_referee_contact.sql ក្នុង Supabase។'
+    return 'មូលដ្ឋានទិន្នន័យមិនទាន់ធ្វើបច្ចុប្បន្នភាពសម្រាប់ព័ត៌មានអ្នកធានា។ សូមដំណើរការ migrations អ្នកធានាក្នុង Supabase។'
   }
 
   if (raw.includes('start_date') || raw.includes('end_date')) {
@@ -94,6 +96,9 @@ export async function registerMember(formData: FormData): Promise<RegisterResult
     const address = asString(formData, 'address')
     const idNumber = asString(formData, 'id_number')
     const residentBookNumber = asString(formData, 'resident_book_number')
+    const refereeNameKh = asString(formData, 'referee_name_kh')
+    const refereeNameEn = asString(formData, 'referee_name_en')
+    const refereePhone = asString(formData, 'referee_phone')
     const refereeEmail = asString(formData, 'referee_email').toLowerCase()
 
     if (!email || !password || !fullNameKh || !fullNameEn || !phone || !dateOfBirth || !idNumber) {
@@ -131,6 +136,7 @@ export async function registerMember(formData: FormData): Promise<RegisterResult
         .select('id')
         .eq('email', refereeEmail)
         .eq('status', 'active')
+        .eq('is_admin', false)
         .maybeSingle()
 
       refereeId = referee?.id ?? null
@@ -166,6 +172,9 @@ export async function registerMember(formData: FormData): Promise<RegisterResult
       id_number: idNumber,
       resident_book_number: residentBookNumber,
       referee_id: refereeId,
+      referee_name_kh: refereeNameKh || null,
+      referee_name_en: refereeNameEn || null,
+      referee_phone: refereePhone || null,
       id_document_url: idDocumentUrl,
       resident_book_url: residentBookUrl,
       telegram_connect_token: connectToken,
@@ -259,7 +268,8 @@ export async function requestLoan(formData: FormData): Promise<ActionResult> {
     const purpose = asString(formData, 'purpose')
     const startDate = asString(formData, 'start_date')
     const endDate = asString(formData, 'end_date')
-    const refereeName = asString(formData, 'referee_name')
+    const refereeNameKh = asString(formData, 'referee_name_kh')
+    const refereeNameEn = asString(formData, 'referee_name_en')
     const refereePhone = asString(formData, 'referee_phone')
     const refereeEmail = asString(formData, 'referee_email').toLowerCase()
     const currency = normalizeCurrency(asString(formData, 'currency'))
@@ -268,10 +278,10 @@ export async function requestLoan(formData: FormData): Promise<ActionResult> {
       return { success: false, error: 'សូមបញ្ចូលចំនួនទឹកប្រាក់កម្ជី និង គោលបំណងត្រឹមត្រូវ។' }
     }
 
-    if (!refereeName || !refereePhone) {
+    if (!refereeNameKh || !refereeNameEn || !refereePhone) {
       return {
         success: false,
-        error: 'សូមបញ្ចូលឈ្មោះពេញ និង លេខទូរស័ព្ទរបស់អ្នកធានា។',
+        error: 'សូមបញ្ចូលឈ្មោះអ្នកធានា (ខ្មែរ និង អង់គ្លេស) និង លេខទូរស័ព្ទត្រឹមត្រូវ។',
       }
     }
 
@@ -299,6 +309,7 @@ export async function requestLoan(formData: FormData): Promise<ActionResult> {
         .select('id')
         .eq('email', refereeEmail)
         .eq('status', 'active')
+        .eq('is_admin', false)
         .maybeSingle()
 
       refereeId = referee?.id ?? null
@@ -320,7 +331,9 @@ export async function requestLoan(formData: FormData): Promise<ActionResult> {
       start_date: startDate,
       end_date: endDate,
       referee_id: refereeId,
-      referee_name: refereeName,
+      referee_name: refereeNameEn,
+      referee_name_kh: refereeNameKh,
+      referee_name_en: refereeNameEn,
       referee_phone: refereePhone,
       referee_email: refereeEmail || null,
       status: 'under_review',

@@ -4,6 +4,7 @@ import React, { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { Menu, X, ChevronDown, Building2 } from 'lucide-react'
+import { createClient } from '@/lib/supabase/client'
 
 const navLinks = [
   {
@@ -23,6 +24,8 @@ const navLinks = [
 export function Navbar() {
   const [mobileOpen, setMobileOpen] = useState(false)
   const [scrolled, setScrolled] = useState(false)
+  const [authResolved, setAuthResolved] = useState(false)
+  const [isAuthenticated, setIsAuthenticated] = useState(false)
   const pathname = usePathname()
 
   useEffect(() => {
@@ -33,7 +36,29 @@ export function Navbar() {
     return () => window.removeEventListener('scroll', updateScrolled)
   }, [])
 
+  useEffect(() => {
+    const supabase = createClient()
+
+    const loadUser = async () => {
+      const { data } = await supabase.auth.getUser()
+      setIsAuthenticated(Boolean(data.user))
+      setAuthResolved(true)
+    }
+
+    void loadUser()
+
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((_event, session) => {
+      setIsAuthenticated(Boolean(session?.user))
+      setAuthResolved(true)
+    })
+
+    return () => subscription.unsubscribe()
+  }, [])
+
   const solidNav = scrolled || mobileOpen
+  const showAuthLinks = authResolved ? !isAuthenticated : false
 
   return (
     <nav
@@ -81,7 +106,7 @@ export function Navbar() {
                     </div>
                   </div>
                 </div>
-              ) : (
+              ) : link.href === '/register' || link.href === '/login' ? null : (
                 <Link
                   key={link.href}
                   href={link.href}
@@ -94,6 +119,30 @@ export function Navbar() {
                   {link.label}
                 </Link>
               )
+            )}
+            {showAuthLinks && (
+              <>
+                <Link
+                  href="/register"
+                  className={`text-sm font-medium transition-colors py-2 ${
+                    pathname === '/register'
+                      ? 'text-brand-200 border-b-2 border-brand-200'
+                      : solidNav ? 'hover:text-brand-200' : 'text-white hover:text-brand-100'
+                  }`}
+                >
+                  ចូលជាសមាជិក
+                </Link>
+                <Link
+                  href="/login"
+                  className={`text-sm font-medium transition-colors py-2 ${
+                    pathname === '/login'
+                      ? 'text-brand-200 border-b-2 border-brand-200'
+                      : solidNav ? 'hover:text-brand-200' : 'text-white hover:text-brand-100'
+                  }`}
+                >
+                  ចូលគណនី
+                </Link>
+              </>
             )}
             <Link
               href="/dashboard"
@@ -139,7 +188,7 @@ export function Navbar() {
                     </Link>
                   ))}
                 </div>
-              ) : (
+              ) : link.href === '/register' || link.href === '/login' ? null : (
                 <Link
                   key={link.href}
                   href={link.href}
@@ -149,6 +198,24 @@ export function Navbar() {
                   {link.label}
                 </Link>
               )
+            )}
+            {showAuthLinks && (
+              <>
+                <Link
+                  href="/register"
+                  onClick={() => setMobileOpen(false)}
+                  className="block rounded-md px-2 py-2 text-sm font-medium text-white transition-colors hover:bg-brand-700"
+                >
+                  ចូលជាសមាជិក
+                </Link>
+                <Link
+                  href="/login"
+                  onClick={() => setMobileOpen(false)}
+                  className="block rounded-md px-2 py-2 text-sm font-medium text-white transition-colors hover:bg-brand-700"
+                >
+                  ចូលគណនី
+                </Link>
+              </>
             )}
             <Link
               href="/dashboard"

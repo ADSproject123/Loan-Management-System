@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useCallback, useEffect, useState } from 'react'
+import React, { useState } from 'react'
 import Link from 'next/link'
 import { Steps } from '@/components/ui/Steps'
 import { Button } from '@/components/ui/Button'
@@ -8,11 +8,10 @@ import { Card } from '@/components/ui/Card'
 import { KhqrPaymentCard } from '@/components/loans/KhqrPaymentCard'
 import { TelegramVerification } from '@/components/ui/TelegramVerification'
 import { repayLoan } from '@/app/actions/member'
-import { createRepayKhqr, checkRepayKhqr } from '@/app/actions/bakong'
 import { showError } from '@/lib/toast'
 import { currencySymbol, type CurrencyCode } from '@/lib/currency'
 import { formatKhmerDate } from '@/lib/dates'
-import { CreditCard, QrCode, Upload, CheckCircle, Info, Loader2, RefreshCw, ShieldCheck } from 'lucide-react'
+import { CreditCard, QrCode, Upload, CheckCircle, Info } from 'lucide-react'
 
 const STEPS = [
   { id: 1, label: 'បញ្ជាក់ចំនួន', description: 'កំណត់ចំនួន' },
@@ -46,55 +45,6 @@ export function LoanRepayForm({
   const currency: CurrencyCode = 'USD'
   const [evidence, setEvidence] = useState<File | null>(null)
   const [loading, setLoading] = useState(false)
-  const [khqr, setKhqr] = useState<{
-    qrImage: string
-    md5: string
-    expiresAt: number
-    merchantName: string
-    currency: 'USD' | 'KHR'
-  } | null>(null)
-  const [khqrLoading, setKhqrLoading] = useState(false)
-  const [khqrError, setKhqrError] = useState<string | null>(null)
-  const [khqrExpired, setKhqrExpired] = useState(false)
-  const [bakongVerified, setBakongVerified] = useState(false)
-
-  const generateKhqr = useCallback(async (amt: number) => {
-    setKhqr(null)
-    setKhqrError(null)
-    setKhqrExpired(false)
-    setKhqrLoading(true)
-    const result = await createRepayKhqr(amt)
-    setKhqrLoading(false)
-    if (!result.success) {
-      setKhqrError(result.error)
-      return
-    }
-    setKhqr({
-      qrImage: result.qrImage,
-      md5: result.md5,
-      expiresAt: result.expiresAt,
-      merchantName: result.merchantName,
-      currency: result.currency,
-    })
-  }, [])
-
-  // Poll Bakong while the QR is on screen; once the transfer settles the
-  // repayment is recorded server-side and we jump straight to the done step.
-  useEffect(() => {
-    if (step !== 3 || !khqr || khqrExpired) return
-    let active = true
-    const interval = setInterval(async () => {
-      const result = await checkRepayKhqr(khqr.md5)
-      if (!active || !result.success || !result.paid) return
-      clearInterval(interval)
-      setBakongVerified(true)
-      setStep(4)
-    }, 4000)
-    return () => {
-      active = false
-      clearInterval(interval)
-    }
-  }, [step, khqr, khqrExpired])
 
   const handleConfirmAmount = () => {
     const amt = parseFloat(payAmount)
@@ -229,33 +179,13 @@ export function LoanRepayForm({
         </Card>
       )}
 
-      {/* Step 2: Telegram verification */}
+      {/* Step 2: Telegram verification modal */}
       {step === 2 && (
-        <Card>
-          <div className="flex items-center gap-3 mb-5">
-            <div className="p-2.5 bg-brand-100 rounded-lg">
-              <ShieldCheck className="w-6 h-6 text-brand-700" />
-            </div>
-            <div>
-              <h2 className="font-semibold text-gray-900">ផ្ទៀងផ្ទាត់អត្តសញ្ញាណ</h2>
-              <p className="text-gray-500 text-sm">បញ្ជាក់ថាជាអ្នកពិតប្រាកដមុនពេលបង់ប្រាក់</p>
-            </div>
-          </div>
-
-          <TelegramVerification
-            action="loan_repay"
-            onVerified={() => {
-              setStep(3)
-              void generateKhqr(amount)
-            }}
-          />
-
-          <div className="mt-5">
-            <Button variant="outline" onClick={() => setStep(1)} className="w-full">
-              ត្រឡប់ក្រោយ
-            </Button>
-          </div>
-        </Card>
+        <TelegramVerification
+          action="loan_repay"
+          onVerified={() => setStep(3)}
+          onCancel={() => setStep(1)}
+        />
       )}
 
       {/* Step 3: QR Code + evidence */}
@@ -272,63 +202,19 @@ export function LoanRepayForm({
           </div>
 
           <div className="mb-6">
-            {khqrLoading && (
-              <div className="flex flex-col items-center justify-center gap-3 py-16">
-                <Loader2 className="w-8 h-8 text-brand-700 animate-spin" />
-                <p className="text-sm text-gray-500">កំពុងបង្កើត KHQR...</p>
-              </div>
-            )}
-
-            {!khqrLoading && khqrError && (
-              <div className="text-center py-10">
-                <p className="text-sm text-red-600 mb-4">{khqrError}</p>
-                <Button variant="outline" onClick={() => generateKhqr(amount)}>
-                  <RefreshCw className="w-4 h-4 mr-2" />
-                  ព្យាយាមម្តងទៀត
-                </Button>
-              </div>
-            )}
-
-            {!khqrLoading && khqr && (
-              <>
-                <KhqrPaymentCard
-                  key={khqr.md5}
-                  merchantName={khqr.merchantName}
-                  amount={amount}
-                  currency={khqr.currency}
-                  qrImage={khqr.qrImage}
-                  expiresAt={khqr.expiresAt}
-                  expired={khqrExpired}
-                  onExpired={() => setKhqrExpired(true)}
-                />
-                <div className="mt-4 text-center">
-                  {khqrExpired ? (
-                    <Button variant="outline" onClick={() => generateKhqr(amount)}>
-                      <RefreshCw className="w-4 h-4 mr-2" />
-                      បង្កើត QR ថ្មី
-                    </Button>
-                  ) : (
-                    <p className="inline-flex items-center gap-2 text-sm text-gray-500">
-                      <Loader2 className="w-4 h-4 animate-spin" />
-                      កំពុងរង់ចាំការបង់ប្រាក់ — នឹងបញ្ជាក់ដោយស្វ័យប្រវត្តិបន្ទាប់ពីបង់រួច
-                    </p>
-                  )}
-                </div>
-              </>
-            )}
+            <KhqrPaymentCard />
           </div>
 
           <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 mb-6">
             <div className="flex items-start gap-2">
               <Info className="w-4 h-4 text-yellow-600 flex-shrink-0 mt-0.5" />
               <div className="text-xs text-yellow-700 space-y-1">
-                <p>ផ្ទេរចំនួនពិតប្រាកដ <strong>{currencySymbol(currency)}{amount.toLocaleString()}</strong> — ចំនួនត្រូវបានចាក់សោក្នុង QR រួចហើយ។</p>
-                <p>បន្ទាប់ពីបង់រួច ប្រព័ន្ធនឹងបញ្ជាក់ដោយស្វ័យប្រវត្តិ។ បើមិនបញ្ជាក់ សូមផ្ទុកភស្តុតាងខាងក្រោម ហើយចុច «ដាក់ស្នើការសង»។</p>
+                <p>ស្កេន QR ខាងលើ ហើយផ្ទេរចំនួនពិតប្រាកដ <strong>{currencySymbol(currency)}{amount.toLocaleString()}</strong>។</p>
+                <p>បន្ទាប់ពីបង់រួច សូមផ្ទុកភស្តុតាងខាងក្រោម ហើយចុច «ដាក់ស្នើការសង»។</p>
               </div>
             </div>
           </div>
 
-          {/* Evidence upload (fallback when Bakong doesn't auto-confirm) */}
           <div className="mb-5">
             <p className="text-sm font-medium text-gray-700 mb-2">ផ្ទុកភស្តុតាងបង់ប្រាក់</p>
             <label className="flex flex-col items-center justify-center w-full h-40 border-2 border-dashed border-gray-300 rounded-xl cursor-pointer hover:border-brand-500 hover:bg-brand-50 transition-colors">
@@ -381,14 +267,10 @@ export function LoanRepayForm({
               <CheckCircle className="w-10 h-10 text-green-500" />
             </div>
             <h2 className="text-2xl font-bold text-gray-900 mb-2">
-              {bakongVerified ? 'ការបង់ប្រាក់ជោគជ័យ!' : 'ការសងត្រូវបានដាក់ស្នើ!'}
+              ការសងត្រូវបានដាក់ស្នើ!
             </h2>
             <p className="text-gray-600 mb-2">
-              {bakongVerified ? (
-                <>ការបង់ប្រាក់ចំនួន <strong>{currencySymbol(currency)}{amount.toLocaleString()}</strong> ត្រូវបានបញ្ជាក់ដោយ Bakong (KHQR)។</>
-              ) : (
-                <>ការសងរបស់អ្នកចំនួន <strong>{currencySymbol(currency)}{amount.toLocaleString()}</strong> ត្រូវបានទទួល។</>
-              )}
+              ការសងរបស់អ្នកចំនួន <strong>{currencySymbol(currency)}{amount.toLocaleString()}</strong> ត្រូវបានទទួល។
             </p>
             <p className="text-gray-500 text-sm mb-6">
               អ្នកគ្រប់គ្រងនឹងទទួលការបង់ប្រាក់របស់អ្នកក្នុងរយៈពេល ២៤ ម៉ោង និង ធ្វើបច្ចុប្បន្នភាពសមតុល្យកម្ជីរបស់អ្នក។
@@ -403,9 +285,7 @@ export function LoanRepayForm({
                 </div>
                 <div className="flex justify-between">
                   <span className="text-green-700">ស្ថានភាព</span>
-                  <span className="font-medium text-green-900">
-                    {bakongVerified ? 'បានបញ្ជាក់ដោយ Bakong — រង់ចាំការទទួល' : 'កំពុងរង់ចាំការទទួល'}
-                  </span>
+                  <span className="font-medium text-green-900">កំពុងរង់ចាំការទទួល</span>
                 </div>
                 {newRemaining > 0 && (
                   <div className="flex justify-between">
