@@ -12,6 +12,7 @@ import { DeleteMemberButton } from '@/app/admin/DeleteMemberButton'
 import { MemberStatusBadge } from '@/components/ui/Badge'
 import type { MemberRole, MemberStatus } from '@/types/database'
 import { AdminActionsMenu, AdminListToolbar, AdminTableEmpty, AdminTableNoResults, adminTable, adminTableRowClass } from '@/components/admin'
+import { CreateMemberButton } from '@/app/admin/members/CreateMemberButton'
 
 export type MemberListItem = {
   id: string
@@ -25,7 +26,6 @@ export type MemberListItem = {
 
 const STATUS_FILTER_OPTIONS = [
   { value: '', label: 'ទាំងអស់' },
-  { value: 'pending', label: 'រង់ចាំ' },
   { value: 'active', label: 'សកម្ម' },
   { value: 'suspended', label: 'ផ្អាក' },
   { value: 'rejected', label: 'បដិសេធ' },
@@ -65,12 +65,7 @@ export function MembersList({
         selectValue={statusFilter}
         onSelectChange={setStatusFilter}
         selectOptions={STATUS_FILTER_OPTIONS}
-        filterSummary={
-          <>
-            បង្ហាញ <span className="font-semibold text-foreground">{filtered.length}</span> នៃ{' '}
-            <span className="font-semibold text-foreground">{members.length}</span>
-          </>
-        }
+        actions={<CreateMemberButton />}
       />
 
       <div className={adminTable.wrap}>

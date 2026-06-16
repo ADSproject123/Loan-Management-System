@@ -17,6 +17,25 @@ export type ActionResult = {
   redirectTo?: string
 }
 
+export type MemberSearchResult = {
+  id: string
+  full_name_kh: string | null
+  full_name_en: string | null
+}
+
+export async function searchActiveMembers(query: string): Promise<MemberSearchResult[]> {
+  if (!query.trim()) return []
+  const admin = createAdminClient()
+  const { data } = await admin
+    .from('members')
+    .select('id, full_name_kh, full_name_en')
+    .eq('status', 'active')
+    .eq('is_admin', false)
+    .or(`full_name_kh.ilike.%${query}%,full_name_en.ilike.%${query}%`)
+    .limit(8)
+  return data ?? []
+}
+
 function asString(formData: FormData, key: string) {
   const value = formData.get(key)
   return typeof value === 'string' ? value.trim() : ''
@@ -96,10 +115,11 @@ export async function registerMember(formData: FormData): Promise<RegisterResult
     const address = asString(formData, 'address')
     const idNumber = asString(formData, 'id_number')
     const residentBookNumber = asString(formData, 'resident_book_number')
-    const refereeNameKh = asString(formData, 'referee_name_kh')
-    const refereeNameEn = asString(formData, 'referee_name_en')
-    const refereePhone = asString(formData, 'referee_phone')
-    const refereeEmail = asString(formData, 'referee_email').toLowerCase()
+    const emergencyContactsRaw = asString(formData, 'emergency_contacts')
+    const emergencyContacts: { full_name: string; phone: string }[] = emergencyContactsRaw
+      ? JSON.parse(emergencyContactsRaw)
+      : []
+    const refereeId = asString(formData, 'referee_id') || null
 
     if (!email || !password || !fullNameKh || !fullNameEn || !phone || !dateOfBirth || !idNumber) {
       return { success: false, error: 'សូមបំពេញគ្រប់វាលទាំងអស់ដែលត្រូវការ។' }
@@ -128,19 +148,6 @@ export async function registerMember(formData: FormData): Promise<RegisterResult
 
     if (authError) throw authError
     if (!authData.user) throw new Error('បង្កើតគណនីបរាជ័យ។')
-
-    let refereeId: string | null = null
-    if (refereeEmail) {
-      const { data: referee } = await admin
-        .from('members')
-        .select('id')
-        .eq('email', refereeEmail)
-        .eq('status', 'active')
-        .eq('is_admin', false)
-        .maybeSingle()
-
-      refereeId = referee?.id ?? null
-    }
 
     const authUserId = authData.user.id
     const idDocumentUrl = await uploadPrivateFile(
@@ -172,11 +179,9 @@ export async function registerMember(formData: FormData): Promise<RegisterResult
       id_number: idNumber,
       resident_book_number: residentBookNumber,
       referee_id: refereeId,
-      referee_name_kh: refereeNameKh || null,
-      referee_name_en: refereeNameEn || null,
-      referee_phone: refereePhone || null,
       id_document_url: idDocumentUrl,
       resident_book_url: residentBookUrl,
+      emergency_contacts: emergencyContacts,
       telegram_connect_token: connectToken,
       status: 'pending',
     })

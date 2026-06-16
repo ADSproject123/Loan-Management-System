@@ -19,6 +19,7 @@ type AdminListToolbarProps = {
   selectOptions?: SelectOption[]
   filterSummary?: React.ReactNode
   extra?: React.ReactNode
+  actions?: React.ReactNode
 }
 
 export function AdminListToolbar({
@@ -32,6 +33,7 @@ export function AdminListToolbar({
   selectOptions,
   filterSummary,
   extra,
+  actions,
 }: AdminListToolbarProps) {
   return (
     <div className="border-b border-border px-6 py-4 md:px-8">
@@ -71,6 +73,7 @@ export function AdminListToolbar({
         {filterSummary && (
           <p className="text-sm text-muted xl:ml-auto xl:shrink-0">{filterSummary}</p>
         )}
+        {actions && <div className={`xl:shrink-0 ${!filterSummary ? 'xl:ml-auto' : ''}`}>{actions}</div>}
       </div>
     </div>
   )

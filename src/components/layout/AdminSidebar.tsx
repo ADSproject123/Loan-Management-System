@@ -3,7 +3,7 @@
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { useState } from 'react'
-import { BarChart3, Building2, ChevronDown, ChevronRight, LayoutDashboard } from 'lucide-react'
+import { BarChart3, Building2, ChevronDown, ChevronRight, LayoutDashboard, LogOut } from 'lucide-react'
 import {
   adminNav,
   adminNavExpandedLabels,
@@ -111,13 +111,24 @@ export function AdminSidebar({ adminName }: { adminName: string }) {
             <span className="text-[10px] font-bold uppercase tracking-wider">ចូលជា</span>
           </div>
           <p className="truncate text-sm font-semibold text-white">{adminName}</p>
-          <Link
-            href="/dashboard"
-            className="mt-3 inline-flex w-full cursor-pointer items-center justify-center gap-2 rounded-xl bg-white/10 px-3 py-2 text-xs font-semibold text-brand-50 ring-1 ring-white/15 transition hover:bg-white/20"
-          >
-            <LayoutDashboard className="h-3.5 w-3.5" />
-            វិបផតថលសមាជិក
-          </Link>
+          <div className="mt-3 flex gap-2">
+            <Link
+              href="/dashboard"
+              className="inline-flex flex-1 cursor-pointer items-center justify-center gap-2 rounded-xl bg-white/10 px-3 py-2 text-xs font-semibold text-brand-50 ring-1 ring-white/15 transition hover:bg-white/20"
+            >
+              <LayoutDashboard className="h-3.5 w-3.5" />
+              វិបផតថលសមាជិក
+            </Link>
+            <form action="/api/auth/signout" method="post">
+              <button
+                type="submit"
+                title="ចាកចេញ"
+                className="inline-flex cursor-pointer items-center justify-center rounded-xl bg-white/10 p-2 text-brand-50 ring-1 ring-white/15 transition hover:bg-rose-500/30 hover:text-rose-200"
+              >
+                <LogOut className="h-3.5 w-3.5" />
+              </button>
+            </form>
+          </div>
         </div>
       </div>
     </aside>
