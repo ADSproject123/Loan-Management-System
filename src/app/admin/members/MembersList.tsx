@@ -5,11 +5,10 @@ import { useRouter } from 'next/navigation'
 import { Ban, Trash2, UserCheck, Users, UserX } from 'lucide-react'
 import { formatDate } from '@/app/admin/adminUtils'
 import { AcceptMemberButton } from '@/app/admin/AcceptMemberButton'
-import { MemberRoleSelect } from '@/app/admin/members/MemberRoleSelect'
 import { SuspendMemberButton } from '@/app/admin/SuspendMemberButton'
 import { DenyMemberButton } from '@/app/admin/DenyMemberButton'
 import { DeleteMemberButton } from '@/app/admin/DeleteMemberButton'
-import { MemberStatusBadge } from '@/components/ui/Badge'
+import { MemberStatusBadge, MemberRoleBadge } from '@/components/ui/Badge'
 import type { MemberRole, MemberStatus } from '@/types/database'
 import { AdminActionsMenu, AdminListToolbar, AdminTableEmpty, AdminTableNoResults, adminTable, adminTableRowClass } from '@/components/admin'
 import { CreateMemberButton } from '@/app/admin/members/CreateMemberButton'
@@ -17,7 +16,6 @@ import { CreateMemberButton } from '@/app/admin/members/CreateMemberButton'
 export type MemberListItem = {
   id: string
   full_name: string
-  email: string
   phone: string | null
   status: MemberStatus
   role: MemberRole
@@ -48,8 +46,7 @@ export function MembersList({
       if (!q) return true
       return (
         member.full_name.toLowerCase().includes(q) ||
-        (member.phone ?? '').includes(q) ||
-        member.email.toLowerCase().includes(q)
+        (member.phone ?? '').includes(q)
       )
     })
   }, [members, query, statusFilter])
@@ -59,7 +56,7 @@ export function MembersList({
       <AdminListToolbar
         searchValue={query}
         onSearchChange={setQuery}
-        searchPlaceholder="ស្វែងរកតាមឈ្មោះ អ៊ីមែល ឬទូរស័ព្ទ..."
+        searchPlaceholder="ស្វែងរកតាមឈ្មោះ ឬទូរស័ព្ទ..."
         selectLabel="ស្ថានភាព"
         selectId="members-status-filter"
         selectValue={statusFilter}
@@ -99,13 +96,12 @@ export function MembersList({
                 className={adminTableRowClass({ pending: member.status === 'pending', clickable: true })}
               >
                 <td className={`${adminTable.tdFirst} ${adminTable.namePrimary}`}>
-                  <p>{member.full_name}</p>
-                  <p className={adminTable.nameSecondary}>{member.email}</p>
+                  {member.full_name}
                 </td>
                 <td className={adminTable.tdMuted}>{formatDate(member.created_at)}</td>
                 <td className={adminTable.tdMuted}>{member.phone ?? '—'}</td>
-                <td className={adminTable.td} onClick={(event) => event.stopPropagation()}>
-                  <MemberRoleSelect memberId={member.id} role={member.role} />
+                <td className={adminTable.tdMuted}>
+                  <MemberRoleBadge role={member.role} plain />
                 </td>
                 <td className={adminTable.td}>
                   <MemberStatusBadge status={member.status} plain />

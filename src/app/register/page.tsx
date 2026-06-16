@@ -785,7 +785,7 @@ function EmergencyContacts({
           className="inline-flex items-center gap-1.5 rounded-lg border border-brand-200 bg-brand-50 px-3 py-1.5 text-xs font-semibold text-brand-800 transition hover:bg-brand-100"
         >
           <Plus className="h-3.5 w-3.5" />
-          បន្ថែមមនុស្ស
+          បន្ថែម
         </button>
       </div>
 
@@ -926,7 +926,7 @@ function StepReferee({ formData, updateField }: StepProps) {
               type="text"
               value={query}
               onChange={(e) => setQuery(e.target.value)}
-              placeholder="ស្វែងរកមេគ្រុមតាមឈ្មោះ..."
+              placeholder="ស្វែងរកតាមឈ្មោះ ទូរស័ព្ទ ឬអ៊ីមែល..."
               className={`${inputBase} app-input--with-icon pr-10`}
             />
             {isSearching && (
@@ -952,10 +952,17 @@ function StepReferee({ formData, updateField }: StepProps) {
                         <span className="grid h-8 w-8 shrink-0 place-items-center rounded-lg bg-slate-100 text-slate-500">
                           <User className="h-4 w-4" />
                         </span>
-                        <div>
-                          <p className="text-sm font-semibold text-slate-900">{member.full_name_kh}</p>
-                          {member.full_name_en && (
+                        <div className="min-w-0 flex-1">
+                          <p className="text-sm font-semibold text-slate-900">
+                            {member.full_name_kh ?? member.full_name_en}
+                          </p>
+                          {member.full_name_kh && member.full_name_en && (
                             <p className="text-xs text-slate-500">{member.full_name_en}</p>
+                          )}
+                          {(member.phone || member.email) && (
+                            <p className="truncate text-xs text-slate-500">
+                              {[member.phone, member.email].filter(Boolean).join(' · ')}
+                            </p>
                           )}
                         </div>
                       </button>
@@ -969,7 +976,7 @@ function StepReferee({ formData, updateField }: StepProps) {
       )}
 
       <p className="text-xs leading-5 text-slate-500">
-        ស្វែងរកមេគ្រុម សមាជិកគ្រួសារ ឬ មិត្តភក្តិដែលជាសមាជិកសន្សំរួចហើយ។ ប្រសិនបើ
+        ស្វែងរកមេគ្រុមតាមឈ្មោះ ទូរស័ព្ទ ឬអ៊ីមែល។ ប្រសិនបើ
         អ្នកមិនមានមេគ្រុម សូមទាក់ទងអ្នកគ្រប់គ្រងសន្សំបន្ទាប់ពីការចុះឈ្មោះ។
       </p>
     </div>

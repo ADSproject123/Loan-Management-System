@@ -50,7 +50,7 @@ export default async function AdminSavingsRequestsPage({
           />
         }
       >
-        <SavingsList savings={savingRows} />
+        <SavingsList savings={savingRows} mode="requests" />
       </AdminPanel>
     </main>
   )

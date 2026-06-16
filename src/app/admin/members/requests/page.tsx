@@ -16,7 +16,7 @@ export default async function AdminMembersRequestsPage({
   const [{ data }, { count: pendingTotal }] = await Promise.all([
     admin
       .from('members')
-      .select('id, full_name, email, phone, status, role, created_at')
+      .select('id, full_name, phone, status, role, created_at')
       .eq('is_admin', false)
       .eq('status', 'pending')
       .order('created_at', { ascending: true })

@@ -32,6 +32,94 @@ export type LoanListItem = {
 
 type LoansListVariant = 'all' | 'active' | 'requests'
 
+type MemberLoanGroup = {
+  member_id: string
+  primaryLoanId: string
+  members: LoanListItem['members']
+  totalAmount: number
+  currency: string | null
+  loanCount: number
+  latestCreatedAt: string
+  latestDisbursedAt: string | null
+  nearestDueDate: string | null
+  hasPending: boolean
+}
+
+function isActiveLoanStatus(status: string) {
+  return status === 'active' || status === 'approved'
+}
+
+function isPendingLoanStatus(status: string) {
+  return status === 'pending' || status === 'under_review'
+}
+
+function pickNearestDueDate(existing: string | null, candidate: string | null) {
+  if (!candidate) return existing
+  if (!existing) return candidate
+  return new Date(candidate).getTime() < new Date(existing).getTime() ? candidate : existing
+}
+
+function aggregateLoansByMember(
+  loans: LoanListItem[],
+  allLoans: LoanListItem[],
+  statusFilter: string,
+  activeOnly = false
+): MemberLoanGroup[] {
+  const source = activeOnly
+    ? loans
+    : statusFilter === ''
+      ? loans.filter((loan) => isActiveLoanStatus(loan.status))
+      : loans
+
+  const groups = new Map<string, MemberLoanGroup>()
+
+  for (const loan of source) {
+    const amount = Number(loan.amount ?? 0)
+    const disbursedAt = loan.disbursed_at ?? loan.created_at
+    const existing = groups.get(loan.member_id)
+
+    if (!existing) {
+      groups.set(loan.member_id, {
+        member_id: loan.member_id,
+        primaryLoanId: loan.id,
+        members: loan.members,
+        totalAmount: amount,
+        currency: loan.currency,
+        loanCount: 1,
+        latestCreatedAt: loan.created_at,
+        latestDisbursedAt: disbursedAt,
+        nearestDueDate: loan.due_date ?? null,
+        hasPending: allLoans.some(
+          (row) => row.member_id === loan.member_id && isPendingLoanStatus(row.status)
+        ),
+      })
+      continue
+    }
+
+    existing.totalAmount += amount
+    existing.loanCount += 1
+
+    if (new Date(loan.created_at).getTime() > new Date(existing.latestCreatedAt).getTime()) {
+      existing.latestCreatedAt = loan.created_at
+    }
+
+    if (
+      disbursedAt &&
+      (!existing.latestDisbursedAt ||
+        new Date(disbursedAt).getTime() > new Date(existing.latestDisbursedAt).getTime())
+    ) {
+      existing.latestDisbursedAt = disbursedAt
+      existing.primaryLoanId = loan.id
+    }
+
+    existing.nearestDueDate = pickNearestDueDate(existing.nearestDueDate, loan.due_date ?? null)
+  }
+
+  return Array.from(groups.values()).sort(
+    (a, b) => new Date(b.latestCreatedAt).getTime() - new Date(a.latestCreatedAt).getTime()
+  )
+}
+
 const STATUS_FILTER_OPTIONS: { value: string; label: string }[] = [
   { value: '', label: 'ទាំងអស់' },
   { value: 'pending', label: 'រង់ចាំ' },
@@ -64,27 +152,38 @@ export function LoansList({
   loans,
   showActions = true,
   variant = 'all',
+  mode = 'transactions',
 }: {
   loans: LoanListItem[]
   showActions?: boolean
   variant?: LoansListVariant
+  mode?: 'ledger' | 'transactions'
 }) {
   const router = useRouter()
   const [query, setQuery] = useState('')
   const [statusFilter, setStatusFilter] = useState('')
   const isActiveView = variant === 'active'
+  const isLedgerView = mode === 'ledger'
   const showStatusColumn = !isActiveView
   const showStatusFilter = variant === 'all'
   const colSpan =
     (showStatusColumn ? 1 : 0) + (isActiveView ? 1 : 0) + 3 + (showActions ? 1 : 0)
+  const ledgerColSpan = 5
 
-  const filtered = useMemo(() => {
-    const q = query.trim().toLowerCase()
-
+  const filteredByStatus = useMemo(() => {
     return loans.filter((loan) => {
       if (showStatusFilter && statusFilter && loan.status !== statusFilter) return false
-      if (!q) return true
+      return true
+    })
+  }, [loans, showStatusFilter, statusFilter])
 
+  const filtered = useMemo(() => {
+    if (isLedgerView) return filteredByStatus
+
+    const q = query.trim().toLowerCase()
+    if (!q) return filteredByStatus
+
+    return filteredByStatus.filter((loan) => {
       const name = relatedMemberName(loan).toLowerCase()
       const email = relatedMemberEmail(loan).toLowerCase()
       const purpose = (loan.purpose ?? '').toLowerCase()
@@ -97,7 +196,34 @@ export function LoansList({
         amount.includes(q)
       )
     })
-  }, [loans, query, showStatusFilter, statusFilter])
+  }, [filteredByStatus, isLedgerView, query])
+
+  const memberGroups = useMemo(() => {
+    if (!isLedgerView) return []
+    return aggregateLoansByMember(filtered, loans, statusFilter, isActiveView)
+  }, [filtered, isLedgerView, isActiveView, loans, statusFilter])
+
+  const ledgerFiltered = useMemo(() => {
+    if (!isLedgerView) return []
+    const q = query.trim().toLowerCase()
+    if (!q) return memberGroups
+
+    return memberGroups.filter((group) => {
+      const name = relatedMemberName(group).toLowerCase()
+      const email = relatedMemberEmail(group).toLowerCase()
+      const amount = money(group.totalAmount, (group.currency as CurrencyCode) ?? 'USD').toLowerCase()
+      return name.includes(q) || email.includes(q) || amount.includes(q)
+    })
+  }, [isLedgerView, memberGroups, query])
+
+  const totalLedgerMembers = useMemo(() => {
+    if (!isLedgerView) return 0
+    return aggregateLoansByMember(loans, loans, statusFilter, isActiveView).length
+  }, [isLedgerView, isActiveView, loans, statusFilter])
+
+  const displayRows = isLedgerView ? ledgerFiltered : filtered
+
+  const openMember = (memberId: string) => router.push(`/admin/members/${memberId}`)
 
   const openLoan = (loanId: string) => router.push(`/admin/loans/${loanId}`)
 
@@ -117,10 +243,17 @@ export function LoansList({
         onSelectChange={setStatusFilter}
         selectOptions={showStatusFilter ? STATUS_FILTER_OPTIONS : undefined}
         filterSummary={
-          <>
-            បង្ហាញ <span className="font-semibold text-foreground">{filtered.length}</span> នៃ{' '}
-            <span className="font-semibold text-foreground">{loans.length}</span>
-          </>
+          isLedgerView ? (
+            <>
+              បង្ហាញ <span className="font-semibold text-foreground">{displayRows.length}</span> នៃ{' '}
+              <span className="font-semibold text-foreground">{totalLedgerMembers}</span> សមាជិក
+            </>
+          ) : (
+            <>
+              បង្ហាញ <span className="font-semibold text-foreground">{filtered.length}</span> នៃ{' '}
+              <span className="font-semibold text-foreground">{loans.length}</span>
+            </>
+          )
         }
       />
 
@@ -129,9 +262,11 @@ export function LoansList({
           <thead className={adminTable.thead}>
             <tr className={adminTable.thRow}>
               <th className={adminTable.thFirst}>សមាជិក</th>
-              <th className={adminTable.th}>ចំនួនទឹកប្រាក់</th>
-              {showStatusColumn ? <th className={adminTable.th}>ស្ថានភាព</th> : null}
-              {isActiveView ? (
+              <th className={adminTable.th}>
+                {isLedgerView ? 'កម្ជីសរុប' : 'ចំនួនទឹកប្រាក់'}
+              </th>
+              {!isLedgerView && showStatusColumn ? <th className={adminTable.th}>ស្ថានភាព</th> : null}
+              {isActiveView || isLedgerView ? (
                 <>
                   <th className={adminTable.th}>ចាប់ផ្តើម</th>
                   <th className={adminTable.th}>កំណត់បង់</th>
@@ -145,18 +280,80 @@ export function LoansList({
           <tbody className={adminTable.tbody}>
             {loans.length === 0 && (
               <AdminTableEmpty
-                colSpan={colSpan}
+                colSpan={isLedgerView ? ledgerColSpan : colSpan}
                 icon={Landmark}
                 title={EMPTY_COPY[variant].title}
                 description={EMPTY_COPY[variant].description}
               />
             )}
 
-            {loans.length > 0 && filtered.length === 0 && (
-              <AdminTableNoResults colSpan={colSpan} />
+            {loans.length > 0 && displayRows.length === 0 && (
+              <AdminTableNoResults colSpan={isLedgerView ? ledgerColSpan : colSpan} />
             )}
 
-            {filtered.map((loan) => {
+            {isLedgerView &&
+              ledgerFiltered.map((group) => {
+                const memberName = relatedMemberName(group)
+                const dueMeta = getDueDateMeta(group.nearestDueDate)
+                const openLedgerRow = isActiveView
+                  ? () => openLoan(group.primaryLoanId)
+                  : () => openMember(group.member_id)
+
+                return (
+                  <tr
+                    key={group.member_id}
+                    tabIndex={0}
+                    role="link"
+                    aria-label={
+                      isActiveView ? `មើលកម្ជី ${memberName}` : `មើលសមាជិក ${memberName}`
+                    }
+                    className={adminTableRowClass({
+                      pending: group.hasPending,
+                      clickable: true,
+                      overdue: dueMeta.tone === 'error',
+                    })}
+                    onClick={openLedgerRow}
+                    onKeyDown={(event) => {
+                      if (event.key === 'Enter' || event.key === ' ') {
+                        event.preventDefault()
+                        openLedgerRow()
+                      }
+                    }}
+                  >
+                    <td className={adminTable.tdFirst}>
+                      <div className={adminTable.memberCell}>
+                        <MemberAvatar name={memberName} />
+                        <div className="min-w-0">
+                          <p className={adminTable.namePrimary}>{memberName}</p>
+                          <p className={adminTable.nameSecondary}>{relatedMemberEmail(group)}</p>
+                        </div>
+                      </div>
+                    </td>
+                    <td className={adminTable.td}>
+                      <p className={adminTable.amountPrimary}>
+                        {money(group.totalAmount, (group.currency as CurrencyCode) ?? 'USD')}
+                      </p>
+                      <p className={adminTable.amountSecondary}>{group.loanCount} កម្ជី</p>
+                    </td>
+                    <td className={adminTable.tdMuted}>
+                      {formatDate(group.latestDisbursedAt ?? group.latestCreatedAt)}
+                    </td>
+                    <td className={adminTable.td}>
+                      <DueDateCell meta={dueMeta} />
+                    </td>
+                    {showActions ? (
+                      <td className={adminTable.tdLast}>
+                        <div className="flex items-center justify-end">
+                          <ChevronRight className={`${adminTable.rowChevron} hidden sm:block`} />
+                        </div>
+                      </td>
+                    ) : null}
+                  </tr>
+                )
+              })}
+
+            {!isLedgerView &&
+              filtered.map((loan) => {
               const memberName = relatedMemberName(loan)
               const dueMeta = isActiveView ? getDueDateMeta(loan.due_date) : null
               const isPending =

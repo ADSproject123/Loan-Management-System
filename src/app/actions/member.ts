@@ -21,19 +21,37 @@ export type MemberSearchResult = {
   id: string
   full_name_kh: string | null
   full_name_en: string | null
+  phone: string | null
+  email: string | null
+}
+
+function escapeIlikePattern(value: string) {
+  return value.replace(/[%_,]/g, (char) => `\\${char}`)
 }
 
 export async function searchActiveMembers(query: string): Promise<MemberSearchResult[]> {
-  if (!query.trim()) return []
+  const trimmed = query.trim()
+  if (!trimmed) return []
+
+  const pattern = `%${escapeIlikePattern(trimmed)}%`
   const admin = createAdminClient()
   const { data } = await admin
     .from('members')
-    .select('id, full_name_kh, full_name_en')
+    .select('id, full_name, full_name_kh, full_name_en, phone, email')
     .eq('status', 'active')
     .eq('is_admin', false)
-    .or(`full_name_kh.ilike.%${query}%,full_name_en.ilike.%${query}%`)
+    .or(
+      `full_name_kh.ilike.${pattern},full_name_en.ilike.${pattern},full_name.ilike.${pattern},phone.ilike.${pattern},email.ilike.${pattern}`
+    )
     .limit(8)
-  return data ?? []
+
+  return (data ?? []).map((member) => ({
+    id: member.id,
+    full_name_kh: member.full_name_kh ?? member.full_name,
+    full_name_en: member.full_name_en ?? member.full_name,
+    phone: member.phone ?? null,
+    email: member.email ?? null,
+  }))
 }
 
 function asString(formData: FormData, key: string) {
