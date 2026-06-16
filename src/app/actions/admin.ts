@@ -6,6 +6,7 @@ import { requireAdmin } from '@/lib/auth/member'
 import type { ActionResult } from '@/app/actions/member'
 import { formatMoney } from '@/lib/currency'
 import { sendTelegramMessage } from '@/lib/telegram'
+import { uploadPrivateFile } from '@/lib/uploads'
 function idFrom(formData: FormData) {
   const id = formData.get('id')
   if (typeof id !== 'string' || !id) {
@@ -717,6 +718,87 @@ export async function assignMemberLoanInterestPlan(formData: FormData): Promise<
       success: false,
       error: error instanceof Error ? error.message : 'មិនអាចកំណត់អត្រាកម្ជីសម្រាប់សមាជិកបានទេ។',
     }
+  }
+}
+
+export async function createMemberByAdmin(formData: FormData): Promise<ActionResult> {
+  try {
+    await requireAdmin()
+    const admin = createAdminClient()
+
+    const email = (formData.get('email') as string ?? '').trim().toLowerCase()
+    const password = (formData.get('password') as string ?? '').trim()
+    const fullNameKh = (formData.get('full_name_kh') as string ?? '').trim()
+    const fullNameEn = (formData.get('full_name_en') as string ?? '').trim()
+    const phone = (formData.get('phone') as string ?? '').trim()
+    const dateOfBirth = (formData.get('date_of_birth') as string ?? '').trim()
+    const address = (formData.get('address') as string ?? '').trim()
+    const idNumber = (formData.get('id_number') as string ?? '').trim()
+    const residentBookNumber = (formData.get('resident_book_number') as string ?? '').trim()
+    const role = (formData.get('role') as string ?? 'member').trim()
+    const emergencyContactsRaw = (formData.get('emergency_contacts') as string ?? '').trim()
+    const emergencyContacts = emergencyContactsRaw ? JSON.parse(emergencyContactsRaw) : []
+    const idDocumentFile = formData.get('id_document')
+    const residentBookFile = formData.get('resident_book')
+
+    if (!email || !password || !fullNameKh || !fullNameEn) {
+      return { success: false, error: 'អ៊ីមែល ពាក្យសម្ងាត់ និងឈ្មោះពេញ (ខ្មែរ + អង់គ្លេស) ត្រូវការ។' }
+    }
+    if (password.length < 8) {
+      return { success: false, error: 'ពាក្យសម្ងាត់ត្រូវមានយ៉ាងតិច ៨ តួអក្សរ។' }
+    }
+
+    const fullName = `${fullNameKh} | ${fullNameEn}`
+
+    const refereeId = (formData.get('referee_id') as string ?? '').trim() || null
+
+    const { data: authData, error: authError } = await admin.auth.admin.createUser({
+      email,
+      password,
+      email_confirm: true,
+      user_metadata: { full_name: fullName, full_name_kh: fullNameKh, full_name_en: fullNameEn },
+    })
+    if (authError) throw authError
+    if (!authData.user) throw new Error('បង្កើតគណនីបរាជ័យ។')
+
+    const authUserId = authData.user.id
+    const idDocumentUrl = await uploadPrivateFile(
+      'member-documents', authUserId, 'id-documents',
+      idDocumentFile instanceof File ? idDocumentFile : null
+    )
+    const residentBookUrl = await uploadPrivateFile(
+      'member-documents', authUserId, 'resident-books',
+      residentBookFile instanceof File ? residentBookFile : null
+    )
+
+    const connectToken = crypto.randomUUID()
+
+    const { error: memberError } = await admin.from('members').insert({
+      auth_user_id: authUserId,
+      full_name: fullName,
+      full_name_kh: fullNameKh,
+      full_name_en: fullNameEn,
+      email,
+      phone: phone || null,
+      date_of_birth: dateOfBirth || null,
+      address: address || null,
+      id_number: idNumber || null,
+      resident_book_number: residentBookNumber || null,
+      emergency_contacts: emergencyContacts,
+      referee_id: refereeId,
+      id_document_url: idDocumentUrl,
+      resident_book_url: residentBookUrl,
+      role: ['founder', 'comember', 'member'].includes(role) ? role : 'member',
+      status: 'active',
+      telegram_connect_token: connectToken,
+    })
+    if (memberError) throw memberError
+
+    revalidatePath('/admin')
+    revalidatePath('/admin/members')
+    return { success: true }
+  } catch (error) {
+    return { success: false, error: error instanceof Error ? error.message : 'មិនអាចបង្កើតសមាជិកបានទេ។' }
   }
 }
 

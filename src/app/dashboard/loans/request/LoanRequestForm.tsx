@@ -439,7 +439,7 @@ export function LoanRequestForm({
 
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1.5">
-                អាសយដ្ឋានអ៊ីមែលអ្នកធានា <span className="text-gray-400 font-normal">(ស្រេចចិត្ត)</span>
+                អាសយដ្ឋានអ៊ីមែលអ្នកធានា
               </label>
               <div className="relative">
                 <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />

@@ -17,14 +17,17 @@ import {
   Mail,
   MapPin,
   Phone,
+  Plus,
+  Search,
   Send,
   ShieldCheck,
+  Trash2,
   Upload,
   User,
   UserCheck,
   X,
 } from 'lucide-react'
-import { registerMember, checkTelegramConnected } from '@/app/actions/member'
+import { registerMember, checkTelegramConnected, searchActiveMembers, type MemberSearchResult } from '@/app/actions/member'
 import { LoadingDots, LoadingSpinner } from '@/components/ui/Loading'
 import { showError } from '@/lib/toast'
 
@@ -52,9 +55,9 @@ const STEPS: StepDefinition[] = [
   },
   {
     id: 3,
-    label: 'អ្នកធានា',
-    description: 'សមាជិកធានា',
-    hint: 'សមាជិកដែលមានស្រាប់អាចធានាជូនអ្នកដើម្បីបង្កើនល្បឿនការទទួល។',
+    label: 'មេគ្រុម',
+    description: 'មេគ្រុមរបស់អ្នក',
+    hint: 'មេគ្រុមដែលមានស្រាប់អាចផ្ទៀងផ្ទាត់ជូនអ្នកដើម្បីបង្កើនល្បឿនការទទួល។',
   },
   {
     id: 4,
@@ -76,6 +79,11 @@ const STEPS: StepDefinition[] = [
   },
 ]
 
+interface EmergencyContact {
+  full_name: string
+  phone: string
+}
+
 interface FormData {
   email: string
   password: string
@@ -87,10 +95,9 @@ interface FormData {
   address: string
   id_number: string
   resident_book_number: string
-  referee_name_kh: string
-  referee_name_en: string
-  referee_phone: string
-  referee_email: string
+  emergency_contacts: EmergencyContact[]
+  referee_id: string
+  referee_display_name: string
   id_document: File | null
   resident_book: File | null
 }
@@ -106,10 +113,9 @@ const INITIAL_FORM: FormData = {
   address: '',
   id_number: '',
   resident_book_number: '',
-  referee_name_kh: '',
-  referee_name_en: '',
-  referee_phone: '',
-  referee_email: '',
+  emergency_contacts: [],
+  referee_id: '',
+  referee_display_name: '',
   id_document: null,
   resident_book: null,
 }
@@ -129,10 +135,9 @@ function normalizeFormData(data: Partial<FormData> & { full_name?: string }): Fo
     address: merged.address ?? '',
     id_number: merged.id_number ?? '',
     resident_book_number: merged.resident_book_number ?? '',
-    referee_name_kh: merged.referee_name_kh ?? '',
-    referee_name_en: merged.referee_name_en ?? '',
-    referee_phone: merged.referee_phone ?? '',
-    referee_email: merged.referee_email ?? '',
+    emergency_contacts: merged.emergency_contacts ?? [],
+    referee_id: merged.referee_id ?? '',
+    referee_display_name: merged.referee_display_name ?? '',
     id_document: merged.id_document ?? null,
     resident_book: merged.resident_book ?? null,
   }
@@ -241,7 +246,11 @@ export default function RegisterPage() {
     try {
       const payload = new FormData()
       Object.entries(formData).forEach(([key, value]) => {
-        if (value) payload.append(key, value)
+        if (key === 'emergency_contacts') {
+          payload.append(key, JSON.stringify(value))
+        } else if (value) {
+          payload.append(key, value as string | Blob)
+        }
       })
 
       const result = await registerMember(payload)
@@ -728,6 +737,11 @@ function StepPersonal({ formData, updateField }: StepProps) {
         </Field>
       </div>
 
+      <EmergencyContacts
+        contacts={formData.emergency_contacts}
+        onChange={(contacts) => updateField('emergency_contacts', contacts)}
+      />
+
       <Field label="អាសយដ្ឋាន" htmlFor="address" optional>
         <div className="relative">
           <MapPin className="pointer-events-none absolute left-3.5 top-3.5 h-4.5 w-4.5 text-slate-400" />
@@ -745,7 +759,129 @@ function StepPersonal({ formData, updateField }: StepProps) {
   )
 }
 
+function EmergencyContacts({
+  contacts,
+  onChange,
+}: {
+  contacts: EmergencyContact[]
+  onChange: (contacts: EmergencyContact[]) => void
+}) {
+  const update = (index: number, field: keyof EmergencyContact, value: string) => {
+    const next = contacts.map((c, i) => (i === index ? { ...c, [field]: value } : c))
+    onChange(next)
+  }
+
+  const add = () => onChange([...contacts, { full_name: '', phone: '' }])
+
+  const remove = (index: number) => onChange(contacts.filter((_, i) => i !== index))
+
+  return (
+    <div className="space-y-3">
+      <div className="flex items-center justify-between">
+        <p className="text-sm font-semibold text-slate-800">ទំនាក់ទំនងបន្ទាន់</p>
+        <button
+          type="button"
+          onClick={add}
+          className="inline-flex items-center gap-1.5 rounded-lg border border-brand-200 bg-brand-50 px-3 py-1.5 text-xs font-semibold text-brand-800 transition hover:bg-brand-100"
+        >
+          <Plus className="h-3.5 w-3.5" />
+          បន្ថែមមនុស្ស
+        </button>
+      </div>
+
+      {contacts.length === 0 && (
+        <button
+          type="button"
+          onClick={add}
+          className="flex w-full items-center justify-center gap-2 rounded-2xl border-2 border-dashed border-slate-200 py-5 text-sm font-medium text-slate-400 transition hover:border-brand-300 hover:text-brand-700"
+        >
+          <Plus className="h-4 w-4" />
+          បន្ថែមទំនាក់ទំនងបន្ទាន់
+        </button>
+      )}
+
+      <div className="space-y-3">
+        {contacts.map((contact, i) => (
+          <div key={i} className="relative rounded-2xl border border-slate-200 bg-slate-50/60 p-4">
+            <div className="mb-3 flex items-center justify-between">
+              <span className="text-xs font-semibold text-slate-500">ទំនាក់ទំនងលេខ {i + 1}</span>
+              <button
+                type="button"
+                onClick={() => remove(i)}
+                className="grid h-7 w-7 place-items-center rounded-lg text-slate-400 transition hover:bg-rose-50 hover:text-rose-600"
+              >
+                <Trash2 className="h-3.5 w-3.5" />
+              </button>
+            </div>
+            <div className="grid gap-3 sm:grid-cols-2">
+              <div className="space-y-1.5">
+                <label className="text-xs font-semibold text-slate-700">ឈ្មោះពេញ</label>
+                <IconInput
+                  icon={<User className="h-4.5 w-4.5" />}
+                  type="text"
+                  value={contact.full_name}
+                  onChange={(e) => update(i, 'full_name', e.target.value)}
+                  placeholder="ឈ្មោះអ្នកទំនាក់ទំនង"
+                />
+              </div>
+              <div className="space-y-1.5">
+                <label className="text-xs font-semibold text-slate-700">លេខទូរស័ព្ទ</label>
+                <IconInput
+                  icon={<Phone className="h-4.5 w-4.5" />}
+                  type="tel"
+                  value={contact.phone}
+                  onChange={(e) => update(i, 'phone', e.target.value)}
+                  placeholder="0812345678"
+                />
+              </div>
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  )
+}
+
 function StepReferee({ formData, updateField }: StepProps) {
+  const [query, setQuery] = useState('')
+  const [results, setResults] = useState<MemberSearchResult[]>([])
+  const [isSearching, setIsSearching] = useState(false)
+  const [showResults, setShowResults] = useState(false)
+
+  const isSelected = Boolean(formData.referee_id)
+
+  useEffect(() => {
+    if (!query.trim()) {
+      setResults([])
+      setShowResults(false)
+      return
+    }
+    const timer = setTimeout(async () => {
+      setIsSearching(true)
+      try {
+        const members = await searchActiveMembers(query)
+        setResults(members)
+        setShowResults(true)
+      } finally {
+        setIsSearching(false)
+      }
+    }, 300)
+    return () => clearTimeout(timer)
+  }, [query])
+
+  function selectMember(member: MemberSearchResult) {
+    updateField('referee_id', member.id)
+    updateField('referee_display_name', member.full_name_kh ?? member.full_name_en ?? '')
+    setQuery('')
+    setResults([])
+    setShowResults(false)
+  }
+
+  function clearSelection() {
+    updateField('referee_id', '')
+    updateField('referee_display_name', '')
+  }
+
   return (
     <div className="space-y-5">
       <div className="overflow-hidden rounded-2xl border border-brand-100 bg-brand-50/60">
@@ -754,73 +890,87 @@ function StepReferee({ formData, updateField }: StepProps) {
             <UserCheck className="h-5 w-5" />
           </span>
           <div>
-            <p className="text-sm font-semibold text-brand-950">ហេតុអ្វីបានជាយើងសុំអ្នកធានា</p>
+            <p className="text-sm font-semibold text-brand-950">ហេតុអ្វីបានជាយើងសុំមេគ្រុម</p>
             <p className="mt-1 text-[13px] leading-6 text-brand-900/80">
-              អ្នកធានាគឺជាសមាជិកសន្សំដែលមានស្រាប់ដែលធានាជូនពាក្យសុំរបស់អ្នក។ ពួកគេនឹង
-              ទទួលបានសំណើផ្ទៀងផ្ទាត់តាមអ៊ីមែល និង បញ្ជាក់ថាពួកគេស្គាល់អ្នក។ អ្នកអាច
-              រំលងជំហាននេះ និង បន្ថែមក្រោយ។
+              មេគ្រុមគឺជាសមាជិកសន្សំដែលមានស្រាប់ដែលផ្ទៀងផ្ទាត់ជូនពាក្យសុំរបស់អ្នក។
+              អ្នកអាចរំលងជំហាននេះ និង បន្ថែមក្រោយ។
             </p>
           </div>
         </div>
       </div>
 
-      <div className="grid gap-5 sm:grid-cols-2">
-        <Field label="ឈ្មោះអ្នកធានា (ខ្មែរ)" htmlFor="referee_name_kh" optional>
-          <IconInput
-            id="referee_name_kh"
-            icon={<User className="h-4.5 w-4.5" />}
-            type="text"
-            autoComplete="off"
-            value={formData.referee_name_kh}
-            onChange={(e) => updateField('referee_name_kh', e.target.value)}
-            placeholder="ឈ្មោះជាអក្សរខ្មែរ"
-          />
-        </Field>
-        <Field label="ឈ្មោះអ្នកធានា (អង់គ្លេស)" htmlFor="referee_name_en" optional>
-          <IconInput
-            id="referee_name_en"
-            icon={<User className="h-4.5 w-4.5" />}
-            type="text"
-            autoComplete="off"
-            value={formData.referee_name_en}
-            onChange={(e) => updateField('referee_name_en', e.target.value)}
-            placeholder="Full name in English"
-          />
-        </Field>
-      </div>
+      {isSelected ? (
+        <div className="flex items-center justify-between rounded-2xl border border-emerald-200 bg-emerald-50/70 px-4 py-3.5">
+          <div className="flex items-center gap-3">
+            <span className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-white text-emerald-700 ring-1 ring-emerald-200">
+              <UserCheck className="h-5 w-5" />
+            </span>
+            <div>
+              <p className="text-sm font-semibold text-slate-900">{formData.referee_display_name}</p>
+              <p className="text-xs text-emerald-700">មេគ្រុមបានជ្រើសរើស</p>
+            </div>
+          </div>
+          <button
+            type="button"
+            onClick={clearSelection}
+            className="grid h-8 w-8 shrink-0 place-items-center rounded-lg text-slate-400 transition hover:bg-white hover:text-rose-600"
+          >
+            <X className="h-4 w-4" />
+          </button>
+        </div>
+      ) : (
+        <div className="space-y-2">
+          <div className="relative">
+            <Search className="pointer-events-none absolute left-3.5 top-1/2 h-4.5 w-4.5 -translate-y-1/2 text-slate-400" />
+            <input
+              type="text"
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+              placeholder="ស្វែងរកមេគ្រុមតាមឈ្មោះ..."
+              className={`${inputBase} app-input--with-icon pr-10`}
+            />
+            {isSearching && (
+              <span className="absolute right-3.5 top-1/2 -translate-y-1/2">
+                <LoadingSpinner size="sm" color="brand" />
+              </span>
+            )}
+          </div>
 
-      <Field label="លេខទូរស័ព្ទអ្នកធានា" htmlFor="referee_phone" optional>
-        <IconInput
-          id="referee_phone"
-          icon={<Phone className="h-4.5 w-4.5" />}
-          type="tel"
-          autoComplete="off"
-          value={formData.referee_phone}
-          onChange={(e) => updateField('referee_phone', e.target.value)}
-          placeholder="0812345678"
-        />
-      </Field>
-
-      <Field
-        label="អាសយដ្ឋានអ៊ីមែលអ្នកធានា"
-        htmlFor="referee_email"
-        optional
-        hint="ត្រូវជាសមាជិកសកម្ម"
-      >
-        <IconInput
-          id="referee_email"
-          icon={<Mail className="h-4.5 w-4.5" />}
-          type="email"
-          autoComplete="off"
-          value={formData.referee_email}
-          onChange={(e) => updateField('referee_email', e.target.value)}
-          placeholder="referee@example.com"
-        />
-      </Field>
+          {showResults && (
+            <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-md">
+              {results.length === 0 ? (
+                <p className="px-4 py-3 text-sm text-slate-500">រកមិនឃើញសមាជិក</p>
+              ) : (
+                <ul>
+                  {results.map((member, i) => (
+                    <li key={member.id}>
+                      <button
+                        type="button"
+                        onClick={() => selectMember(member)}
+                        className={`flex w-full items-center gap-3 px-4 py-3 text-left transition hover:bg-brand-50 ${i > 0 ? 'border-t border-slate-100' : ''}`}
+                      >
+                        <span className="grid h-8 w-8 shrink-0 place-items-center rounded-lg bg-slate-100 text-slate-500">
+                          <User className="h-4 w-4" />
+                        </span>
+                        <div>
+                          <p className="text-sm font-semibold text-slate-900">{member.full_name_kh}</p>
+                          {member.full_name_en && (
+                            <p className="text-xs text-slate-500">{member.full_name_en}</p>
+                          )}
+                        </div>
+                      </button>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </div>
+          )}
+        </div>
+      )}
 
       <p className="text-xs leading-5 text-slate-500">
-        គន្លឹះ៖ សុំសហការី សមាជិកគ្រួសារ ឬ មិត្តភក្តិដែលជាសមាជិកសន្សំរួចហើយ។ ប្រសិនបើ
-        អ្នកមិនមានអ្នកធានា សូមទាក់ទងអ្នកគ្រប់គ្រងសន្សំបន្ទាប់ពីការចុះឈ្មោះ។
+        ស្វែងរកមេគ្រុម សមាជិកគ្រួសារ ឬ មិត្តភក្តិដែលជាសមាជិកសន្សំរួចហើយ។ ប្រសិនបើ
+        អ្នកមិនមានមេគ្រុម សូមទាក់ទងអ្នកគ្រប់គ្រងសន្សំបន្ទាប់ពីការចុះឈ្មោះ។
       </p>
     </div>
   )
@@ -838,11 +988,12 @@ function StepDocuments({ formData, updateField }: StepProps) {
           accept="image/*,.pdf"
         />
         <FileUpload
-          label="សៀវភៅគ្រួសារ"
+          label="សៀវភៅគ្រួសារ/លេខសៀវភៅស្នាក់នៅ"
           subtitle="សៀវភៅស្នាក់នៅ"
           file={formData.resident_book}
           onChange={(file) => updateField('resident_book', file)}
           accept="image/*,.pdf"
+          optional
         />
       </div>
 
@@ -872,13 +1023,17 @@ interface FileUploadProps {
   file: File | null
   onChange: (file: File | null) => void
   accept: string
+  optional?: boolean
 }
 
-function FileUpload({ label, subtitle, file, onChange, accept }: FileUploadProps) {
+function FileUpload({ label, subtitle, file, onChange, accept, optional }: FileUploadProps) {
   return (
     <div className="space-y-2">
       <div>
-        <p className="text-sm font-semibold text-slate-800">{label}</p>
+        <p className="text-sm font-semibold text-slate-800">
+          {label}
+          {optional && <span className="ml-1.5 text-xs font-normal text-slate-400">(ស្រេចចិត្ត)</span>}
+        </p>
         <p className="text-xs text-slate-500">{subtitle}</p>
       </div>
 
@@ -1064,7 +1219,7 @@ function StepSuccess() {
         <ol className="mt-3 space-y-3">
           {[
             'អ្នកគ្រប់គ្រងពិនិត្យអត្តសញ្ញាណប័ណ្ណ និង សៀវភៅគ្រួសាររបស់អ្នក',
-            'អ្នកធានាទទួលបានសំណើផ្ទៀងផ្ទាត់ (ប្រសិនបើបានផ្តល់)',
+            'មេគ្រុមទទួលបានសំណើផ្ទៀងផ្ទាត់ (ប្រសិនបើបានផ្តល់)',
             'គណនីត្រូវបានទទួល និង ដំណើរការ',
             'ចូលគណនី និង ចាប់ផ្តើមសន្សំជាមួយសន្សំ',
           ].map((item, i) => (
