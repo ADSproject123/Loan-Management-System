@@ -2,7 +2,7 @@
 
 import { useMemo, useState } from 'react'
 import Link from 'next/link'
-import { PiggyBank } from 'lucide-react'
+import { ExternalLink, PiggyBank } from 'lucide-react'
 import { SavingStatusBadge } from '@/components/ui/Badge'
 import { SavingActions } from '@/app/admin/savings/SavingActions'
 import { formatDate, money, relatedMemberEmail, relatedMemberName } from '@/app/admin/adminUtils'
@@ -28,8 +28,19 @@ export type SavingListItem = {
   qr_code_ref?: string | null
   saving_date: string | null
   created_at: string
-  evidenceSignedUrl: string | null
+  evidenceSignedUrl?: string | null
   members?: { full_name?: string | null; email?: string | null } | { full_name?: string | null; email?: string | null }[] | null
+}
+
+type MemberSavingGroup = {
+  member_id: string
+  members: SavingListItem['members']
+  totalAmount: number
+  currency: string | null
+  savingCount: number
+  latestSavingDate: string | null
+  latestCreatedAt: string
+  hasPending: boolean
 }
 
 const STATUS_FILTER_OPTIONS = [
@@ -40,28 +51,81 @@ const STATUS_FILTER_OPTIONS = [
   { value: 'refunded', label: 'សងប្រាក់វិញ' },
 ]
 
-export function SavingsList({ savings }: { savings: SavingListItem[] }) {
+function isVerifiedSavingStatus(status: string) {
+  return status === 'verified' || status === 'completed'
+}
+
+function aggregateByMember(
+  savings: SavingListItem[],
+  allSavings: SavingListItem[],
+  statusFilter: string
+): MemberSavingGroup[] {
+  const source =
+    statusFilter === ''
+      ? savings.filter((saving) => isVerifiedSavingStatus(saving.status))
+      : savings
+
+  const groups = new Map<string, MemberSavingGroup>()
+
+  for (const saving of source) {
+    const amount = Number(saving.amount ?? 0)
+    const existing = groups.get(saving.member_id)
+
+    if (!existing) {
+      groups.set(saving.member_id, {
+        member_id: saving.member_id,
+        members: saving.members,
+        totalAmount: amount,
+        currency: saving.currency,
+        savingCount: 1,
+        latestSavingDate: saving.saving_date,
+        latestCreatedAt: saving.created_at,
+        hasPending: allSavings.some(
+          (row) => row.member_id === saving.member_id && row.status === 'pending'
+        ),
+      })
+      continue
+    }
+
+    existing.totalAmount += amount
+    existing.savingCount += 1
+
+    if (
+      saving.saving_date &&
+      (!existing.latestSavingDate ||
+        new Date(saving.saving_date).getTime() > new Date(existing.latestSavingDate).getTime())
+    ) {
+      existing.latestSavingDate = saving.saving_date
+    }
+
+    if (new Date(saving.created_at).getTime() > new Date(existing.latestCreatedAt).getTime()) {
+      existing.latestCreatedAt = saving.created_at
+    }
+  }
+
+  return Array.from(groups.values()).sort(
+    (a, b) => new Date(b.latestCreatedAt).getTime() - new Date(a.latestCreatedAt).getTime()
+  )
+}
+
+export function SavingsList({
+  savings,
+  mode = 'requests',
+}: {
+  savings: SavingListItem[]
+  mode?: 'ledger' | 'requests'
+}) {
   const [query, setQuery] = useState('')
   const [statusFilter, setStatusFilter] = useState('')
   const [dateFrom, setDateFrom] = useState('')
   const [dateTo, setDateTo] = useState('')
 
-  const filtered = useMemo(() => {
-    const q = query.trim().toLowerCase()
+  const filteredByStatusAndDate = useMemo(() => {
     const fromMs = dateFrom ? startOfDay(dateFrom) : null
     const toMs = dateTo ? endOfDay(dateTo) : null
 
     return savings.filter((saving) => {
       if (statusFilter && saving.status !== statusFilter) return false
-      if (q) {
-        const name = relatedMemberName(saving).toLowerCase()
-        const email = relatedMemberEmail(saving).toLowerCase()
-        const amount = money(saving.amount, (saving.currency as CurrencyCode) ?? 'USD').toLowerCase()
-        const currency = (saving.currency ?? '').toLowerCase()
-        const matchesQuery =
-          name.includes(q) || email.includes(q) || amount.includes(q) || currency.includes(q)
-        if (!matchesQuery) return false
-      }
 
       if (fromMs !== null || toMs !== null) {
         const recordMs = recordDateMs(saving)
@@ -72,7 +136,46 @@ export function SavingsList({ savings }: { savings: SavingListItem[] }) {
 
       return true
     })
-  }, [savings, query, statusFilter, dateFrom, dateTo])
+  }, [savings, statusFilter, dateFrom, dateTo])
+
+  const filtered = useMemo(() => {
+    if (mode === 'ledger') return filteredByStatusAndDate
+
+    const q = query.trim().toLowerCase()
+    if (!q) return filteredByStatusAndDate
+
+    return filteredByStatusAndDate.filter((saving) => {
+      const name = relatedMemberName(saving).toLowerCase()
+      const email = relatedMemberEmail(saving).toLowerCase()
+      const amount = money(saving.amount, (saving.currency as CurrencyCode) ?? 'USD').toLowerCase()
+      const currency = (saving.currency ?? '').toLowerCase()
+      return name.includes(q) || email.includes(q) || amount.includes(q) || currency.includes(q)
+    })
+  }, [filteredByStatusAndDate, mode, query])
+
+  const memberGroups = useMemo(() => {
+    if (mode !== 'ledger') return []
+    return aggregateByMember(filtered, savings, statusFilter)
+  }, [filtered, mode, savings, statusFilter])
+
+  const ledgerFiltered = useMemo(() => {
+    if (mode !== 'ledger') return []
+    const q = query.trim().toLowerCase()
+    if (!q) return memberGroups
+
+    return memberGroups.filter((group) => {
+      const name = relatedMemberName(group).toLowerCase()
+      const email = relatedMemberEmail(group).toLowerCase()
+      const amount = money(group.totalAmount, (group.currency as CurrencyCode) ?? 'USD').toLowerCase()
+      return name.includes(q) || email.includes(q) || amount.includes(q)
+    })
+  }, [memberGroups, mode, query])
+
+  const displayRows = mode === 'ledger' ? ledgerFiltered : filtered
+  const totalLedgerMembers = useMemo(() => {
+    if (mode !== 'ledger') return 0
+    return aggregateByMember(savings, savings, statusFilter).length
+  }, [mode, savings, statusFilter])
 
   return (
     <div className="flex flex-col flex-1 min-h-0">
@@ -103,10 +206,17 @@ export function SavingsList({ savings }: { savings: SavingListItem[] }) {
           </div>
         }
         filterSummary={
-          <>
-            បង្ហាញ <span className="font-semibold text-foreground">{filtered.length}</span> នៃ{' '}
-            <span className="font-semibold text-foreground">{savings.length}</span>
-          </>
+          mode === 'ledger' ? (
+            <>
+              បង្ហាញ <span className="font-semibold text-foreground">{displayRows.length}</span> នៃ{' '}
+              <span className="font-semibold text-foreground">{totalLedgerMembers}</span> សមាជិក
+            </>
+          ) : (
+            <>
+              បង្ហាញ <span className="font-semibold text-foreground">{filtered.length}</span> នៃ{' '}
+              <span className="font-semibold text-foreground">{savings.length}</span>
+            </>
+          )
         }
       />
 
@@ -115,9 +225,11 @@ export function SavingsList({ savings }: { savings: SavingListItem[] }) {
           <thead className={adminTable.thead}>
             <tr className={adminTable.thRow}>
               <th className={adminTable.thFirst}>សមាជិក</th>
-              <th className={adminTable.th}>ចំនួនទឹកប្រាក់</th>
+              <th className={adminTable.th}>
+                {mode === 'ledger' ? 'សន្សំសរុប' : 'ចំនួនទឹកប្រាក់'}
+              </th>
               <th className={adminTable.th}>ថ្ងៃសន្សំ</th>
-              <th className={adminTable.th}>ភស្តុតាង</th>
+              {mode === 'requests' && <th className={adminTable.th}>ភស្តុតាង</th>}
               <th className={adminTable.th}>ស្ថានភាព</th>
               <th className={adminTable.thLast}>សកម្មភាព</th>
             </tr>
@@ -125,67 +237,109 @@ export function SavingsList({ savings }: { savings: SavingListItem[] }) {
           <tbody className={adminTable.tbody}>
             {savings.length === 0 && (
               <AdminTableEmpty
-                colSpan={6}
+                colSpan={mode === 'ledger' ? 5 : 6}
                 icon={PiggyBank}
                 title="មិនមានការសន្សំ"
                 description="ការដាក់សន្សំរបស់សមាជិកនឹងបង្ហាញនៅទីនេះ។"
               />
             )}
 
-            {savings.length > 0 && filtered.length === 0 && <AdminTableNoResults colSpan={6} />}
+            {savings.length > 0 && displayRows.length === 0 && (
+              <AdminTableNoResults colSpan={mode === 'ledger' ? 5 : 6} />
+            )}
 
-            {filtered.map((saving) => (
-              <tr
-                key={saving.id}
-                className={adminTableRowClass({ pending: saving.status === 'pending' })}
-              >
-                <td className={adminTable.tdFirst}>
-                  <Link
-                    href={`/admin/members/${saving.member_id}`}
-                    className="group block min-w-0"
-                  >
-                    <p className={`${adminTable.namePrimary} transition group-hover:text-brand-700`}>
-                      {relatedMemberName(saving)}
+            {mode === 'ledger' &&
+              ledgerFiltered.map((group) => (
+                <tr key={group.member_id} className={adminTableRowClass({ pending: group.hasPending })}>
+                  <td className={adminTable.tdFirst}>
+                    <Link href={`/admin/members/${group.member_id}`} className="group block min-w-0">
+                      <p className={`${adminTable.namePrimary} transition group-hover:text-brand-700`}>
+                        {relatedMemberName(group)}
+                      </p>
+                      <p className={adminTable.nameSecondary}>{relatedMemberEmail(group)}</p>
+                    </Link>
+                  </td>
+                  <td className={adminTable.td}>
+                    <p className={adminTable.amountPrimary}>
+                      {money(group.totalAmount, (group.currency as CurrencyCode) ?? 'USD')}
                     </p>
-                    <p className={adminTable.nameSecondary}>{relatedMemberEmail(saving)}</p>
-                  </Link>
-                </td>
-                <td className={adminTable.td}>
-                  <p className={adminTable.amountPrimary}>
-                    {money(saving.amount, (saving.currency as CurrencyCode) ?? 'USD')}
-                  </p>
-                  <p className={adminTable.amountSecondary}>
-                    ដាក់ស្នើ {formatDate(saving.created_at)}
-                  </p>
-                </td>
-                <td className={adminTable.tdMuted}>{formatDate(saving.saving_date)}</td>
-                <td className={adminTable.td}>
-                  {saving.evidenceSignedUrl ? (
-                    <AdminExternalLink href={saving.evidenceSignedUrl}>មើលភស្តុតាង</AdminExternalLink>
-                  ) : saving.qr_code_ref?.startsWith('KHQR-') ? (
-                    <span className="inline-flex items-center rounded-full bg-green-50 px-2 py-0.5 text-xs font-medium text-green-700 ring-1 ring-green-200">
-                      បានបញ្ជាក់ដោយ Bakong
-                    </span>
-                  ) : (
-                    <span className={adminTable.missingText}>
-                      {saving.evidence_url ? 'មិនអាចបង្ហាញ' : 'មិនមាន'}
-                    </span>
-                  )}
-                </td>
-                <td className={adminTable.td}>
-                  <SavingStatusBadge status={saving.status as SavingStatus} plain />
-                </td>
-                <td className={adminTable.tdLast} onClick={(event) => event.stopPropagation()}>
-                  <SavingActions
-                    savingId={saving.id}
-                    memberName={relatedMemberName(saving)}
-                    amount={saving.amount}
-                    currency={saving.currency}
-                    status={saving.status}
-                  />
-                </td>
-              </tr>
-            ))}
+                    <p className={adminTable.amountSecondary}>
+                      {group.savingCount} ការសន្សំ
+                    </p>
+                  </td>
+                  <td className={adminTable.tdMuted}>{formatDate(group.latestSavingDate)}</td>
+                  <td className={adminTable.td}>
+                    {group.hasPending ? (
+                      <SavingStatusBadge status="pending" plain />
+                    ) : (
+                      <SavingStatusBadge status="completed" plain />
+                    )}
+                  </td>
+                  <td className={adminTable.tdLast}>
+                    <Link
+                      href={`/admin/members/${group.member_id}`}
+                      className="inline-flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-xs font-semibold text-brand-700 transition hover:bg-brand-50"
+                    >
+                      មើលលម្អិត
+                      <ExternalLink className="h-3.5 w-3.5" />
+                    </Link>
+                  </td>
+                </tr>
+              ))}
+
+            {mode === 'requests' &&
+              filtered.map((saving) => (
+                <tr
+                  key={saving.id}
+                  className={adminTableRowClass({ pending: saving.status === 'pending' })}
+                >
+                  <td className={adminTable.tdFirst}>
+                    <Link
+                      href={`/admin/members/${saving.member_id}`}
+                      className="group block min-w-0"
+                    >
+                      <p className={`${adminTable.namePrimary} transition group-hover:text-brand-700`}>
+                        {relatedMemberName(saving)}
+                      </p>
+                      <p className={adminTable.nameSecondary}>{relatedMemberEmail(saving)}</p>
+                    </Link>
+                  </td>
+                  <td className={adminTable.td}>
+                    <p className={adminTable.amountPrimary}>
+                      {money(saving.amount, (saving.currency as CurrencyCode) ?? 'USD')}
+                    </p>
+                    <p className={adminTable.amountSecondary}>
+                      ដាក់ស្នើ {formatDate(saving.created_at)}
+                    </p>
+                  </td>
+                  <td className={adminTable.tdMuted}>{formatDate(saving.saving_date)}</td>
+                  <td className={adminTable.td}>
+                    {saving.evidenceSignedUrl ? (
+                      <AdminExternalLink href={saving.evidenceSignedUrl}>មើលភស្តុតាង</AdminExternalLink>
+                    ) : saving.qr_code_ref?.startsWith('KHQR-') ? (
+                      <span className="inline-flex items-center rounded-full bg-green-50 px-2 py-0.5 text-xs font-medium text-green-700 ring-1 ring-green-200">
+                        បានបញ្ជាក់ដោយ Bakong
+                      </span>
+                    ) : (
+                      <span className={adminTable.missingText}>
+                        {saving.evidence_url ? 'មិនអាចបង្ហាញ' : 'មិនមាន'}
+                      </span>
+                    )}
+                  </td>
+                  <td className={adminTable.td}>
+                    <SavingStatusBadge status={saving.status as SavingStatus} plain />
+                  </td>
+                  <td className={adminTable.tdLast} onClick={(event) => event.stopPropagation()}>
+                    <SavingActions
+                      savingId={saving.id}
+                      memberName={relatedMemberName(saving)}
+                      amount={saving.amount}
+                      currency={saving.currency}
+                      status={saving.status}
+                    />
+                  </td>
+                </tr>
+              ))}
           </tbody>
         </table>
       </div>

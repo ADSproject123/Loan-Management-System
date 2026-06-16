@@ -1,13 +1,12 @@
 'use client'
 
-import { useState } from 'react'
+import { useMemo, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { Percent } from 'lucide-react'
-import { Button } from '@/components/ui/Button'
-import { Card } from '@/components/ui/Card'
-import { adminFieldClassName } from '@/components/admin'
+import { Select, type SelectOption } from '@/components/ui/Select'
 import { assignMemberLoanInterestPlan } from '@/app/actions/admin'
 import { showError } from '@/lib/toast'
+import { useRegisterMemberEditForm } from './MemberEditModeContext'
 import type { LoanInterestPlan } from '@/lib/loanInterestPlans'
 
 type MemberLoanInterestFormProps = {
@@ -15,6 +14,7 @@ type MemberLoanInterestFormProps = {
   assignedPlanId: string | null
   plans: LoanInterestPlan[]
   globalMonthlyLoanInterestRate: number
+  onSaved?: () => void
 }
 
 export function MemberLoanInterestForm({
@@ -22,14 +22,32 @@ export function MemberLoanInterestForm({
   assignedPlanId,
   plans,
   globalMonthlyLoanInterestRate,
+  onSaved,
 }: MemberLoanInterestFormProps) {
   const router = useRouter()
   const [planId, setPlanId] = useState(assignedPlanId ?? '')
   const [loading, setLoading] = useState(false)
+  const formRef = useRegisterMemberEditForm(loading)
 
   const activePlans = plans.filter((plan) => plan.isActive)
   const selectedPlan = activePlans.find((plan) => plan.id === planId)
   const effectiveRate = selectedPlan?.monthlyRate ?? globalMonthlyLoanInterestRate
+
+  const planOptions = useMemo<SelectOption[]>(
+    () => [
+      {
+        value: '',
+        label: 'អត្រាទូទៅ',
+        hint: `${globalMonthlyLoanInterestRate}% ប្រចាំខែ`,
+      },
+      ...activePlans.map((plan) => ({
+        value: plan.id,
+        label: plan.name,
+        hint: `${plan.monthlyRate}% ប្រចាំខែ`,
+      })),
+    ],
+    [activePlans, globalMonthlyLoanInterestRate]
+  )
 
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault()
@@ -47,64 +65,38 @@ export function MemberLoanInterestForm({
       return
     }
 
+    onSaved?.()
     router.refresh()
   }
 
   return (
-    <Card className="mb-6 w-full">
-      <div className="mb-5 flex items-start gap-3">
-        <span className="grid h-11 w-11 shrink-0 place-items-center rounded-xl bg-brand-100 text-brand-700">
-          <Percent className="h-5 w-5" />
-        </span>
-        <div>
-          <h3 className="text-lg font-semibold text-gray-900">អត្រាការប្រាក់កម្ជី</h3>
-          <p className="mt-1 text-sm text-gray-500">
-            ជ្រើសរើសអត្រាកម្ជីជាក្រុមសម្រាប់សមាជិកនេះ។ កម្ជីថ្មីនឹងប្រើអត្រាដែលចាត់ចែងនៅទីនេះ។
-          </p>
-        </div>
+    <div className="w-full rounded-xl border border-border bg-surface">
+      <div className="flex items-center gap-2 border-b border-border px-5 py-4 md:px-6">
+        <Percent className="h-5 w-5 text-brand-700" />
+        <h3 className="text-lg font-semibold text-foreground">អត្រាកម្ជី</h3>
       </div>
 
-      <form onSubmit={handleSubmit} className="space-y-4">
-        <div className="max-w-md">
-          <label className="block text-sm font-medium text-gray-700" htmlFor="member-loan-plan">
-            អត្រាកម្ជី
-          </label>
-          <select
-            id="member-loan-plan"
-            value={planId}
-            onChange={(event) => setPlanId(event.target.value)}
-            className={`${adminFieldClassName} mt-2 w-full`}
-          >
-            <option value="">
-              អត្រាទូទៅ ({globalMonthlyLoanInterestRate}% ប្រចាំខែ)
-            </option>
-            {activePlans.map((plan) => (
-              <option key={plan.id} value={plan.id}>
-                {plan.name} ({plan.monthlyRate}% ប្រចាំខែ)
-              </option>
-            ))}
-          </select>
-        </div>
-
-        <p className="text-sm text-gray-600">
-          អត្រាប្រើប្រាស់សម្រាប់កម្ជីថ្មី៖{' '}
-          <span className="font-semibold text-gray-900">{effectiveRate}%</span> ប្រចាំខែ
+      <form ref={formRef} onSubmit={handleSubmit} className="space-y-4 px-5 py-5 md:px-6">
+        <p className="text-sm text-muted">
+          ជ្រើសរើសអត្រាកម្ជីជាក្រុមសម្រាប់សមាជិកនេះ។ កម្ជីថ្មីនឹងប្រើអត្រាដែលចាត់ចែងនៅទីនេះ។
         </p>
 
-        {activePlans.length === 0 && (
-          <p className="text-sm text-amber-700">
-            មិនទាន់មានអត្រាកម្ជីជាក្រុមទេ។{' '}
-            <a href="/admin/settings/loan-plans" className="font-medium text-brand-700 hover:text-brand-900">
-              បង្កើតអត្រានៅទីនេះ
-            </a>
-            ។
-          </p>
-        )}
-
-        <Button type="submit" loading={loading} size="sm">
-          រក្សាទុកការចាត់ចែង
-        </Button>
+        <div className="max-w-md">
+          <label
+            htmlFor="member-loan-plan"
+            className="mb-1 block text-xs font-semibold text-muted"
+          >
+            អត្រាកម្ជីជាក្រុម
+          </label>
+          <Select
+            id="member-loan-plan"
+            value={planId}
+            onChange={setPlanId}
+            options={planOptions}
+            aria-label="អត្រាកម្ជីជាក្រុម"
+          />
+        </div>
       </form>
-    </Card>
+    </div>
   )
 }

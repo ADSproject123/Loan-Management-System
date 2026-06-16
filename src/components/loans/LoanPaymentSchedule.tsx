@@ -3,6 +3,7 @@ import { ArrowRight } from 'lucide-react'
 import { formatMoney, type CurrencyCode } from '@/lib/currency'
 import { formatKhmerDate } from '@/lib/dates'
 import type { LoanScheduleRow } from '@/lib/interestCalculations'
+import { LoanPaymentScheduleDownloads } from '@/components/loans/LoanPaymentScheduleDownloads'
 
 const STATUS_LABELS: Record<LoanScheduleRow['status'], string> = {
   paid: 'បានបង់',
@@ -25,6 +26,9 @@ type LoanPaymentScheduleProps = {
   compact?: boolean
   repayHref?: string
   showRowPayButton?: boolean
+  fileBaseName?: string
+  memberName?: string
+  showDownload?: boolean
 }
 
 export function LoanPaymentSchedule({
@@ -34,6 +38,9 @@ export function LoanPaymentSchedule({
   compact = false,
   repayHref,
   showRowPayButton = false,
+  fileBaseName,
+  memberName,
+  showDownload = true,
 }: LoanPaymentScheduleProps) {
   if (schedule.length === 0) return null
 
@@ -54,6 +61,15 @@ export function LoanPaymentSchedule({
             បានបង់{' '}
             <span className="font-semibold text-gray-900">{formatMoney(totalPaid, currency)}</span>
           </p>
+          {showDownload ? (
+            <LoanPaymentScheduleDownloads
+              schedule={schedule}
+              currency={currency}
+              compact={compact}
+              fileBaseName={fileBaseName}
+              memberName={memberName}
+            />
+          ) : null}
           {repayHref ? (
             <Link
               href={repayHref}

@@ -107,6 +107,257 @@ export async function updateMemberRole(formData: FormData): Promise<ActionResult
   }
 }
 
+type EmergencyContact = { full_name: string; phone: string }
+
+function parseEmergencyContacts(raw: string): EmergencyContact[] {
+  if (!raw) return []
+  try {
+    const parsed = JSON.parse(raw) as unknown
+    if (!Array.isArray(parsed)) return []
+    return parsed
+      .filter(
+        (item): item is EmergencyContact =>
+          Boolean(item) &&
+          typeof item === 'object' &&
+          typeof (item as EmergencyContact).full_name === 'string' &&
+          typeof (item as EmergencyContact).phone === 'string'
+      )
+      .map((item) => ({
+        full_name: item.full_name.trim(),
+        phone: item.phone.trim(),
+      }))
+      .filter((item) => item.full_name && item.phone)
+  } catch {
+    return []
+  }
+}
+
+function revalidateMemberPaths(id: string) {
+  revalidatePath('/admin/members')
+  revalidatePath(`/admin/members/${id}`)
+}
+
+export async function updateMemberProfile(formData: FormData): Promise<ActionResult> {
+  try {
+    await requireAdmin()
+    const id = idFrom(formData)
+    const admin = createAdminClient()
+
+    const email = (formData.get('email') as string ?? '').trim().toLowerCase()
+    const fullNameKh = (formData.get('full_name_kh') as string ?? '').trim()
+    const fullNameEn = (formData.get('full_name_en') as string ?? '').trim()
+    const phone = (formData.get('phone') as string ?? '').trim()
+    const dateOfBirth = (formData.get('date_of_birth') as string ?? '').trim()
+    const address = (formData.get('address') as string ?? '').trim()
+    const idNumber = (formData.get('id_number') as string ?? '').trim()
+    const residentBookNumber = (formData.get('resident_book_number') as string ?? '').trim()
+    const role = roleFrom(formData)
+    const emergencyContacts = parseEmergencyContacts(
+      (formData.get('emergency_contacts') as string ?? '').trim()
+    )
+
+    if (!email || !fullNameKh || !fullNameEn || !phone) {
+      return {
+        success: false,
+        error: 'អ៊ីមែល ឈ្មោះ (ខ្មែរ + អង់គ្លេស) និង ទូរស័ព្ទ ត្រូវការ។',
+      }
+    }
+
+    if (dateOfBirth && !/^\d{4}-\d{2}-\d{2}$/.test(dateOfBirth)) {
+      return { success: false, error: 'សូមបញ្ចូលថ្ងៃខែឆ្នាំកំណើតត្រឹមត្រូវ។' }
+    }
+
+    if (dateOfBirth && dateOfBirth > new Date().toISOString().slice(0, 10)) {
+      return { success: false, error: 'ថ្ងៃខែឆ្នាំកំណើតមិនអាចនៅពេលអនាគតបានទេ។' }
+    }
+
+    const { data: member, error: memberError } = await admin
+      .from('members')
+      .select('id, email, auth_user_id, role')
+      .eq('id', id)
+      .maybeSingle()
+
+    if (memberError) throw memberError
+    if (!member) return { success: false, error: 'រកមិនឃើញសមាជិក។' }
+
+    if (email !== member.email) {
+      const { data: duplicate } = await admin
+        .from('members')
+        .select('id')
+        .eq('email', email)
+        .neq('id', id)
+        .maybeSingle()
+
+      if (duplicate) {
+        return { success: false, error: 'អ៊ីមែលនេះត្រូវបានប្រើរួចហើយ។' }
+      }
+    }
+
+    const fullName = `${fullNameKh} | ${fullNameEn}`
+
+    if (member.auth_user_id && email !== member.email) {
+      const { error: authError } = await admin.auth.admin.updateUserById(member.auth_user_id, {
+        email,
+        user_metadata: { full_name: fullName, full_name_kh: fullNameKh, full_name_en: fullNameEn },
+      })
+      if (authError) throw authError
+    } else if (member.auth_user_id) {
+      const { error: authError } = await admin.auth.admin.updateUserById(member.auth_user_id, {
+        user_metadata: { full_name: fullName, full_name_kh: fullNameKh, full_name_en: fullNameEn },
+      })
+      if (authError) throw authError
+    }
+
+    const { error } = await admin
+      .from('members')
+      .update({
+        email,
+        full_name: fullName,
+        full_name_kh: fullNameKh,
+        full_name_en: fullNameEn,
+        phone,
+        date_of_birth: dateOfBirth || null,
+        address: address || null,
+        id_number: idNumber || null,
+        resident_book_number: residentBookNumber || null,
+        emergency_contacts: emergencyContacts,
+        role,
+      })
+      .eq('id', id)
+
+    if (error) throw error
+
+    if (role !== member.role) {
+      await notify(
+        id,
+        'តួនាទីត្រូវបានធ្វើបច្ចុប្បន្នភាព',
+        `តួនាទីរបស់អ្នកត្រូវបានកំណត់ជា ${MEMBER_ROLE_LABELS[role]}។`
+      )
+    } else {
+      await notify(id, 'ព័ត៌មានត្រូវបានធ្វើបច្ចុប្បន្នភាព', 'ព័ត៌មានផ្ទាល់ខ្លួនរបស់អ្នកត្រូវបានអ្នកគ្រប់គ្រងធ្វើបច្ចុប្បន្នភាព។')
+    }
+    revalidateMemberPaths(id)
+    return { success: true }
+  } catch (error) {
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : 'មិនអាចរក្សាទុកព័ត៌មានសមាជិកបានទេ។',
+    }
+  }
+}
+
+export async function updateMemberDocuments(formData: FormData): Promise<ActionResult> {
+  try {
+    await requireAdmin()
+    const id = idFrom(formData)
+    const admin = createAdminClient()
+
+    const idDocumentFile = formData.get('id_document')
+    const residentBookFile = formData.get('resident_book')
+    const hasIdDoc = idDocumentFile instanceof File && idDocumentFile.size > 0
+    const hasResidentBook = residentBookFile instanceof File && residentBookFile.size > 0
+
+    if (!hasIdDoc && !hasResidentBook) {
+      return { success: false, error: 'សូមជ្រើសរើសឯកសារយ៉ាងហោចណាស់មួយដើម្បីផ្ទុក។' }
+    }
+
+    const { data: member, error: memberError } = await admin
+      .from('members')
+      .select('id, auth_user_id, id_document_url, resident_book_url')
+      .eq('id', id)
+      .maybeSingle()
+
+    if (memberError) throw memberError
+    if (!member?.auth_user_id) {
+      return { success: false, error: 'សមាជិកនេះមិនមានគណនីចូលភ្ជាប់ទេ។' }
+    }
+
+    const updates: { id_document_url?: string; resident_book_url?: string } = {}
+
+    if (hasIdDoc) {
+      const idDocumentUrl = await uploadPrivateFile(
+        'member-documents',
+        member.auth_user_id,
+        'id-documents',
+        idDocumentFile
+      )
+      if (idDocumentUrl) updates.id_document_url = idDocumentUrl
+    }
+
+    if (hasResidentBook) {
+      const residentBookUrl = await uploadPrivateFile(
+        'member-documents',
+        member.auth_user_id,
+        'resident-books',
+        residentBookFile
+      )
+      if (residentBookUrl) updates.resident_book_url = residentBookUrl
+    }
+
+    const { error } = await admin.from('members').update(updates).eq('id', id)
+    if (error) throw error
+
+    await notify(id, 'ឯកសារត្រូវបានធ្វើបច្ចុប្បន្នភាព', 'ឯកសារផ្ទៀងផ្ទាត់របស់អ្នកត្រូវបានអ្នកគ្រប់គ្រងធ្វើបច្ចុប្បន្នភាព។')
+    revalidateMemberPaths(id)
+    return { success: true }
+  } catch (error) {
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : 'មិនអាចផ្ទុកឯកសារបានទេ។',
+    }
+  }
+}
+
+export async function updateMemberReferee(formData: FormData): Promise<ActionResult> {
+  try {
+    await requireAdmin()
+    const id = idFrom(formData)
+    const admin = createAdminClient()
+
+    const rawRefereeId = (formData.get('referee_id') as string ?? '').trim()
+    const refereeId = rawRefereeId || null
+    const refereeVerified = formData.get('referee_verified') === 'true'
+
+    if (refereeId === id) {
+      return { success: false, error: 'សមាជិកមិនអាចជាអ្នកធានារបស់ខ្លួនឯងបានទេ។' }
+    }
+
+    if (refereeId) {
+      const { data: referee, error: refereeError } = await admin
+        .from('members')
+        .select('id')
+        .eq('id', refereeId)
+        .eq('status', 'active')
+        .eq('is_admin', false)
+        .maybeSingle()
+
+      if (refereeError) throw refereeError
+      if (!referee) {
+        return { success: false, error: 'អ្នកធានាដែលជ្រើសរើសមិនមាន ឬ មិនសកម្មទេ។' }
+      }
+    }
+
+    const { error } = await admin
+      .from('members')
+      .update({
+        referee_id: refereeId,
+        referee_verified: refereeId ? refereeVerified : false,
+      })
+      .eq('id', id)
+
+    if (error) throw error
+
+    await notify(id, 'អ្នកធានាត្រូវបានធ្វើបច្ចុប្បន្នភាព', 'ព័ត៌មានអ្នកធានារបស់អ្នកត្រូវបានអ្នកគ្រប់គ្រងធ្វើបច្ចុប្បន្នភាព។')
+    revalidateMemberPaths(id)
+    return { success: true }
+  } catch (error) {
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : 'មិនអាចរក្សាទុកអ្នកធានាបានទេ។',
+    }
+  }
+}
+
 export async function suspendMember(formData: FormData): Promise<ActionResult> {
   try {
     await requireAdmin()

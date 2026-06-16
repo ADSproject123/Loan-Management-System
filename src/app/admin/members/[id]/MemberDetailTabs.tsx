@@ -1,42 +1,47 @@
 'use client'
 
-import { useState, type ReactNode } from 'react'
+import { useState } from 'react'
 import Link from 'next/link'
 import {
   Calendar,
-  CheckCircle2,
   CircleAlert,
   CreditCard,
   ExternalLink,
   FileText,
   Mail,
   MapPin,
+  Percent,
   Phone,
   PiggyBank,
+  Shield,
   ShieldCheck,
   User,
   UserCheck,
 } from 'lucide-react'
-import { Card } from '@/components/ui/Card'
-import { LoanStatusBadge, MemberStatusBadge, SavingStatusBadge } from '@/components/ui/Badge'
+import { LoanStatusBadge, MemberStatusBadge, SavingStatusBadge, MEMBER_ROLE_LABELS } from '@/components/ui/Badge'
 import { formatDate, money } from '@/app/admin/adminUtils'
 import { normalizeCurrency } from '@/lib/currency'
-import type { LoanStatus, MemberStatus, SavingStatus } from '@/types/database'
+import { monthlySavingInterest } from '@/lib/interestCalculations'
+import type { LoanStatus, MemberRole, MemberStatus, SavingStatus } from '@/types/database'
+import { MemberProfileEditForm } from './MemberProfileEditForm'
+import { MemberDocumentsEditForm } from './MemberDocumentsEditForm'
+import { MemberRefereeEditForm } from './MemberRefereeEditForm'
+import { MemberLoanInterestForm } from './MemberLoanInterestForm'
+import { useMemberEditMode } from './MemberEditModeContext'
+import type { LoanInterestPlan } from '@/lib/loanInterestPlans'
 
 export type TabId = 'profile' | 'documents' | 'referee' | 'savings' | 'loans'
+
+type EmergencyContact = { full_name: string; phone: string }
 
 type RefereeRecord = {
   id: string
   full_name: string
+  full_name_kh?: string | null
+  full_name_en?: string | null
   email: string
   phone?: string | null
   status: MemberStatus
-}
-
-type ChecklistItem = {
-  label: string
-  done: boolean
-  detail: string
 }
 
 type SavingRow = {
@@ -69,12 +74,15 @@ export type MemberDetailTabsProps = {
     date_of_birth: string | null
     address: string | null
     status: MemberStatus
+    role: MemberRole
     id_number: string | null
     resident_book_number: string | null
     id_document_url: string | null
     resident_book_url: string | null
+    referee_id: string | null
     referee_verified: boolean
     telegram_chat_id: string | null
+    emergency_contacts: EmergencyContact[]
   }
   referee: RefereeRecord | null
   savings: SavingRow[]
@@ -85,9 +93,16 @@ export type MemberDetailTabsProps = {
   loansCount: number
   idDocumentUrl: string | null
   residentBookUrl: string | null
-  checklist: ChecklistItem[]
   docsComplete: boolean
-  memberLoanInterestForm?: ReactNode
+  loanInterest?: {
+    assignedPlanId: string | null
+    plans: LoanInterestPlan[]
+    globalMonthlyLoanInterestRate: number
+  }
+  savingInterest?: {
+    monthlyRate: number
+    monthlyAmount: number
+  }
   defaultTab?: TabId
 }
 
@@ -98,6 +113,10 @@ const TABS: { id: TabId; label: string; icon: React.ReactNode }[] = [
   { id: 'savings', label: 'សន្សំ', icon: <PiggyBank className="h-4 w-4" /> },
   { id: 'loans', label: 'កម្ជី', icon: <CreditCard className="h-4 w-4" /> },
 ]
+
+function isVerifiedSavingStatus(status: string) {
+  return status === 'verified' || status === 'completed'
+}
 
 export function MemberDetailTabs({
   member,
@@ -110,17 +129,18 @@ export function MemberDetailTabs({
   loansCount,
   idDocumentUrl,
   residentBookUrl,
-  checklist,
   docsComplete,
-  memberLoanInterestForm,
+  loanInterest,
+  savingInterest,
   defaultTab = 'profile',
 }: MemberDetailTabsProps) {
   const [activeTab, setActiveTab] = useState<TabId>(defaultTab)
+  const { isEditing, exitEditMode } = useMemberEditMode()
 
   return (
-    <div className="w-full space-y-0">
+    <div className="flex min-h-0 flex-1 flex-col">
       <nav
-        className="w-full overflow-x-auto rounded-t-2xl border border-b-0 border-border bg-surface shadow-sm"
+        className="shrink-0 w-full overflow-x-auto rounded-t-2xl border border-b-0 border-border bg-surface shadow-sm"
         aria-label="ផ្ទាំងព័ត៌មានសមាជិក"
       >
         <div className="flex w-full min-w-max sm:min-w-0">
@@ -145,50 +165,90 @@ export function MemberDetailTabs({
         </div>
       </nav>
 
-      <div className="w-full rounded-b-2xl border border-border bg-surface p-6 shadow-sm md:p-8">
+      <div className="flex min-h-0 flex-1 flex-col overflow-hidden rounded-b-2xl border border-border bg-surface shadow-sm">
+        <div className="flex min-h-0 flex-1 flex-col overflow-y-auto p-6 md:p-8">
         {activeTab === 'profile' && (
           <div className="w-full space-y-8">
             <div>
-              <SectionTitle icon={<User className="h-5 w-5" />} title="ព័ត៌មានផ្ទាល់ខ្លួន" />
-              <div className="mt-6 grid w-full gap-4 sm:grid-cols-2 xl:grid-cols-3">
-              <InfoTile
-                icon={<User className="h-4 w-4" />}
-                label="ឈ្មោះ (ខ្មែរ)"
-                value={member.full_name_kh ?? member.full_name}
-              />
-              <InfoTile
-                icon={<User className="h-4 w-4" />}
-                label="ឈ្មោះ (អង់គ្លេស)"
-                value={member.full_name_en ?? member.full_name}
-              />
-              <InfoTile icon={<Mail className="h-4 w-4" />} label="អ៊ីមែល" value={member.email} />
-              <InfoTile icon={<Phone className="h-4 w-4" />} label="ទូរស័ព្ទ" value={member.phone ?? 'គ្មាន'} />
-              <InfoTile
-                icon={<Calendar className="h-4 w-4" />}
-                label="ថ្ងៃខែឆ្នាំកំណើត"
-                value={formatDate(member.date_of_birth)}
-              />
-              <InfoTile
-                icon={<CreditCard className="h-4 w-4" />}
-                label="លេខអត្តសញ្ញាណប័ណ្ណ"
-                value={member.id_number ?? 'គ្មាន'}
-              />
-              <InfoTile
-                icon={<FileText className="h-4 w-4" />}
-                label="លេខសៀវភៅគ្រួសារ"
-                value={member.resident_book_number ?? 'គ្មាន'}
-              />
-              <InfoTile
-                icon={<Calendar className="h-4 w-4" />}
-                label="Telegram"
-                value={member.telegram_chat_id ?? 'មិនបានភ្ជាប់'}
-              />
-              <InfoTile
-                icon={<MapPin className="h-4 w-4" />}
-                label="អាសយដ្ឋាន"
-                value={member.address ?? 'គ្មាន'}
-                className="sm:col-span-2 xl:col-span-3"
-              />
+              <div className="mt-6">
+                {isEditing ? (
+                  <MemberProfileEditForm member={member} onSaved={exitEditMode} />
+                ) : (
+                  <>
+                    <div className="grid w-full gap-4 sm:grid-cols-2 xl:grid-cols-3">
+                      <InfoTile
+                        icon={<User className="h-4 w-4" />}
+                        label="ឈ្មោះ (ខ្មែរ)"
+                        value={member.full_name_kh ?? member.full_name}
+                      />
+                      <InfoTile
+                        icon={<User className="h-4 w-4" />}
+                        label="ឈ្មោះ (អង់គ្លេស)"
+                        value={member.full_name_en ?? member.full_name}
+                      />
+                      <InfoTile
+                        icon={<Shield className="h-4 w-4" />}
+                        label="តួនាទី"
+                        value={MEMBER_ROLE_LABELS[member.role]}
+                      />
+                      <InfoTile icon={<Mail className="h-4 w-4" />} label="អ៊ីមែល" value={member.email} />
+                      <InfoTile
+                        icon={<Phone className="h-4 w-4" />}
+                        label="ទូរស័ព្ទ"
+                        value={member.phone ?? 'គ្មាន'}
+                      />
+                      <InfoTile
+                        icon={<Calendar className="h-4 w-4" />}
+                        label="ថ្ងៃខែឆ្នាំកំណើត"
+                        value={formatDate(member.date_of_birth)}
+                      />
+                      <InfoTile
+                        icon={<CreditCard className="h-4 w-4" />}
+                        label="លេខអត្តសញ្ញាណប័ណ្ណ"
+                        value={member.id_number ?? 'គ្មាន'}
+                      />
+                      <InfoTile
+                        icon={<FileText className="h-4 w-4" />}
+                        label="លេខសៀវភៅគ្រួសារ"
+                        value={member.resident_book_number ?? 'គ្មាន'}
+                      />
+                      <InfoTile
+                        icon={<Calendar className="h-4 w-4" />}
+                        label="Telegram"
+                        value={member.telegram_chat_id ?? 'មិនបានភ្ជាប់'}
+                      />
+                      <InfoTile
+                        icon={<MapPin className="h-4 w-4" />}
+                        label="អាសយដ្ឋាន"
+                        value={member.address ?? 'គ្មាន'}
+                        className="sm:col-span-2 xl:col-span-3"
+                      />
+                      {savingInterest && (
+                        <InfoTile
+                          icon={<Percent className="h-4 w-4" />}
+                          label="អត្រាការប្រាក់សន្សំ"
+                          value={`${savingInterest.monthlyRate}% ប្រចាំខែ`}
+                        />
+                      )}
+                    </div>
+                    {member.emergency_contacts.length > 0 && (
+                      <div className="mt-6 border-t border-border pt-6">
+                        <h4 className="mb-3 text-sm font-semibold text-foreground">ទំនាក់ទំនងបន្ទាន់</h4>
+                        <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
+                          {member.emergency_contacts.map((contact, index) => (
+                            <div
+                              key={`${contact.full_name}-${contact.phone}-${index}`}
+                              className="rounded-xl border border-border bg-surface-muted/40 p-4"
+                            >
+                              <p className="text-sm font-medium text-foreground">{contact.full_name}</p>
+                              <p className="mt-1 text-sm text-muted">{contact.phone}</p>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                  </>
+                )}
               </div>
             </div>
 
@@ -200,6 +260,7 @@ export function MemberDetailTabs({
                   loanAmount={loanTotal}
                   savingsCount={savingsCount}
                   loansCount={loansCount}
+                  savingInterest={savingInterest}
                 />
               </div>
             </div>
@@ -208,52 +269,8 @@ export function MemberDetailTabs({
 
         {activeTab === 'documents' && (
           <div className="w-full space-y-6">
-            {member.status === 'pending' && (
-              <Card className="w-full rounded-xl border-amber-200 bg-amber-50">
-                <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
-                  <div>
-                    <h3 className="flex items-center gap-2 font-semibold text-amber-950">
-                      <ShieldCheck className="h-5 w-5" />
-                      បញ្ជីពិនិត្យមុនទទួល
-                    </h3>
-                    <p className="mt-1 text-sm text-amber-800">
-                      ពិនិត្យឯកសារ និងអ្នកធានា មុនពេលទទួលយកគណនីសមាជិក។
-                    </p>
-                  </div>
-                  <div className="flex flex-wrap gap-2">
-                    {checklist.map((item) => (
-                      <span
-                        key={item.label}
-                        className={`inline-flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-semibold ${
-                          item.done
-                            ? 'bg-emerald-100 text-emerald-800'
-                            : 'bg-white text-amber-800 ring-1 ring-amber-200'
-                        }`}
-                      >
-                        {item.done ? (
-                          <CheckCircle2 className="h-3.5 w-3.5" />
-                        ) : (
-                          <CircleAlert className="h-3.5 w-3.5" />
-                        )}
-                        {item.label} · {item.detail}
-                      </span>
-                    ))}
-                  </div>
-                </div>
-              </Card>
-            )}
-
-            <div className="w-full">
-              <div className="mb-6 flex flex-wrap items-center justify-between gap-3 border-b border-gray-100 pb-4">
-                <SectionTitle icon={<ShieldCheck className="h-5 w-5" />} title="ឯកសារផ្ទៀងផ្ទាត់" />
-                <span
-                  className={`rounded-lg px-3 py-1 text-xs font-semibold ${
-                    docsComplete ? 'bg-emerald-100 text-emerald-800' : 'bg-amber-100 text-amber-800'
-                  }`}
-                >
-                  {docsComplete ? 'ឯកសារពេញលេញ' : 'ឯកសារមិនពេញលេញ'}
-                </span>
-              </div>
+            {isEditing && <MemberDocumentsEditForm memberId={member.id} onSaved={exitEditMode} />}
+            <div className="w-full">       
               <div className="grid w-full gap-6 xl:grid-cols-2">
                 <DocumentPreview
                   label="អត្តសញ្ញាណប័ណ្ណ"
@@ -273,6 +290,22 @@ export function MemberDetailTabs({
         {activeTab === 'referee' && (
           <div className="w-full">
             <SectionTitle icon={<UserCheck className="h-5 w-5" />} title="អ្នកធានា" />
+            {isEditing && (
+              <div className="mt-5">
+                <MemberRefereeEditForm
+                  memberId={member.id}
+                  refereeId={member.referee_id}
+                  refereeDisplayName={
+                    referee?.full_name ??
+                    referee?.full_name_kh ??
+                    referee?.full_name_en ??
+                    ''
+                  }
+                  refereeVerified={member.referee_verified}
+                  onSaved={exitEditMode}
+                />
+              </div>
+            )}
             {referee ? (
               <div className="mt-5 rounded-xl border border-gray-100 bg-gray-50 p-4">
                 <div className="flex items-start gap-3">
@@ -320,15 +353,19 @@ export function MemberDetailTabs({
 
         {activeTab === 'savings' && (
           <div className="w-full overflow-hidden rounded-xl border border-border bg-surface">
-            <div className="flex items-center gap-2 border-b border-border px-5 py-4 md:px-6">
-              <PiggyBank className="h-5 w-5 text-brand-700" />
-              <h3 className="text-lg font-semibold text-foreground">ការសន្សំថ្មីៗ</h3>
-            </div>
             <div className="overflow-x-auto">
-              <table className="w-full min-w-138 text-left text-sm">
+              <table className="w-full min-w-160 text-left text-sm">
                 <thead className="border-b border-border bg-surface-muted/80">
                   <tr className="text-xs font-semibold uppercase tracking-wide text-muted">
                     <th className="px-5 py-3.5 md:px-6">ចំនួនទឹកប្រាក់</th>
+                    <th className="px-5 py-3.5">
+                      ការប្រាក់ប្រចាំខែ
+                      {savingInterest ? (
+                        <span className="mt-0.5 block text-[10px] font-normal normal-case tracking-normal text-muted">
+                          {savingInterest.monthlyRate}% ប្រចាំខែ
+                        </span>
+                      ) : null}
+                    </th>
                     <th className="px-5 py-3.5">ថ្ងៃសន្សំ</th>
                     <th className="px-5 py-3.5">ដាក់ស្នើ</th>
                     <th className="px-5 py-3.5 md:px-6">ស្ថានភាព</th>
@@ -337,29 +374,67 @@ export function MemberDetailTabs({
                 <tbody className="divide-y divide-border">
                   {savings.length === 0 ? (
                     <tr>
-                      <td colSpan={4} className="px-5 py-12 text-center text-sm text-muted md:px-6">
+                      <td colSpan={5} className="px-5 py-12 text-center text-sm text-muted md:px-6">
                         មិនមានការសន្សំទេ។
                       </td>
                     </tr>
                   ) : (
-                    savings.map((saving) => (
-                      <tr key={saving.id} className="transition hover:bg-surface-muted/50">
-                        <td className="px-5 py-4 md:px-6">
-                          <p className="font-bold tabular-nums text-foreground">
-                            {money(saving.amount, normalizeCurrency(saving.currency))}
-                          </p>
-                        </td>
-                        <td className="px-5 py-4 text-foreground">
-                          {formatDate(saving.saving_date)}
-                        </td>
-                        <td className="px-5 py-4 text-muted">{formatDate(saving.created_at)}</td>
-                        <td className="px-5 py-4 md:px-6">
-                          <SavingStatusBadge status={saving.status as SavingStatus} />
-                        </td>
-                      </tr>
-                    ))
+                    savings.map((saving) => {
+                      const currency = normalizeCurrency(saving.currency)
+                      const rowInterest =
+                        savingInterest && isVerifiedSavingStatus(saving.status)
+                          ? monthlySavingInterest(Number(saving.amount ?? 0), savingInterest.monthlyRate)
+                          : null
+
+                      return (
+                        <tr key={saving.id} className="transition hover:bg-surface-muted/50">
+                          <td className="px-5 py-4 md:px-6">
+                            <p className="font-bold tabular-nums text-foreground">
+                              {money(saving.amount, currency)}
+                            </p>
+                          </td>
+                          <td className="px-5 py-4">
+                            {rowInterest !== null ? (
+                              <p className="font-semibold tabular-nums text-emerald-700">
+                                {money(rowInterest, currency)}
+                              </p>
+                            ) : (
+                              <span className="text-muted">—</span>
+                            )}
+                          </td>
+                          <td className="px-5 py-4 text-foreground">
+                            {formatDate(saving.saving_date)}
+                          </td>
+                          <td className="px-5 py-4 text-muted">{formatDate(saving.created_at)}</td>
+                          <td className="px-5 py-4 md:px-6">
+                            <SavingStatusBadge status={saving.status as SavingStatus} plain />
+                          </td>
+                        </tr>
+                      )
+                    })
                   )}
                 </tbody>
+                {savingInterest && savings.length > 0 && (
+                  <tfoot className="border-t-2 border-border bg-surface-muted/60">
+                    <tr>
+                      <td className="px-5 py-4 md:px-6">
+                        <p className="text-xs font-semibold uppercase tracking-wide text-muted">សរុប</p>
+                        <p className="mt-1 font-bold tabular-nums text-foreground">{money(savingsTotal)}</p>
+                      </td>
+                      <td className="px-5 py-4">
+                        <p className="text-xs font-semibold uppercase tracking-wide text-muted">
+                          សរុបការប្រាក់
+                        </p>
+                        <p className="mt-1 font-bold tabular-nums text-emerald-700">
+                          {money(savingInterest.monthlyAmount)}
+                        </p>
+                      </td>
+                      <td colSpan={3} className="px-5 py-4 text-sm text-muted md:px-6">
+                        {savingsCount} ការសន្សំបានទទួល
+                      </td>
+                    </tr>
+                  </tfoot>
+                )}
               </table>
             </div>
           </div>
@@ -367,12 +442,16 @@ export function MemberDetailTabs({
 
         {activeTab === 'loans' && (
           <div className="w-full space-y-6">
-            {memberLoanInterestForm}
+            {isEditing && loanInterest && (
+              <MemberLoanInterestForm
+                memberId={member.id}
+                assignedPlanId={loanInterest.assignedPlanId}
+                plans={loanInterest.plans}
+                globalMonthlyLoanInterestRate={loanInterest.globalMonthlyLoanInterestRate}
+                onSaved={exitEditMode}
+              />
+            )}
             <div className="w-full overflow-hidden rounded-xl border border-border bg-surface">
-            <div className="flex items-center gap-2 border-b border-border px-5 py-4 md:px-6">
-              <CreditCard className="h-5 w-5 text-brand-700" />
-              <h3 className="text-lg font-semibold text-foreground">កម្ជីថ្មីៗ</h3>
-            </div>
             <div className="overflow-x-auto">
               <table className="w-full min-w-3xl text-left text-sm">
                 <thead className="border-b border-border bg-surface-muted/80">
@@ -429,6 +508,7 @@ export function MemberDetailTabs({
           </div>
         )}
 
+        </div>
       </div>
     </div>
   )
@@ -439,15 +519,20 @@ function FinancialSummary({
   loanAmount,
   savingsCount,
   loansCount,
+  savingInterest,
 }: {
   savingsAmount: number
   loanAmount: number
   savingsCount: number
   loansCount: number
+  savingInterest?: {
+    monthlyRate: number
+    monthlyAmount: number
+  }
 }) {
   return (
     <div className="overflow-hidden rounded-2xl border border-border bg-surface-muted/40">
-      <div className="grid gap-px bg-border sm:grid-cols-2">
+      <div className="grid gap-px bg-border sm:grid-cols-2 lg:grid-cols-3">
         <FinancialStatCard
           label="សន្សំសរុប"
           amount={savingsAmount}
@@ -455,6 +540,15 @@ function FinancialSummary({
           icon={PiggyBank}
           tone="emerald"
         />
+        {savingInterest && (
+          <FinancialStatCard
+            label="ការប្រាក់សន្សំប្រចាំខែ"
+            amount={savingInterest.monthlyAmount}
+            subtitle={`${savingInterest.monthlyRate}% នៃសន្សំសរុប`}
+            icon={Percent}
+            tone="amber"
+          />
+        )}
         <FinancialStatCard
           label="កម្ជីសកម្ម"
           amount={loanAmount}
@@ -478,14 +572,20 @@ function FinancialStatCard({
   amount: number
   subtitle: string
   icon: React.ComponentType<{ className?: string }>
-  tone: 'emerald' | 'blue'
+  tone: 'emerald' | 'blue' | 'amber'
 }) {
   const toneClasses =
     tone === 'emerald'
       ? 'bg-emerald-50/80 text-emerald-900'
-      : 'bg-brand-50/80 text-brand-900'
+      : tone === 'amber'
+        ? 'bg-amber-50/80 text-amber-950'
+        : 'bg-brand-50/80 text-brand-900'
   const iconClasses =
-    tone === 'emerald' ? 'bg-emerald-100 text-emerald-700' : 'bg-brand-100 text-brand-700'
+    tone === 'emerald'
+      ? 'bg-emerald-100 text-emerald-700'
+      : tone === 'amber'
+        ? 'bg-amber-100 text-amber-700'
+        : 'bg-brand-100 text-brand-700'
 
   return (
     <div className={`p-5 ${toneClasses}`}>

@@ -195,41 +195,6 @@ export function LoanDetailView({
             />
           </section>
 
-          <section className="overflow-hidden rounded-2xl border border-border bg-surface ring-1 ring-foreground/5">
-            <div className="border-b border-border px-5 py-4 md:px-6">
-              <h2 className="text-sm font-semibold text-foreground">ដំណើរការកម្ជី</h2>
-            </div>
-            <ol className="grid gap-4 p-5 sm:grid-cols-2 lg:grid-cols-4 md:px-6 md:pb-6">
-              {timeline.map((step, index) => (
-                <li key={step.label} className="relative flex gap-3">
-                  {index < timeline.length - 1 && (
-                    <span
-                      className="absolute left-3.5 top-8 hidden h-full w-px bg-border lg:block"
-                      aria-hidden
-                    />
-                  )}
-                  <span
-                    className={`grid h-7 w-7 shrink-0 place-items-center rounded-full text-xs font-bold ${
-                      step.done
-                        ? 'bg-emerald-100 text-emerald-700'
-                        : step.current
-                          ? 'bg-brand-100 text-brand-700 ring-2 ring-brand-200'
-                          : 'bg-surface-muted text-muted'
-                    }`}
-                  >
-                    {step.done ? <CheckCircle2 className="h-4 w-4" /> : index + 1}
-                  </span>
-                  <div className="min-w-0 pt-0.5">
-                    <p className="text-sm font-medium text-foreground">{step.label}</p>
-                    <p className="mt-0.5 text-xs text-muted">
-                      {step.date ? formatDate(step.date) : step.placeholder}
-                    </p>
-                  </div>
-                </li>
-              ))}
-            </ol>
-          </section>
-
           <div className="grid gap-6 lg:grid-cols-3">
             <div className="space-y-6 lg:col-span-2">
               {loan.purpose && (
@@ -240,7 +205,13 @@ export function LoanDetailView({
 
               {paymentSchedule.length > 0 && (
                   <div className="px-5 pb-5 md:px-6 md:pb-6">
-                    <LoanPaymentSchedule schedule={paymentSchedule} currency={currency} compact />
+                    <LoanPaymentSchedule
+                      schedule={paymentSchedule}
+                      currency={currency}
+                      compact
+                      fileBaseName={`loan-${loan.id}-schedule`}
+                      memberName={member?.full_name_kh ?? member?.full_name ?? undefined}
+                    />
                   </div>
               )}
 
@@ -331,45 +302,6 @@ export function LoanDetailView({
                 </dl>
               </DetailSection>
 
-              <DetailSection title="ឯកសារ និងការផ្ទៀងផ្ទាត់">
-                <div className="mb-4">
-                  <div className="mb-2 flex items-center justify-between text-xs">
-                    <span className="font-medium text-muted">វឌ្ឍនភាព</span>
-                    <span className="font-semibold tabular-nums text-foreground">{docsPercent}%</span>
-                  </div>
-                  <div className="h-2 overflow-hidden rounded-full bg-surface-muted">
-                    <div
-                      className={`h-full rounded-full transition-all ${
-                        docsComplete ? 'bg-emerald-500' : 'bg-amber-400'
-                      }`}
-                      style={{ width: `${docsPercent}%` }}
-                    />
-                  </div>
-                </div>
-                <ul className="space-y-3">
-                  {docChecklist.map((item) => (
-                    <li
-                      key={item.label}
-                      className="flex items-start justify-between gap-3 rounded-xl border border-border bg-surface-muted/30 px-3 py-3"
-                    >
-                      <div className="flex min-w-0 items-start gap-2.5">
-                        {item.done ? (
-                          <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-emerald-600" />
-                        ) : (
-                          <XCircle className="mt-0.5 h-4 w-4 shrink-0 text-muted" />
-                        )}
-                        <div className="min-w-0">
-                          <p className="text-sm font-medium text-foreground">{item.label}</p>
-                          <p className="text-xs text-muted">{item.detail}</p>
-                        </div>
-                      </div>
-                      {item.href ? (
-                        <AdminExternalLink href={item.href}>មើល</AdminExternalLink>
-                      ) : null}
-                    </li>
-                  ))}
-                </ul>
-              </DetailSection>
 
               {hasRefereeInfo && (
                 <DetailSection title="អ្នកធានា">
