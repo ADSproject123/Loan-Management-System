@@ -117,9 +117,8 @@ export function RepaymentsList({
                 })}
                 onClick={() => router.push(`/admin/loans/${repayment.loan_id}`)}
               >
-                <td className={adminTable.tdFirst}>
-                  <p className={adminTable.namePrimary}>{relatedMemberName(repayment)}</p>
-                  <p className={adminTable.nameSecondary}>{relatedMemberEmail(repayment)}</p>
+                <td className={`${adminTable.tdFirst} ${adminTable.namePrimary}`}>
+                  {relatedMemberName(repayment)}
                 </td>
                 <td className={adminTable.td}>
                   <p className={adminTable.amountPrimary}>

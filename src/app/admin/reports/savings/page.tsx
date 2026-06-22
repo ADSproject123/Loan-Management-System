@@ -1,6 +1,6 @@
 import { ReportRequestStatusBadge } from '@/components/ui/Badge'
 import { createAdminClient } from '@/lib/supabase/admin'
-import { formatDate, relatedMemberEmail, relatedMemberName } from '@/app/admin/adminUtils'
+import { formatDate, relatedMemberName } from '@/app/admin/adminUtils'
 import { ReportRequestActions } from '@/app/admin/reports/ReportRequestActions'
 import { AdminPagination, AdminPanel, adminTable, adminTableRowClass } from '@/components/admin'
 import { parseAdminListParams } from '@/lib/admin/pagination'
@@ -72,9 +72,8 @@ export default async function AdminSavingReportsPage({
                   key={report.id}
                   className={adminTableRowClass({ pending: report.status === 'pending' })}
                 >
-                  <td className={adminTable.tdFirst}>
-                    <p className={adminTable.namePrimary}>{relatedMemberName(report)}</p>
-                    <p className={adminTable.nameSecondary}>{relatedMemberEmail(report)}</p>
+                  <td className={`${adminTable.tdFirst} ${adminTable.namePrimary}`}>
+                    {relatedMemberName(report)}
                   </td>
                   <td className={adminTable.tdMuted}>
                     {formatDate(report.period_from)} - {formatDate(report.period_to)}

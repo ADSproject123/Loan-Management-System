@@ -3,7 +3,7 @@ import type { MemberStatus, MemberRole, LoanStatus, SavingStatus, CapitalRequest
 
 export const MEMBER_ROLE_LABELS: Record<MemberRole, string> = {
   founder: 'Founder',
-  comember: 'Co-member',
+  comember: 'Core member',
   member: 'Member',
 }
 

@@ -256,7 +256,6 @@ export function SavingsList({
                       <p className={`${adminTable.namePrimary} transition group-hover:text-brand-700`}>
                         {relatedMemberName(group)}
                       </p>
-                      <p className={adminTable.nameSecondary}>{relatedMemberEmail(group)}</p>
                     </Link>
                   </td>
                   <td className={adminTable.td}>
@@ -301,7 +300,6 @@ export function SavingsList({
                       <p className={`${adminTable.namePrimary} transition group-hover:text-brand-700`}>
                         {relatedMemberName(saving)}
                       </p>
-                      <p className={adminTable.nameSecondary}>{relatedMemberEmail(saving)}</p>
                     </Link>
                   </td>
                   <td className={adminTable.td}>

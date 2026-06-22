@@ -12,7 +12,7 @@ import type { MemberRole } from '@/types/database'
 
 const ROLE_OPTIONS: { value: MemberRole; description: string }[] = [
   { value: 'founder', description: 'សមាជិកស្ថាបនិកនៃសហករណ៍' },
-  { value: 'comember', description: 'សហសមាជិករួមបង្កើត' },
+  { value: 'comember', description: 'សមាជិកស្នូល' },
   { value: 'member', description: 'សមាជិកធម្មតា' },
 ]
 

@@ -28,6 +28,7 @@ import {
   X,
 } from 'lucide-react'
 import { registerMember, checkTelegramConnected, searchActiveMembers, type MemberSearchResult } from '@/app/actions/member'
+import { WORKPLACE_OPTIONS } from '@/lib/workplace'
 import { LoadingDots, LoadingSpinner } from '@/components/ui/Loading'
 import { showError } from '@/lib/toast'
 
@@ -44,7 +45,7 @@ const STEPS: StepDefinition[] = [
   {
     id: 1,
     label: 'គណនី',
-    description: 'អ៊ីមែល និង ពាក្យសម្ងាត់',
+    description: 'លេខទូរស័ព្ទ និង ពាក្យសម្ងាត់',
     hint: 'កំណត់ព័ត៌មានបញ្ជាក់ដែលអ្នកនឹងប្រើដើម្បីចូលវិបផតថលសមាជិករបស់អ្នក។',
   },
   {
@@ -95,6 +96,7 @@ interface FormData {
   address: string
   id_number: string
   resident_book_number: string
+  workplace: string
   emergency_contacts: EmergencyContact[]
   referee_id: string
   referee_display_name: string
@@ -113,6 +115,7 @@ const INITIAL_FORM: FormData = {
   address: '',
   id_number: '',
   resident_book_number: '',
+  workplace: '',
   emergency_contacts: [],
   referee_id: '',
   referee_display_name: '',
@@ -135,6 +138,7 @@ function normalizeFormData(data: Partial<FormData> & { full_name?: string }): Fo
     address: merged.address ?? '',
     id_number: merged.id_number ?? '',
     resident_book_number: merged.resident_book_number ?? '',
+    workplace: merged.workplace ?? '',
     emergency_contacts: merged.emergency_contacts ?? [],
     referee_id: merged.referee_id ?? '',
     referee_display_name: merged.referee_display_name ?? '',
@@ -182,11 +186,11 @@ export default function RegisterPage() {
   }, [formData.password])
 
   const validateStep1 = () => {
-    if (!formData.email || !formData.password || !formData.confirmPassword) {
-      showError('សូមបំពេញអ៊ីមែល និង ពាក្យសម្ងាត់របស់អ្នក។')
+    if (!formData.phone || !formData.password || !formData.confirmPassword) {
+      showError('សូមបំពេញលេខទូរស័ព្ទ និង ពាក្យសម្ងាត់របស់អ្នក។')
       return false
     }
-    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
+    if (formData.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
       showError('សូមបញ្ចូលអាសយដ្ឋានអ៊ីមែលត្រឹមត្រូវ។')
       return false
     }
@@ -205,12 +209,11 @@ export default function RegisterPage() {
     if (
       !formData.full_name_kh ||
       !formData.full_name_en ||
-      !formData.phone ||
       !formData.date_of_birth ||
       !formData.id_number
     ) {
       showError(
-        'សូមបំពេញឈ្មោះ (ខ្មែរ និង អង់គ្លេស) ថ្ងៃខែឆ្នាំកំណើត លេខទូរស័ព្ទ និង លេខអត្តសញ្ញាណប័ណ្ណ។'
+        'សូមបំពេញឈ្មោះ (ខ្មែរ និង អង់គ្លេស) ថ្ងៃខែឆ្នាំកំណើត និង លេខអត្តសញ្ញាណប័ណ្ណ។'
       )
       return false
     }
@@ -578,7 +581,19 @@ function StepAccount({
 }: StepAccountProps) {
   return (
     <div className="space-y-6">
-      <Field label="អាសយដ្ឋានអ៊ីមែល" htmlFor="email">
+      <Field label="លេខទូរស័ព្ទ" htmlFor="phone">
+        <IconInput
+          id="phone"
+          icon={<Phone className="h-4.5 w-4.5" />}
+          type="tel"
+          autoComplete="tel"
+          value={formData.phone}
+          onChange={(e) => updateField('phone', e.target.value)}
+          placeholder="0812345678"
+        />
+      </Field>
+
+      <Field label="អាសយដ្ឋានអ៊ីមែល" htmlFor="email" optional>
         <IconInput
           id="email"
           icon={<Mail className="h-4.5 w-4.5" />}
@@ -688,29 +703,19 @@ function StepPersonal({ formData, updateField }: StepProps) {
             placeholder="Full name in English"
           />
         </Field>
-        <Field label="លេខទូរស័ព្ទ" htmlFor="phone">
-          <IconInput
-            id="phone"
-            icon={<Phone className="h-4.5 w-4.5" />}
-            type="tel"
-            autoComplete="tel"
-            value={formData.phone}
-            onChange={(e) => updateField('phone', e.target.value)}
-            placeholder="0812345678"
-          />
-        </Field>
-        <Field label="ថ្ងៃខែឆ្នាំកំណើត" htmlFor="date_of_birth" hint="ដូចនៅលើអត្តសញ្ញាណប័ណ្ណ">
-          <IconInput
-            id="date_of_birth"
-            icon={<Calendar className="h-4.5 w-4.5" />}
-            type="date"
-            autoComplete="bday"
-            value={formData.date_of_birth}
-            max={new Date().toISOString().slice(0, 10)}
-            onChange={(e) => updateField('date_of_birth', e.target.value)}
-          />
-        </Field>
       </div>
+
+      <Field label="ថ្ងៃខែឆ្នាំកំណើត" htmlFor="date_of_birth" hint="ដូចនៅលើអត្តសញ្ញាណប័ណ្ណ">
+        <IconInput
+          id="date_of_birth"
+          icon={<Calendar className="h-4.5 w-4.5" />}
+          type="date"
+          autoComplete="bday"
+          value={formData.date_of_birth}
+          max={new Date().toISOString().slice(0, 10)}
+          onChange={(e) => updateField('date_of_birth', e.target.value)}
+        />
+      </Field>
 
       <div className="grid gap-5 sm:grid-cols-2">
         <Field label="លេខអត្តសញ្ញាណប័ណ្ណ" htmlFor="id_number">
@@ -736,6 +741,23 @@ function StepPersonal({ formData, updateField }: StepProps) {
           />
         </Field>
       </div>
+
+      <Field label="កន្លែងធ្វើការ" htmlFor="workplace" optional>
+        <div className="relative">
+          <Building2 className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 h-4.5 w-4.5 text-slate-400" />
+          <select
+            id="workplace"
+            value={formData.workplace}
+            onChange={(e) => updateField('workplace', e.target.value)}
+            className={`${inputBase} app-input--with-icon appearance-none`}
+          >
+            <option value="">-- ជ្រើសរើស --</option>
+            {WORKPLACE_OPTIONS.map((o) => (
+              <option key={o.value} value={o.value}>{o.label}</option>
+            ))}
+          </select>
+        </div>
+      </Field>
 
       <EmergencyContacts
         contacts={formData.emergency_contacts}

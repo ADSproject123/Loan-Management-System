@@ -6,9 +6,6 @@ import { createAdminClient } from '@/lib/supabase/admin'
 import { requireActiveMember } from '@/lib/auth/member'
 import { MIN_SAVING_AMOUNT, normalizeCurrency } from '@/lib/currency'
 import { checkPaymentByMd5, createKhqrIntent } from '@/lib/bakong'
-import { hasRecentVerification } from '@/lib/verification'
-
-const VERIFICATION_REQUIRED_ERROR = 'សូមផ្ទៀងផ្ទាត់អត្តសញ្ញាណតាម Telegram ជាមុនសិន។'
 
 export type KhqrIntentResult =
   | {
@@ -25,9 +22,7 @@ export type KhqrIntentResult =
 export async function createRepayKhqr(amount: number): Promise<KhqrIntentResult> {
   try {
     const member = await requireActiveMember()
-    if (!(await hasRecentVerification(member.id, 'loan_repay'))) {
-      return { success: false, error: VERIFICATION_REQUIRED_ERROR }
-    }
+
 
     if (!Number.isFinite(amount) || amount <= 0) {
       return { success: false, error: 'សូមបញ្ចូលចំនួនទឹកប្រាក់បង់ត្រឹមត្រូវ។' }
@@ -143,9 +138,7 @@ export async function checkRepayKhqr(md5: string): Promise<KhqrStatusResult> {
 export async function createSavingKhqr(amount: number): Promise<KhqrIntentResult> {
   try {
     const member = await requireActiveMember()
-    if (!(await hasRecentVerification(member.id, 'saving_add'))) {
-      return { success: false, error: VERIFICATION_REQUIRED_ERROR }
-    }
+
 
     if (!Number.isFinite(amount) || amount < MIN_SAVING_AMOUNT) {
       return { success: false, error: `ចំនួនទឹកប្រាក់សន្សំអប្បបរមាគឺ $${MIN_SAVING_AMOUNT}។` }

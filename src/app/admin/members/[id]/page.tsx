@@ -2,9 +2,12 @@ import { notFound } from 'next/navigation'
 import { AdminBackLink, AdminPanel } from '@/components/admin'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { formatDate, sumAmounts } from '@/app/admin/adminUtils'
-import { getInterestSettings, getLoanInterestPlans, monthlySavingInterest } from '@/lib/interest'
+import { getInterestSettings, getLoanInterestPlans, monthlySavingInterest, fetchMemberLoanInterestRate } from '@/lib/interest'
+import { accruedSavingInterestTotal, nextInterestDate } from '@/lib/interestCalculations'
 import { isVerifiedSavingForChart } from '@/lib/admin/savingsChartData'
 import { getPrivateFileUrl } from '@/lib/uploads'
+import { predominantCurrency } from '@/lib/currency'
+import { fetchMemberLoanEligibility } from '@/lib/loanEligibility'
 import type { MemberRole, MemberStatus } from '@/types/database'
 import { MemberDetailTabs, type TabId } from './MemberDetailTabs'
 import { MemberEditModeProvider } from './MemberEditModeContext'
@@ -29,7 +32,7 @@ export default async function AdminMemberDetailPage({ params }: PageProps) {
   const { data: member } = await admin
     .from('members')
     .select(
-      'id, full_name, full_name_kh, full_name_en, email, phone, date_of_birth, address, status, role, id_number, resident_book_number, id_document_url, resident_book_url, referee_id, referee_verified, is_admin, telegram_chat_id, loan_interest_plan_id, emergency_contacts, suspension_reason, suspended_at, rejection_reason, rejected_at, joined_at, created_at, updated_at, referee:referee_id(id, full_name, full_name_kh, full_name_en, email, phone, status)'
+      'id, full_name, full_name_kh, full_name_en, email, phone, date_of_birth, address, status, role, id_number, resident_book_number, workplace, id_document_url, resident_book_url, referee_id, referee_verified, is_admin, telegram_chat_id, loan_interest_plan_id, emergency_contacts, suspension_reason, suspended_at, rejection_reason, rejected_at, joined_at, created_at, updated_at, referee:referee_id(id, full_name, full_name_kh, full_name_en, email, phone, status)'
     )
     .eq('id', id)
     .maybeSingle()
@@ -68,6 +71,17 @@ export default async function AdminMemberDetailPage({ params }: PageProps) {
     savingsTotal,
     interestSettings.monthlySavingInterestRate
   )
+  const accruedSavingInterest = accruedSavingInterestTotal(
+    verifiedSavings,
+    interestSettings.monthlySavingInterestRate
+  )
+  const nextSavingInterestDate = nextInterestDate(verifiedSavings)
+  const memberCurrency = predominantCurrency(savings)
+  const loanEligibility = await fetchMemberLoanEligibility(admin, id)
+  const monthlyLoanInterestRate = await fetchMemberLoanInterestRate(
+    id,
+    interestSettings.monthlyLoanInterestRate
+  )
 
   const [idDocumentUrl, residentBookUrl] = await Promise.all([
     getPrivateFileUrl(member.id_document_url),
@@ -89,7 +103,7 @@ export default async function AdminMemberDetailPage({ params }: PageProps) {
         <div className="flex min-h-0 flex-1 flex-col">
         <div className="shrink-0 flex flex-col gap-4 border-b border-border px-6 py-4 md:flex-row md:items-center md:justify-between md:px-8">
           <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:gap-4">
-            <AdminBackLink href="/admin/members">ត្រឡប់ទៅបញ្ជីសមាជិក</AdminBackLink>
+            <AdminBackLink href="/admin/members">ត្រឡប់</AdminBackLink>
             <div className="hidden h-6 w-px bg-border sm:block" aria-hidden />
             <p className="text-sm text-muted">
               ព័ត៌មានលម្អិតសមាជិក · ចូលរួម {formatDate(member.joined_at ?? member.created_at)}
@@ -138,6 +152,7 @@ export default async function AdminMemberDetailPage({ params }: PageProps) {
           role: (member.role ?? 'member') as MemberRole,
           id_number: member.id_number,
           resident_book_number: member.resident_book_number,
+          workplace: member.workplace ?? null,
           id_document_url: member.id_document_url,
           resident_book_url: member.resident_book_url,
           referee_verified: member.referee_verified,
@@ -163,7 +178,12 @@ export default async function AdminMemberDetailPage({ params }: PageProps) {
         savingInterest={{
           monthlyRate: interestSettings.monthlySavingInterestRate,
           monthlyAmount: monthlySavingInterestAmount,
+          accruedTotal: accruedSavingInterest,
+          nextDate: nextSavingInterestDate?.toISOString().slice(0, 10) ?? null,
         }}
+        memberCurrency={memberCurrency}
+        monthlyLoanInterestRate={monthlyLoanInterestRate}
+        loanEligibility={loanEligibility}
       />
         </div>
       </AdminPanel>
