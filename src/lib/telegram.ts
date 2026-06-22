@@ -99,7 +99,8 @@ export function configureBotMenuButton(): Promise<boolean> {
 export function setBotCommands(): Promise<boolean> {
   return callTelegram('setMyCommands', {
     commands: [
-      { command: 'start', description: 'ភ្ជាប់គណនី / Link your account' },
+      { command: 'start',  description: 'ភ្ជាប់គណនី / Link your account' },
+      { command: 'saving', description: 'មើលការសន្សំ' },
     ],
   })
 }
