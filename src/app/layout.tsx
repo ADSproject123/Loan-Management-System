@@ -1,5 +1,6 @@
 import type { Metadata } from 'next'
 import { Geist, Noto_Sans_Khmer } from 'next/font/google'
+import Script from 'next/script'
 import { ToastProvider } from '@/components/providers/ToastProvider'
 import './globals.css'
 
@@ -29,6 +30,8 @@ export default function RootLayout({
   return (
     <html lang="km" className={`${geistSans.variable} ${notoKhmer.variable} h-full antialiased`}>
       <body className="min-h-full bg-background text-foreground">
+        {/* Telegram Mini App SDK — initialises window.Telegram.WebApp before React hydration */}
+        <Script src="https://telegram.org/js/telegram-web-app.js" strategy="beforeInteractive" />
         {children}
         <ToastProvider />
       </body>

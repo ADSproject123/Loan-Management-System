@@ -1,6 +1,6 @@
 import { NextResponse, type NextRequest } from 'next/server'
 import { createAdminClient } from '@/lib/supabase/admin'
-import { sendTelegramMessage } from '@/lib/telegram'
+import { sendTelegramMessage, sendTelegramMessageWithAppButton } from '@/lib/telegram'
 
 // Telegram calls this on every message to the bot. Always run at request time.
 export const dynamic = 'force-dynamic'
@@ -52,13 +52,13 @@ export async function POST(request: NextRequest) {
 
   // Only the linking command matters. Format: "/start <token>".
   if (!text.startsWith('/start')) {
-    await sendTelegramMessage(String(chatId), WELCOME_NO_TOKEN)
+    await sendTelegramMessageWithAppButton(String(chatId), WELCOME_NO_TOKEN)
     return NextResponse.json({ ok: true })
   }
 
   const token = text.slice('/start'.length).trim()
   if (!token) {
-    await sendTelegramMessage(String(chatId), WELCOME_NO_TOKEN)
+    await sendTelegramMessageWithAppButton(String(chatId), WELCOME_NO_TOKEN)
     return NextResponse.json({ ok: true })
   }
 
@@ -116,7 +116,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ ok: true })
   }
 
-  await sendTelegramMessage(
+  await sendTelegramMessageWithAppButton(
     String(chatId),
     '✅ <b>បានភ្ជាប់ដោយជោគជ័យ!</b>\nអ្នកនឹងទទួលបានការជូនដំណឹងពីសមាគមន៏សន្សំនៅទីនេះ។\n\n' +
       '<b>Connected!</b> You will now receive notifications here.'
