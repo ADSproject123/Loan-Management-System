@@ -1,5 +1,6 @@
 export type MemberStatus = 'pending' | 'active' | 'suspended' | 'withdrawn' | 'rejected'
 export type MemberRole = 'founder' | 'comember' | 'member'
+export type WorkplaceType = 'private_company' | 'government' | 'ngo' | 'self_employed' | 'other'
 export type LoanStatus = 'pending' | 'under_review' | 'approved' | 'active' | 'completed' | 'rejected'
 export type CapitalRequestStatus = 'pending' | 'approved' | 'rejected'
 export type SavingStatus = 'pending' | 'verified' | 'completed' | 'refunded'
@@ -45,6 +46,7 @@ export interface Member {
   telegram_chat_id?: string
   telegram_connect_token?: string | null
   loan_interest_plan_id?: string | null
+  workplace?: WorkplaceType | null
   suspension_reason?: string | null
   suspended_at?: string | null
   rejection_reason?: string | null

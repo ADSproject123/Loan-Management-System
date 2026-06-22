@@ -6,7 +6,7 @@ import { Steps } from '@/components/ui/Steps'
 import { Button } from '@/components/ui/Button'
 import { Card } from '@/components/ui/Card'
 import { requestLoan } from '@/app/actions/member'
-import { TelegramVerification } from '@/components/ui/TelegramVerification'
+
 import { showError } from '@/lib/toast'
 import { currencySymbol, type CurrencyCode } from '@/lib/currency'
 import { buildLoanPaymentSchedule, loanRepaymentSummary } from '@/lib/interestCalculations'
@@ -26,7 +26,6 @@ import {
   Phone,
   User,
   PiggyBank,
-  ShieldCheck,
 } from 'lucide-react'
 
 const STEPS = [
@@ -76,8 +75,7 @@ export function LoanRequestForm({
   const sym = currencySymbol(currency)
   const [step, setStep] = useState(1)
   const [loading, setLoading] = useState(false)
-  const [otpVerified, setOtpVerified] = useState(false)
-  const [showVerification, setShowVerification] = useState(false)
+
   const [formData, setFormData] = useState<LoanFormData>({
     amount: '',
     purpose: '',
@@ -512,36 +510,9 @@ export function LoanRequestForm({
             </div>
           </div>
 
-          {/* Telegram OTP gate before the request can be submitted */}
-          <div className="border border-gray-200 rounded-xl p-4 mb-5">
-            {otpVerified ? (
-              <div className="flex items-center gap-2 text-green-700 text-sm font-medium">
-                <ShieldCheck className="w-5 h-5" />
-                អត្តសញ្ញាណត្រូវបានផ្ទៀងផ្ទាត់តាម Telegram
-              </div>
-            ) : (
-              <button
-                type="button"
-                onClick={() => setShowVerification(true)}
-                className="flex w-full items-center gap-3 rounded-lg bg-brand-50 px-4 py-3 text-sm font-semibold text-brand-900 transition hover:bg-brand-100"
-              >
-                <ShieldCheck className="w-5 h-5 text-brand-700 shrink-0" />
-                ផ្ទៀងផ្ទាត់អត្តសញ្ញាណតាម Telegram
-              </button>
-            )}
-          </div>
-
-          {showVerification && (
-            <TelegramVerification
-              action="loan_request"
-              onVerified={() => { setOtpVerified(true); setShowVerification(false) }}
-              onCancel={() => setShowVerification(false)}
-            />
-          )}
-
           <div className="flex gap-3">
             <Button variant="outline" onClick={() => setStep(2)} className="flex-1" disabled={loading}>ត្រឡប់ក្រោយ</Button>
-            <Button onClick={handleSubmit} loading={loading} disabled={!otpVerified} className="flex-1">
+            <Button onClick={handleSubmit} loading={loading} className="flex-1">
               ដាក់ស្នើពាក្យសុំ
             </Button>
           </div>

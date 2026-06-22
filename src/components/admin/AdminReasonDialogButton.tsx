@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useTransition } from 'react'
+import { createPortal } from 'react-dom'
 import { useRouter } from 'next/navigation'
 import { AlertTriangle, X, type LucideIcon } from 'lucide-react'
 import type { ActionResult } from '@/app/actions/member'
@@ -91,7 +92,7 @@ export function AdminReasonDialogButton({
         <span>{label}</span>
       </button>
 
-      {open && (
+      {open && createPortal(
         <div
           className="fixed inset-0 z-50 flex items-center justify-center p-4"
           role="dialog"
@@ -159,7 +160,8 @@ export function AdminReasonDialogButton({
               </div>
             </form>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
     </>
   )

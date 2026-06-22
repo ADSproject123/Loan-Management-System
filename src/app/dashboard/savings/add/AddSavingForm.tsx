@@ -6,7 +6,7 @@ import { Steps } from '@/components/ui/Steps'
 import { Button } from '@/components/ui/Button'
 import { Card } from '@/components/ui/Card'
 import { KhqrPaymentCard } from '@/components/loans/KhqrPaymentCard'
-import { TelegramVerification } from '@/components/ui/TelegramVerification'
+
 import { addSaving } from '@/app/actions/member'
 import { showError } from '@/lib/toast'
 import { currencySymbol, MIN_SAVING_AMOUNT } from '@/lib/currency'
@@ -22,7 +22,6 @@ import {
 
 const STEPS = [
   { id: 1, label: 'ចំនួនទឹកប្រាក់', description: 'បញ្ចូលចំនួន' },
-  { id: 2, label: 'ផ្ទៀងផ្ទាត់', description: 'កូដ Telegram' },
   { id: 3, label: 'QR Code', description: 'ស្កេន បង់ និង ភស្តុតាង' },
   { id: 4, label: 'រួចរាល់', description: 'បានបញ្ជាក់' },
 ]
@@ -47,7 +46,7 @@ export function AddSavingForm({ monthlySavingInterestRate }: { monthlySavingInte
       showError(`ចំនួនទឹកប្រាក់សន្សំអប្បបរមាគឺ ${currencySymbol(currency)}${MIN_SAVING_AMOUNT}។`)
       return
     }
-    setStep(2)
+    setStep(3)
   }
 
   const handleSubmitEvidence = async () => {
@@ -149,15 +148,6 @@ export function AddSavingForm({ monthlySavingInterestRate }: { monthlySavingInte
             បន្តទៅការបង់ប្រាក់
           </Button>
         </Card>
-      )}
-
-      {/* Step 2: Telegram verification modal */}
-      {step === 2 && (
-        <TelegramVerification
-          action="saving_add"
-          onVerified={() => setStep(3)}
-          onCancel={() => setStep(1)}
-        />
       )}
 
       {/* Step 3: QR Code + evidence */}

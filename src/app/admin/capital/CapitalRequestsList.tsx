@@ -100,9 +100,8 @@ export function CapitalRequestsList({ requests }: { requests: CapitalRequestList
                 key={request.id}
                 className={adminTableRowClass({ pending: request.status === 'pending' })}
               >
-                <td className={adminTable.tdFirst}>
-                  <p className={adminTable.namePrimary}>{relatedMemberName(request)}</p>
-                  <p className={adminTable.nameSecondary}>{relatedMemberEmail(request)}</p>
+                <td className={`${adminTable.tdFirst} ${adminTable.namePrimary}`}>
+                  {relatedMemberName(request)}
                 </td>
                 <td className={adminTable.tdMuted}>{formatDate(request.created_at)}</td>
                 <td className={adminTable.td}>

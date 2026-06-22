@@ -3,7 +3,10 @@
 import { useState } from 'react'
 import Link from 'next/link'
 import {
+  ArrowRight,
+  Briefcase,
   Calendar,
+  Scale,
   CircleAlert,
   CreditCard,
   ExternalLink,
@@ -15,6 +18,7 @@ import {
   PiggyBank,
   Shield,
   ShieldCheck,
+  Wallet,
   User,
   UserCheck,
 } from 'lucide-react'
@@ -23,14 +27,20 @@ import { formatDate, money } from '@/app/admin/adminUtils'
 import { normalizeCurrency } from '@/lib/currency'
 import { monthlySavingInterest } from '@/lib/interestCalculations'
 import type { LoanStatus, MemberRole, MemberStatus, SavingStatus } from '@/types/database'
+import { WORKPLACE_LABELS } from '@/lib/workplace'
 import { MemberProfileEditForm } from './MemberProfileEditForm'
 import { MemberDocumentsEditForm } from './MemberDocumentsEditForm'
 import { MemberRefereeEditForm } from './MemberRefereeEditForm'
 import { MemberLoanInterestForm } from './MemberLoanInterestForm'
+import { MemberAddSavingForm } from './MemberAddSavingForm'
+import { MemberAddCapitalRequestForm } from './MemberAddCapitalRequestForm'
+import { MemberAddLoanForm } from './MemberAddLoanForm'
 import { useMemberEditMode } from './MemberEditModeContext'
 import type { LoanInterestPlan } from '@/lib/loanInterestPlans'
+import type { CurrencyCode } from '@/lib/currency'
+import type { LoanEligibility } from '@/lib/loanEligibility'
 
-export type TabId = 'profile' | 'documents' | 'referee' | 'savings' | 'loans'
+export type TabId = 'profile' | 'finance' | 'documents' | 'referee' | 'savings' | 'loans'
 
 type EmergencyContact = { full_name: string; phone: string }
 
@@ -77,6 +87,7 @@ export type MemberDetailTabsProps = {
     role: MemberRole
     id_number: string | null
     resident_book_number: string | null
+    workplace: string | null
     id_document_url: string | null
     resident_book_url: string | null
     referee_id: string | null
@@ -102,12 +113,18 @@ export type MemberDetailTabsProps = {
   savingInterest?: {
     monthlyRate: number
     monthlyAmount: number
+    accruedTotal: number
+    nextDate: string | null
   }
+  memberCurrency: CurrencyCode
+  monthlyLoanInterestRate: number
+  loanEligibility: LoanEligibility
   defaultTab?: TabId
 }
 
 const TABS: { id: TabId; label: string; icon: React.ReactNode }[] = [
   { id: 'profile', label: 'ព័ត៌មាន', icon: <User className="h-4 w-4" /> },
+  { id: 'finance', label: 'សង្ខេបហិរញ្ញវត្ថុ', icon: <Wallet className="h-4 w-4" /> },
   { id: 'documents', label: 'ឯកសារ', icon: <ShieldCheck className="h-4 w-4" /> },
   { id: 'referee', label: 'អ្នកធានា', icon: <UserCheck className="h-4 w-4" /> },
   { id: 'savings', label: 'សន្សំ', icon: <PiggyBank className="h-4 w-4" /> },
@@ -132,6 +149,9 @@ export function MemberDetailTabs({
   docsComplete,
   loanInterest,
   savingInterest,
+  memberCurrency,
+  monthlyLoanInterestRate,
+  loanEligibility,
   defaultTab = 'profile',
 }: MemberDetailTabsProps) {
   const [activeTab, setActiveTab] = useState<TabId>(defaultTab)
@@ -213,6 +233,11 @@ export function MemberDetailTabs({
                         value={member.resident_book_number ?? 'គ្មាន'}
                       />
                       <InfoTile
+                        icon={<Briefcase className="h-4 w-4" />}
+                        label="កន្លែងធ្វើការ"
+                        value={member.workplace ? (WORKPLACE_LABELS[member.workplace as keyof typeof WORKPLACE_LABELS] ?? member.workplace) : 'គ្មាន'}
+                      />
+                      <InfoTile
                         icon={<Calendar className="h-4 w-4" />}
                         label="Telegram"
                         value={member.telegram_chat_id ?? 'មិនបានភ្ជាប់'}
@@ -223,13 +248,6 @@ export function MemberDetailTabs({
                         value={member.address ?? 'គ្មាន'}
                         className="sm:col-span-2 xl:col-span-3"
                       />
-                      {savingInterest && (
-                        <InfoTile
-                          icon={<Percent className="h-4 w-4" />}
-                          label="អត្រាការប្រាក់សន្សំ"
-                          value={`${savingInterest.monthlyRate}% ប្រចាំខែ`}
-                        />
-                      )}
                     </div>
                     {member.emergency_contacts.length > 0 && (
                       <div className="mt-6 border-t border-border pt-6">
@@ -251,20 +269,19 @@ export function MemberDetailTabs({
                 )}
               </div>
             </div>
-
-            <div>
-              <SectionTitle icon={<PiggyBank className="h-5 w-5" />} title="សង្ខេបហិរញ្ញវត្ថុ" />
-              <div className="mt-5">
-                <FinancialSummary
-                  savingsAmount={savingsTotal}
-                  loanAmount={loanTotal}
-                  savingsCount={savingsCount}
-                  loansCount={loansCount}
-                  savingInterest={savingInterest}
-                />
-              </div>
-            </div>
           </div>
+        )}
+
+        {activeTab === 'finance' && (
+          <FinancialSummary
+            savingsAmount={savingsTotal}
+            loanAmount={loanTotal}
+            savingsCount={savingsCount}
+            loansCount={loansCount}
+            savingInterest={savingInterest}
+            onViewSavings={() => setActiveTab('savings')}
+            onViewLoans={() => setActiveTab('loans')}
+          />
         )}
 
         {activeTab === 'documents' && (
@@ -352,7 +369,28 @@ export function MemberDetailTabs({
         )}
 
         {activeTab === 'savings' && (
-          <div className="w-full overflow-hidden rounded-xl border border-border bg-surface">
+          <div className="w-full space-y-4">
+            <div className="flex flex-wrap items-center justify-between gap-3">
+              <p className="text-sm text-muted">
+                {member.status !== 'active'
+                  ? 'អ្នកអាចបន្ថែមការសន្សំបានតែសម្រាប់សមាជិកសកម្មប៉ុណ្ណោះ។'
+                  : `${savingsCount} ការសន្សំ · សរុប ${money(savingsTotal)}`}
+              </p>
+              <div className="flex items-center gap-2">
+                <MemberAddCapitalRequestForm
+                  memberId={member.id}
+                  currency={memberCurrency}
+                  savingsTotal={savingsTotal}
+                  disabled={member.status !== 'active'}
+                />
+                <MemberAddSavingForm
+                  memberId={member.id}
+                  currency={memberCurrency}
+                  disabled={member.status !== 'active'}
+                />
+              </div>
+            </div>
+          <div className="overflow-hidden rounded-xl border border-border bg-surface">
             <div className="overflow-x-auto">
               <table className="w-full min-w-160 text-left text-sm">
                 <thead className="border-b border-border bg-surface-muted/80">
@@ -429,7 +467,15 @@ export function MemberDetailTabs({
                           {money(savingInterest.monthlyAmount)}
                         </p>
                       </td>
-                      <td colSpan={3} className="px-5 py-4 text-sm text-muted md:px-6">
+                      <td className="px-5 py-4">
+                        <p className="text-xs font-semibold uppercase tracking-wide text-muted">
+                          ថ្ងៃទទួលការប្រាក់បន្ទាប់
+                        </p>
+                        <p className="mt-1 text-sm font-semibold text-foreground">
+                          {savingInterest.nextDate ? formatDate(savingInterest.nextDate) : '—'}
+                        </p>
+                      </td>
+                      <td colSpan={2} className="px-5 py-4 text-sm text-muted md:px-6">
                         {savingsCount} ការសន្សំបានទទួល
                       </td>
                     </tr>
@@ -438,10 +484,36 @@ export function MemberDetailTabs({
               </table>
             </div>
           </div>
+          </div>
         )}
 
         {activeTab === 'loans' && (
           <div className="w-full space-y-6">
+            <div className="flex flex-wrap items-center justify-between gap-3">
+              <p className="text-sm text-muted">
+                {member.status !== 'active'
+                  ? 'អ្នកអាចបន្ថែមកម្ជីបានតែសម្រាប់សមាជិកសកម្មប៉ុណ្ណោះ។'
+                  : `${loansCount} កម្ជីសកម្ម · សរុប ${money(loanTotal)}`}
+              </p>
+              <MemberAddLoanForm
+                memberId={member.id}
+                currency={memberCurrency}
+                monthlyLoanInterestRate={monthlyLoanInterestRate}
+                eligibility={loanEligibility}
+                referee={
+                  referee
+                    ? {
+                        id: referee.id,
+                        nameKh: referee.full_name_kh ?? referee.full_name,
+                        nameEn: referee.full_name_en ?? referee.full_name,
+                        phone: referee.phone ?? '',
+                        email: referee.email,
+                      }
+                    : null
+                }
+                disabled={member.status !== 'active'}
+              />
+            </div>
             {isEditing && loanInterest && (
               <MemberLoanInterestForm
                 memberId={member.id}
@@ -520,6 +592,8 @@ function FinancialSummary({
   savingsCount,
   loansCount,
   savingInterest,
+  onViewSavings,
+  onViewLoans,
 }: {
   savingsAmount: number
   loanAmount: number
@@ -528,35 +602,103 @@ function FinancialSummary({
   savingInterest?: {
     monthlyRate: number
     monthlyAmount: number
+    accruedTotal: number
+    nextDate: string | null
   }
+  onViewSavings: () => void
+  onViewLoans: () => void
 }) {
   return (
-    <div className="overflow-hidden rounded-2xl border border-border bg-surface-muted/40">
-      <div className="grid gap-px bg-border sm:grid-cols-2 lg:grid-cols-3">
-        <FinancialStatCard
-          label="សន្សំសរុប"
-          amount={savingsAmount}
-          subtitle={`${savingsCount} ការសន្សំបានទទួល`}
-          icon={PiggyBank}
-          tone="emerald"
-        />
-        {savingInterest && (
-          <FinancialStatCard
-            label="ការប្រាក់សន្សំប្រចាំខែ"
-            amount={savingInterest.monthlyAmount}
-            subtitle={`${savingInterest.monthlyRate}% នៃសន្សំសរុប`}
-            icon={Percent}
-            tone="amber"
-          />
-        )}
-        <FinancialStatCard
-          label="កម្ជីសកម្ម"
-          amount={loanAmount}
-          subtitle={`${loansCount} កម្ជីកំពុងដំណើរការ`}
-          icon={CreditCard}
-          tone="blue"
-        />
+    <div className="w-full space-y-8">
+      <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
+        <div>
+          <div className="flex items-center gap-2.5">
+            <span className="grid h-10 w-10 place-items-center rounded-xl bg-brand-50 text-brand-800 ring-1 ring-brand-100">
+              <Wallet className="h-5 w-5" />
+            </span>
+            <div>
+              <h2 className="text-xl font-bold tracking-tight text-foreground">សង្ខេបហិរញ្ញវត្ថុ</h2>
+              <p className="text-sm text-muted">ទិដ្ឋភាពរួមនៃសន្សំ ការប្រាក់ និងកម្ជីសកម្ម</p>
+            </div>
+          </div>
+        </div>
       </div>
+
+      <section>
+        <h3 className="mb-4 text-xs font-semibold uppercase tracking-wide text-muted">សង្ខេប</h3>
+        <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+          <FinancialStatCard
+            label="សន្សំសរុប"
+            amount={savingsAmount}
+            meta={`${savingsCount} ការសន្សំបានទទួល`}
+            icon={PiggyBank}
+            tone="emerald"
+            actionLabel="មើលបញ្ជីសន្សំ"
+            onAction={onViewSavings}
+          />
+          {savingInterest && (
+            <FinancialStatCard
+              label="ការប្រាក់សន្សំប្រចាំខែ"
+              amount={savingInterest.monthlyAmount}
+              meta={`${savingInterest.monthlyRate}% នៃសន្សំសរុប`}
+              icon={Percent}
+              tone="amber"
+            />
+          )}
+          <FinancialStatCard
+            label="កម្ជីសកម្ម"
+            amount={loanAmount}
+            meta={`${loansCount} កម្ជីកំពុងដំណើរការ`}
+            icon={CreditCard}
+            tone="blue"
+            actionLabel="មើលបញ្ជីកម្ជី"
+            onAction={onViewLoans}
+          />
+          <FinancialStatCard
+            label="សមតុល្យសរុប"
+            amount={savingsAmount + (savingInterest?.accruedTotal ?? 0) - loanAmount}
+            meta="សន្សំ + ការប្រាក់ − កម្ជីសកម្ម"
+            icon={Scale}
+            tone="violet"
+          />
+        </div>
+      </section>
+
+      <section className="overflow-hidden rounded-2xl border border-border bg-surface shadow-sm">
+        <div className="border-b border-border bg-surface-muted/50 px-5 py-4 md:px-6">
+          <h3 className="text-sm font-semibold text-foreground">ព័ត៌មានលម្អិត</h3>
+          <p className="mt-0.5 text-xs text-muted">ចំនួន និងអត្រាការប្រាក់ដែលពាក់ព័ន្ធ</p>
+        </div>
+        <dl className="divide-y divide-border">
+          <FinancialDetailRow
+            icon={PiggyBank}
+            label="ការសន្សំបានទទួល"
+            value={`${savingsCount} ដង`}
+            tone="emerald"
+          />
+          <FinancialDetailRow
+            icon={CreditCard}
+            label="កម្ជីកំពុងដំណើរការ"
+            value={`${loansCount} កម្ជី`}
+            tone="blue"
+          />
+          {savingInterest && (
+            <FinancialDetailRow
+              icon={Percent}
+              label="អត្រាការប្រាក់សន្សំ"
+              value={`${savingInterest.monthlyRate}% ប្រចាំខែ`}
+              tone="amber"
+            />
+          )}
+          <FinancialDetailRow
+            icon={Scale}
+            label="សមតុល្យសរុប"
+            value={money(savingsAmount + (savingInterest?.accruedTotal ?? 0) - loanAmount)}
+            tone="violet"
+            highlight
+          />
+        </dl>
+      </section>
     </div>
   )
 }
@@ -564,41 +706,127 @@ function FinancialSummary({
 function FinancialStatCard({
   label,
   amount,
-  subtitle,
+  meta,
   icon: Icon,
   tone,
+  actionLabel,
+  onAction,
 }: {
   label: string
   amount: number
-  subtitle: string
+  meta: string
   icon: React.ComponentType<{ className?: string }>
-  tone: 'emerald' | 'blue' | 'amber'
+  tone: 'emerald' | 'blue' | 'amber' | 'violet'
+  actionLabel?: string
+  onAction?: () => void
 }) {
-  const toneClasses =
+  const styles =
     tone === 'emerald'
-      ? 'bg-emerald-50/80 text-emerald-900'
+      ? {
+          card: 'hover:border-emerald-200 hover:shadow-emerald-100/50',
+          stripe: 'bg-emerald-500',
+          icon: 'bg-emerald-50 text-emerald-700 ring-emerald-100',
+          badge: 'bg-emerald-50 text-emerald-800',
+        }
       : tone === 'amber'
-        ? 'bg-amber-50/80 text-amber-950'
-        : 'bg-brand-50/80 text-brand-900'
-  const iconClasses =
-    tone === 'emerald'
-      ? 'bg-emerald-100 text-emerald-700'
-      : tone === 'amber'
-        ? 'bg-amber-100 text-amber-700'
-        : 'bg-brand-100 text-brand-700'
+        ? {
+            card: 'hover:border-amber-200 hover:shadow-amber-100/50',
+            stripe: 'bg-amber-500',
+            icon: 'bg-amber-50 text-amber-700 ring-amber-100',
+            badge: 'bg-amber-50 text-amber-800',
+          }
+        : tone === 'violet'
+          ? {
+              card: 'hover:border-violet-200 hover:shadow-violet-100/50',
+              stripe: 'bg-violet-500',
+              icon: 'bg-violet-50 text-violet-700 ring-violet-100',
+              badge: 'bg-violet-50 text-violet-800',
+            }
+          : {
+              card: 'hover:border-brand-200 hover:shadow-brand-100/50',
+              stripe: 'bg-brand-600',
+              icon: 'bg-brand-50 text-brand-700 ring-brand-100',
+              badge: 'bg-brand-50 text-brand-800',
+            }
 
   return (
-    <div className={`p-5 ${toneClasses}`}>
+    <div
+      className={`group relative overflow-hidden rounded-2xl border border-border bg-surface p-5 shadow-sm transition hover:shadow-md ${styles.card}`}
+    >
+      <div className={`absolute inset-x-0 top-0 h-1 ${styles.stripe}`} aria-hidden />
       <div className="flex items-start justify-between gap-4">
-        <div className="min-w-0 flex-1">
-          <p className="text-xs font-semibold uppercase tracking-wide opacity-70">{label}</p>
-          <p className="mt-3 text-2xl font-bold tabular-nums">{money(amount)}</p>
-          <p className="mt-4 text-sm opacity-80">{subtitle}</p>
+        <div className="min-w-0 flex-1 pt-1">
+          <p className="text-xs font-semibold uppercase tracking-wide text-muted">{label}</p>
+          <p className="mt-3 text-2xl font-bold tabular-nums tracking-tight text-foreground">
+            {money(amount)}
+          </p>
+          <span
+            className={`mt-3 inline-flex rounded-full px-2.5 py-1 text-xs font-medium ${styles.badge}`}
+          >
+            {meta}
+          </span>
         </div>
-        <span className={`grid h-11 w-11 shrink-0 place-items-center rounded-xl ${iconClasses}`}>
+        <span
+          className={`grid h-11 w-11 shrink-0 place-items-center rounded-xl ring-1 ${styles.icon}`}
+        >
           <Icon className="h-5 w-5" />
         </span>
       </div>
+      {actionLabel && onAction ? (
+        <button
+          type="button"
+          onClick={onAction}
+          className="mt-5 inline-flex w-full items-center justify-center gap-1.5 rounded-lg border border-border bg-surface-muted/50 px-3 py-2 text-xs font-semibold text-brand-800 transition hover:border-brand-200 hover:bg-brand-50 group-hover:border-brand-200"
+        >
+          {actionLabel}
+          <ArrowRight className="h-3.5 w-3.5" />
+        </button>
+      ) : null}
+    </div>
+  )
+}
+
+function FinancialDetailRow({
+  icon: Icon,
+  label,
+  value,
+  tone,
+  highlight = false,
+}: {
+  icon: React.ComponentType<{ className?: string }>
+  label: string
+  value: string
+  tone: 'emerald' | 'blue' | 'amber' | 'violet'
+  highlight?: boolean
+}) {
+  const iconTone =
+    tone === 'emerald'
+      ? 'bg-emerald-50 text-emerald-700'
+      : tone === 'amber'
+        ? 'bg-amber-50 text-amber-700'
+        : tone === 'violet'
+          ? 'bg-violet-50 text-violet-700'
+          : 'bg-brand-50 text-brand-700'
+
+  return (
+    <div
+      className={`flex items-center justify-between gap-4 px-5 py-4 md:px-6 ${
+        highlight ? 'bg-surface-muted/40' : ''
+      }`}
+    >
+      <dt className="flex min-w-0 items-center gap-3 text-sm text-muted">
+        <span className={`grid h-9 w-9 shrink-0 place-items-center rounded-lg ${iconTone}`}>
+          <Icon className="h-4 w-4" />
+        </span>
+        {label}
+      </dt>
+      <dd
+        className={`shrink-0 text-sm font-semibold tabular-nums ${
+          highlight ? 'text-base text-foreground' : 'text-foreground'
+        }`}
+      >
+        {value}
+      </dd>
     </div>
   )
 }

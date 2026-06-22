@@ -20,9 +20,6 @@ export const adminTable = {
   amountPrimary: 'font-semibold tabular-nums text-foreground',
   amountSecondary: 'mt-0.5 truncate text-xs text-muted',
   missingText: 'text-sm text-muted',
-  memberCell: 'flex min-w-0 items-center gap-3',
-  memberAvatar:
-    'grid h-9 w-9 shrink-0 place-items-center rounded-full bg-brand-100 text-sm font-semibold text-brand-700',
   rowChevron: 'h-4 w-4 text-muted opacity-0 transition group-hover:opacity-100 group-focus-visible:opacity-100',
 } as const
 

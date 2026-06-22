@@ -7,6 +7,7 @@ import { createMemberByAdmin } from '@/app/actions/admin'
 import { searchActiveMembers, type MemberSearchResult } from '@/app/actions/member'
 import { showError, showSuccess } from '@/lib/toast'
 import { adminFieldClassName } from '@/components/admin/AdminListToolbar'
+import { WORKPLACE_OPTIONS } from '@/lib/workplace'
 
 type EmergencyContact = { full_name: string; phone: string }
 
@@ -20,6 +21,7 @@ const EMPTY_FORM = {
   address: '',
   id_number: '',
   resident_book_number: '',
+  workplace: '',
   role: 'member',
   referee_id: '',
   referee_display_name: '',
@@ -51,7 +53,6 @@ function FileUploadField({
   optional,
 }: {
   label: string
-  subtitle: string
   file: File | null
   onChange: (f: File | null) => void
   disabled?: boolean
@@ -256,18 +257,28 @@ export function CreateMemberForm() {
       <section className="space-y-4">
         <SectionTitle>គណនី</SectionTitle>
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          <Field label="អ៊ីមែល" required>
+          <Field label="លេខទូរស័ព្ទ" required>
+            <input
+              type="tel"
+              value={form.phone}
+              onChange={(e) => set('phone', e.target.value)}
+              className={inputClass}
+              placeholder="0812345678"
+              required
+              disabled={pending}
+            />
+          </Field>
+          <Field label="អ៊ីមែល">
             <input
               type="email"
               value={form.email}
               onChange={(e) => set('email', e.target.value)}
               className={inputClass}
-              placeholder="member@example.com"
-              required
+              placeholder="member@example.com (មិនដាក់ក៏បាន)"
               disabled={pending}
             />
           </Field>
-          <Field label="ពាក្យសម្ងាត់បណ្តោះអាសន្ន" required>
+          <Field label="ពាក្យសម្ងាត់" required>
             <input
               type="text"
               value={form.password}
@@ -286,7 +297,7 @@ export function CreateMemberForm() {
               disabled={pending}
             >
               <option value="member">Member</option>
-              <option value="comember">Co-member</option>
+              <option value="comember">Core member</option>
               <option value="founder">Founder</option>
             </select>
           </Field>
@@ -316,16 +327,6 @@ export function CreateMemberForm() {
               className={inputClass}
               placeholder="Full name in English"
               required
-              disabled={pending}
-            />
-          </Field>
-          <Field label="លេខទូរស័ព្ទ">
-            <input
-              type="tel"
-              value={form.phone}
-              onChange={(e) => set('phone', e.target.value)}
-              className={inputClass}
-              placeholder="0812345678"
               disabled={pending}
             />
           </Field>
@@ -360,6 +361,19 @@ export function CreateMemberForm() {
               placeholder="លេខសៀវភៅ"
               disabled={pending}
             />
+          </Field>
+          <Field label="កន្លែងធ្វើការ">
+            <select
+              value={form.workplace}
+              onChange={(e) => set('workplace', e.target.value)}
+              className={inputClass}
+              disabled={pending}
+            >
+              <option value="">-- ជ្រើសរើស --</option>
+              {WORKPLACE_OPTIONS.map((o) => (
+                <option key={o.value} value={o.value}>{o.label}</option>
+              ))}
+            </select>
           </Field>
         </div>
         <Field label="អាសយដ្ឋាន">

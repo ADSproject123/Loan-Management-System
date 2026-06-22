@@ -4,7 +4,9 @@ import { revalidatePath } from 'next/cache'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { requireAdmin } from '@/lib/auth/member'
 import type { ActionResult } from '@/app/actions/member'
-import { formatMoney } from '@/lib/currency'
+import { formatMoney, MIN_SAVING_AMOUNT, normalizeCurrency } from '@/lib/currency'
+import { fetchMemberLoanInterestRate, getInterestSettings } from '@/lib/interest'
+import { fetchMemberLoanEligibility, validateLoanRequestAmount } from '@/lib/loanEligibility'
 import { sendTelegramMessage } from '@/lib/telegram'
 import { uploadPrivateFile } from '@/lib/uploads'
 function idFrom(formData: FormData) {
@@ -43,7 +45,7 @@ type MemberRoleValue = (typeof MEMBER_ROLES)[number]
 
 const MEMBER_ROLE_LABELS: Record<MemberRoleValue, string> = {
   founder: 'Founder',
-  comember: 'Co-member',
+  comember: 'Core member',
   member: 'Member',
 }
 
@@ -151,6 +153,7 @@ export async function updateMemberProfile(formData: FormData): Promise<ActionRes
     const address = (formData.get('address') as string ?? '').trim()
     const idNumber = (formData.get('id_number') as string ?? '').trim()
     const residentBookNumber = (formData.get('resident_book_number') as string ?? '').trim()
+    const workplace = (formData.get('workplace') as string ?? '').trim() || null
     const role = roleFrom(formData)
     const emergencyContacts = parseEmergencyContacts(
       (formData.get('emergency_contacts') as string ?? '').trim()
@@ -220,6 +223,7 @@ export async function updateMemberProfile(formData: FormData): Promise<ActionRes
         address: address || null,
         id_number: idNumber || null,
         resident_book_number: residentBookNumber || null,
+        workplace,
         emergency_contacts: emergencyContacts,
         role,
       })
@@ -819,6 +823,49 @@ export async function decideCapitalRequest(formData: FormData): Promise<ActionRe
   }
 }
 
+export async function adminCreateCapitalRequest(formData: FormData): Promise<ActionResult> {
+  try {
+    const approver = await requireAdmin()
+    const memberId = idFrom(formData)
+    const amount = Number((formData.get('amount') as string ?? '').trim())
+    const reason = (formData.get('reason') as string ?? '').trim()
+    const afterDecision = (formData.get('after_decision') as string ?? '').trim()
+    const currency = normalizeCurrency((formData.get('currency') as string ?? '').trim())
+
+    if (!memberId || amount <= 0 || !reason) {
+      return { success: false, error: 'សូមបំពេញចំនួនទឹកប្រាក់ និង មូលហេតុ។' }
+    }
+    if (afterDecision !== 'continue' && afterDecision !== 'withdraw') {
+      return { success: false, error: 'សូមជ្រើសរើសសកម្មភាពបន្ទាប់ពីការដក។' }
+    }
+
+    const admin = createAdminClient()
+    const { error } = await admin.from('capital_requests').insert({
+      member_id: memberId,
+      amount,
+      currency,
+      reason,
+      continue_saving: afterDecision === 'continue',
+      remove_membership: afterDecision === 'withdraw',
+      status: 'approved',
+      approved_by: approver.id,
+      approved_at: new Date().toISOString(),
+    })
+
+    if (error) throw error
+
+    const label = `${formatMoney(amount, currency)}`
+    await notify(memberId, 'ការដកដើមទុន', `អ្នកគ្រប់គ្រងបានដំណើរការការដកដើមទុនចំនួន ${label} ។`)
+
+    revalidatePath('/admin')
+    revalidatePath(`/admin/members/${memberId}`)
+    revalidatePath('/admin/capital')
+    return { success: true }
+  } catch (error) {
+    return { success: false, error: error instanceof Error ? error.message : 'មិនអាចដំណើរការការដកដើមទុនបានទេ។' }
+  }
+}
+
 function parseInterestRate(formData: FormData, field: string) {
   const raw = formData.get(field)
   const value = typeof raw === 'string' ? Number(raw) : NaN
@@ -986,14 +1033,15 @@ export async function createMemberByAdmin(formData: FormData): Promise<ActionRes
     const address = (formData.get('address') as string ?? '').trim()
     const idNumber = (formData.get('id_number') as string ?? '').trim()
     const residentBookNumber = (formData.get('resident_book_number') as string ?? '').trim()
+    const workplace = (formData.get('workplace') as string ?? '').trim() || null
     const role = (formData.get('role') as string ?? 'member').trim()
     const emergencyContactsRaw = (formData.get('emergency_contacts') as string ?? '').trim()
     const emergencyContacts = emergencyContactsRaw ? JSON.parse(emergencyContactsRaw) : []
     const idDocumentFile = formData.get('id_document')
     const residentBookFile = formData.get('resident_book')
 
-    if (!email || !password || !fullNameKh || !fullNameEn) {
-      return { success: false, error: 'អ៊ីមែល ពាក្យសម្ងាត់ និងឈ្មោះពេញ (ខ្មែរ + អង់គ្លេស) ត្រូវការ។' }
+    if (!phone || !password || !fullNameKh || !fullNameEn) {
+      return { success: false, error: 'លេខទូរស័ព្ទ ពាក្យសម្ងាត់ និងឈ្មោះពេញ (ខ្មែរ + អង់គ្លេស) ត្រូវការ។' }
     }
     if (password.length < 8) {
       return { success: false, error: 'ពាក្យសម្ងាត់ត្រូវមានយ៉ាងតិច ៨ តួអក្សរ។' }
@@ -1001,10 +1049,13 @@ export async function createMemberByAdmin(formData: FormData): Promise<ActionRes
 
     const fullName = `${fullNameKh} | ${fullNameEn}`
 
+    // Supabase Auth requires an email; synthesize one from phone when none is provided.
+    const authEmail = email || `${phone.replace(/\D/g, '')}@member.local`
+
     const refereeId = (formData.get('referee_id') as string ?? '').trim() || null
 
     const { data: authData, error: authError } = await admin.auth.admin.createUser({
-      email,
+      email: authEmail,
       password,
       email_confirm: true,
       user_metadata: { full_name: fullName, full_name_kh: fullNameKh, full_name_en: fullNameEn },
@@ -1029,12 +1080,13 @@ export async function createMemberByAdmin(formData: FormData): Promise<ActionRes
       full_name: fullName,
       full_name_kh: fullNameKh,
       full_name_en: fullNameEn,
-      email,
+      email: email || null,
       phone: phone || null,
       date_of_birth: dateOfBirth || null,
       address: address || null,
       id_number: idNumber || null,
       resident_book_number: residentBookNumber || null,
+      workplace,
       emergency_contacts: emergencyContacts,
       referee_id: refereeId,
       id_document_url: idDocumentUrl,
@@ -1073,5 +1125,251 @@ export async function markReportSent(formData: FormData): Promise<ActionResult> 
     return { success: true }
   } catch (error) {
     return { success: false, error: error instanceof Error ? error.message : 'មិនអាចសម្គាល់ថារបាយការណ៍បានផ្ញើទេ។' }
+  }
+}
+
+function memberIdFrom(formData: FormData) {
+  const value = formData.get('member_id')
+  if (typeof value !== 'string' || !value) {
+    throw new Error('បាត់លេខសម្គាល់សមាជិក។')
+  }
+  return value
+}
+
+function adminAsString(formData: FormData, key: string) {
+  const value = formData.get(key)
+  return typeof value === 'string' ? value.trim() : ''
+}
+
+function adminAsNumber(formData: FormData, key: string) {
+  const value = Number(adminAsString(formData, key))
+  return Number.isFinite(value) ? value : 0
+}
+
+function adminAsFile(formData: FormData, key: string) {
+  const value = formData.get(key)
+  return value instanceof File && value.size > 0 ? value : null
+}
+
+function monthsBetween(start: string, end: string) {
+  const startDate = new Date(start)
+  const endDate = new Date(end)
+  let months =
+    (endDate.getFullYear() - startDate.getFullYear()) * 12 +
+    (endDate.getMonth() - startDate.getMonth())
+  if (endDate.getDate() < startDate.getDate()) months -= 1
+  return Math.max(1, months)
+}
+
+async function requireActiveMemberForAdmin(
+  admin: ReturnType<typeof createAdminClient>,
+  memberId: string
+) {
+  const { data: member, error } = await admin
+    .from('members')
+    .select('id, status, auth_user_id, referee_id')
+    .eq('id', memberId)
+    .eq('is_admin', false)
+    .maybeSingle()
+
+  if (error) throw error
+  if (!member) throw new Error('រកមិនឃើញសមាជិកទេ។')
+  if (member.status !== 'active') {
+    throw new Error('អ្នកអាចបន្ថែមការសន្សំ ឬកម្ជីបានតែសម្រាប់សមាជិកសកម្មប៉ុណ្ណោះ។')
+  }
+
+  return member
+}
+
+function revalidateMemberFinancialPaths(memberId: string) {
+  revalidatePath('/admin')
+  revalidatePath('/admin/members')
+  revalidatePath(`/admin/members/${memberId}`)
+  revalidatePath('/admin/savings')
+  revalidatePath('/admin/savings/requests')
+  revalidatePath('/admin/loans')
+  revalidatePath('/admin/loans/requests')
+  revalidatePath('/admin/loans/active')
+  revalidatePath('/dashboard')
+  revalidatePath('/dashboard/savings')
+  revalidatePath('/dashboard/loans')
+}
+
+export async function addSavingByAdmin(formData: FormData): Promise<ActionResult> {
+  try {
+    const approver = await requireAdmin()
+    const memberId = memberIdFrom(formData)
+    const amount = adminAsNumber(formData, 'amount')
+    const notes = adminAsString(formData, 'notes')
+    const currency = normalizeCurrency(adminAsString(formData, 'currency') || 'USD')
+    const savingDate = adminAsString(formData, 'saving_date') || new Date().toISOString().slice(0, 10)
+
+    if (amount < MIN_SAVING_AMOUNT) {
+      return {
+        success: false,
+        error: `ចំនួនទឹកប្រាក់សន្សំអប្បបរមាគឺ $${MIN_SAVING_AMOUNT}។`,
+      }
+    }
+
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(savingDate)) {
+      return { success: false, error: 'សូមបញ្ចូលថ្ងៃសន្សំត្រឹមត្រូវ។' }
+    }
+
+    const admin = createAdminClient()
+    const member = await requireActiveMemberForAdmin(admin, memberId)
+    const evidenceFile = adminAsFile(formData, 'evidence')
+    const uploadUserId = member.auth_user_id ?? approver.auth_user_id
+
+    if (!uploadUserId) {
+      return { success: false, error: 'មិនអាចផ្ទុកភស្តុតាងបានទេ។' }
+    }
+
+    const evidenceUrl = evidenceFile
+      ? await uploadPrivateFile('payment-evidence', uploadUserId, 'savings', evidenceFile)
+      : null
+
+    const { error } = await admin.from('savings').insert({
+      member_id: memberId,
+      amount,
+      currency,
+      notes: notes || null,
+      saving_date: savingDate,
+      evidence_url: evidenceUrl,
+      qr_code_ref: `ADM-SAV-${Date.now()}`,
+      status: 'completed',
+      verified_by: approver.id,
+      verified_at: new Date().toISOString(),
+    })
+
+    if (error) throw error
+
+    await notify(
+      memberId,
+      'ការសន្សំត្រូវបានបន្ថែម',
+      `ការសន្សំចំនួន ${formatMoney(amount, currency)} ត្រូវបានបន្ថែមដោយអ្នកគ្រប់គ្រង។`
+    )
+    revalidateMemberFinancialPaths(memberId)
+    return { success: true }
+  } catch (error) {
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : 'មិនអាចបន្ថែមការសន្សំបានទេ។',
+    }
+  }
+}
+
+export async function addLoanByAdmin(formData: FormData): Promise<ActionResult> {
+  try {
+    const approver = await requireAdmin()
+    const memberId = memberIdFrom(formData)
+    const amount = adminAsNumber(formData, 'amount')
+    const purpose = adminAsString(formData, 'purpose')
+    const startDate = adminAsString(formData, 'start_date')
+    const endDate = adminAsString(formData, 'end_date')
+    const currency = normalizeCurrency(adminAsString(formData, 'currency') || 'USD')
+    const autoApprove = adminAsString(formData, 'auto_approve') === 'true'
+
+    let refereeId = adminAsString(formData, 'referee_id') || null
+    let refereeNameKh = adminAsString(formData, 'referee_name_kh')
+    let refereeNameEn = adminAsString(formData, 'referee_name_en')
+    let refereePhone = adminAsString(formData, 'referee_phone')
+    let refereeEmail = adminAsString(formData, 'referee_email').toLowerCase()
+
+    if (amount <= 0 || !purpose) {
+      return { success: false, error: 'សូមបញ្ចូលចំនួនទឹកប្រាក់កម្ជី និង គោលបំណងត្រឹមត្រូវ។' }
+    }
+
+    if (
+      !/^\d{4}-\d{2}-\d{2}$/.test(startDate) ||
+      !/^\d{4}-\d{2}-\d{2}$/.test(endDate) ||
+      endDate <= startDate
+    ) {
+      return { success: false, error: 'សូមជ្រើសរើសកាលបរិច្ឆេទចាប់ផ្តើម និង បញ្ចប់នៃកម្ជីត្រឹមត្រូវ។' }
+    }
+
+    const admin = createAdminClient()
+    const member = await requireActiveMemberForAdmin(admin, memberId)
+
+    if (!refereeId && member.referee_id) {
+      refereeId = member.referee_id
+    }
+
+    if (refereeId && (!refereeNameKh || !refereeNameEn || !refereePhone)) {
+      const { data: linkedReferee } = await admin
+        .from('members')
+        .select('full_name, full_name_kh, full_name_en, phone, email')
+        .eq('id', refereeId)
+        .maybeSingle()
+
+      if (linkedReferee) {
+        refereeNameKh =
+          refereeNameKh || linkedReferee.full_name_kh || linkedReferee.full_name || ''
+        refereeNameEn =
+          refereeNameEn || linkedReferee.full_name_en || linkedReferee.full_name || ''
+        refereePhone = refereePhone || linkedReferee.phone || ''
+        refereeEmail = refereeEmail || linkedReferee.email?.toLowerCase() || ''
+      }
+    }
+
+    if (!refereeNameKh || !refereeNameEn || !refereePhone) {
+      return {
+        success: false,
+        error: 'សូមបញ្ចូលព័ត៌មានអ្នកធានា (ខ្មែរ អង់គ្លេស និង ទូរស័ព្ទ) ឬដាក់អ្នកធានាឲ្យសមាជិកជាមុនសិន។',
+      }
+    }
+
+    const eligibility = await fetchMemberLoanEligibility(admin, memberId)
+    const amountCheck = validateLoanRequestAmount(amount, eligibility)
+    if (!amountCheck.valid) {
+      return { success: false, error: amountCheck.error }
+    }
+
+    const interestSettings = await getInterestSettings()
+    const loanInterestRate = await fetchMemberLoanInterestRate(
+      memberId,
+      interestSettings.monthlyLoanInterestRate
+    )
+    const termMonths = monthsBetween(startDate, endDate)
+
+    const insertPayload: Record<string, unknown> = {
+      member_id: memberId,
+      amount,
+      currency,
+      purpose,
+      term_months: termMonths,
+      monthly_interest_rate: loanInterestRate,
+      start_date: startDate,
+      end_date: endDate,
+      referee_id: refereeId,
+      referee_name: refereeNameEn,
+      referee_name_kh: refereeNameKh,
+      referee_name_en: refereeNameEn,
+      referee_phone: refereePhone,
+      referee_email: refereeEmail || null,
+      status: autoApprove ? 'approved' : 'under_review',
+    }
+
+    if (autoApprove) {
+      insertPayload.approved_by = approver.id
+      insertPayload.approved_at = new Date().toISOString()
+    }
+
+    const { error } = await admin.from('loans').insert(insertPayload)
+    if (error) throw error
+
+    await notify(
+      memberId,
+      autoApprove ? 'កម្ជីត្រូវបានបន្ថែម និងទទួលយក' : 'កម្ជីត្រូវបានបន្ថែម',
+      autoApprove
+        ? `កម្ជីចំនួន ${formatMoney(amount, currency)} ត្រូវបានបន្ថែម និងទទួលយកដោយអ្នកគ្រប់គ្រង។`
+        : `កម្ជីចំនួន ${formatMoney(amount, currency)} ត្រូវបានបន្ថែមដោយអ្នកគ្រប់គ្រង។`
+    )
+    revalidateMemberFinancialPaths(memberId)
+    return { success: true }
+  } catch (error) {
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : 'មិនអាចបន្ថែមកម្ជីបានទេ។',
+    }
   }
 }

@@ -7,9 +7,6 @@ import { uploadPrivateFile } from '@/lib/uploads'
 import { MIN_SAVING_AMOUNT, normalizeCurrency } from '@/lib/currency'
 import { fetchMemberLoanInterestRate, getInterestSettings } from '@/lib/interest'
 import { fetchMemberLoanEligibility, validateLoanRequestAmount } from '@/lib/loanEligibility'
-import { hasRecentVerification } from '@/lib/verification'
-
-const VERIFICATION_REQUIRED_ERROR = 'សូមផ្ទៀងផ្ទាត់អត្តសញ្ញាណតាម Telegram ជាមុនសិន។'
 
 export type ActionResult = {
   success: boolean
@@ -133,15 +130,19 @@ export async function registerMember(formData: FormData): Promise<RegisterResult
     const address = asString(formData, 'address')
     const idNumber = asString(formData, 'id_number')
     const residentBookNumber = asString(formData, 'resident_book_number')
+    const workplace = asString(formData, 'workplace') || null
     const emergencyContactsRaw = asString(formData, 'emergency_contacts')
     const emergencyContacts: { full_name: string; phone: string }[] = emergencyContactsRaw
       ? JSON.parse(emergencyContactsRaw)
       : []
     const refereeId = asString(formData, 'referee_id') || null
 
-    if (!email || !password || !fullNameKh || !fullNameEn || !phone || !dateOfBirth || !idNumber) {
+    if (!phone || !password || !fullNameKh || !fullNameEn || !dateOfBirth || !idNumber) {
       return { success: false, error: 'សូមបំពេញគ្រប់វាលទាំងអស់ដែលត្រូវការ។' }
     }
+
+    // Supabase Auth requires an email; synthesize one from phone when none is provided.
+    const authEmail = email || `${phone.replace(/\D/g, '')}@member.local`
 
     if (!/^\d{4}-\d{2}-\d{2}$/.test(dateOfBirth)) {
       return { success: false, error: 'សូមបញ្ចូលថ្ងៃខែឆ្នាំកំណើតត្រឹមត្រូវ។' }
@@ -158,7 +159,7 @@ export async function registerMember(formData: FormData): Promise<RegisterResult
     }
 
     const { data: authData, error: authError } = await admin.auth.admin.createUser({
-      email,
+      email: authEmail,
       password,
       email_confirm: true,
       user_metadata: { full_name: fullName, full_name_kh: fullNameKh, full_name_en: fullNameEn },
@@ -190,12 +191,13 @@ export async function registerMember(formData: FormData): Promise<RegisterResult
       full_name: fullName,
       full_name_kh: fullNameKh,
       full_name_en: fullNameEn,
-      email,
+      email: email || null,
       phone,
       date_of_birth: dateOfBirth,
       address,
       id_number: idNumber,
       resident_book_number: residentBookNumber,
+      workplace,
       referee_id: refereeId,
       id_document_url: idDocumentUrl,
       resident_book_url: residentBookUrl,
@@ -234,9 +236,7 @@ export async function checkTelegramConnected(connectToken: string): Promise<bool
 export async function addSaving(formData: FormData): Promise<ActionResult> {
   try {
     const member = await requireActiveMember()
-    if (!(await hasRecentVerification(member.id, 'saving_add'))) {
-      return { success: false, error: VERIFICATION_REQUIRED_ERROR }
-    }
+
     const amount = asNumber(formData, 'amount')
     const notes = asString(formData, 'notes')
     const currency = normalizeCurrency(asString(formData, 'currency'))
@@ -284,9 +284,7 @@ export async function addSaving(formData: FormData): Promise<ActionResult> {
 export async function requestLoan(formData: FormData): Promise<ActionResult> {
   try {
     const member = await requireActiveMember()
-    if (!(await hasRecentVerification(member.id, 'loan_request'))) {
-      return { success: false, error: VERIFICATION_REQUIRED_ERROR }
-    }
+
     const amount = asNumber(formData, 'amount')
     const purpose = asString(formData, 'purpose')
     const startDate = asString(formData, 'start_date')
@@ -383,9 +381,7 @@ export async function requestLoan(formData: FormData): Promise<ActionResult> {
 export async function repayLoan(formData: FormData): Promise<ActionResult> {
   try {
     const member = await requireActiveMember()
-    if (!(await hasRecentVerification(member.id, 'loan_repay'))) {
-      return { success: false, error: VERIFICATION_REQUIRED_ERROR }
-    }
+
     const amount = asNumber(formData, 'amount')
     const currency = normalizeCurrency(asString(formData, 'currency'))
 
@@ -475,9 +471,7 @@ export async function requestReport(formData: FormData): Promise<ActionResult> {
 export async function requestCapitalWithdrawal(formData: FormData): Promise<ActionResult> {
   try {
     const member = await requireActiveMember()
-    if (!(await hasRecentVerification(member.id, 'capital_request'))) {
-      return { success: false, error: VERIFICATION_REQUIRED_ERROR }
-    }
+
     const amount = asNumber(formData, 'amount')
     const reason = asString(formData, 'reason')
     const afterDecision = asString(formData, 'after_decision')

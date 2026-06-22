@@ -6,6 +6,61 @@ export function monthlySavingInterest(balance: number, ratePercent: number) {
   return balance * (rate / 100)
 }
 
+/**
+ * Full months of interest that have accrued since fromDateStr.
+ * The current month counts only once today's date has reached the same
+ * day-of-month as the start date (i.e. the monthly "payment day" has arrived).
+ */
+export function monthsAccrued(fromDateStr: string, today = new Date()): number {
+  const from = new Date(fromDateStr)
+  const totalMonths =
+    (today.getFullYear() - from.getFullYear()) * 12 +
+    (today.getMonth() - from.getMonth())
+  const dayReached = today.getDate() >= from.getDate()
+  return Math.max(0, dayReached ? totalMonths : totalMonths - 1)
+}
+
+/**
+ * The next calendar date when interest will click over for a given saving.
+ * Interest ticks on the same day-of-month as the original saving_date.
+ */
+function nextInterestDateForSaving(savingDateStr: string, today = new Date()): Date {
+  const payDay = new Date(savingDateStr).getDate()
+  const next = new Date(today.getFullYear(), today.getMonth(), payDay)
+  if (today.getDate() >= payDay) {
+    next.setMonth(next.getMonth() + 1)
+  }
+  return next
+}
+
+/**
+ * Earliest upcoming interest date across all savings (the soonest day any
+ * saving's monthly interest will next click over).
+ */
+export function nextInterestDate(
+  savings: { saving_date: string }[],
+  today = new Date()
+): Date | null {
+  if (savings.length === 0) return null
+  return savings.reduce<Date | null>((earliest, s) => {
+    const d = nextInterestDateForSaving(s.saving_date, today)
+    return earliest === null || d < earliest ? d : earliest
+  }, null)
+}
+
+/** Total saving interest accrued across all savings up to today. */
+export function accruedSavingInterestTotal(
+  savings: { amount: number; saving_date: string }[],
+  ratePercent: number,
+  today = new Date()
+): number {
+  const rate = Number.isFinite(ratePercent) ? ratePercent : DEFAULT_SAVING_INTEREST_RATE
+  return savings.reduce((sum, s) => {
+    const months = monthsAccrued(s.saving_date, today)
+    return sum + s.amount * (rate / 100) * months
+  }, 0)
+}
+
 function safePrincipal(principal: number) {
   return Number.isFinite(principal) ? Math.max(principal, 0) : 0
 }

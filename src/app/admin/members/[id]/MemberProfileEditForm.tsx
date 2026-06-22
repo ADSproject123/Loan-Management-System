@@ -10,6 +10,7 @@ import { adminFieldClassName } from '@/components/admin'
 import { updateMemberProfile } from '@/app/actions/admin'
 import { showError, showSuccess } from '@/lib/toast'
 import { useRegisterMemberEditForm } from './MemberEditModeContext'
+import { WORKPLACE_OPTIONS } from '@/lib/workplace'
 import type { MemberRole } from '@/types/database'
 
 type EmergencyContact = { full_name: string; phone: string }
@@ -27,6 +28,7 @@ type MemberProfileEditFormProps = {
     address: string | null
     id_number: string | null
     resident_book_number: string | null
+    workplace: string | null
     telegram_chat_id: string | null
     role: MemberRole
     emergency_contacts: EmergencyContact[]
@@ -68,6 +70,7 @@ export function MemberProfileEditForm({ member, onSaved }: MemberProfileEditForm
     date_of_birth: member.date_of_birth ?? '',
     id_number: member.id_number ?? '',
     resident_book_number: member.resident_book_number ?? '',
+    workplace: member.workplace ?? '',
     address: member.address ?? '',
     role: member.role,
   })
@@ -201,6 +204,19 @@ export function MemberProfileEditForm({ member, onSaved }: MemberProfileEditForm
             className={inputClass}
             disabled={pending}
           />
+        </Field>
+        <Field label="កន្លែងធ្វើការ">
+          <select
+            value={form.workplace}
+            onChange={(e) => setField('workplace', e.target.value)}
+            className={inputClass}
+            disabled={pending}
+          >
+            <option value="">-- ជ្រើសរើស --</option>
+            {WORKPLACE_OPTIONS.map((o) => (
+              <option key={o.value} value={o.value}>{o.label}</option>
+            ))}
+          </select>
         </Field>
         <Field label="Telegram">
           <input

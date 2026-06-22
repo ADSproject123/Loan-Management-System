@@ -6,7 +6,7 @@ import { Steps } from '@/components/ui/Steps'
 import { Button } from '@/components/ui/Button'
 import { Card } from '@/components/ui/Card'
 import { KhqrPaymentCard } from '@/components/loans/KhqrPaymentCard'
-import { TelegramVerification } from '@/components/ui/TelegramVerification'
+
 import { repayLoan } from '@/app/actions/member'
 import { showError } from '@/lib/toast'
 import { currencySymbol, type CurrencyCode } from '@/lib/currency'
@@ -15,7 +15,6 @@ import { CreditCard, QrCode, Upload, CheckCircle, Info } from 'lucide-react'
 
 const STEPS = [
   { id: 1, label: 'បញ្ជាក់ចំនួន', description: 'កំណត់ចំនួន' },
-  { id: 2, label: 'ផ្ទៀងផ្ទាត់', description: 'កូដ Telegram' },
   { id: 3, label: 'QR Code', description: 'ស្កេន បង់ និង ភស្តុតាង' },
   { id: 4, label: 'រួចរាល់', description: 'បានដាក់ស្នើ' },
 ]
@@ -56,7 +55,7 @@ export function LoanRepayForm({
       showError(`ចំនួនទឹកប្រាក់មិនអាចលើសសមតុល្យកម្ជីនៅសល់ ${currencySymbol(currency)}${activeLoan.remaining.toLocaleString()} ។`)
       return
     }
-    setStep(2)
+    setStep(3)
   }
 
   const handleSubmit = async () => {
@@ -177,15 +176,6 @@ export function LoanRepayForm({
             បន្តទៅការបង់ប្រាក់
           </Button>
         </Card>
-      )}
-
-      {/* Step 2: Telegram verification modal */}
-      {step === 2 && (
-        <TelegramVerification
-          action="loan_repay"
-          onVerified={() => setStep(3)}
-          onCancel={() => setStep(1)}
-        />
       )}
 
       {/* Step 3: QR Code + evidence */}

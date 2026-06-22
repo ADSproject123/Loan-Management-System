@@ -168,7 +168,7 @@ export function LoansList({
   const showStatusFilter = variant === 'all'
   const colSpan =
     (showStatusColumn ? 1 : 0) + (isActiveView ? 1 : 0) + 3 + (showActions ? 1 : 0)
-  const ledgerColSpan = 5
+  const ledgerColSpan = 6
 
   const filteredByStatus = useMemo(() => {
     return loans.filter((loan) => {
@@ -265,6 +265,7 @@ export function LoansList({
               <th className={adminTable.th}>
                 {isLedgerView ? 'កម្ជីសរុប' : 'ចំនួនទឹកប្រាក់'}
               </th>
+              {isLedgerView ? <th className={adminTable.th}>ចំនួនកម្ជី</th> : null}
               {!isLedgerView && showStatusColumn ? <th className={adminTable.th}>ស្ថានភាព</th> : null}
               {isActiveView || isLedgerView ? (
                 <>
@@ -320,21 +321,15 @@ export function LoansList({
                       }
                     }}
                   >
-                    <td className={adminTable.tdFirst}>
-                      <div className={adminTable.memberCell}>
-                        <MemberAvatar name={memberName} />
-                        <div className="min-w-0">
-                          <p className={adminTable.namePrimary}>{memberName}</p>
-                          <p className={adminTable.nameSecondary}>{relatedMemberEmail(group)}</p>
-                        </div>
-                      </div>
+                    <td className={`${adminTable.tdFirst} ${adminTable.namePrimary}`}>
+                      {memberName}
                     </td>
                     <td className={adminTable.td}>
                       <p className={adminTable.amountPrimary}>
                         {money(group.totalAmount, (group.currency as CurrencyCode) ?? 'USD')}
                       </p>
-                      <p className={adminTable.amountSecondary}>{group.loanCount} កម្ជី</p>
                     </td>
+                    <td className={adminTable.tdMuted}>{group.loanCount} កម្ជី</td>
                     <td className={adminTable.tdMuted}>
                       {formatDate(group.latestDisbursedAt ?? group.latestCreatedAt)}
                     </td>
@@ -378,14 +373,8 @@ export function LoansList({
                     }
                   }}
                 >
-                  <td className={adminTable.tdFirst}>
-                    <div className={adminTable.memberCell}>
-                      <MemberAvatar name={memberName} />
-                      <div className="min-w-0">
-                        <p className={adminTable.namePrimary}>{memberName}</p>
-                        <p className={adminTable.nameSecondary}>{relatedMemberEmail(loan)}</p>
-                      </div>
-                    </div>
+                  <td className={`${adminTable.tdFirst} ${adminTable.namePrimary}`}>
+                    {memberName}
                   </td>
                   <td className={adminTable.td}>
                     <p className={adminTable.amountPrimary}>
@@ -427,16 +416,6 @@ export function LoansList({
         </table>
       </div>
     </div>
-  )
-}
-
-function MemberAvatar({ name }: { name: string }) {
-  const initial = name.trim().charAt(0).toUpperCase() || '?'
-
-  return (
-    <span className={adminTable.memberAvatar} aria-hidden>
-      {initial}
-    </span>
   )
 }
 
