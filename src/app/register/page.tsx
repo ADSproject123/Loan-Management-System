@@ -278,32 +278,23 @@ export default function RegisterPage() {
         <BrandPanel currentStep={step} />
 
         <main className="relative flex min-h-screen flex-col bg-background">
-          <header className="flex items-center justify-between border-b border-slate-200 bg-white/80 px-4 py-4 backdrop-blur-sm sm:px-8 lg:hidden">
-            <Link
-              href="/"
-              className="inline-flex items-center gap-2 text-lg font-bold text-brand-950"
-            >
-              <span className="grid h-9 w-9 place-items-center rounded-xl bg-brand-950 text-white">
-                <Building2 className="h-5 w-5" />
+          <div className="flex items-center justify-between border-b border-border px-6 py-4 sm:px-8">
+            <Link href="/" className="flex items-center gap-2 lg:hidden">
+              <span className="grid h-8 w-8 place-items-center rounded-lg bg-brand-950 text-white">
+                <Building2 className="h-4 w-4" />
               </span>
-              សន្សំ
+              <span className="text-sm font-bold text-brand-950">សមាគមន៏សន្សំ</span>
             </Link>
-            <Link
-              href="/login"
-              className="text-sm font-semibold text-brand-900 hover:text-brand-700"
-            >
-              ចូលគណនី
-            </Link>
-          </header>
-
-          <div className="hidden items-center justify-end border-b border-slate-200 bg-white/60 px-8 py-5 backdrop-blur-sm lg:flex">
-            <span className="mr-4 text-sm text-slate-500">ជាសមាជិករួចហើយ?</span>
-            <Link
-              href="/login"
-              className="inline-flex items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-brand-900 transition hover:border-brand-200 hover:text-brand-700"
-            >
-              ចូលគណនី
-            </Link>
+            <span className="hidden lg:block" />
+            <div className="flex items-center gap-3">
+              <span className="text-sm text-muted">ជាសមាជិករួចហើយ?</span>
+              <Link
+                href="/login"
+                className="rounded-lg border border-border bg-surface px-3.5 py-2 text-sm font-semibold text-foreground transition hover:border-brand-200 hover:text-brand-700"
+              >
+                ចូលគណនី
+              </Link>
+            </div>
           </div>
 
           <div className="flex flex-1 flex-col px-4 py-8 sm:px-8 lg:px-12 lg:py-12">
@@ -409,11 +400,11 @@ export default function RegisterPage() {
   )
 }
 
-function BrandPanel({ currentStep }: { currentStep: StepId }) {
+function BrandPanel({ currentStep: _ }: { currentStep: StepId }) {
   return (
     <aside className="app-brand-panel relative hidden overflow-hidden lg:flex lg:flex-col">
       <div className="relative flex h-full flex-col px-10 py-10">
-        <Link href="/" className="inline-flex w-fit items-center gap-2.5 group">
+        <Link href="/" className="group inline-flex w-fit items-center gap-2.5">
           <span className="grid h-10 w-10 place-items-center rounded-xl bg-white/10 ring-1 ring-white/15 transition group-hover:bg-white/15">
             <Building2 className="h-5 w-5 text-white" />
           </span>
@@ -421,7 +412,7 @@ function BrandPanel({ currentStep }: { currentStep: StepId }) {
         </Link>
 
         <div className="mt-14">
-          <h2 className="mt-5 text-[28px] font-bold leading-[1.2]">
+          <h2 className="text-[28px] font-bold leading-[1.2]">
             ចូលរួមសហគមន៍ដែលគ្រប់គ្រងដោយសមាជិកដែលអាចទុកចិត្តបាន។
           </h2>
           <p className="mt-3 text-[15px] leading-7 text-brand-100/85">
@@ -429,56 +420,30 @@ function BrandPanel({ currentStep }: { currentStep: StepId }) {
           </p>
         </div>
 
-        <ol className="mt-10 space-y-2.5">
-          {STEPS.slice(0, 4).map((step) => {
-            const isComplete = currentStep > step.id
-            const isCurrent = currentStep === step.id
-            return (
-              <li
-                key={step.id}
-                className={`flex items-start gap-4 rounded-2xl px-4 py-3 transition-colors ${
-                  isCurrent
-                    ? 'bg-white/10 ring-1 ring-white/20'
-                    : isComplete
-                    ? 'bg-white/4'
-                    : ''
-                }`}
-              >
-                <span
-                  className={`mt-0.5 grid h-8 w-8 shrink-0 place-items-center rounded-full text-sm font-semibold transition-all ${
-                    isComplete
-                      ? 'bg-emerald-400 text-emerald-950'
-                      : isCurrent
-                      ? 'bg-white text-brand-950 ring-4 ring-white/15'
-                      : 'bg-white/10 text-brand-100 ring-1 ring-white/15'
-                  }`}
-                >
-                  {isComplete ? <Check className="h-4 w-4" /> : step.id}
-                </span>
-                <div>
-                  <p
-                    className={`text-sm font-semibold ${
-                      isCurrent ? 'text-white' : 'text-brand-50'
-                    }`}
-                  >
-                    {step.label}
-                  </p>
-                  <p className="mt-0.5 text-xs leading-5 text-brand-200/80">{step.description}</p>
-                </div>
-              </li>
-            )
-          })}
-        </ol>
+        <ul className="mt-10 space-y-3">
+          {[
+            { title: 'សន្សំទទួលការប្រាក់ ៣%', description: 'ការប្រាក់ប្រចាំខែលើសមតុល្យសន្សំសរុបរបស់អ្នក។' },
+            { title: 'កម្ជីសមាជិកដោយយុត្តិធម៌', description: 'ដាក់ស្នើ តាមដាន និង សងកម្ជីតាមដំណើរការតម្លាភាព។' },
+            { title: 'ការជូនដំណឹងភ្លាមៗ', description: 'ទទួលការជូនដំណឹងសន្សំ និង កម្ជីតាមរយៈ Telegram។' },
+          ].map((b) => (
+            <li key={b.title} className="flex items-start gap-3 rounded-2xl bg-white/5 px-4 py-3 ring-1 ring-white/10">
+              <span className="mt-1 h-1.5 w-1.5 shrink-0 rounded-full bg-brand-300" />
+              <div>
+                <p className="text-sm font-semibold text-white">{b.title}</p>
+                <p className="mt-0.5 text-xs leading-5 text-brand-200/80">{b.description}</p>
+              </div>
+            </li>
+          ))}
+        </ul>
 
         <div className="mt-auto pt-10">
-          <div className="rounded-2xl border border-white/10 bg-white/5 p-5 backdrop-blur-sm">
+          <div className="rounded-2xl border border-white/10 bg-white/5 p-5">
             <div className="flex items-center gap-2 text-brand-100">
-              <ShieldCheck className="h-5 w-5" />
+              <ShieldCheck className="h-4 w-4" />
               <p className="text-sm font-semibold">ទិន្នន័យរបស់អ្នកត្រូវបានការពារ</p>
             </div>
-            <p className="mt-2 text-xs leading-5 text-brand-200/85">
-              ឯកសារត្រូវបានរក្សាទុកដោយឯកជន និង ត្រួតពិនិត្យតែដោយអ្នកគ្រប់គ្រងសន្សំដែលបានទទួល។
-              ការទទួលជាធម្មតាចំណាយពេល ១-៣ ថ្ងៃ។
+            <p className="mt-2 text-xs leading-5 text-brand-200/80">
+              ឯកសារត្រូវបានរក្សាទុកដោយឯកជន និង ត្រួតពិនិត្យតែដោយអ្នកគ្រប់គ្រងដែលបានទទួលការអនុញ្ញាត។
             </p>
           </div>
         </div>
