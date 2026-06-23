@@ -73,19 +73,6 @@ function safeRatePercent(ratePercent: number) {
   return Number.isFinite(ratePercent) ? Math.max(ratePercent, 0) : DEFAULT_LOAN_INTEREST_RATE
 }
 
-/** Equal monthly installment (interest on declining balance each month). */
-function amortizedMonthlyPayment(principal: number, termMonths: number, ratePercent: number) {
-  const amount = safePrincipal(principal)
-  const term = safeTermMonths(termMonths)
-  const monthlyRate = safeRatePercent(ratePercent) / 100
-
-  if (amount === 0) return 0
-  if (monthlyRate === 0) return amount / term
-
-  const growth = Math.pow(1 + monthlyRate, term)
-  return (amount * monthlyRate * growth) / (growth - 1)
-}
-
 export function loanRepaymentSummary(
   principal: number,
   termMonths: number,
@@ -94,7 +81,8 @@ export function loanRepaymentSummary(
   const schedule = buildLoanPaymentSchedule(principal, termMonths, ratePercent)
   const interest = schedule.reduce((sum, row) => sum + row.interestPortion, 0)
   const totalRepayment = schedule.reduce((sum, row) => sum + row.amount, 0)
-  const monthlyPayment = schedule[0]?.amount ?? amortizedMonthlyPayment(principal, termMonths, ratePercent)
+  // First month has the highest payment (most interest); use it as the reference.
+  const monthlyPayment = schedule[0]?.amount ?? 0
 
   return { interest, totalRepayment, monthlyPayment }
 }
@@ -105,6 +93,7 @@ export type LoanScheduleEntry = {
   principalPortion: number
   interestPortion: number
   amount: number
+  remainingBalance: number
 }
 
 export type LoanScheduleStatus = 'paid' | 'partial' | 'pending' | 'overdue'
@@ -130,16 +119,18 @@ export function buildLoanPaymentSchedule(
   const amount = safePrincipal(principal)
   const term = safeTermMonths(termMonths)
   const monthlyRate = safeRatePercent(ratePercent) / 100
-  const installment = amortizedMonthlyPayment(amount, term, ratePercent)
+  // Equal-principal method: same principal paid every month.
+  const principalPerMonth = amount / term
 
   let balance = amount
   const entries: LoanScheduleEntry[] = []
 
   for (let index = 0; index < term; index += 1) {
     const isLastMonth = index === term - 1
+    const principalPortion = isLastMonth ? balance : principalPerMonth
     const interestPortion = monthlyRate === 0 ? 0 : balance * monthlyRate
-    let principalPortion = isLastMonth ? balance : installment - interestPortion
-    principalPortion = Math.min(Math.max(principalPortion, 0), balance)
+
+    balance = Math.max(balance - principalPortion, 0)
 
     entries.push({
       month: index + 1,
@@ -147,9 +138,8 @@ export function buildLoanPaymentSchedule(
       principalPortion,
       interestPortion,
       amount: principalPortion + interestPortion,
+      remainingBalance: balance,
     })
-
-    balance = Math.max(balance - principalPortion, 0)
   }
 
   return entries

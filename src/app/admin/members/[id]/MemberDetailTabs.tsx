@@ -100,6 +100,7 @@ export type MemberDetailTabsProps = {
   loans: LoanRow[]
   savingsTotal: number
   loanTotal: number
+  loanRemainingBalance: number
   savingsCount: number
   loansCount: number
   idDocumentUrl: string | null
@@ -142,6 +143,7 @@ export function MemberDetailTabs({
   loans,
   savingsTotal,
   loanTotal,
+  loanRemainingBalance,
   savingsCount,
   loansCount,
   idDocumentUrl,
@@ -269,6 +271,43 @@ export function MemberDetailTabs({
                 )}
               </div>
             </div>
+
+            {/* ── ព័ត៌មានលម្អិត ── */}
+            <section className="overflow-hidden rounded-2xl border border-border bg-surface shadow-sm">
+              <div className="border-b border-border bg-surface-muted/50 px-5 py-4 md:px-6">
+                <h3 className="text-sm font-semibold text-foreground">ព័ត៌មានលម្អិត</h3>
+                <p className="mt-0.5 text-xs text-muted">ចំនួន និងអត្រាការប្រាក់ដែលពាក់ព័ន្ធ</p>
+              </div>
+              <dl className="divide-y divide-border">
+                <FinancialDetailRow
+                  icon={PiggyBank}
+                  label="ការសន្សំបានទទួល"
+                  value={`${savingsCount} ដង`}
+                  tone="emerald"
+                />
+                <FinancialDetailRow
+                  icon={CreditCard}
+                  label="កម្ជីកំពុងដំណើរការ"
+                  value={`${loansCount} កម្ជី`}
+                  tone="blue"
+                />
+                {savingInterest && (
+                  <FinancialDetailRow
+                    icon={Percent}
+                    label="អត្រាការប្រាក់សន្សំ"
+                    value={`${savingInterest.monthlyRate}% ប្រចាំខែ`}
+                    tone="amber"
+                  />
+                )}
+                <FinancialDetailRow
+                  icon={Scale}
+                  label="សមតុល្យសរុប"
+                  value={money(savingsTotal + (savingInterest?.accruedTotal ?? 0) - loanRemainingBalance)}
+                  tone="violet"
+                  highlight
+                />
+              </dl>
+            </section>
           </div>
         )}
 
@@ -276,6 +315,7 @@ export function MemberDetailTabs({
           <FinancialSummary
             savingsAmount={savingsTotal}
             loanAmount={loanTotal}
+            loanRemainingBalance={loanRemainingBalance}
             savingsCount={savingsCount}
             loansCount={loansCount}
             savingInterest={savingInterest}
@@ -559,7 +599,7 @@ export function MemberDetailTabs({
                         </td>
                         <td className="px-5 py-4 text-muted">{formatDate(loan.created_at)}</td>
                         <td className="px-5 py-4">
-                          <LoanStatusBadge status={loan.status as LoanStatus} />
+                          <LoanStatusBadge status={loan.status as LoanStatus} plain />
                         </td>
                         <td className="px-5 py-4 text-right md:px-6">
                           <Link
@@ -589,6 +629,7 @@ export function MemberDetailTabs({
 function FinancialSummary({
   savingsAmount,
   loanAmount,
+  loanRemainingBalance,
   savingsCount,
   loansCount,
   savingInterest,
@@ -597,6 +638,7 @@ function FinancialSummary({
 }: {
   savingsAmount: number
   loanAmount: number
+  loanRemainingBalance: number
   savingsCount: number
   loansCount: number
   savingInterest?: {
@@ -646,9 +688,9 @@ function FinancialSummary({
             />
           )}
           <FinancialStatCard
-            label="កម្ជីសកម្ម"
-            amount={loanAmount}
-            meta={`${loansCount} កម្ជីកំពុងដំណើរការ`}
+            label="កម្ជីសកម្ម (នៅសល់)"
+            amount={loanRemainingBalance}
+            meta={`${loansCount} កម្ជី · ដើម ${money(loanAmount)}`}
             icon={CreditCard}
             tone="blue"
             actionLabel="មើលបញ្ជីកម្ជី"
@@ -656,49 +698,14 @@ function FinancialSummary({
           />
           <FinancialStatCard
             label="សមតុល្យសរុប"
-            amount={savingsAmount + (savingInterest?.accruedTotal ?? 0) - loanAmount}
-            meta="សន្សំ + ការប្រាក់ − កម្ជីសកម្ម"
+            amount={savingsAmount + (savingInterest?.accruedTotal ?? 0) - loanRemainingBalance}
+            meta="សន្សំ + ការប្រាក់ − កម្ជីនៅសល់"
             icon={Scale}
             tone="violet"
           />
         </div>
       </section>
 
-      <section className="overflow-hidden rounded-2xl border border-border bg-surface shadow-sm">
-        <div className="border-b border-border bg-surface-muted/50 px-5 py-4 md:px-6">
-          <h3 className="text-sm font-semibold text-foreground">ព័ត៌មានលម្អិត</h3>
-          <p className="mt-0.5 text-xs text-muted">ចំនួន និងអត្រាការប្រាក់ដែលពាក់ព័ន្ធ</p>
-        </div>
-        <dl className="divide-y divide-border">
-          <FinancialDetailRow
-            icon={PiggyBank}
-            label="ការសន្សំបានទទួល"
-            value={`${savingsCount} ដង`}
-            tone="emerald"
-          />
-          <FinancialDetailRow
-            icon={CreditCard}
-            label="កម្ជីកំពុងដំណើរការ"
-            value={`${loansCount} កម្ជី`}
-            tone="blue"
-          />
-          {savingInterest && (
-            <FinancialDetailRow
-              icon={Percent}
-              label="អត្រាការប្រាក់សន្សំ"
-              value={`${savingInterest.monthlyRate}% ប្រចាំខែ`}
-              tone="amber"
-            />
-          )}
-          <FinancialDetailRow
-            icon={Scale}
-            label="សមតុល្យសរុប"
-            value={money(savingsAmount + (savingInterest?.accruedTotal ?? 0) - loanAmount)}
-            tone="violet"
-            highlight
-          />
-        </dl>
-      </section>
     </div>
   )
 }

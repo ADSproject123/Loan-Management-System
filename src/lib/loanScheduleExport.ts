@@ -17,8 +17,6 @@ const STATUS_COLORS: Record<LoanScheduleRow['status'], { bg: string; text: strin
   overdue: { bg: 'FFFEE2E2', text: 'FF991B1B' },
 }
 
-const KHMER_FONT = 'Noto Sans Khmer'
-const MONEY_FORMAT = '#,##0.00'
 const BRAND_BLUE = 'FF1E3A8A'
 const BORDER_COLOR = 'FFE5E7EB'
 
@@ -34,18 +32,20 @@ const HEADERS = [
   'ខែ',
   'កាលបរិច្ឆេទត្រូវបង់',
   'ប្រាក់ដើម',
+  'ប្រាក់ដើមនៅសល់',
   'ការប្រាក់',
   'ចំនួនត្រូវបង់',
   'បានបង់',
   'ស្ថានភាព',
 ] as const
 
-const COLUMN_WIDTHS = [8, 24, 14, 14, 16, 14, 18]
+const COLUMN_WIDTHS = [8, 24, 14, 14, 14, 16, 14, 18]
 
 type PdfMakeInstance = {
   vfs: Record<string, string>
   fonts: Record<string, { normal: string; bold: string }>
   createPdf: (doc: unknown) => { download: (name: string) => void }
+  addVirtualFileSystem: (vfs: Record<string, string>) => void
 }
 
 let pdfMakeReady: Promise<PdfMakeInstance> | null = null
@@ -90,15 +90,12 @@ function applyThinBorder(cell: ExcelJS.Cell) {
 
 function styleHeaderCell(cell: ExcelJS.Cell, value: string) {
   cell.value = value
-  cell.font = { name: KHMER_FONT, bold: true, size: 11, color: { argb: 'FFFFFFFF' } }
+  cell.font = { bold: true, size: 11, color: { argb: 'FFFFFFFF' } }
   cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: BRAND_BLUE } }
   cell.alignment = { vertical: 'middle', horizontal: 'center', wrapText: true }
   applyThinBorder(cell)
 }
 
-function roundMoney(value: number) {
-  return Math.round(value * 100) / 100
-}
 
 async function getPdfMake() {
   if (!pdfMakeReady) {
@@ -108,15 +105,33 @@ async function getPdfMake() {
       const pdfMake = pdfMakeModule.default as unknown as PdfMakeInstance
       const vfsFonts = pdfFontsModule.default as { pdfMake?: { vfs?: Record<string, string> } }
 
-      pdfMake.vfs = { ...(vfsFonts.pdfMake?.vfs ?? {}), ...pdfMake.vfs }
+      // Register bundled fonts (Roboto etc.) into the singleton VFS via the
+      // proper API. Setting pdfMake.vfs[key] directly is ignored — pdfmake
+      // reads from an internal singleton (VirtualFileSystem) that is only
+      // populated through addVirtualFileSystem → singleton.writeFileSync().
+      if (vfsFonts.pdfMake?.vfs) {
+        pdfMake.addVirtualFileSystem(vfsFonts.pdfMake.vfs)
+      }
 
-      const [regular, bold] = await Promise.all([
-        fetch('/fonts/NotoSansKhmer-Regular.ttf').then((response) => response.arrayBuffer()),
-        fetch('/fonts/NotoSansKhmer-Bold.ttf').then((response) => response.arrayBuffer()),
+      const [regularRes, boldRes] = await Promise.all([
+        fetch('/fonts/NotoSansKhmer-Regular.ttf'),
+        fetch('/fonts/NotoSansKhmer-Bold.ttf'),
       ])
 
-      pdfMake.vfs['NotoSansKhmer-Regular.ttf'] = arrayBufferToBase64(regular)
-      pdfMake.vfs['NotoSansKhmer-Bold.ttf'] = arrayBufferToBase64(bold)
+      if (!regularRes.ok || !boldRes.ok) {
+        throw new Error(`Failed to load Khmer fonts (${regularRes.status} / ${boldRes.status})`)
+      }
+
+      const [regular, bold] = await Promise.all([
+        regularRes.arrayBuffer(),
+        boldRes.arrayBuffer(),
+      ])
+
+      pdfMake.addVirtualFileSystem({
+        'NotoSansKhmer-Regular.ttf': arrayBufferToBase64(regular),
+        'NotoSansKhmer-Bold.ttf': arrayBufferToBase64(bold),
+      })
+
       pdfMake.fonts = {
         ...pdfMake.fonts,
         NotoSansKhmer: {
@@ -154,7 +169,7 @@ export async function downloadLoanScheduleExcel(options: LoanScheduleExportOptio
   sheet.mergeCells('A1:G1')
   const titleCell = sheet.getCell('A1')
   titleCell.value = 'តារាបង់ប្រចាំខែ'
-  titleCell.font = { name: KHMER_FONT, bold: true, size: 16, color: { argb: BRAND_BLUE } }
+  titleCell.font = { bold: true, size: 16, color: { argb: BRAND_BLUE } }
   titleCell.alignment = { vertical: 'middle', horizontal: 'center' }
   sheet.getRow(1).height = 30
 
@@ -162,7 +177,7 @@ export async function downloadLoanScheduleExcel(options: LoanScheduleExportOptio
     sheet.mergeCells('A2:G2')
     const memberCell = sheet.getCell('A2')
     memberCell.value = `សមាជិក: ${options.memberName}`
-    memberCell.font = { name: KHMER_FONT, size: 11, color: { argb: 'FF4B5563' } }
+    memberCell.font = { size: 11, color: { argb: 'FF4B5563' } }
     memberCell.alignment = { vertical: 'middle', horizontal: 'center' }
     sheet.getRow(2).height = 22
   }
@@ -170,8 +185,8 @@ export async function downloadLoanScheduleExcel(options: LoanScheduleExportOptio
   const summaryRow = options.memberName ? 3 : 2
   sheet.mergeCells(`A${summaryRow}:G${summaryRow}`)
   const summaryCell = sheet.getCell(`A${summaryRow}`)
-  summaryCell.value = `ការបង់ ${options.schedule.length} ដង · សរុប ${formatMoney(totalDue, currency)} · បានបង់ ${formatMoney(totalPaid, currency)}`
-  summaryCell.font = { name: KHMER_FONT, size: 10, color: { argb: 'FF6B7280' } }
+  summaryCell.value = `ការបង់ ${options.schedule.length} ដង | សរុប ${formatMoney(totalDue, currency)} | បានបង់ ${formatMoney(totalPaid, currency)}`
+  summaryCell.font = { size: 10, color: { argb: 'FF6B7280' } }
   summaryCell.alignment = { vertical: 'middle', horizontal: 'center' }
   sheet.getRow(summaryRow).height = 20
 
@@ -186,13 +201,14 @@ export async function downloadLoanScheduleExcel(options: LoanScheduleExportOptio
     const excelRow = sheet.getRow(headerRowIndex + 1 + rowIndex)
     excelRow.height = 24
 
-    const values: (string | number)[] = [
-      row.month,
-      formatKhmerDate(row.dueDate, '—'),
-      roundMoney(row.principalPortion),
-      roundMoney(row.interestPortion),
-      roundMoney(row.amount),
-      roundMoney(row.paidAmount),
+    const values: string[] = [
+      String(row.month),
+      formatKhmerDate(row.dueDate, '-'),
+      formatMoney(row.principalPortion, currency),
+      formatMoney(row.remainingBalance, currency),
+      formatMoney(row.interestPortion, currency),
+      formatMoney(row.amount, currency),
+      formatMoney(row.paidAmount, currency),
       STATUS_LABELS[row.status],
     ]
 
@@ -200,9 +216,8 @@ export async function downloadLoanScheduleExcel(options: LoanScheduleExportOptio
       const cell = excelRow.getCell(colIndex + 1)
       cell.value = value
       cell.font = {
-        name: KHMER_FONT,
         size: 10,
-        bold: colIndex === 4,
+        bold: colIndex === 4 || colIndex === 6,
         color: { argb: colIndex >= 2 && colIndex <= 5 ? 'FF111827' : 'FF374151' },
       }
       cell.alignment = {
@@ -211,14 +226,10 @@ export async function downloadLoanScheduleExcel(options: LoanScheduleExportOptio
         wrapText: colIndex === 1 || colIndex === 6,
       }
 
-      if (colIndex >= 2 && colIndex <= 5) {
-        cell.numFmt = MONEY_FORMAT
-      }
-
       if (colIndex === 6) {
         const colors = STATUS_COLORS[row.status]
         cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: colors.bg } }
-        cell.font = { name: KHMER_FONT, size: 10, bold: true, color: { argb: colors.text } }
+        cell.font = { size: 10, bold: true, color: { argb: colors.text } }
       } else if (rowIndex % 2 === 1) {
         cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFF9FAFB' } }
       }
@@ -257,8 +268,9 @@ export async function downloadLoanSchedulePdf(options: LoanScheduleExportOptions
 
     return [
       { text: String(row.month), alignment: 'center' as const, fillColor: rowFill, margin: [0, 5, 0, 5] as [number, number, number, number] },
-      { text: formatKhmerDate(row.dueDate, '—'), fillColor: rowFill, margin: [0, 5, 0, 5] as [number, number, number, number] },
+      { text: formatKhmerDate(row.dueDate, '-'), fillColor: rowFill, margin: [0, 5, 0, 5] as [number, number, number, number] },
       { text: formatMoney(row.principalPortion, currency), alignment: 'right' as const, fillColor: rowFill, margin: [0, 5, 0, 5] as [number, number, number, number] },
+      { text: formatMoney(row.remainingBalance, currency), alignment: 'right' as const, fillColor: rowFill, margin: [0, 5, 0, 5] as [number, number, number, number] },
       { text: formatMoney(row.interestPortion, currency), alignment: 'right' as const, fillColor: rowFill, margin: [0, 5, 0, 5] as [number, number, number, number] },
       { text: formatMoney(row.amount, currency), alignment: 'right' as const, bold: true, fillColor: rowFill, margin: [0, 5, 0, 5] as [number, number, number, number] },
       { text: formatMoney(row.paidAmount, currency), alignment: 'right' as const, fillColor: rowFill, margin: [0, 5, 0, 5] as [number, number, number, number] },
@@ -296,7 +308,7 @@ export async function downloadLoanSchedulePdf(options: LoanScheduleExportOptions
   }
 
   content.push({
-    text: `ការបង់ ${options.schedule.length} ដង · សរុប ${formatMoney(totalDue, currency)} · បានបង់ ${formatMoney(totalPaid, currency)}`,
+    text: `ការបង់ ${options.schedule.length} ដង | សរុប ${formatMoney(totalDue, currency)} | បានបង់ ${formatMoney(totalPaid, currency)}`,
     fontSize: 10,
     color: '#6b7280',
     alignment: 'center',
@@ -306,7 +318,7 @@ export async function downloadLoanSchedulePdf(options: LoanScheduleExportOptions
   content.push({
     table: {
       headerRows: 1,
-      widths: [24, 78, 58, 58, 64, 58, 62],
+      widths: [20, 66, 50, 50, 50, 56, 50, 54],
       body: [headerRow, ...dataRows],
     },
     layout: {
