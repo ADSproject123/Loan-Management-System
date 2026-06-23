@@ -35,7 +35,7 @@ export function LoanPaymentSchedule({
   schedule,
   currency = 'USD',
   className = '',
-  compact = false,
+
   repayHref,
   showRowPayButton = false,
   fileBaseName,
@@ -65,7 +65,7 @@ export function LoanPaymentSchedule({
             <LoanPaymentScheduleDownloads
               schedule={schedule}
               currency={currency}
-              compact={compact}
+
               fileBaseName={fileBaseName}
               memberName={memberName}
             />
@@ -88,8 +88,9 @@ export function LoanPaymentSchedule({
             <tr className="text-xs font-semibold uppercase tracking-wide text-gray-500">
               <th className="px-4 py-3 md:px-5">ខែ</th>
               <th className="px-4 py-3">កាលបរិច្ឆេទត្រូវបង់</th>
-              {!compact ? <th className="px-4 py-3">ប្រាក់ដើម</th> : null}
-              {!compact ? <th className="px-4 py-3">ការប្រាក់</th> : null}
+              <th className="px-4 py-3">ប្រាក់ដើម</th>
+              <th className="px-4 py-3">ប្រាក់ដើមនៅសល់</th>
+              <th className="px-4 py-3">ការប្រាក់</th>
               <th className="px-4 py-3">ចំនួនត្រូវបង់</th>
               <th className="px-4 py-3 md:px-5">ស្ថានភាព</th>
               {showRowPayButton ? <th className="px-4 py-3 md:px-5">សកម្មភាព</th> : null}
@@ -100,16 +101,15 @@ export function LoanPaymentSchedule({
               <tr key={row.month} className="bg-white">
                 <td className="px-4 py-3 font-medium text-gray-900 md:px-5">ខែ {row.month}</td>
                 <td className="px-4 py-3 text-gray-600">{formatKhmerDate(row.dueDate, '—')}</td>
-                {!compact ? (
-                  <td className="px-4 py-3 tabular-nums text-gray-700">
-                    {formatMoney(row.principalPortion, currency)}
-                  </td>
-                ) : null}
-                {!compact ? (
-                  <td className="px-4 py-3 tabular-nums text-gray-700">
-                    {formatMoney(row.interestPortion, currency)}
-                  </td>
-                ) : null}
+                <td className="px-4 py-3 tabular-nums text-gray-700">
+                  {formatMoney(row.principalPortion, currency)}
+                </td>
+                <td className="px-4 py-3 tabular-nums text-gray-700">
+                  {formatMoney(row.remainingBalance, currency)}
+                </td>
+                <td className="px-4 py-3 tabular-nums text-gray-700">
+                  {formatMoney(row.interestPortion, currency)}
+                </td>
                 <td className="px-4 py-3 font-semibold tabular-nums text-gray-900">
                   {formatMoney(row.amount, currency)}
                 </td>

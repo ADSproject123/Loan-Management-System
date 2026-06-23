@@ -1,15 +1,16 @@
+'use client'
+
+import { useState } from 'react'
 import Link from 'next/link'
 import {
-  Calendar,
   CheckCircle2,
   CircleDollarSign,
   Clock,
   FileCheck2,
+  FileText,
+  History,
+  Info,
   Landmark,
-  Mail,
-  Percent,
-  Phone,
-  User,
   XCircle,
 } from 'lucide-react'
 import { LoanStatusBadge, SavingStatusBadge } from '@/components/ui/Badge'
@@ -22,7 +23,6 @@ import type { LoanStatus, SavingStatus } from '@/types/database'
 import type { AdminLoanDetailRecord } from '@/lib/admin/loanDetail'
 import {
   AdminBackLink,
-  AdminExternalLink,
   AdminPanel,
   adminTable,
 } from '@/components/admin'
@@ -85,12 +85,21 @@ type LoanDetailViewProps = {
   repayments: RepaymentRow[]
 }
 
+type TabId = 'info' | 'schedule' | 'history' | 'documents'
+
+const TABS: { id: TabId; label: string; icon: React.ReactNode }[] = [
+  { id: 'info',      label: 'ព័ត៌មាន',    icon: <Info className="h-4 w-4" /> },
+  { id: 'schedule',  label: 'តារាបង់',    icon: <FileText className="h-4 w-4" /> },
+  { id: 'history',   label: 'ប្រវត្តិ',   icon: <History className="h-4 w-4" /> },
+  { id: 'documents', label: 'ឯកសារ',     icon: <FileCheck2 className="h-4 w-4" /> },
+]
+
 const ACTIONABLE_STATUSES: LoanStatus[] = ['pending', 'under_review', 'approved']
 
 const ACTION_HINT: Partial<Record<LoanStatus, string>> = {
-  pending: 'ពិនិត្យពាក្យសុំ រួច ទទួលយក ឬ បដិសេធ។',
+  pending:      'ពិនិត្យពាក្យសុំ រួច ទទួលយក ឬ បដិសេធ។',
   under_review: 'ពិនិត្យពាក្យសុំ រួច ទទួលយក ឬ បដិសេធ។',
-  approved: 'ទទួលយករួចហើយ — ចុចដំណើរការដើម្បីបើកកម្ជីជាសកម្ម។',
+  approved:     'ទទួលយករួចហើយ — ចុចដំណើរការដើម្បីបើកកម្ជីជាសកម្ម។',
 }
 
 export function LoanDetailView({
@@ -112,44 +121,41 @@ export function LoanDetailView({
   paymentSchedule,
   repayments,
 }: LoanDetailViewProps) {
+  const [activeTab, setActiveTab] = useState<TabId>('info')
+
   const status = loan.status as LoanStatus
   const memberName =
     member?.full_name_kh ?? member?.full_name ?? relatedMemberName({ members: member })
   const docsDoneCount = docChecklist.filter((item) => item.done).length
-  const docsPercent = docChecklist.length
-    ? Math.round((docsDoneCount / docChecklist.length) * 100)
-    : 0
   const remaining = Math.max(scheduleTotalDue - totalPaid, 0)
   const needsAction = ACTIONABLE_STATUSES.includes(status)
-  const timeline = buildTimeline(loan)
 
   return (
     <main>
       <AdminPanel title={memberName}>
+
+        {/* ── Header ── */}
         <header className="flex flex-col gap-4 border-b border-border px-6 py-4 md:flex-row md:items-center md:justify-between md:px-8">
           <div className="flex min-w-0 flex-col gap-3 sm:flex-row sm:items-center sm:gap-4">
-            <AdminBackLink href="/admin/loans">ត្រឡប់ទៅបញ្ជីកម្ជី</AdminBackLink>
+            <AdminBackLink href="/admin/loans">ត្រឡប់</AdminBackLink>
             <div className="hidden h-6 w-px bg-border sm:block" aria-hidden />
             <div className="min-w-0">
-              <p className="truncate text-sm font-medium text-foreground">{memberName}</p>
-              <p className="text-xs text-muted">
-                ដាក់ស្នើ {formatDate(loan.created_at)} · {money(loan.amount, currency)}
-              </p>
+              <p className="truncate text-sm font-semibold text-foreground">{memberName}</p>
+              <p className="text-xs text-muted">ដាក់ស្នើ {formatDate(loan.created_at)}</p>
             </div>
           </div>
-
           <div className="flex flex-wrap items-center gap-3">
             <LoanStatusBadge status={status} plain />
             <LoanActions loanId={loan.id} status={status} />
           </div>
         </header>
 
+        {/* ── Alerts ── */}
         {needsAction && (
           <div className="mx-6 mt-4 rounded-xl border border-brand-200 bg-brand-50/70 px-4 py-3 md:mx-8">
             <p className="text-sm text-brand-900">{ACTION_HINT[status]}</p>
           </div>
         )}
-
         {status === 'rejected' && loan.rejection_reason && (
           <div className="mx-6 mt-4 rounded-xl border border-red-200 bg-red-50 px-4 py-4 md:mx-8">
             <p className="text-sm font-semibold text-red-950">មូលហេតុបដិសេធ</p>
@@ -163,6 +169,8 @@ export function LoanDetailView({
         )}
 
         <div className="space-y-6 px-6 py-6 md:px-8">
+
+          {/* ── Key metrics ── */}
           <section className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
             <MetricCard
               icon={CircleDollarSign}
@@ -174,17 +182,14 @@ export function LoanDetailView({
               icon={Clock}
               label="រយៈពេល"
               value={`${loan.term_months ?? 0} ខែ`}
-              hint={`អត្រា ${loanRate}% / ខែ`}
+              hint={`${loanRate}% / ខែ`}
             />
             <MetricCard
               icon={Landmark}
               label="បានសង"
               value={money(totalPaid, currency)}
-              hint={
-                scheduleTotalDue > 0
-                  ? `នៅសល់ ${money(remaining, currency)}`
-                  : 'មិនទាន់មានតារាបង់'
-              }
+              hint={scheduleTotalDue > 0 ? `នៅសល់ ${money(remaining, currency)}` : 'មិនទាន់មានតារាបង់'}
+              accent={remaining === 0 && scheduleTotalDue > 0 ? 'success' : 'default'}
             />
             <MetricCard
               icon={FileCheck2}
@@ -195,181 +200,209 @@ export function LoanDetailView({
             />
           </section>
 
-          <div className="grid gap-6 lg:grid-cols-3">
-            <div className="space-y-6 lg:col-span-2">
-              {loan.purpose && (
-                <DetailSection title="គោលបំណង">
-                  <p className="text-sm leading-relaxed text-foreground">{loan.purpose}</p>
-                </DetailSection>
-              )}
+          {/* ── Tabs ── */}
+          <div className="flex min-h-0 flex-1 flex-col">
+            <nav
+              className="w-full overflow-x-auto rounded-t-2xl border border-b-0 border-border bg-surface shadow-sm"
+              aria-label="ផ្ទាំងព័ត៌មានកម្ជី"
+            >
+              <div className="flex w-full min-w-max sm:min-w-0">
+                {TABS.map((tab) => {
+                  const isActive = activeTab === tab.id
+                  return (
+                    <button
+                      key={tab.id}
+                      type="button"
+                      onClick={() => setActiveTab(tab.id)}
+                      className={`flex flex-1 items-center justify-center gap-2 border-b-2 px-4 py-4 text-sm font-semibold transition sm:px-6 ${
+                        isActive
+                          ? 'border-brand-900 text-brand-900'
+                          : 'border-transparent text-muted hover:border-border hover:bg-surface-muted hover:text-foreground'
+                      }`}
+                    >
+                      <span className={isActive ? 'text-brand-900' : 'text-muted'}>{tab.icon}</span>
+                      {tab.label}
+                    </button>
+                  )
+                })}
+              </div>
+            </nav>
 
-              {paymentSchedule.length > 0 && (
-                  <div className="px-5 pb-5 md:px-6 md:pb-6">
+            <div className="rounded-b-2xl border border-border bg-surface shadow-sm">
+              <div className="p-6 md:p-8">
+
+                {/* ── Tab: ព័ត៌មាន ── */}
+                {activeTab === 'info' && (
+                  <dl className="divide-y divide-border">
+                    {/* Member */}
+                    <InfoRow label="ឈ្មោះ">
+                      <Link
+                        href={`/admin/members/${loan.member_id}`}
+                        className="font-medium text-brand-700 hover:underline"
+                      >
+                        {memberName}
+                      </Link>
+                    </InfoRow>
+                    {member?.phone && (
+                      <InfoRow label="លេខទូរស័ព្ទ"><span>{member.phone}</span></InfoRow>
+                    )}
+                    {member?.email && (
+                      <InfoRow label="អ៊ីមែល"><span>{member.email}</span></InfoRow>
+                    )}
+
+                    <InfoRow label="រូបិយប័ណ្ណ"><span>{currency}</span></InfoRow>
+                    <InfoRow label="ចំនួនកម្ជី"><span className="font-semibold">{money(loan.amount, currency)}</span></InfoRow>
+                    <InfoRow label="រយៈពេល"><span>{loan.term_months ?? 0} ខែ</span></InfoRow>
+                    <InfoRow label="អត្រាការប្រាក់"><span>{loanRate}% / ខែ</span></InfoRow>
+                    {loan.start_date && (
+                      <InfoRow label="ថ្ងៃចាប់ផ្តើម"><span>{formatDate(loan.start_date)}</span></InfoRow>
+                    )}
+                    {loan.due_date && (
+                      <InfoRow label="ថ្ងៃកំណត់"><span>{formatDate(loan.due_date)}</span></InfoRow>
+                    )}
+                    {approver?.full_name && (
+                      <InfoRow label="ទទួលដោយ"><span>{approver.full_name}</span></InfoRow>
+                    )}
+                    {loan.purpose && (
+                      <InfoRow label="គោលបំណង"><span className="leading-relaxed">{loan.purpose}</span></InfoRow>
+                    )}
+
+                    {/* Referee */}
+                    {hasRefereeInfo && (
+                      <InfoRow label="អ្នកធានា">
+                        <div className="space-y-0.5">
+                          {(referee?.full_name_kh || refereeNameKh) && (
+                            <p className="font-medium text-foreground">
+                              {referee?.full_name_kh ?? refereeNameKh}
+                            </p>
+                          )}
+                          {(referee?.full_name_en || refereeNameEn) && (
+                            <p className="text-sm text-muted">{referee?.full_name_en ?? refereeNameEn}</p>
+                          )}
+                          {(referee?.phone || refereePhone) && (
+                            <p className="text-sm text-muted">{referee?.phone ?? refereePhone}</p>
+                          )}
+                          {(referee?.email || refereeEmail) && (
+                            <p className="text-sm text-muted">{referee?.email ?? refereeEmail}</p>
+                          )}
+                          <div className="flex items-center gap-3 pt-1">
+                            <span className={`rounded-full px-2 py-0.5 text-xs font-semibold ${
+                              loan.referee_verified ? 'bg-emerald-100 text-emerald-700' : 'bg-amber-100 text-amber-700'
+                            }`}>
+                              {loan.referee_verified ? 'បានបញ្ជាក់' : 'រង់ចាំ'}
+                            </span>
+                            {referee && (
+                              <Link
+                                href={`/admin/members/${referee.id}`}
+                                className="text-xs font-medium text-brand-700 hover:underline"
+                              >
+                                មើលប្រវត្តិ →
+                              </Link>
+                            )}
+                          </div>
+                        </div>
+                      </InfoRow>
+                    )}
+                  </dl>
+                )}
+
+                {/* ── Tab: តារាបង់ ── */}
+                {activeTab === 'schedule' && (
+                  paymentSchedule.length > 0 ? (
                     <LoanPaymentSchedule
                       schedule={paymentSchedule}
                       currency={currency}
-                      compact
                       fileBaseName={`loan-${loan.id}-schedule`}
                       memberName={member?.full_name_kh ?? member?.full_name ?? undefined}
+                      showDownload
                     />
-                  </div>
-              )}
-
-              <DetailSection title="ប្រវត្តិសងកម្ជី" noPadding>
-                {(repayments ?? []).length === 0 ? (
-                  <p className="px-5 pb-5 text-sm text-muted md:px-6 md:pb-6">
-                    មិនទាន់មានការសងកម្ជីទេ។
-                  </p>
-                ) : (
-                  <div className={adminTable.wrap}>
-                    <table className={adminTable.table}>
-                      <thead className={adminTable.thead}>
-                        <tr className={adminTable.thRow}>
-                          <th className={adminTable.thFirst}>ចំនួន</th>
-                          <th className={adminTable.th}>ថ្ងៃបង់</th>
-                          <th className={adminTable.th}>ស្ថានភាព</th>
-                          <th className={adminTable.thLast}>ដាក់ស្នើ</th>
-                        </tr>
-                      </thead>
-                      <tbody className={adminTable.tbody}>
-                        {repayments.map((repayment) => (
-                          <tr key={repayment.id} className={adminTable.tr}>
-                            <td className={`${adminTable.tdFirst} ${adminTable.amountPrimary}`}>
-                              {money(repayment.amount, currency)}
-                            </td>
-                            <td className={adminTable.tdMuted}>
-                              {formatDate(repayment.payment_date)}
-                            </td>
-                            <td className={adminTable.td}>
-                              <SavingStatusBadge
-                                status={repayment.status as SavingStatus}
-                                plain
-                              />
-                            </td>
-                            <td className={adminTable.tdLast}>
-                              {formatDate(repayment.created_at)}
-                            </td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                  </div>
+                  ) : (
+                    <p className="text-sm text-muted">មិនទាន់មានតារាបង់ទេ។</p>
+                  )
                 )}
-              </DetailSection>
-            </div>
 
-            <aside className="space-y-6">
-              <DetailSection title="សមាជិក">
-                <Link
-                  href={`/admin/members/${loan.member_id}`}
-                  className="group flex items-start gap-3 rounded-xl border border-border bg-surface-muted/40 p-4 transition hover:border-brand-200 hover:bg-brand-50/40"
-                >
-                  <span className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-brand-100 text-brand-700">
-                    <User className="h-5 w-5" />
-                  </span>
-                  <div className="min-w-0">
-                    <p className="font-medium text-foreground transition group-hover:text-brand-700">
-                      {memberName}
-                    </p>
-                    {member?.email && (
-                      <p className="mt-1 flex items-center gap-1.5 truncate text-xs text-muted">
-                        <Mail className="h-3.5 w-3.5 shrink-0" />
-                        {member.email}
-                      </p>
-                    )}
-                    {member?.phone && (
-                      <p className="mt-1 flex items-center gap-1.5 text-xs text-muted">
-                        <Phone className="h-3.5 w-3.5 shrink-0" />
-                        {member.phone}
-                      </p>
-                    )}
-                  </div>
-                </Link>
-              </DetailSection>
-
-              <DetailSection title="លក្ខខណ្ឌ">
-                <dl className="space-y-3">
-                  <InfoRow icon={Calendar} label="រូបិយប័ណ្ណ" value={currency} />
-                  <InfoRow icon={Percent} label="អត្រាការប្រាក់" value={`${loanRate}% / ខែ`} />
-                  <InfoRow
-                    icon={Calendar}
-                    label="កាលបរិច្ឆេទបង់"
-                    value={formatDate(loan.due_date)}
-                  />
-                  {approver?.full_name && (
-                    <InfoRow icon={User} label="ទទួលដោយ" value={approver.full_name} />
-                  )}
-                </dl>
-              </DetailSection>
-
-
-              {hasRefereeInfo && (
-                <DetailSection title="អ្នកធានា">
-                  <div className="rounded-xl border border-border bg-surface-muted/30 p-4">
-                    <div className="flex items-start justify-between gap-3">
-                      <div className="min-w-0 space-y-1">
-                        {(referee?.full_name_kh || refereeNameKh) && (
-                          <p className="font-medium text-foreground">
-                            {referee?.full_name_kh ?? refereeNameKh}
-                          </p>
-                        )}
-                        {(referee?.full_name_en || referee?.full_name || refereeNameEn) && (
-                          <p className="text-sm text-muted">
-                            {referee?.full_name_en ?? referee?.full_name ?? refereeNameEn}
-                          </p>
-                        )}
-                        <p className="text-xs text-muted">
-                          {referee?.phone ?? refereePhone ?? 'គ្មានទូរស័ព្ទ'}
-                        </p>
-                        {(referee?.email || refereeEmail) && (
-                          <p className="text-xs text-muted">
-                            {referee?.email ?? refereeEmail}
-                          </p>
-                        )}
-                      </div>
-                      <span
-                        className={`shrink-0 text-xs font-semibold ${
-                          loan.referee_verified ? 'text-emerald-600' : 'text-amber-600'
-                        }`}
-                      >
-                        {loan.referee_verified ? 'បានបញ្ជាក់' : 'រង់ចាំ'}
-                      </span>
+                {/* ── Tab: ប្រវត្តិ ── */}
+                {activeTab === 'history' && (
+                  repayments.length === 0 ? (
+                    <p className="text-sm text-muted">មិនទាន់មានការសងកម្ជីទេ។</p>
+                  ) : (
+                    <div className={adminTable.wrap}>
+                      <table className={adminTable.table}>
+                        <thead className={adminTable.thead}>
+                          <tr className={adminTable.thRow}>
+                            <th className={adminTable.thFirst}>ចំនួន</th>
+                            <th className={adminTable.th}>ថ្ងៃបង់</th>
+                            <th className={adminTable.th}>ស្ថានភាព</th>
+                            <th className={adminTable.thLast}>ដាក់ស្នើ</th>
+                          </tr>
+                        </thead>
+                        <tbody className={adminTable.tbody}>
+                          {repayments.map((r) => (
+                            <tr key={r.id} className={adminTable.tr}>
+                              <td className={`${adminTable.tdFirst} ${adminTable.amountPrimary}`}>
+                                {money(r.amount, currency)}
+                              </td>
+                              <td className={adminTable.tdMuted}>{formatDate(r.payment_date)}</td>
+                              <td className={adminTable.td}>
+                                <SavingStatusBadge status={r.status as SavingStatus} plain />
+                              </td>
+                              <td className={adminTable.tdLast}>{formatDate(r.created_at)}</td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
                     </div>
-                    {referee && (
-                      <Link
-                        href={`/admin/members/${referee.id}`}
-                        className="mt-3 inline-block text-xs font-medium text-brand-700 hover:text-brand-900"
-                      >
-                        មើលប្រវត្តិសមាជិក
-                      </Link>
-                    )}
-                  </div>
-                </DetailSection>
-              )}
-            </aside>
+                  )
+                )}
+
+                {/* ── Tab: ឯកសារ ── */}
+                {activeTab === 'documents' && (
+                  <ul className="space-y-3">
+                    {docChecklist.map((item) => (
+                      <li key={item.label} className="flex items-start gap-3 rounded-xl border border-border bg-surface-muted/30 p-4">
+                        {item.done ? (
+                          <CheckCircle2 className="mt-0.5 h-5 w-5 shrink-0 text-emerald-600" />
+                        ) : (
+                          <XCircle className="mt-0.5 h-5 w-5 shrink-0 text-slate-300" />
+                        )}
+                        <div className="min-w-0">
+                          <p className={`text-sm font-medium ${item.done ? 'text-foreground' : 'text-muted'}`}>
+                            {item.label}
+                          </p>
+                          {item.href ? (
+                            <a
+                              href={item.href}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="mt-0.5 inline-block text-xs text-brand-700 hover:underline"
+                            >
+                              {item.detail}
+                            </a>
+                          ) : (
+                            <p className="mt-0.5 text-xs text-muted">{item.detail}</p>
+                          )}
+                        </div>
+                      </li>
+                    ))}
+                  </ul>
+                )}
+
+              </div>
+            </div>
           </div>
+
         </div>
       </AdminPanel>
     </main>
   )
 }
 
-function DetailSection({
-  title,
-  children,
-  noPadding = false,
-}: {
-  title: string
-  children: React.ReactNode
-  noPadding?: boolean
-}) {
+function InfoRow({ label, children }: { label: string; children: React.ReactNode }) {
   return (
-    <section className="overflow-hidden rounded-2xl border border-border bg-surface ring-1 ring-foreground/5">
-      <div className="border-b border-border px-5 py-4 md:px-6">
-        <h2 className="text-sm font-semibold text-foreground">{title}</h2>
-      </div>
-      {noPadding ? children : <div className="px-5 py-4 md:px-6 md:py-5">{children}</div>}
-    </section>
+    <div className="flex items-start gap-6 py-3 first:pt-0 last:pb-0">
+      <dt className="w-36 shrink-0 text-sm text-muted">{label}</dt>
+      <dd className="min-w-0 flex-1 text-sm text-foreground">{children}</dd>
+    </div>
   )
 }
 
@@ -394,14 +427,14 @@ function MetricCard({
         : 'text-foreground'
 
   return (
-    <div className="rounded-xl border border-border bg-surface-muted/40 p-4 ring-1 ring-foreground/5">
+    <div className="rounded-2xl border border-border bg-surface p-5">
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0">
           <p className="text-xs font-semibold uppercase tracking-wide text-muted">{label}</p>
-          <p className={`mt-1.5 truncate text-xl font-bold tabular-nums ${accentClass}`}>{value}</p>
+          <p className={`mt-2 truncate text-2xl font-bold tabular-nums ${accentClass}`}>{value}</p>
           <p className="mt-1 line-clamp-2 text-xs text-muted">{hint}</p>
         </div>
-        <span className="grid h-9 w-9 shrink-0 place-items-center rounded-lg bg-brand-50 text-brand-700">
+        <span className="grid h-9 w-9 shrink-0 place-items-center rounded-xl bg-brand-50 text-brand-700 ring-1 ring-brand-100">
           <Icon className="h-4 w-4" />
         </span>
       </div>
@@ -409,64 +442,3 @@ function MetricCard({
   )
 }
 
-function InfoRow({
-  icon: Icon,
-  label,
-  value,
-}: {
-  icon: React.ComponentType<{ className?: string }>
-  label: string
-  value: string
-}) {
-  return (
-    <div className="flex items-center justify-between gap-3 rounded-lg bg-surface-muted/40 px-3 py-2.5">
-      <dt className="flex items-center gap-2 text-xs text-muted">
-        <Icon className="h-3.5 w-3.5 shrink-0" />
-        {label}
-      </dt>
-      <dd className="text-sm font-medium text-foreground">{value}</dd>
-    </div>
-  )
-}
-
-function buildTimeline(loan: AdminLoanDetailRecord) {
-  const status = loan.status as LoanStatus
-  const steps = [
-    {
-      label: 'ដាក់ស្នើ',
-      date: loan.created_at,
-      placeholder: '—',
-      done: Boolean(loan.created_at),
-      current: status === 'pending' || status === 'under_review',
-    },
-    {
-      label: 'ទទួលយក',
-      date: loan.approved_at,
-      placeholder: 'រង់ចាំ',
-      done: Boolean(loan.approved_at),
-      current: status === 'approved',
-    },
-    {
-      label: 'ដំណើរការ',
-      date: loan.disbursed_at,
-      placeholder: 'រង់ចាំ',
-      done: Boolean(loan.disbursed_at),
-      current: status === 'active',
-    },
-    {
-      label: 'កំណត់បង់',
-      date: loan.due_date,
-      placeholder: '—',
-      done: status === 'completed',
-      current: status === 'active' && Boolean(loan.disbursed_at),
-    },
-  ]
-
-  if (status === 'rejected') {
-    return steps.map((step, index) =>
-      index === 0 ? step : { ...step, done: false, current: false, placeholder: '—' }
-    )
-  }
-
-  return steps
-}

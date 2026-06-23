@@ -231,7 +231,7 @@ export function SavingsList({
               <th className={adminTable.th}>ថ្ងៃសន្សំ</th>
               {mode === 'requests' && <th className={adminTable.th}>ភស្តុតាង</th>}
               <th className={adminTable.th}>ស្ថានភាព</th>
-              <th className={adminTable.thLast}>សកម្មភាព</th>
+              {mode === 'requests' && <th className={adminTable.thLast}>សកម្មភាព</th>}
             </tr>
           </thead>
           <tbody className={adminTable.tbody}>
@@ -273,15 +273,6 @@ export function SavingsList({
                     ) : (
                       <SavingStatusBadge status="completed" plain />
                     )}
-                  </td>
-                  <td className={adminTable.tdLast}>
-                    <Link
-                      href={`/admin/members/${group.member_id}`}
-                      className="inline-flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-xs font-semibold text-brand-700 transition hover:bg-brand-50"
-                    >
-                      មើលលម្អិត
-                      <ExternalLink className="h-3.5 w-3.5" />
-                    </Link>
                   </td>
                 </tr>
               ))}

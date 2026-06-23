@@ -28,7 +28,7 @@ export default function RootLayout({
   children: React.ReactNode
 }>) {
   return (
-    <html lang="km" className={`${geistSans.variable} ${notoKhmer.variable} h-full antialiased`}>
+    <html lang="km" className={`${geistSans.variable} ${notoKhmer.variable} h-full antialiased`} suppressHydrationWarning>
       <body className="min-h-full bg-background text-foreground">
         {/* Telegram Mini App SDK — initialises window.Telegram.WebApp before React hydration */}
         <Script src="https://telegram.org/js/telegram-web-app.js" strategy="beforeInteractive" />

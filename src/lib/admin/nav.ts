@@ -1,7 +1,7 @@
 import type { ElementType } from 'react'
 import {
   CreditCard,
-  FileText,
+
   LayoutDashboard,
   PiggyBank,
   Settings,
@@ -54,24 +54,15 @@ export const adminNav: AdminNavItem[] = [
       { label: 'បញ្ជីការសងកម្ជី', href: '/admin/loans/payments' },
     ],
   },
-  {
-    label: 'របាយការណ៍',
-    icon: FileText,
-    basePath: '/admin/reports',
-    children: [
-      { label: 'របាយការណ៍កម្ជី', href: '/admin/reports/loans' },
-      { label: 'របាយការណ៍សន្សំ', href: '/admin/reports/savings' },
-    ],
-  },
+
   { label: 'ការកំណត់', href: '/admin/settings', icon: Settings },
 ]
 
 /** First path segment under a section that is not a list/detail id */
 const sectionReservedSegments: Record<string, Set<string>> = {
   '/admin/members': new Set(['requests']),
-  '/admin/savings': new Set(['requests', 'capital', 'reports']),
+  '/admin/savings': new Set(['requests', 'capital']),
   '/admin/loans': new Set(['requests', 'active', 'payments']),
-  '/admin/reports': new Set(['loans', 'savings']),
 }
 
 export function getAdminSectionByPath(pathname: string): AdminNavItem | undefined {

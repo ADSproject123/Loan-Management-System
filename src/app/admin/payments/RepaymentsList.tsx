@@ -1,8 +1,9 @@
 'use client'
 
 import { useMemo, useState } from 'react'
+import { createPortal } from 'react-dom'
 import { useRouter } from 'next/navigation'
-import { CreditCard, CheckCircle2 } from 'lucide-react'
+import { CreditCard, CheckCircle2, X } from 'lucide-react'
 import { SavingStatusBadge } from '@/components/ui/Badge'
 import { verifyRepayment } from '@/app/actions/admin'
 import { formatDate, money, relatedMemberEmail, relatedMemberName } from '@/app/admin/adminUtils'
@@ -11,7 +12,6 @@ import type { SavingStatus } from '@/types/database'
 import {
   AdminActionButton,
   AdminActionsMenu,
-  AdminExternalLink,
   AdminListToolbar,
   AdminTableEmpty,
   AdminTableNoResults,
@@ -53,6 +53,7 @@ export function RepaymentsList({
   const router = useRouter()
   const [query, setQuery] = useState('')
   const [statusFilter, setStatusFilter] = useState(initialStatusFilter)
+  const [previewUrl, setPreviewUrl] = useState<string | null>(null)
 
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase()
@@ -67,6 +68,7 @@ export function RepaymentsList({
   }, [repayments, query, statusFilter])
 
   return (
+    <>
     <div className="flex flex-col flex-1 min-h-0">
       <AdminListToolbar
         searchValue={query}
@@ -128,7 +130,13 @@ export function RepaymentsList({
                 <td className={adminTable.tdMuted}>{formatDate(repayment.payment_date)}</td>
                 <td className={adminTable.td} onClick={(event) => event.stopPropagation()}>
                   {repayment.evidenceSignedUrl ? (
-                    <AdminExternalLink href={repayment.evidenceSignedUrl}>មើលភស្តុតាង</AdminExternalLink>
+                    <button
+                      type="button"
+                      onClick={() => setPreviewUrl(repayment.evidenceSignedUrl)}
+                      className="inline-flex items-center rounded-lg border border-brand-200 bg-brand-50 px-3 py-1.5 text-xs font-semibold text-brand-800 transition hover:bg-brand-100"
+                    >
+                      មើលភស្តុតាង
+                    </button>
                   ) : repayment.qr_code_ref?.startsWith('KHQR-') ? (
                     <span className="inline-flex items-center rounded-full bg-green-50 px-2 py-0.5 text-xs font-medium text-green-700 ring-1 ring-green-200">
                       បានបញ្ជាក់ដោយ Bakong
@@ -164,5 +172,52 @@ export function RepaymentsList({
         </table>
       </div>
     </div>
+
+      {previewUrl && createPortal(
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/70 backdrop-blur-sm"
+          onClick={() => setPreviewUrl(null)}
+        >
+          <div
+            className="relative max-h-[90vh] max-w-3xl w-full overflow-hidden rounded-2xl bg-white shadow-2xl"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-center justify-between border-b border-slate-200 px-5 py-3.5">
+              <p className="text-sm font-semibold text-slate-800">ភស្តុតាង</p>
+              <button
+                type="button"
+                onClick={() => setPreviewUrl(null)}
+                className="grid h-8 w-8 place-items-center rounded-lg text-slate-400 hover:bg-slate-100 hover:text-slate-700"
+              >
+                <X className="h-4 w-4" />
+              </button>
+            </div>
+            {previewUrl.toLowerCase().includes('.pdf') ? (
+              <div className="flex flex-col items-center gap-4 p-8 text-center">
+                <p className="text-sm text-slate-600">មិនអាចបង្ហាញ PDF នៅក្នុងផ្ទាំងនេះ</p>
+                <a
+                  href={previewUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="rounded-lg bg-brand-950 px-4 py-2 text-sm font-semibold text-white hover:bg-brand-800"
+                >
+                  បើក PDF
+                </a>
+              </div>
+            ) : (
+              <div className="overflow-auto">
+                <img
+                  src={previewUrl}
+                  alt="ភស្តុតាង"
+                  className="block max-h-[80vh] w-full object-contain"
+                />
+              </div>
+            )}
+          </div>
+        </div>,
+        document.body
+      )}
+    </>
   )
 }
+

@@ -3,7 +3,7 @@ import { AdminBackLink, AdminPanel } from '@/components/admin'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { formatDate, sumAmounts } from '@/app/admin/adminUtils'
 import { getInterestSettings, getLoanInterestPlans, monthlySavingInterest, fetchMemberLoanInterestRate } from '@/lib/interest'
-import { accruedSavingInterestTotal, nextInterestDate } from '@/lib/interestCalculations'
+import { accruedSavingInterestTotal, nextInterestDate, buildLoanPaymentSchedule, annotateLoanPaymentSchedule } from '@/lib/interestCalculations'
 import { isVerifiedSavingForChart } from '@/lib/admin/savingsChartData'
 import { getPrivateFileUrl } from '@/lib/uploads'
 import { predominantCurrency } from '@/lib/currency'
@@ -52,7 +52,7 @@ export default async function AdminMemberDetailPage({ params }: PageProps) {
       .order('created_at', { ascending: false }),
     admin
       .from('loans')
-      .select('id, amount, currency, purpose, status, term_months, created_at')
+      .select('id, amount, currency, purpose, status, term_months, monthly_interest_rate, start_date, created_at')
       .eq('member_id', id)
       .order('created_at', { ascending: false }),
   ])
@@ -65,6 +65,39 @@ export default async function AdminMemberDetailPage({ params }: PageProps) {
   const activeLoans = loans.filter((loan) => loan.status === 'active' || loan.status === 'approved')
   const savingsTotal = sumAmounts(verifiedSavings)
   const loanTotal = sumAmounts(activeLoans)
+
+  // Remaining principal: re-run the amortization schedule for each active loan
+  // against its verified repayments so the balance declines as the member pays.
+  let loanRemainingBalance = loanTotal
+  if (activeLoans.length > 0) {
+    const { data: repaymentRows } = await admin
+      .from('loan_repayments')
+      .select('loan_id, amount')
+      .in('loan_id', activeLoans.map((l) => l.id))
+      .in('status', ['verified', 'completed'])
+
+    const paidByLoan = (repaymentRows ?? []).reduce<Record<string, number>>((acc, r) => {
+      acc[r.loan_id] = (acc[r.loan_id] ?? 0) + (r.amount ?? 0)
+      return acc
+    }, {})
+
+    loanRemainingBalance = activeLoans.reduce((total, loan) => {
+      const paidSoFar = paidByLoan[loan.id] ?? 0
+      if (paidSoFar === 0) return total + loan.amount
+
+      const rate = (loan.monthly_interest_rate as number | null) ?? interestSettings.monthlyLoanInterestRate
+      const schedule = buildLoanPaymentSchedule(loan.amount, loan.term_months ?? 12, rate, loan.start_date as string | null)
+      const annotated = annotateLoanPaymentSchedule(schedule, paidSoFar)
+
+      const remaining = annotated.reduce((sum, row) => {
+        if (row.status === 'paid') return sum
+        const principalPaid = Math.max(0, row.paidAmount - row.interestPortion)
+        return sum + Math.max(row.principalPortion - principalPaid, 0)
+      }, 0)
+
+      return total + remaining
+    }, 0)
+  }
   const savingsCount = verifiedSavings.length
   const loansCount = activeLoans.length
   const monthlySavingInterestAmount = monthlySavingInterest(
@@ -165,6 +198,7 @@ export default async function AdminMemberDetailPage({ params }: PageProps) {
         loans={recentLoans}
         savingsTotal={savingsTotal}
         loanTotal={loanTotal}
+        loanRemainingBalance={loanRemainingBalance}
         savingsCount={savingsCount}
         loansCount={loansCount}
         idDocumentUrl={idDocumentUrl}

@@ -275,7 +275,7 @@ export function LoansList({
               ) : (
                 <th className={adminTable.th}>ដាក់ស្នើ</th>
               )}
-              {showActions ? <th className={adminTable.thLast}>សកម្មភាព</th> : null}
+              {showActions && !isLedgerView ? <th className={adminTable.thLast}>សកម្មភាព</th> : null}
             </tr>
           </thead>
           <tbody className={adminTable.tbody}>
@@ -336,13 +336,6 @@ export function LoansList({
                     <td className={adminTable.td}>
                       <DueDateCell meta={dueMeta} />
                     </td>
-                    {showActions ? (
-                      <td className={adminTable.tdLast}>
-                        <div className="flex items-center justify-end">
-                          <ChevronRight className={`${adminTable.rowChevron} hidden sm:block`} />
-                        </div>
-                      </td>
-                    ) : null}
                   </tr>
                 )
               })}
