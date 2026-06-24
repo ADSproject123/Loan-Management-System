@@ -3,6 +3,7 @@ import { ArrowRight } from 'lucide-react'
 import { formatMoney, type CurrencyCode } from '@/lib/currency'
 import { formatKhmerDate } from '@/lib/dates'
 import type { LoanScheduleRow } from '@/lib/interestCalculations'
+import { LoanScheduleTableFooter } from '@/components/loans/LoanScheduleOverallSummary'
 import { LoanPaymentScheduleDownloads } from '@/components/loans/LoanPaymentScheduleDownloads'
 
 const STATUS_LABELS: Record<LoanScheduleRow['status'], string> = {
@@ -44,28 +45,15 @@ export function LoanPaymentSchedule({
 }: LoanPaymentScheduleProps) {
   if (schedule.length === 0) return null
 
-  const totalDue = schedule.reduce((sum, row) => sum + row.amount, 0)
-  const totalPaid = schedule.reduce((sum, row) => sum + row.paidAmount, 0)
-
   return (
     <div className={className}>
-      <div className="mb-4 flex flex-wrap items-end justify-between gap-3">
-        <div>
-          <h3 className="text-base font-semibold text-gray-900">តារាបង់ប្រចាំខែ</h3>
-          <p className="mt-1 text-sm text-gray-500">
-            ការបង់ {schedule.length} ដង — សរុប {formatMoney(totalDue, currency)}
-          </p>
-        </div>
+      <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
+        <h3 className="text-base font-semibold text-gray-900">តារាបង់ប្រចាំខែ</h3>
         <div className="flex flex-wrap items-center gap-3">
-          <p className="text-sm text-gray-600">
-            បានបង់{' '}
-            <span className="font-semibold text-gray-900">{formatMoney(totalPaid, currency)}</span>
-          </p>
           {showDownload ? (
             <LoanPaymentScheduleDownloads
               schedule={schedule}
               currency={currency}
-
               fileBaseName={fileBaseName}
               memberName={memberName}
             />
@@ -114,9 +102,7 @@ export function LoanPaymentSchedule({
                   {formatMoney(row.amount, currency)}
                 </td>
                 <td className="px-4 py-3 md:px-5">
-                  <span
-                    className={`text-xs font-semibold ${STATUS_CLASSES[row.status]}`}
-                  >
+                  <span className={`text-xs font-semibold ${STATUS_CLASSES[row.status]}`}>
                     {STATUS_LABELS[row.status]}
                   </span>
                 </td>
@@ -142,6 +128,11 @@ export function LoanPaymentSchedule({
               </tr>
             ))}
           </tbody>
+          <LoanScheduleTableFooter
+            schedule={schedule}
+            currency={currency}
+            showActionColumn={showRowPayButton}
+          />
         </table>
       </div>
     </div>

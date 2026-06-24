@@ -39,6 +39,7 @@ export const adminNav: AdminNavItem[] = [
     basePath: '/admin/savings',
     children: [
       { label: 'បញ្ជីការសន្សំ', href: '/admin/savings' },
+      { label: 'បញ្ជីការប្រាក់សន្សំ', href: '/admin/savings/interest' },
       { label: 'សំណើសន្សំ', href: '/admin/savings/requests' },
       { label: 'ស្នើសុំដកដើមទុន', href: '/admin/savings/capital' },
     ],
@@ -61,7 +62,7 @@ export const adminNav: AdminNavItem[] = [
 /** First path segment under a section that is not a list/detail id */
 const sectionReservedSegments: Record<string, Set<string>> = {
   '/admin/members': new Set(['requests']),
-  '/admin/savings': new Set(['requests', 'capital']),
+  '/admin/savings': new Set(['requests', 'capital', 'interest']),
   '/admin/loans': new Set(['requests', 'active', 'payments']),
 }
 

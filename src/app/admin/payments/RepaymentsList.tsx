@@ -3,21 +3,22 @@
 import { useMemo, useState } from 'react'
 import { createPortal } from 'react-dom'
 import { useRouter } from 'next/navigation'
-import { CreditCard, CheckCircle2, X } from 'lucide-react'
-import { SavingStatusBadge } from '@/components/ui/Badge'
-import { verifyRepayment } from '@/app/actions/admin'
+import { CreditCard, X } from 'lucide-react'
 import { formatDate, money, relatedMemberEmail, relatedMemberName } from '@/app/admin/adminUtils'
-import type { CurrencyCode } from '@/lib/currency'
-import type { SavingStatus } from '@/types/database'
 import {
-  AdminActionButton,
-  AdminActionsMenu,
+  normalizeRepaymentPaidStatus,
+  REPAYMENT_PAID_LABELS,
+  REPAYMENT_PAID_STYLES,
+} from '@/lib/admin/repaymentStatus'
+import type { CurrencyCode } from '@/lib/currency'
+import {
   AdminListToolbar,
   AdminTableEmpty,
   AdminTableNoResults,
   adminTable,
   adminTableRowClass,
 } from '@/components/admin'
+import { RepaymentActions } from '@/app/admin/payments/RepaymentActions'
 
 export type RepaymentListItem = {
   id: string
@@ -36,49 +37,58 @@ export type RepaymentListItem = {
 
 const STATUS_OPTIONS = [
   { value: '', label: 'ទាំងអស់' },
-  { value: 'pending', label: 'រង់ចាំ' },
-  { value: 'completed', label: 'បានទទួល' },
-  { value: 'verified', label: 'verified' },
+  { value: 'pending', label: 'មិនទាន់បង់' },
+  { value: 'completed', label: 'បានបង់' },
 ]
 
 export function RepaymentsList({
   repayments,
-  showVerifyAction = true,
   initialStatusFilter = '',
+  variant = 'all',
+  totalCount,
+  embed = false,
 }: {
   repayments: RepaymentListItem[]
-  showVerifyAction?: boolean
   initialStatusFilter?: string
+  variant?: 'all' | 'pending'
+  totalCount?: number
+  embed?: boolean
 }) {
   const router = useRouter()
   const [query, setQuery] = useState('')
-  const [statusFilter, setStatusFilter] = useState(initialStatusFilter)
+  const [statusFilter, setStatusFilter] = useState(
+    variant === 'pending' ? 'pending' : initialStatusFilter
+  )
   const [previewUrl, setPreviewUrl] = useState<string | null>(null)
+  const listTotal = totalCount ?? repayments.length
 
   const filtered = useMemo(() => {
+    if (embed) return repayments
     const q = query.trim().toLowerCase()
     return repayments.filter((row) => {
-      if (statusFilter && row.status !== statusFilter) return false
+      const paidStatus = normalizeRepaymentPaidStatus(row.status)
+      if (statusFilter && paidStatus !== statusFilter) return false
       if (!q) return true
       const name = relatedMemberName(row).toLowerCase()
       const email = relatedMemberEmail(row).toLowerCase()
       const amount = money(row.amount, (row.currency as CurrencyCode) ?? 'USD').toLowerCase()
       return name.includes(q) || email.includes(q) || amount.includes(q)
     })
-  }, [repayments, query, statusFilter])
+  }, [repayments, query, statusFilter, embed])
 
   return (
     <>
     <div className="flex flex-col flex-1 min-h-0">
+      {!embed && (
       <AdminListToolbar
         searchValue={query}
         onSearchChange={setQuery}
         searchPlaceholder="ស្វែងរកតាមឈ្មោះ អ៊ីមែល ឬចំនួនទឹកប្រាក់..."
-        selectLabel="ស្ថានភាព"
+        selectLabel={variant === 'pending' ? undefined : 'ស្ថានភាព'}
         selectId="repayment-status-filter"
-        selectValue={statusFilter}
-        onSelectChange={setStatusFilter}
-        selectOptions={STATUS_OPTIONS}
+        selectValue={variant === 'pending' ? undefined : statusFilter}
+        onSelectChange={variant === 'pending' ? undefined : setStatusFilter}
+        selectOptions={variant === 'pending' ? undefined : STATUS_OPTIONS}
         filterSummary={
           <>
             បង្ហាញ <span className="font-semibold text-foreground">{filtered.length}</span> នៃ{' '}
@@ -86,6 +96,7 @@ export function RepaymentsList({
           </>
         }
       />
+      )}
 
       <div className={adminTable.wrap}>
         <table className={`${adminTable.table} min-w-208`}>
@@ -100,21 +111,27 @@ export function RepaymentsList({
             </tr>
           </thead>
           <tbody className={adminTable.tbody}>
-            {repayments.length === 0 && (
+            {listTotal === 0 && (
               <AdminTableEmpty
                 colSpan={6}
                 icon={CreditCard}
-                title="មិនមានការសង"
-                description="ការសងកម្ជីរបស់សមាជិកនឹងបង្ហាញនៅទីនេះ។"
+                title={variant === 'pending' ? 'មិនមានការសងរង់ចាំ' : 'មិនមានការសង'}
+                description={
+                  variant === 'pending'
+                    ? 'ការសងកម្ជីដែលសមាជិកបានដាក់នឹងបង្ហាញនៅទីនេះសម្រាប់ទទួល។'
+                    : 'ការសងកម្ជីរបស់សមាជិកនឹងបង្ហាញនៅទីនេះ។'
+                }
               />
             )}
-            {repayments.length > 0 && filtered.length === 0 && <AdminTableNoResults colSpan={6} />}
+            {listTotal > 0 && filtered.length === 0 && <AdminTableNoResults colSpan={6} />}
 
-            {filtered.map((repayment) => (
+            {filtered.map((repayment) => {
+              const paidStatus = normalizeRepaymentPaidStatus(repayment.status)
+              return (
               <tr
                 key={repayment.id}
                 className={adminTableRowClass({
-                  pending: repayment.status === 'pending',
+                  pending: paidStatus === 'pending',
                   clickable: true,
                 })}
                 onClick={() => router.push(`/admin/loans/${repayment.loan_id}`)}
@@ -148,26 +165,20 @@ export function RepaymentsList({
                   )}
                 </td>
                 <td className={adminTable.td}>
-                  <SavingStatusBadge status={repayment.status as SavingStatus} plain />
+                  <span
+                    className={`text-xs font-semibold ${REPAYMENT_PAID_STYLES[paidStatus]}`}
+                  >
+                    {REPAYMENT_PAID_LABELS[paidStatus]}
+                  </span>
                 </td>
                 <td className={adminTable.tdLast} onClick={(event) => event.stopPropagation()}>
-                  {showVerifyAction && repayment.status === 'pending' ? (
-                    <AdminActionsMenu>
-                      <AdminActionButton
-                        action={verifyRepayment}
-                        id={repayment.id}
-                        menuItem
-                        icon={CheckCircle2}
-                      >
-                        បានទទួល
-                      </AdminActionButton>
-                    </AdminActionsMenu>
-                  ) : (
-                    <span className="text-xs text-muted">—</span>
-                  )}
+                  <RepaymentActions
+                    repaymentId={repayment.id}
+                    status={repayment.status}
+                  />
                 </td>
               </tr>
-            ))}
+            )})}
           </tbody>
         </table>
       </div>

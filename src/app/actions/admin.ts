@@ -9,6 +9,12 @@ import { fetchMemberLoanInterestRate, getInterestSettings } from '@/lib/interest
 import { fetchMemberLoanEligibility, validateLoanRequestAmount } from '@/lib/loanEligibility'
 import { sendTelegramMessage } from '@/lib/telegram'
 import { uploadPrivateFile } from '@/lib/uploads'
+import type { LoanDuePaymentStatus, SavingInterestPaymentStatus, SavingStatus } from '@/types/database'
+
+const REPAYMENT_STATUSES: SavingStatus[] = ['pending', 'verified', 'completed', 'refunded']
+const LOAN_REPAYMENT_ADMIN_STATUSES = ['pending', 'completed'] as const
+const SAVING_INTEREST_STATUSES = ['completed', 'rejected'] as const
+const LOAN_DUE_STATUSES = ['pending', 'completed'] as const
 function idFrom(formData: FormData) {
   const id = formData.get('id')
   if (typeof id !== 'string' || !id) {
@@ -320,7 +326,6 @@ export async function updateMemberReferee(formData: FormData): Promise<ActionRes
 
     const rawRefereeId = (formData.get('referee_id') as string ?? '').trim()
     const refereeId = rawRefereeId || null
-    const refereeVerified = formData.get('referee_verified') === 'true'
 
     if (refereeId === id) {
       return { success: false, error: 'សមាជិកមិនអាចជាអ្នកធានារបស់ខ្លួនឯងបានទេ។' }
@@ -345,7 +350,7 @@ export async function updateMemberReferee(formData: FormData): Promise<ActionRes
       .from('members')
       .update({
         referee_id: refereeId,
-        referee_verified: refereeId ? refereeVerified : false,
+        referee_verified: Boolean(refereeId),
       })
       .eq('id', id)
 
@@ -633,6 +638,240 @@ export async function refundSaving(formData: FormData): Promise<ActionResult> {
     return {
       success: false,
       error: error instanceof Error ? error.message : 'មិនអាចសងប្រាក់វិញបានទេ។',
+    }
+  }
+}
+
+export async function updateRepaymentStatus(formData: FormData): Promise<ActionResult> {
+  try {
+    const approver = await requireAdmin()
+    const id = idFrom(formData)
+    const status = (formData.get('status') as string | null)?.trim() ?? ''
+
+    if (!LOAN_REPAYMENT_ADMIN_STATUSES.includes(status as (typeof LOAN_REPAYMENT_ADMIN_STATUSES)[number])) {
+      return { success: false, error: 'ស្ថានភាពមិនត្រឹមត្រូវ។' }
+    }
+
+    const admin = createAdminClient()
+    const nextStatus = status as 'pending' | 'completed'
+    const updates =
+      nextStatus === 'completed'
+        ? {
+            status: 'completed' as SavingStatus,
+            verified_by: approver.id,
+            verified_at: new Date().toISOString(),
+          }
+        : {
+            status: 'pending' as SavingStatus,
+            verified_by: null,
+            verified_at: null,
+          }
+
+    const { data, error } = await admin
+      .from('loan_repayments')
+      .update(updates)
+      .eq('id', id)
+      .select('member_id, loan_id, amount, currency, status')
+      .single()
+
+    if (error) throw error
+
+    if (nextStatus === 'completed') {
+      await notify(
+        data.member_id,
+        'ការសងត្រូវបានទទួល',
+        `ការសងរបស់អ្នកចំនួន ${formatMoney(data.amount, data.currency ?? 'USD')} ត្រូវបានទទួល។`
+      )
+    }
+
+    revalidatePath('/admin')
+    revalidatePath('/admin/loans/payments')
+    revalidatePath('/admin/loans/payments/requests')
+    revalidatePath('/admin/payments')
+    revalidatePath('/admin/payments/requests')
+    revalidatePath(`/admin/loans/${data.loan_id}`)
+    revalidatePath(`/admin/members/${data.member_id}`)
+    revalidatePath('/dashboard')
+    revalidatePath('/dashboard/loans')
+    return { success: true }
+  } catch (error) {
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : 'មិនអាចប្តូរស្ថានភាពការសងបានទេ។',
+    }
+  }
+}
+
+export async function updateLoanDueStatus(formData: FormData): Promise<ActionResult> {
+  try {
+    const approver = await requireAdmin()
+    const loanId = (formData.get('loan_id') as string | null)?.trim() ?? ''
+    const memberId = (formData.get('member_id') as string | null)?.trim() ?? ''
+    const year = Number(formData.get('year'))
+    const month = Number(formData.get('month'))
+    const scheduleMonth = Number(formData.get('schedule_month'))
+    const amount = Number(formData.get('amount'))
+    const interestAmount = Number(formData.get('interest_amount'))
+    const currency = normalizeCurrency((formData.get('currency') as string | null) ?? 'USD')
+    const dueDate = (formData.get('due_date') as string | null)?.trim() ?? ''
+    const status = (formData.get('status') as string | null)?.trim() ?? ''
+
+    if (!loanId || !memberId) {
+      return { success: false, error: 'បាត់លេខសម្គាល់កម្ជី ឬសមាជិក។' }
+    }
+    if (!Number.isFinite(year) || !Number.isFinite(month) || month < 1 || month > 12) {
+      return { success: false, error: 'ខែឬឆ្នាំមិនត្រឹមត្រូវ។' }
+    }
+    if (!Number.isFinite(scheduleMonth) || scheduleMonth < 1) {
+      return { success: false, error: 'ខែកម្ជីមិនត្រឹមត្រូវ។' }
+    }
+    if (!Number.isFinite(amount) || amount <= 0) {
+      return { success: false, error: 'ចំនួនត្រូវបង់មិនត្រឹមត្រូវ។' }
+    }
+    if (!Number.isFinite(interestAmount) || interestAmount < 0) {
+      return { success: false, error: 'ចំនួនការប្រាក់មិនត្រឹមត្រូវ។' }
+    }
+    if (!dueDate) {
+      return { success: false, error: 'បាត់ថ្ងៃត្រូវបង់។' }
+    }
+    if (!LOAN_DUE_STATUSES.includes(status as (typeof LOAN_DUE_STATUSES)[number])) {
+      return { success: false, error: 'ស្ថានភាពមិនត្រឹមត្រូវ។' }
+    }
+
+    const admin = createAdminClient()
+    const nextStatus = status as LoanDuePaymentStatus
+    const verifiedFields =
+      nextStatus === 'completed'
+        ? { verified_by: approver.id, verified_at: new Date().toISOString() }
+        : { verified_by: null, verified_at: null }
+
+    const { data, error } = await admin
+      .from('loan_due_payments')
+      .upsert(
+        {
+          loan_id: loanId,
+          member_id: memberId,
+          period_year: year,
+          period_month: month,
+          schedule_month: scheduleMonth,
+          amount,
+          interest_amount: interestAmount,
+          currency,
+          due_date: dueDate,
+          status: nextStatus,
+          ...verifiedFields,
+        },
+        { onConflict: 'loan_id,period_year,period_month' }
+      )
+      .select('member_id, loan_id, amount, currency, status')
+      .single()
+
+    if (error) throw error
+
+    if (nextStatus === 'completed') {
+      await notify(
+        data.member_id,
+        'ការសងកម្ជីត្រូវបានទទួល',
+        `ការសងកម្ជីរបស់អ្នកចំនួន ${formatMoney(data.amount, data.currency ?? 'USD')} ត្រូវបានទទួល។`
+      )
+    }
+
+    revalidatePath('/admin')
+    revalidatePath('/admin/loans/payments')
+    revalidatePath('/admin/loans/payments/requests')
+    revalidatePath('/admin/payments')
+    revalidatePath('/admin/payments/requests')
+    revalidatePath(`/admin/loans/${data.loan_id}`)
+    revalidatePath(`/admin/members/${data.member_id}`)
+    revalidatePath('/dashboard')
+    revalidatePath('/dashboard/loans')
+    return { success: true }
+  } catch (error) {
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : 'មិនអាចប្តូរស្ថានភាពការសងបានទេ។',
+    }
+  }
+}
+
+export async function updateSavingInterestStatus(formData: FormData): Promise<ActionResult> {
+  try {
+    const approver = await requireAdmin()
+    const memberId = (formData.get('member_id') as string | null)?.trim() ?? ''
+    const year = Number(formData.get('year'))
+    const month = Number(formData.get('month'))
+    const amount = Number(formData.get('amount'))
+    const currency = normalizeCurrency((formData.get('currency') as string | null) ?? 'USD')
+    const interestDate = (formData.get('interest_date') as string | null)?.trim() ?? ''
+    const status = (formData.get('status') as string | null)?.trim() ?? ''
+
+    if (!memberId) {
+      return { success: false, error: 'បាត់លេខសម្គាល់សមាជិក។' }
+    }
+    if (!Number.isFinite(year) || !Number.isFinite(month) || month < 1 || month > 12) {
+      return { success: false, error: 'ខែឬឆ្នាំមិនត្រឹមត្រូវ។' }
+    }
+    if (!Number.isFinite(amount) || amount <= 0) {
+      return { success: false, error: 'ចំនួនការប្រាក់មិនត្រឹមត្រូវ។' }
+    }
+    if (!interestDate) {
+      return { success: false, error: 'បាត់ថ្ងៃទទួលការប្រាក់។' }
+    }
+    if (!SAVING_INTEREST_STATUSES.includes(status as (typeof SAVING_INTEREST_STATUSES)[number])) {
+      return { success: false, error: 'ស្ថានភាពមិនត្រឹមត្រូវ។' }
+    }
+
+    const admin = createAdminClient()
+    const nextStatus = status as SavingInterestPaymentStatus
+    const verifiedFields =
+      nextStatus === 'completed'
+        ? { verified_by: approver.id, verified_at: new Date().toISOString() }
+        : { verified_by: null, verified_at: null }
+
+    const { data, error } = await admin
+      .from('saving_interest_payments')
+      .upsert(
+        {
+          member_id: memberId,
+          period_year: year,
+          period_month: month,
+          amount,
+          currency,
+          interest_date: interestDate,
+          status: nextStatus,
+          ...verifiedFields,
+        },
+        { onConflict: 'member_id,period_year,period_month' }
+      )
+      .select('member_id, amount, currency, status')
+      .single()
+
+    if (error) throw error
+
+    if (nextStatus === 'completed') {
+      await notify(
+        data.member_id,
+        'ការប្រាក់សន្សំត្រូវបានបង់',
+        `ការប្រាក់សន្សំរបស់អ្នកចំនួន ${formatMoney(data.amount, data.currency ?? 'USD')} ត្រូវបានបង់។`
+      )
+    } else if (nextStatus === 'rejected') {
+      await notify(
+        data.member_id,
+        'ការប្រាក់សន្សំត្រូវបានបដិសេធ',
+        `ការប្រាក់សន្សំចំនួន ${formatMoney(data.amount, data.currency ?? 'USD')} ត្រូវបានបដិសេធ។`
+      )
+    }
+
+    revalidatePath('/admin')
+    revalidatePath('/admin/savings/interest')
+    revalidatePath(`/admin/members/${data.member_id}`)
+    revalidatePath('/dashboard')
+    revalidatePath('/dashboard/savings')
+    return { success: true }
+  } catch (error) {
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : 'មិនអាចប្តូរស្ថានភាពការប្រាក់សន្សំបានទេ។',
     }
   }
 }
@@ -1089,6 +1328,7 @@ export async function createMemberByAdmin(formData: FormData): Promise<ActionRes
       workplace,
       emergency_contacts: emergencyContacts,
       referee_id: refereeId,
+      referee_verified: Boolean(refereeId),
       id_document_url: idDocumentUrl,
       resident_book_url: residentBookUrl,
       role: ['founder', 'comember', 'member'].includes(role) ? role : 'member',

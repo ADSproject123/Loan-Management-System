@@ -8,10 +8,15 @@ import {
 } from '@/lib/admin/savingsChartData'
 import { type LoanChartSourceRow } from '@/lib/admin/loanChartData'
 import { DashboardCharts } from '@/app/admin/DashboardCharts'
+import { CommunityBalanceCircle } from '@/app/admin/CommunityBalanceCircle'
 import { AdminPanel } from '@/components/admin'
+import { getInterestSettings } from '@/lib/interest'
+import { computeCommunityBalance } from '@/lib/admin/communityBalance'
 
 export default async function AdminPage() {
   const admin = createAdminClient()
+  const todayIso = new Date().toISOString().slice(0, 10)
+  const interestSettings = await getInterestSettings()
 
   const [
     membersActive,
@@ -19,6 +24,8 @@ export default async function AdminPage() {
     allSavings,
     allLoans,
     activeLoans,
+    activeLoansForInterest,
+    loanRepayments,
     completedRepayments,
     loansTotalCount,
     loansActiveCount,
@@ -27,17 +34,25 @@ export default async function AdminPage() {
     admin.from('members').select('id', { count: 'exact', head: true }).eq('is_admin', false).eq('status', 'pending'),
     admin
       .from('savings')
-      .select('amount, currency, status, verified_at, verified_by, saving_date, created_at'),
+      .select('id, member_id, amount, currency, status, verified_at, verified_by, saving_date, created_at'),
     admin
       .from('loans')
       .select('amount, currency, status, disbursed_at, approved_at, start_date, created_at'),
     admin.from('loans').select('amount, currency').eq('status', 'active'),
+    admin
+      .from('loans')
+      .select(
+        'id, member_id, amount, currency, term_months, monthly_interest_rate, start_date, disbursed_at, created_at, status'
+      )
+      .in('status', ['active', 'approved']),
+    admin.from('loan_repayments').select('loan_id, amount, status'),
     admin.from('loan_repayments').select('amount, currency').eq('status', 'completed'),
     admin.from('loans').select('id', { count: 'exact', head: true }),
     admin.from('loans').select('id', { count: 'exact', head: true }).eq('status', 'active'),
   ])
 
   const savingsRows = (allSavings.data ?? []) as SavingChartSourceRow[]
+  const savingsInterestRows = allSavings.data ?? []
   const verifiedSavings = savingsRows.filter(isVerifiedSavingForChart)
   const verifiedSavingsTotal = sumAmounts(verifiedSavings)
   const activeLoanTotal = sumAmounts(activeLoans.data ?? [])
@@ -62,9 +77,37 @@ export default async function AdminPage() {
   const totalLoans = loansTotalCount.count ?? 0
   const activeLoansCount = loansActiveCount.count ?? 0
   const verifiedSavingsCount = verifiedSavings.length
+  const verifiedSavingsMemberCount = new Set(
+    (allSavings.data ?? [])
+      .filter((row) => isVerifiedSavingForChart(row as SavingChartSourceRow))
+      .map((row) => row.member_id)
+  ).size
+
+  const balanceLoans = (activeLoansForInterest.data ?? []).filter(
+    (loan) => loan.status === 'active' || loan.status === 'approved'
+  )
+  const communityBalance = computeCommunityBalance(
+    savingsRows,
+    balanceLoans,
+    loanRepayments.data ?? [],
+    interestSettings.monthlySavingInterestRate,
+    interestSettings.monthlyLoanInterestRate
+  )
 
   const overviewStats = (
-    <div className="overflow-hidden rounded-xl border border-border">
+    <div className="space-y-4">
+      <div className="overflow-hidden rounded-xl border border-border bg-surface-muted/20">
+        <CommunityBalanceCircle
+          netTotal={communityBalance.netTotal}
+          savingsTotal={communityBalance.savingsTotal}
+          accruedInterest={communityBalance.accruedInterest}
+          loanRemaining={communityBalance.loanRemaining}
+          memberCount={verifiedSavingsMemberCount}
+          savingsCount={verifiedSavingsCount}
+        />
+      </div>
+
+      <div className="overflow-hidden rounded-xl border border-border">
       <table className="w-full text-sm">
         <thead className="border-b border-border bg-surface-muted/50">
           <tr>
@@ -107,6 +150,7 @@ export default async function AdminPage() {
           </tr>
         </tbody>
       </table>
+      </div>
     </div>
   )
 
@@ -119,6 +163,12 @@ export default async function AdminPage() {
             portfolioData={portfolioPieData}
             savingsRows={savingsRows}
             loanRows={loanRows}
+            savingsInterestRows={savingsInterestRows}
+            activeLoanRows={(activeLoansForInterest.data ?? []).filter((loan) => loan.status === 'active')}
+            loanRepaymentRows={loanRepayments.data ?? []}
+            monthlySavingInterestRate={interestSettings.monthlySavingInterestRate}
+            monthlyLoanInterestRate={interestSettings.monthlyLoanInterestRate}
+            asOfDate={todayIso}
             defaultFromKey={defaultFromKey}
             defaultToKey={defaultToKey}
           />

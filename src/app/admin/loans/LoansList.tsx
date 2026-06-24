@@ -130,21 +130,15 @@ const STATUS_FILTER_OPTIONS: { value: string; label: string }[] = [
   { value: 'rejected', label: 'បានបដិសេធ' },
 ]
 
-const EMPTY_COPY: Record<
-  LoansListVariant,
-  { title: string; description: string }
-> = {
+const EMPTY_COPY: Record<LoansListVariant, { title: string }> = {
   all: {
     title: 'មិនមានពាក្យសុំកម្ជី',
-    description: 'ពាក្យសុំកម្ជីថ្មីរបស់សមាជិកនឹងបង្ហាញនៅទីនេះ។',
   },
   active: {
     title: 'មិនមានកម្ជីសកម្ម',
-    description: 'កម្ជីដែលបានដំណើរការនឹងបង្ហាញនៅទីនេះ។',
   },
   requests: {
     title: 'មិនមានពាក្យសុំរង់ចាំ',
-    description: 'ពាក្យសុំកម្ជីថ្មីនឹងបង្ហាញនៅទីនេះ។',
   },
 }
 
@@ -221,6 +215,24 @@ export function LoansList({
     return aggregateLoansByMember(loans, loans, statusFilter, isActiveView).length
   }, [isLedgerView, isActiveView, loans, statusFilter])
 
+  const ledgerTotals = useMemo(() => {
+    if (!isLedgerView || !isActiveView) return null
+
+    let totalAmount = 0
+    let totalLoans = 0
+    for (const group of ledgerFiltered) {
+      totalAmount += group.totalAmount
+      totalLoans += group.loanCount
+    }
+
+    return {
+      totalAmount,
+      totalLoans,
+      memberCount: ledgerFiltered.length,
+      currency: (ledgerFiltered[0]?.currency as CurrencyCode) ?? 'USD',
+    }
+  }, [isLedgerView, isActiveView, ledgerFiltered])
+
   const displayRows = isLedgerView ? ledgerFiltered : filtered
 
   const openMember = (memberId: string) => router.push(`/admin/members/${memberId}`)
@@ -284,7 +296,6 @@ export function LoansList({
                 colSpan={isLedgerView ? ledgerColSpan : colSpan}
                 icon={Landmark}
                 title={EMPTY_COPY[variant].title}
-                description={EMPTY_COPY[variant].description}
               />
             )}
 
@@ -406,6 +417,24 @@ export function LoansList({
               )
             })}
           </tbody>
+          {isLedgerView && isActiveView && ledgerTotals && ledgerFiltered.length > 0 && (
+            <tfoot className="border-t-2 border-border bg-surface-muted/60">
+              <tr>
+                <td className={`${adminTable.tdFirst} font-semibold text-foreground`}>
+                  សរុប ({ledgerTotals.memberCount} សមាជិក)
+                </td>
+                <td className={adminTable.td}>
+                  <p className={`${adminTable.amountPrimary} font-bold`}>
+                    {money(ledgerTotals.totalAmount, ledgerTotals.currency)}
+                  </p>
+                </td>
+                <td className={`${adminTable.tdMuted} font-semibold`}>
+                  {ledgerTotals.totalLoans} កម្ជី
+                </td>
+                <td colSpan={2} />
+              </tr>
+            </tfoot>
+          )}
         </table>
       </div>
     </div>
