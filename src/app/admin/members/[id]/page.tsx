@@ -180,7 +180,6 @@ export default async function AdminMemberDetailPage({ params }: PageProps) {
           workplace: member.workplace ?? null,
           id_document_url: member.id_document_url,
           resident_book_url: member.resident_book_url,
-          referee_verified: member.referee_verified,
           telegram_chat_id: member.telegram_chat_id,
           referee_id: member.referee_id,
           emergency_contacts: parseEmergencyContacts(member.emergency_contacts),

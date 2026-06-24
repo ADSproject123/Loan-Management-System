@@ -14,7 +14,7 @@ export function currencySymbol(_currency: CurrencyCode = 'USD') {
 export function formatMoney(value: unknown, _currency: CurrencyCode = 'USD') {
   const amount = Number(value ?? 0)
   const safeAmount = Number.isFinite(amount) ? amount : 0
-  return `${currencySymbol()}${safeAmount.toLocaleString()}`
+  return `${currencySymbol()}${safeAmount.toLocaleString('en-US')}`
 }
 
 export function predominantCurrency(

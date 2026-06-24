@@ -109,7 +109,7 @@ export function MemberDocumentsEditForm({ memberId, onSaved }: MemberDocumentsEd
         </p>
       </div>
 
-      <div className="grid gap-4 xl:grid-cols-2">
+      <div className="flex flex-col gap-4">
         <FileField
           label="អត្តសញ្ញាណប័ណ្ណ"
           file={idDocument}

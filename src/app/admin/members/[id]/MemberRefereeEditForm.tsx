@@ -13,7 +13,6 @@ type MemberRefereeEditFormProps = {
   memberId: string
   refereeId: string | null
   refereeDisplayName: string
-  refereeVerified: boolean
   onSaved?: () => void
 }
 
@@ -142,7 +141,6 @@ export function MemberRefereeEditForm({
   memberId,
   refereeId,
   refereeDisplayName,
-  refereeVerified,
   onSaved,
 }: MemberRefereeEditFormProps) {
   const router = useRouter()
@@ -150,7 +148,6 @@ export function MemberRefereeEditForm({
   const formRef = useRegisterMemberEditForm(pending)
   const [selectedRefereeId, setSelectedRefereeId] = useState(refereeId ?? '')
   const [selectedRefereeName, setSelectedRefereeName] = useState(refereeDisplayName)
-  const [verified, setVerified] = useState(refereeVerified)
 
   function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault()
@@ -158,7 +155,6 @@ export function MemberRefereeEditForm({
     const payload = new FormData()
     payload.set('id', memberId)
     payload.set('referee_id', selectedRefereeId)
-    payload.set('referee_verified', verified ? 'true' : 'false')
 
     startTransition(async () => {
       const result = await updateMemberReferee(payload)
@@ -192,21 +188,9 @@ export function MemberRefereeEditForm({
         onClear={() => {
           setSelectedRefereeId('')
           setSelectedRefereeName('')
-          setVerified(false)
         }}
         disabled={pending}
       />
-
-      <label className="flex items-center gap-2 text-sm text-foreground">
-        <input
-          type="checkbox"
-          checked={verified}
-          onChange={(e) => setVerified(e.target.checked)}
-          disabled={pending || !selectedRefereeId}
-          className="h-4 w-4 rounded border-border text-brand-700 focus:ring-brand-500"
-        />
-        បានបញ្ជាក់ដោយអ្នកគ្រប់គ្រង
-      </label>
     </form>
   )
 }

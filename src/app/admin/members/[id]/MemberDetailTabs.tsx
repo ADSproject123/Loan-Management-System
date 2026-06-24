@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useTransition } from 'react'
+import { useState, useTransition, useEffect } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import {
@@ -9,6 +9,7 @@ import {
   CircleAlert,
   CreditCard,
   ExternalLink,
+  X,
   Percent,
   Phone,
   PiggyBank,
@@ -93,7 +94,6 @@ export type MemberDetailTabsProps = {
     id_document_url: string | null
     resident_book_url: string | null
     referee_id: string | null
-    referee_verified: boolean
     telegram_chat_id: string | null
     emergency_contacts: EmergencyContact[]
   }
@@ -422,7 +422,7 @@ export function MemberDetailTabs({
           <div className="w-full space-y-6">
             {isEditing && <MemberDocumentsEditForm memberId={member.id} onSaved={exitEditMode} />}
             <div className="w-full">       
-              <div className="grid w-full gap-6 xl:grid-cols-2">
+              <div className="flex w-full flex-col gap-6">
                 <DocumentPreview
                   label="អត្តសញ្ញាណប័ណ្ណ"
                   storageKey={member.id_document_url}
@@ -439,66 +439,68 @@ export function MemberDetailTabs({
         )}
 
         {activeTab === 'referee' && (
-          <div className="w-full">
-            <SectionTitle icon={<UserCheck className="h-5 w-5" />} title="អ្នកធានា" />
+          <div className="w-full space-y-4">
             {isEditing && (
-              <div className="mt-5">
-                <MemberRefereeEditForm
-                  memberId={member.id}
-                  refereeId={member.referee_id}
-                  refereeDisplayName={
-                    referee?.full_name ??
-                    referee?.full_name_kh ??
-                    referee?.full_name_en ??
-                    ''
-                  }
-                  refereeVerified={member.referee_verified}
-                  onSaved={exitEditMode}
-                />
-              </div>
+              <MemberRefereeEditForm
+                memberId={member.id}
+                refereeId={member.referee_id}
+                refereeDisplayName={
+                  referee?.full_name ??
+                  referee?.full_name_kh ??
+                  referee?.full_name_en ??
+                  ''
+                }
+                onSaved={exitEditMode}
+              />
             )}
-            {referee ? (
-              <div className="mt-5 rounded-xl border border-gray-100 bg-gray-50 p-4">
-                <div className="flex items-start gap-3">
-                  <span className="grid h-11 w-11 shrink-0 place-items-center rounded-lg bg-brand-100 text-sm font-bold text-brand-900">
-                    {referee.full_name
-                      .split(' ')
-                      .map((p) => p[0])
-                      .join('')
-                      .slice(0, 2)
-                      .toUpperCase()}
-                  </span>
-                  <div className="min-w-0 flex-1">
-                    <p className="font-semibold text-gray-900">{referee.full_name}</p>
-                    <p className="truncate text-sm text-gray-500">{referee.email}</p>
-                    <p className="text-sm text-gray-500">{referee.phone ?? 'គ្មានទូរស័ព្ទ'}</p>
-                    <div className="mt-3 flex flex-wrap items-center gap-2">
-                      <MemberStatusBadge status={referee.status} />
-                      <span
-                        className={`rounded-md px-2 py-0.5 text-xs font-semibold ${
-                          member.referee_verified
-                            ? 'bg-emerald-100 text-emerald-800'
-                            : 'bg-amber-100 text-amber-800'
-                        }`}
-                      >
-                        {member.referee_verified ? 'បានបញ្ជាក់' : 'រង់ចាំ'}
-                      </span>
-                    </div>
-                  </div>
-                </div>
-                <Link
-                  href={`/admin/members/${referee.id}`}
-                  className="mt-4 inline-flex w-full items-center justify-center gap-2 rounded-lg bg-white py-2.5 text-sm font-semibold text-brand-700 ring-1 ring-gray-200 transition hover:bg-brand-50"
-                >
-                  មើលប្រវត្តិអ្នកធានា
-                  <ExternalLink className="h-4 w-4" />
-                </Link>
+            <div className="overflow-hidden rounded-xl border border-border bg-surface">
+              <div className="overflow-x-auto">
+                <table className="w-full min-w-xl text-left text-sm">
+                  <thead className="border-b border-border bg-surface-muted/80">
+                    <tr className="text-xs font-semibold uppercase tracking-wide text-muted">
+                      <th className="px-5 py-3.5 md:px-6">ឈ្មោះ</th>
+                      <th className="px-5 py-3.5">ទូរស័ព្ទ</th>
+                      <th className="px-5 py-3.5">ស្ថានភាព</th>
+                      <th className="w-12 px-5 py-3.5 md:px-6" aria-label="មើលលម្អិត" />
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-border">
+                    {!referee ? (
+                      <tr>
+                        <td colSpan={4} className="px-5 py-12 text-center text-sm text-muted md:px-6">
+                          មិនមានអ្នកធានាត្រូវបានដាក់បញ្ជើទេ។
+                        </td>
+                      </tr>
+                    ) : (
+                      <tr className="transition hover:bg-surface-muted/50">
+                        <td className="px-5 py-4 md:px-6">
+                          <p className="font-semibold text-foreground">
+                            {referee.full_name_kh ?? referee.full_name_en ?? referee.full_name}
+                          </p>
+                          {referee.full_name_en &&
+                            referee.full_name_en !== (referee.full_name_kh ?? referee.full_name) && (
+                              <p className="mt-0.5 text-sm text-muted">{referee.full_name_en}</p>
+                            )}
+                        </td>
+                        <td className="px-5 py-4 text-foreground">{referee.phone ?? '—'}</td>
+                        <td className="px-5 py-4">
+                          <MemberStatusBadge status={referee.status} plain />
+                        </td>
+                        <td className="px-5 py-4 text-right md:px-6">
+                          <Link
+                            href={`/admin/members/${referee.id}`}
+                            className="inline-flex items-center justify-center rounded-lg p-2 text-muted transition hover:bg-brand-50 hover:text-brand-700"
+                            aria-label="មើលប្រវត្តិអ្នកធានា"
+                          >
+                            <ExternalLink className="h-4 w-4" />
+                          </Link>
+                        </td>
+                      </tr>
+                    )}
+                  </tbody>
+                </table>
               </div>
-            ) : (
-              <div className="mt-5 rounded-xl border border-dashed border-gray-200 bg-gray-50 px-4 py-10 text-center text-sm text-gray-500">
-                មិនមានអ្នកធានាត្រូវបានដាក់បញ្ជើទេ។
-              </div>
-            )}
+            </div>
           </div>
         )}
 
@@ -532,12 +534,7 @@ export function MemberDetailTabs({
                     <th className="px-5 py-3.5 md:px-6">ចំនួនទឹកប្រាក់</th>
                     <th className="px-5 py-3.5">
                       ការប្រាក់ប្រចាំខែ
-                      {savingInterest ? (
-                        <span className="mt-0.5 block text-[10px] font-normal normal-case tracking-normal text-muted">
-                          {savingInterest.monthlyRate}% ប្រចាំខែ
-                        </span>
-                      ) : null}
-                    </th>
+                      </th>
                     <th className="px-5 py-3.5">ថ្ងៃសន្សំ</th>
                     <th className="px-5 py-3.5">ដាក់ស្នើ</th>
                     <th className="px-5 py-3.5 md:px-6">ស្ថានភាព</th>
@@ -811,15 +808,6 @@ function FinancialSummary({
 }
 
 
-function SectionTitle({ icon, title }: { icon: React.ReactNode; title: string }) {
-  return (
-    <h3 className="flex items-center gap-2 text-lg font-semibold text-foreground">
-      <span className="text-brand-700">{icon}</span>
-      {title}
-    </h3>
-  )
-}
-
 function DocumentPreview({
   label,
   storageKey,
@@ -829,6 +817,25 @@ function DocumentPreview({
   storageKey: string | null | undefined
   url: string | null
 }) {
+  const [fullscreenOpen, setFullscreenOpen] = useState(false)
+
+  useEffect(() => {
+    if (!fullscreenOpen) return
+
+    const previousOverflow = document.body.style.overflow
+    document.body.style.overflow = 'hidden'
+
+    function onKeyDown(event: KeyboardEvent) {
+      if (event.key === 'Escape') setFullscreenOpen(false)
+    }
+
+    document.addEventListener('keydown', onKeyDown)
+    return () => {
+      document.body.style.overflow = previousOverflow
+      document.removeEventListener('keydown', onKeyDown)
+    }
+  }, [fullscreenOpen])
+
   if (!storageKey) {
     return (
       <div className="flex min-h-80 flex-col overflow-hidden rounded-xl border border-dashed border-gray-200 bg-gray-50">
@@ -855,25 +862,59 @@ function DocumentPreview({
   const isPdf = /\.pdf$/i.test(storageKey)
 
   return (
-    <div className="overflow-hidden">
-      <DocHeader label={label} url={url} />
-      <div >
-        {isPdf ? (
-          <iframe
-            src={url}
-            title={label}
-            className="h-[min(72vh,560px)]"
+    <>
+      <div className="overflow-hidden">
+        <DocHeader label={label} url={url} />
+        <div className="relative">
+          {isPdf ? (
+            <iframe
+              src={url}
+              title={label}
+              className="h-[min(72vh,560px)] w-full"
+            />
+          ) : (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img
+              src={url}
+              alt={label}
+              className="mx-auto block max-h-[min(72vh,560px)] w-full object-contain"
+            />
+          )}
+          <button
+            type="button"
+            onClick={() => setFullscreenOpen(true)}
+            className="absolute inset-0 cursor-pointer"
+            aria-label={`ពង្រីក ${label}`}
           />
-        ) : (
-          // eslint-disable-next-line @next/next/no-img-element
-          <img
-            src={url}
-            alt={label}
-            className="mx-auto block max-h-[min(72vh,560px)] w-full object-contain"
-          />
-        )}
+        </div>
       </div>
-    </div>
+
+      {fullscreenOpen ? (
+        <div
+          className="fixed inset-0 z-[100] flex flex-col bg-black"
+          role="dialog"
+          aria-modal="true"
+          aria-label={label}
+        >
+          <button
+            type="button"
+            onClick={() => setFullscreenOpen(false)}
+            className="absolute right-4 top-4 z-10 grid h-10 w-10 place-items-center rounded-lg bg-black/60 text-white"
+            aria-label="បិទ"
+          >
+            <X className="h-5 w-5" />
+          </button>
+          <div className="flex min-h-0 flex-1 items-center justify-center overflow-auto p-4">
+            {isPdf ? (
+              <iframe src={url} title={label} className="h-full min-h-[90vh] w-full" />
+            ) : (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img src={url} alt={label} className="max-h-full max-w-full object-contain" />
+            )}
+          </div>
+        </div>
+      ) : null}
+    </>
   )
 }
 
@@ -891,7 +932,7 @@ function DocHeader({
       className={`flex items-center justify-between gap-3 ${
         warning ? 'border-amber-200 bg-amber-50' : 'border-gray-100 bg-gray-50'
       }`}
-    >     
-    </div>
+    />
   )
 }
+

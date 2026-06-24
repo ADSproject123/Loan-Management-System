@@ -4,6 +4,8 @@ export type WorkplaceType = 'private_company' | 'government' | 'ngo' | 'self_emp
 export type LoanStatus = 'pending' | 'under_review' | 'approved' | 'active' | 'completed' | 'rejected'
 export type CapitalRequestStatus = 'pending' | 'approved' | 'rejected'
 export type SavingStatus = 'pending' | 'verified' | 'completed' | 'refunded'
+export type SavingInterestPaymentStatus = 'pending' | 'completed' | 'rejected'
+export type LoanDuePaymentStatus = 'pending' | 'completed'
 export type CurrencyCode = 'USD'
 
 export interface LoanInterestPlan {
@@ -116,6 +118,39 @@ export interface LoanRepayment {
   evidence_url?: string
   currency?: CurrencyCode
   status: SavingStatus
+  verified_by?: string
+  verified_at?: string
+  created_at: string
+  updated_at: string
+}
+
+export interface SavingInterestPayment {
+  id: string
+  member_id: string
+  period_year: number
+  period_month: number
+  amount: number
+  currency?: CurrencyCode
+  interest_date: string
+  status: SavingInterestPaymentStatus
+  verified_by?: string
+  verified_at?: string
+  created_at: string
+  updated_at: string
+}
+
+export interface LoanDuePayment {
+  id: string
+  loan_id: string
+  member_id: string
+  period_year: number
+  period_month: number
+  schedule_month: number
+  amount: number
+  interest_amount: number
+  currency?: CurrencyCode
+  due_date: string
+  status: LoanDuePaymentStatus
   verified_by?: string
   verified_at?: string
   created_at: string

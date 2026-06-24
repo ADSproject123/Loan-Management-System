@@ -2,6 +2,13 @@ import ExcelJS from 'exceljs'
 import { formatKhmerDate } from '@/lib/dates'
 import { formatMoney, type CurrencyCode } from '@/lib/currency'
 import type { LoanScheduleRow } from '@/lib/interestCalculations'
+import {
+  buildScheduleTableFooterHtml,
+  formatScheduleSummary,
+  SCHEDULE_APP_LOGO_PATH,
+  SCHEDULE_APP_NAME,
+  SCHEDULE_APP_TAGLINE,
+} from '@/lib/loanScheduleDisplay'
 
 const STATUS_LABELS: Record<LoanScheduleRow['status'], string> = {
   paid: 'បានបង់',
@@ -41,14 +48,24 @@ const HEADERS = [
 
 const COLUMN_WIDTHS = [8, 24, 14, 14, 14, 16, 14, 18]
 
-type PdfMakeInstance = {
-  vfs: Record<string, string>
-  fonts: Record<string, { normal: string; bold: string }>
-  createPdf: (doc: unknown) => { download: (name: string) => void }
-  addVirtualFileSystem: (vfs: Record<string, string>) => void
-}
+const PDF_WIDTH_PX = 794
 
-let pdfMakeReady: Promise<PdfMakeInstance> | null = null
+const WEB_TABLE_HEADERS = [
+  'ខែ',
+  'កាលបរិច្ឆេទត្រូវបង់',
+  'ប្រាក់ដើម',
+  'ប្រាក់ដើមនៅសល់',
+  'ការប្រាក់',
+  'ចំនួនត្រូវបង់',
+  'ស្ថានភាព',
+] as const
+
+const WEB_STATUS_COLORS: Record<LoanScheduleRow['status'], string> = {
+  paid: '#15803d',
+  partial: '#b45309',
+  pending: '#6b7280',
+  overdue: '#b91c1c',
+}
 
 function sanitizeFileName(value: string) {
   return value.replace(/[^\w\u1780-\u17FF-]+/g, '_').replace(/_+/g, '_').slice(0, 80)
@@ -69,14 +86,116 @@ function triggerBlobDownload(blob: Blob, filename: string) {
   URL.revokeObjectURL(url)
 }
 
-function arrayBufferToBase64(buffer: ArrayBuffer) {
-  const bytes = new Uint8Array(buffer)
-  let binary = ''
-  const chunkSize = 0x8000
-  for (let i = 0; i < bytes.length; i += chunkSize) {
-    binary += String.fromCharCode(...bytes.subarray(i, i + chunkSize))
-  }
-  return btoa(binary)
+function escapeHtml(value: string) {
+  return value
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+}
+
+function buildScheduleHtml(options: LoanScheduleExportOptions) {
+  const currency = options.currency ?? 'USD'
+  const fontBase = typeof window !== 'undefined' ? window.location.origin : ''
+  const footerHtml = buildScheduleTableFooterHtml(options.schedule, currency)
+
+  const tableRows = options.schedule
+    .map((row) => {
+      const statusColor = WEB_STATUS_COLORS[row.status]
+
+      return `<tr style="background:#ffffff">
+        <td style="font-weight:500;color:#111827">ខែ ${row.month}</td>
+        <td style="color:#4b5563">${escapeHtml(formatKhmerDate(row.dueDate, '—'))}</td>
+        <td style="font-variant-numeric:tabular-nums;color:#374151">${escapeHtml(formatMoney(row.principalPortion, currency))}</td>
+        <td style="font-variant-numeric:tabular-nums;color:#374151">${escapeHtml(formatMoney(row.remainingBalance, currency))}</td>
+        <td style="font-variant-numeric:tabular-nums;color:#374151">${escapeHtml(formatMoney(row.interestPortion, currency))}</td>
+        <td style="font-variant-numeric:tabular-nums;font-weight:600;color:#111827">${escapeHtml(formatMoney(row.amount, currency))}</td>
+        <td>
+          <span style="font-size:12px;font-weight:600;color:${statusColor}">${STATUS_LABELS[row.status]}</span>
+        </td>
+      </tr>`
+    })
+    .join('')
+
+  const memberLine = options.memberName
+    ? `<p style="margin:0 0 12px;font-size:13px;color:#4b5563">សមាជិក: ${escapeHtml(options.memberName)}</p>`
+    : ''
+
+  return `
+    <style>
+      @font-face {
+        font-family: 'Noto Sans Khmer';
+        src: url('${fontBase}/fonts/NotoSansKhmer-Regular.ttf') format('truetype');
+        font-weight: 400;
+        font-style: normal;
+      }
+      @font-face {
+        font-family: 'Noto Sans Khmer';
+        src: url('${fontBase}/fonts/NotoSansKhmer-Bold.ttf') format('truetype');
+        font-weight: 700;
+        font-style: normal;
+      }
+      .schedule-pdf-root {
+        font-family: 'Noto Sans Khmer', sans-serif;
+        color: #111827;
+        background: #ffffff;
+        -webkit-font-smoothing: antialiased;
+      }
+      .schedule-pdf-root table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 14px;
+        line-height: 1.45;
+      }
+      .schedule-pdf-root th,
+      .schedule-pdf-root td {
+        border-bottom: 1px solid #f3f4f6;
+        padding: 12px 16px;
+        vertical-align: middle;
+        text-align: left;
+      }
+      .schedule-pdf-root th {
+        background: rgba(249, 250, 251, 0.8);
+        color: #111827;
+        font-weight: 700;
+        font-size: 14px;
+        border-bottom: 1px solid #f3f4f6;
+      }
+      .schedule-pdf-root tfoot td {
+        border-top: 2px solid #e5e7eb;
+        background: #f9fafb;
+      }
+      .schedule-pdf-table-wrap {
+        border: 1px solid #e5e7eb;
+        border-radius: 12px;
+        overflow: hidden;
+      }
+    </style>
+    <div class="schedule-pdf-root">
+      <div style="display:flex;align-items:center;gap:12px;margin-bottom:20px;padding-bottom:16px;border-bottom:1px solid #e5e7eb">
+        <img src="${fontBase}${SCHEDULE_APP_LOGO_PATH}" alt="" style="height:48px;width:auto;object-fit:contain" />
+        <div>
+          <p style="margin:0;font-size:18px;font-weight:700;color:#172554">${SCHEDULE_APP_NAME}</p>
+          <p style="margin:2px 0 0;font-size:12px;color:#6b7280">${SCHEDULE_APP_TAGLINE}</p>
+        </div>
+      </div>
+      <h1 style="margin:0 0 12px;font-size:16px;font-weight:600;color:#111827">តារាបង់ប្រចាំខែ</h1>
+      ${memberLine}
+      <div class="schedule-pdf-table-wrap">
+        <table>
+          <thead>
+            <tr>
+              ${WEB_TABLE_HEADERS.map((header) => `<th>${header}</th>`).join('')}
+            </tr>
+          </thead>
+          <tbody>
+            ${tableRows}
+          </tbody>
+          ${footerHtml}
+        </table>
+      </div>
+    </div>
+  `
 }
 
 function applyThinBorder(cell: ExcelJS.Cell) {
@@ -97,60 +216,8 @@ function styleHeaderCell(cell: ExcelJS.Cell, value: string) {
 }
 
 
-async function getPdfMake() {
-  if (!pdfMakeReady) {
-    pdfMakeReady = (async () => {
-      const pdfMakeModule = await import('pdfmake/build/pdfmake')
-      const pdfFontsModule = await import('pdfmake/build/vfs_fonts')
-      const pdfMake = pdfMakeModule.default as unknown as PdfMakeInstance
-      const vfsFonts = pdfFontsModule.default as { pdfMake?: { vfs?: Record<string, string> } }
-
-      // Register bundled fonts (Roboto etc.) into the singleton VFS via the
-      // proper API. Setting pdfMake.vfs[key] directly is ignored — pdfmake
-      // reads from an internal singleton (VirtualFileSystem) that is only
-      // populated through addVirtualFileSystem → singleton.writeFileSync().
-      if (vfsFonts.pdfMake?.vfs) {
-        pdfMake.addVirtualFileSystem(vfsFonts.pdfMake.vfs)
-      }
-
-      const [regularRes, boldRes] = await Promise.all([
-        fetch('/fonts/NotoSansKhmer-Regular.ttf'),
-        fetch('/fonts/NotoSansKhmer-Bold.ttf'),
-      ])
-
-      if (!regularRes.ok || !boldRes.ok) {
-        throw new Error(`Failed to load Khmer fonts (${regularRes.status} / ${boldRes.status})`)
-      }
-
-      const [regular, bold] = await Promise.all([
-        regularRes.arrayBuffer(),
-        boldRes.arrayBuffer(),
-      ])
-
-      pdfMake.addVirtualFileSystem({
-        'NotoSansKhmer-Regular.ttf': arrayBufferToBase64(regular),
-        'NotoSansKhmer-Bold.ttf': arrayBufferToBase64(bold),
-      })
-
-      pdfMake.fonts = {
-        ...pdfMake.fonts,
-        NotoSansKhmer: {
-          normal: 'NotoSansKhmer-Regular.ttf',
-          bold: 'NotoSansKhmer-Bold.ttf',
-        },
-      }
-
-      return pdfMake
-    })()
-  }
-
-  return pdfMakeReady
-}
-
 export async function downloadLoanScheduleExcel(options: LoanScheduleExportOptions) {
   const currency = options.currency ?? 'USD'
-  const totalDue = options.schedule.reduce((sum, row) => sum + row.amount, 0)
-  const totalPaid = options.schedule.reduce((sum, row) => sum + row.paidAmount, 0)
   const fileName = defaultFileBaseName(options)
 
   const workbook = new ExcelJS.Workbook()
@@ -182,15 +249,7 @@ export async function downloadLoanScheduleExcel(options: LoanScheduleExportOptio
     sheet.getRow(2).height = 22
   }
 
-  const summaryRow = options.memberName ? 3 : 2
-  sheet.mergeCells(`A${summaryRow}:G${summaryRow}`)
-  const summaryCell = sheet.getCell(`A${summaryRow}`)
-  summaryCell.value = `ការបង់ ${options.schedule.length} ដង | សរុប ${formatMoney(totalDue, currency)} | បានបង់ ${formatMoney(totalPaid, currency)}`
-  summaryCell.font = { size: 10, color: { argb: 'FF6B7280' } }
-  summaryCell.alignment = { vertical: 'middle', horizontal: 'center' }
-  sheet.getRow(summaryRow).height = 20
-
-  const headerRowIndex = summaryRow + 2
+  const headerRowIndex = (options.memberName ? 3 : 2) + 1
   const headerRow = sheet.getRow(headerRowIndex)
   headerRow.height = 28
   HEADERS.forEach((header, index) => {
@@ -238,6 +297,14 @@ export async function downloadLoanScheduleExcel(options: LoanScheduleExportOptio
     })
   })
 
+  const summaryRowIndex = headerRowIndex + options.schedule.length + 2
+  sheet.mergeCells(`A${summaryRowIndex}:H${summaryRowIndex}`)
+  const summaryCell = sheet.getCell(`A${summaryRowIndex}`)
+  summaryCell.value = formatScheduleSummary(options.schedule, currency)
+  summaryCell.font = { size: 10, color: { argb: 'FF6B7280' } }
+  summaryCell.alignment = { vertical: 'middle', horizontal: 'center' }
+  sheet.getRow(summaryRowIndex).height = 22
+
   const buffer = await workbook.xlsx.writeBuffer()
   const blob = new Blob([buffer], {
     type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
@@ -246,100 +313,74 @@ export async function downloadLoanScheduleExcel(options: LoanScheduleExportOptio
 }
 
 export async function downloadLoanSchedulePdf(options: LoanScheduleExportOptions) {
-  const pdfMake = await getPdfMake()
-  const currency = options.currency ?? 'USD'
-  const totalDue = options.schedule.reduce((sum, row) => sum + row.amount, 0)
-  const totalPaid = options.schedule.reduce((sum, row) => sum + row.paidAmount, 0)
   const fileName = defaultFileBaseName(options)
 
-  const headerRow = HEADERS.map((header) => ({
-    text: header,
-    bold: true,
-    fontSize: 10,
-    color: '#ffffff',
-    fillColor: '#1e3a8a',
-    alignment: 'center' as const,
-    margin: [0, 6, 0, 6] as [number, number, number, number],
-  }))
+  const wrapper = document.createElement('div')
+  wrapper.style.position = 'fixed'
+  wrapper.style.left = '-10000px'
+  wrapper.style.top = '0'
+  wrapper.style.zIndex = '-1'
+  wrapper.style.background = '#ffffff'
 
-  const dataRows = options.schedule.map((row, index) => {
-    const colors = STATUS_COLORS[row.status]
-    const rowFill = index % 2 === 1 ? '#f9fafb' : undefined
+  const inner = document.createElement('div')
+  inner.style.width = `${PDF_WIDTH_PX}px`
+  inner.style.padding = '32px 36px'
+  inner.style.boxSizing = 'border-box'
+  inner.innerHTML = buildScheduleHtml(options)
+  wrapper.appendChild(inner)
+  document.body.appendChild(wrapper)
 
-    return [
-      { text: String(row.month), alignment: 'center' as const, fillColor: rowFill, margin: [0, 5, 0, 5] as [number, number, number, number] },
-      { text: formatKhmerDate(row.dueDate, '-'), fillColor: rowFill, margin: [0, 5, 0, 5] as [number, number, number, number] },
-      { text: formatMoney(row.principalPortion, currency), alignment: 'right' as const, fillColor: rowFill, margin: [0, 5, 0, 5] as [number, number, number, number] },
-      { text: formatMoney(row.remainingBalance, currency), alignment: 'right' as const, fillColor: rowFill, margin: [0, 5, 0, 5] as [number, number, number, number] },
-      { text: formatMoney(row.interestPortion, currency), alignment: 'right' as const, fillColor: rowFill, margin: [0, 5, 0, 5] as [number, number, number, number] },
-      { text: formatMoney(row.amount, currency), alignment: 'right' as const, bold: true, fillColor: rowFill, margin: [0, 5, 0, 5] as [number, number, number, number] },
-      { text: formatMoney(row.paidAmount, currency), alignment: 'right' as const, fillColor: rowFill, margin: [0, 5, 0, 5] as [number, number, number, number] },
-      {
-        text: STATUS_LABELS[row.status],
-        alignment: 'center' as const,
-        bold: true,
-        fontSize: 9,
-        color: `#${colors.text.slice(2)}`,
-        fillColor: `#${colors.bg.slice(2)}`,
-        margin: [0, 5, 0, 5] as [number, number, number, number],
-      },
-    ]
-  })
+  try {
+    await document.fonts.ready
+    await Promise.all([
+      document.fonts.load("400 16px 'Noto Sans Khmer'"),
+      document.fonts.load("700 16px 'Noto Sans Khmer'"),
+    ])
 
-  const content: unknown[] = [
-    {
-      text: 'តារាបង់ប្រចាំខែ',
-      fontSize: 18,
-      bold: true,
-      color: '#1e3a8a',
-      alignment: 'center',
-      margin: [0, 0, 0, 6],
-    },
-  ]
+    const logoImg = inner.querySelector('img')
+    if (logoImg instanceof HTMLImageElement && !logoImg.complete) {
+      await new Promise<void>((resolve, reject) => {
+        logoImg.onload = () => resolve()
+        logoImg.onerror = () => reject(new Error('Failed to load logo'))
+      })
+    }
 
-  if (options.memberName) {
-    content.push({
-      text: `សមាជិក: ${options.memberName}`,
-      fontSize: 11,
-      color: '#4b5563',
-      alignment: 'center',
-      margin: [0, 0, 0, 4],
+    await new Promise((resolve) => setTimeout(resolve, 100))
+
+    const { toPng } = await import('html-to-image')
+    const dataUrl = await toPng(inner, {
+      pixelRatio: 2,
+      backgroundColor: '#ffffff',
+      cacheBust: true,
     })
+
+    const { jsPDF } = await import('jspdf')
+    const pdf = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' })
+    const pageWidth = pdf.internal.pageSize.getWidth()
+    const pageHeight = pdf.internal.pageSize.getHeight()
+
+    const img = new Image()
+    img.src = dataUrl
+    await img.decode()
+
+    const imgWidth = pageWidth
+    const imgHeight = (img.height * imgWidth) / img.width
+
+    let heightLeft = imgHeight
+    let position = 0
+
+    pdf.addImage(dataUrl, 'PNG', 0, position, imgWidth, imgHeight)
+    heightLeft -= pageHeight
+
+    while (heightLeft > 0) {
+      position -= pageHeight
+      pdf.addPage()
+      pdf.addImage(dataUrl, 'PNG', 0, position, imgWidth, imgHeight)
+      heightLeft -= pageHeight
+    }
+
+    pdf.save(`${fileName}.pdf`)
+  } finally {
+    document.body.removeChild(wrapper)
   }
-
-  content.push({
-    text: `ការបង់ ${options.schedule.length} ដង | សរុប ${formatMoney(totalDue, currency)} | បានបង់ ${formatMoney(totalPaid, currency)}`,
-    fontSize: 10,
-    color: '#6b7280',
-    alignment: 'center',
-    margin: [0, 0, 0, 14],
-  })
-
-  content.push({
-    table: {
-      headerRows: 1,
-      widths: [20, 66, 50, 50, 50, 56, 50, 54],
-      body: [headerRow, ...dataRows],
-    },
-    layout: {
-      hLineWidth: () => 0.5,
-      vLineWidth: () => 0.5,
-      hLineColor: () => '#e5e7eb',
-      vLineColor: () => '#e5e7eb',
-      paddingLeft: () => 6,
-      paddingRight: () => 6,
-      paddingTop: () => 4,
-      paddingBottom: () => 4,
-    },
-  })
-
-  pdfMake.createPdf({
-    pageSize: 'A4',
-    pageMargins: [36, 42, 36, 42],
-    defaultStyle: {
-      font: 'NotoSansKhmer',
-      fontSize: 10,
-    },
-    content,
-  }).download(`${fileName}.pdf`)
 }

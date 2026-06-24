@@ -199,6 +199,7 @@ export async function registerMember(formData: FormData): Promise<RegisterResult
       resident_book_number: residentBookNumber,
       workplace,
       referee_id: refereeId,
+      referee_verified: Boolean(refereeId),
       id_document_url: idDocumentUrl,
       resident_book_url: residentBookUrl,
       emergency_contacts: emergencyContacts,

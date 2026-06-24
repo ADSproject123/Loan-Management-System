@@ -3,7 +3,7 @@ import type { LucideIcon } from 'lucide-react'
 type AdminTableEmptyProps = {
   icon: LucideIcon
   title: string
-  description: string
+  description?: string
   colSpan: number
 }
 
@@ -16,7 +16,7 @@ export function AdminTableEmpty({ icon: Icon, title, description, colSpan }: Adm
             <Icon className="h-6 w-6" />
           </span>
           <p className="font-semibold text-foreground">{title}</p>
-          <p className="text-sm text-muted">{description}</p>
+          {description ? <p className="text-sm text-muted">{description}</p> : null}
         </div>
       </td>
     </tr>

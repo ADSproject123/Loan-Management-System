@@ -2,9 +2,10 @@
 
 import { useMemo, useState, type ReactNode } from 'react'
 import { format, subMonths } from 'date-fns'
-import { LayoutDashboard, ChartPie, PiggyBank, Landmark } from 'lucide-react'
+import { LayoutDashboard, ChartPie, PiggyBank, Landmark, Coins, TrendingUp } from 'lucide-react'
 import { SavingsAmountChart } from '@/app/admin/SavingsAmountChart'
 import { LoanAmountChart } from '@/app/admin/LoanAmountChart'
+import { InterestAmountChart } from '@/app/admin/InterestAmountChart'
 import { PortfolioPieChart, type PortfolioSlice } from '@/app/admin/PortfolioPieChart'
 import {
   buildMonthlySavingsChartData,
@@ -14,8 +15,14 @@ import {
   buildMonthlyLoanChartData,
   type LoanChartSourceRow,
 } from '@/lib/admin/loanChartData'
+import {
+  buildMonthlyLoanInterestChartData,
+  buildMonthlySavingInterestChartData,
+} from '@/lib/admin/interestChartData'
+import type { ActiveLoanDueRow, LoanRepaymentAmountRow } from '@/lib/admin/loanRepaymentDue'
+import type { VerifiedSavingInterestRow } from '@/lib/admin/savingInterestDue'
 
-type TabId = 'overview' | 'portfolio' | 'savings' | 'loans'
+type TabId = 'overview' | 'portfolio' | 'savings' | 'loans' | 'saving-interest' | 'loan-interest'
 
 const TABS: { id: TabId; label: string; icon: React.ReactNode; subtitle?: string }[] = [
   {
@@ -41,6 +48,18 @@ const TABS: { id: TabId; label: string; icon: React.ReactNode; subtitle?: string
     icon: <Landmark className="h-4 w-4" />,
     subtitle: 'ចំនួនកម្ជីដែលបានផ្តល់ប្រចាំខែ',
   },
+  {
+    id: 'saving-interest',
+    label: 'ការប្រាក់សន្សំ',
+    icon: <Coins className="h-4 w-4" />,
+    subtitle: 'ការប្រាក់សន្សំត្រូវបង់ប្រចាំខែ',
+  },
+  {
+    id: 'loan-interest',
+    label: 'ការប្រាក់កម្ជី',
+    icon: <TrendingUp className="h-4 w-4" />,
+    subtitle: 'ការប្រាក់កម្ជីដែលទទួលបានប្រចាំខែ',
+  },
 ]
 
 const PRESETS = [
@@ -59,6 +78,12 @@ export function DashboardCharts({
   portfolioData,
   savingsRows,
   loanRows,
+  savingsInterestRows,
+  activeLoanRows,
+  loanRepaymentRows,
+  monthlySavingInterestRate,
+  monthlyLoanInterestRate,
+  asOfDate,
   defaultFromKey,
   defaultToKey,
 }: {
@@ -66,6 +91,12 @@ export function DashboardCharts({
   portfolioData: PortfolioSlice[]
   savingsRows: SavingChartSourceRow[]
   loanRows: LoanChartSourceRow[]
+  savingsInterestRows: VerifiedSavingInterestRow[]
+  activeLoanRows: ActiveLoanDueRow[]
+  loanRepaymentRows: LoanRepaymentAmountRow[]
+  monthlySavingInterestRate: number
+  monthlyLoanInterestRate: number
+  asOfDate: string
   defaultFromKey: string
   defaultToKey: string
 }) {
@@ -74,7 +105,11 @@ export function DashboardCharts({
   const [toMonth, setToMonth] = useState(defaultToKey)
 
   const active = TABS.find((tab) => tab.id === activeTab) ?? TABS[0]
-  const showFilter = activeTab === 'savings' || activeTab === 'loans'
+  const showFilter =
+    activeTab === 'savings' ||
+    activeTab === 'loans' ||
+    activeTab === 'saving-interest' ||
+    activeTab === 'loan-interest'
 
   const savingsData = useMemo(
     () => buildMonthlySavingsChartData(savingsRows, { fromKey: fromMonth, toKey: toMonth }),
@@ -83,6 +118,34 @@ export function DashboardCharts({
   const loanData = useMemo(
     () => buildMonthlyLoanChartData(loanRows, { fromKey: fromMonth, toKey: toMonth }),
     [loanRows, fromMonth, toMonth]
+  )
+  const savingInterestData = useMemo(
+    () =>
+      buildMonthlySavingInterestChartData(
+        savingsInterestRows,
+        monthlySavingInterestRate,
+        { fromKey: fromMonth, toKey: toMonth },
+        asOfDate
+      ),
+    [savingsInterestRows, monthlySavingInterestRate, fromMonth, toMonth, asOfDate]
+  )
+  const loanInterestData = useMemo(
+    () =>
+      buildMonthlyLoanInterestChartData(
+        activeLoanRows,
+        loanRepaymentRows,
+        monthlyLoanInterestRate,
+        { fromKey: fromMonth, toKey: toMonth },
+        asOfDate
+      ),
+    [
+      activeLoanRows,
+      loanRepaymentRows,
+      monthlyLoanInterestRate,
+      fromMonth,
+      toMonth,
+      asOfDate,
+    ]
   )
 
   const activePreset = PRESETS.find(
@@ -175,6 +238,22 @@ export function DashboardCharts({
           {activeTab === 'portfolio' && <PortfolioPieChart data={portfolioData} />}
           {activeTab === 'savings' && <SavingsAmountChart data={savingsData} />}
           {activeTab === 'loans' && <LoanAmountChart data={loanData} />}
+          {activeTab === 'saving-interest' && (
+            <InterestAmountChart
+              data={savingInterestData}
+              barColor="#10b981"
+              emptyMessage="មិនទាន់មានការប្រាក់សន្សំសម្រាប់បង្ហាញក្រាប់។"
+              rangeEmptyMessage="មិនមានការប្រាក់សន្សំក្នុងចន្លោះខែដែលបានជ្រើស"
+            />
+          )}
+          {activeTab === 'loan-interest' && (
+            <InterestAmountChart
+              data={loanInterestData}
+              barColor="#f59e0b"
+              emptyMessage="មិនទាន់មានការប្រាក់កម្ជីសម្រាប់បង្ហាញក្រាប់។"
+              rangeEmptyMessage="មិនមានការប្រាក់កម្ជីក្នុងចន្លោះខែដែលបានជ្រើស"
+            />
+          )}
         </div>
       </div>
     </div>
