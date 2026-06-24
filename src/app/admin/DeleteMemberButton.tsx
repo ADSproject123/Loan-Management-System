@@ -110,9 +110,9 @@ export function DeleteMemberButton({
               លុបគណនី — {memberName}
             </h2>
             <p className="mt-2 text-sm leading-6 text-gray-600">
-              សកម្មភាពនេះ<strong className="text-red-600">មិនអាចត្រឡប់វិញបានទេ</strong>។
+              សកម្មភាពនេះ<strong className="text-red-600">មិនអាចត្រឡប់ក្រោយវិញបានទេ</strong>។
               ទិន្នន័យទាំងអស់របស់សមាជិក — ការសន្សំ កម្ជី ការសងប្រាក់ និង គណនីចូល —
-              នឹងត្រូវបានលុបជាអចិន្ត្រៃយ៍។
+              នឹងត្រូវបានលុប។
             </p>
 
             <form onSubmit={handleSubmit} className="mt-5 space-y-4">
@@ -146,7 +146,7 @@ export function DeleteMemberButton({
                   disabled={pending || !nameMatches}
                   className="rounded-lg bg-red-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-red-700 disabled:opacity-60"
                 >
-                  {pending ? 'កំពុងលុប...' : 'លុបជាអចិន្ត្រៃយ៍'}
+                  {pending ? 'កំពុងលុប...' : 'លុប'}
                 </button>
               </div>
             </form>

@@ -81,7 +81,7 @@ export function AddSavingForm({ monthlySavingInterestRate }: { monthlySavingInte
           className="inline-flex items-center gap-2 text-gray-500 hover:text-gray-700 text-sm mb-4 transition-colors"
         >
           <ArrowLeft className="w-4 h-4" />
-          ត្រឡប់ទៅការសន្សំ
+          ត្រឡប់ក្រោយ
         </Link>
         <h1 className="text-2xl font-bold text-gray-900">ស្នើសុំការសន្សំ</h1>
         <p className="text-gray-500 text-sm mt-1">បន្ថែមការបរិច្ចាគសន្សំប្រចាំខែរបស់អ្នក</p>

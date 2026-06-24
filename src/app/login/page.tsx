@@ -46,10 +46,10 @@ export default function LoginPage() {
 
   return (
     <div className="min-h-screen bg-background">
-      <div className="mx-auto grid min-h-screen w-full max-w-[1400px] grid-cols-1 lg:grid-cols-[440px_1fr]">
+      <div className="min-h-screen w-full">
         <BrandPanel />
 
-        <main className="flex min-h-screen flex-col bg-background">
+        <main className="flex min-h-screen flex-col bg-background lg:ml-[30%]">
           {/* Top bar */}
           <div className="flex items-center justify-between border-b border-border px-6 py-4 sm:px-8">
             <Link href="/" className="flex items-center gap-2 lg:hidden">
@@ -71,13 +71,10 @@ export default function LoginPage() {
           </div>
 
           {/* Form */}
-          <div className="flex flex-1 items-center justify-center px-6 py-10 sm:px-8">
-            <div className="w-full max-w-md">
+          <div className="flex flex-1 items-center justify-center px-6 py-10 sm:px-12">
+            <div className="w-full max-w-xl">
               <div className="mb-8">
-                <p className="text-xs font-semibold uppercase tracking-widest text-brand-700">
-                  វិបផតថលសមាជិក
-                </p>
-                <h1 className="mt-2 text-3xl font-bold tracking-tight text-foreground">
+                <h1 className="text-3xl font-bold tracking-tight text-foreground">
                   សូមស្វាគមន៍ការត្រឡប់មកវិញ
                 </h1>
                 <p className="mt-2 text-sm leading-6 text-muted">
@@ -85,7 +82,7 @@ export default function LoginPage() {
                 </p>
               </div>
 
-              <div className="rounded-2xl border border-border bg-surface p-6 shadow-sm sm:p-8">
+              <div className="border border-border bg-surface p-8 sm:p-10">
                 <form onSubmit={handleLogin} className="space-y-5">
                   <Field label="អ៊ីមែល ឬ លេខទូរស័ព្ទ" htmlFor="email">
                     <div className="relative">
@@ -192,7 +189,7 @@ function BrandPanel() {
   ]
 
   return (
-    <aside className="app-brand-panel relative hidden overflow-hidden lg:flex lg:flex-col">
+    <aside className="app-brand-panel fixed inset-y-0 left-0 hidden w-[30%] overflow-hidden lg:flex lg:flex-col">
       <div className="relative flex h-full flex-col px-10 py-10">
         <Link href="/" className="group inline-flex w-fit items-center gap-2.5">
           <span className="grid h-10 w-10 place-items-center rounded-xl bg-white/10 ring-1 ring-white/15 transition group-hover:bg-white/15">
@@ -200,16 +197,6 @@ function BrandPanel() {
           </span>
           <span className="text-lg font-bold tracking-tight">សមាគមន៏សន្សំ</span>
         </Link>
-
-        <div className="mt-14">
-          <h2 className="text-[28px] font-bold leading-[1.2]">
-            បន្តដំណើរហិរញ្ញវត្ថុរបស់អ្នកជាមួយសន្សំ។
-          </h2>
-          <p className="mt-3 text-[15px] leading-7 text-brand-100/85">
-            ចូលគណនីដើម្បីបន្ថែមការសន្សំ ស្នើសុំកម្ជី មើលរបាយការណ៍ និង តាមដានគ្រប់សកម្មភាព។
-          </p>
-        </div>
-
         <ul className="mt-10 space-y-3">
           {benefits.map((b) => (
             <li key={b.title} className="flex items-start gap-4 rounded-2xl bg-white/5 px-4 py-3 ring-1 ring-white/10">

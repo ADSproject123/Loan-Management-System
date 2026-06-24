@@ -101,8 +101,6 @@ export default async function AdminLoanDetailPage({ params }: PageProps) {
           totalPaid
         )
       : []
-  const scheduleTotalDue = paymentSchedule.reduce((sum, row) => sum + row.amount, 0)
-
   return (
     <LoanDetailView
       loan={loan}
@@ -118,8 +116,6 @@ export default async function AdminLoanDetailPage({ params }: PageProps) {
       docChecklist={docChecklist}
       docsComplete={docsComplete}
       loanRate={loanRate}
-      totalPaid={totalPaid}
-      scheduleTotalDue={scheduleTotalDue}
       paymentSchedule={paymentSchedule}
       repayments={repayments ?? []}
     />

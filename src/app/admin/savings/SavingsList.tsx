@@ -228,6 +228,7 @@ export function SavingsList({
               <th className={adminTable.th}>
                 {mode === 'ledger' ? 'សន្សំសរុប' : 'ចំនួនទឹកប្រាក់'}
               </th>
+              {mode === 'ledger' && <th className={adminTable.th}>ចំនួនសន្សំ</th>}
               <th className={adminTable.th}>ថ្ងៃសន្សំ</th>
               {mode === 'requests' && <th className={adminTable.th}>ភស្តុតាង</th>}
               <th className={adminTable.th}>ស្ថានភាព</th>
@@ -237,7 +238,7 @@ export function SavingsList({
           <tbody className={adminTable.tbody}>
             {savings.length === 0 && (
               <AdminTableEmpty
-                colSpan={mode === 'ledger' ? 5 : 6}
+                colSpan={mode === 'ledger' ? 6 : 6}
                 icon={PiggyBank}
                 title="មិនមានការសន្សំ"
                 description="ការដាក់សន្សំរបស់សមាជិកនឹងបង្ហាញនៅទីនេះ។"
@@ -245,7 +246,7 @@ export function SavingsList({
             )}
 
             {savings.length > 0 && displayRows.length === 0 && (
-              <AdminTableNoResults colSpan={mode === 'ledger' ? 5 : 6} />
+              <AdminTableNoResults colSpan={mode === 'ledger' ? 6 : 6} />
             )}
 
             {mode === 'ledger' &&
@@ -262,9 +263,9 @@ export function SavingsList({
                     <p className={adminTable.amountPrimary}>
                       {money(group.totalAmount, (group.currency as CurrencyCode) ?? 'USD')}
                     </p>
-                    <p className={adminTable.amountSecondary}>
-                      {group.savingCount} ការសន្សំ
-                    </p>
+                  </td>
+                  <td className={adminTable.td}>
+                    <p className={adminTable.amountPrimary}>{group.savingCount} ដង</p>
                   </td>
                   <td className={adminTable.tdMuted}>{formatDate(group.latestSavingDate)}</td>
                   <td className={adminTable.td}>

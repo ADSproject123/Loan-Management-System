@@ -21,7 +21,7 @@ export default function NotFound() {
           រកមិនឃើញទំព័រ
         </h1>
         <p className="mt-4 text-base leading-7 text-slate-600">
-          ទំព័រដែលអ្នកបើកមិនមាន ឬ ត្រូវបានផ្លាស់ទី។ សូមពិនិត្យតំណភ្ជាប់ ឬ ត្រឡប់ទៅទំព័រដើម។
+          ទំព័រដែលអ្នកបើកមិនមាន ឬ ត្រូវបានផ្លាស់ទី។ សូមពិនិត្យតំណភ្ជាប់ ឬ ត្រឡប់ក្រោយទៅទំព័រដើម។
         </p>
 
         <div className="mt-10 flex flex-col items-stretch justify-center gap-3 sm:flex-row sm:items-center">

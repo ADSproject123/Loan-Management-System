@@ -2,7 +2,7 @@ export const adminTable = {
   wrap: 'flex-1 overflow-auto min-h-0',
   table: 'w-full min-w-160 text-left text-sm',
   thead: 'sticky top-0 z-10 border-b border-border bg-surface-muted/95 backdrop-blur-sm',
-  thRow: 'text-xs font-semibold uppercase tracking-wide text-muted',
+  thRow: 'text-xs font-bold uppercase tracking-wide text-foreground',
   th: 'px-6 py-3.5 whitespace-nowrap',
   thFirst: 'px-6 py-3.5 md:px-8 whitespace-nowrap',
   thLast: 'px-6 py-3.5 text-right md:px-8 whitespace-nowrap',

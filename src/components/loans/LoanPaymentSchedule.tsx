@@ -13,10 +13,10 @@ const STATUS_LABELS: Record<LoanScheduleRow['status'], string> = {
 }
 
 const STATUS_CLASSES: Record<LoanScheduleRow['status'], string> = {
-  paid: 'bg-green-100 text-green-800',
-  partial: 'bg-amber-100 text-amber-800',
-  pending: 'bg-gray-100 text-gray-700',
-  overdue: 'bg-red-100 text-red-800',
+  paid: 'text-green-700',
+  partial: 'text-amber-700',
+  pending: 'text-gray-500',
+  overdue: 'text-red-700',
 }
 
 type LoanPaymentScheduleProps = {
@@ -85,7 +85,7 @@ export function LoanPaymentSchedule({
       <div className="overflow-x-auto rounded-xl border border-gray-200">
         <table className="w-full min-w-160 text-left text-sm">
           <thead className="border-b border-gray-100 bg-gray-50/80">
-            <tr className="text-xs font-semibold uppercase tracking-wide text-gray-500">
+            <tr className="text-sm font-bold uppercase tracking-wide text-gray-900">
               <th className="px-4 py-3 md:px-5">ខែ</th>
               <th className="px-4 py-3">កាលបរិច្ឆេទត្រូវបង់</th>
               <th className="px-4 py-3">ប្រាក់ដើម</th>
@@ -115,7 +115,7 @@ export function LoanPaymentSchedule({
                 </td>
                 <td className="px-4 py-3 md:px-5">
                   <span
-                    className={`inline-flex rounded-full px-2.5 py-1 text-xs font-semibold ${STATUS_CLASSES[row.status]}`}
+                    className={`text-xs font-semibold ${STATUS_CLASSES[row.status]}`}
                   >
                     {STATUS_LABELS[row.status]}
                   </span>

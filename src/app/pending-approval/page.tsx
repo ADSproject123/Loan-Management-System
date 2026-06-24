@@ -197,7 +197,7 @@ export default async function PendingApprovalPage() {
                   href="/"
                   className="rounded-xl border border-gray-300 bg-white px-5 py-2.5 text-sm font-semibold text-gray-700 hover:bg-gray-50"
                 >
-                  ត្រឡប់ទៅទំព័រដើម
+                  ត្រឡប់ក្រោយ
                 </Link>
               </div>
             </div>

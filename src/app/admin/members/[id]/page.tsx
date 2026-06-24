@@ -1,5 +1,5 @@
 import { notFound } from 'next/navigation'
-import { AdminBackLink, AdminPanel } from '@/components/admin'
+import { AdminPanel } from '@/components/admin'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { formatDate, sumAmounts } from '@/app/admin/adminUtils'
 import { getInterestSettings, getLoanInterestPlans, monthlySavingInterest, fetchMemberLoanInterestRate } from '@/lib/interest'
@@ -123,32 +123,24 @@ export default async function AdminMemberDetailPage({ params }: PageProps) {
 
   const referee = normalizeReferee(member.referee)
 
-  const hasIdDoc = Boolean(member.id_document_url)
-  const hasResidentBook = Boolean(member.resident_book_url)
-  const docsComplete = hasIdDoc && hasResidentBook
 
   const defaultTab: TabId = member.status === 'pending' ? 'documents' : 'profile'
 
   return (
     <main className="flex min-h-screen flex-col">
       <MemberEditModeProvider>
-      <AdminPanel>
-        <div className="flex min-h-0 flex-1 flex-col">
-        <div className="shrink-0 flex flex-col gap-4 border-b border-border px-6 py-4 md:flex-row md:items-center md:justify-between md:px-8">
-          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:gap-4">
-            <AdminBackLink href="/admin/members">ត្រឡប់</AdminBackLink>
-            <div className="hidden h-6 w-px bg-border sm:block" aria-hidden />
-            <p className="text-sm text-muted">
-              ព័ត៌មានលម្អិតសមាជិក · ចូលរួម {formatDate(member.joined_at ?? member.created_at)}
-            </p>
-          </div>
-
+      <AdminPanel
+        backHref="/admin/members"
+        description={`ព័ត៌មានលម្អិតសមាជិក · ចូលរួម ${formatDate(member.joined_at ?? member.created_at)}`}
+        headerActions={
           <MemberDetailHeaderActions
             memberId={member.id}
             memberName={member.full_name}
             status={member.status as MemberStatus}
           />
-        </div>
+        }
+      >
+        <div className="flex min-h-0 flex-1 flex-col">
 
       {member.status === 'suspended' && member.suspension_reason && (
         <div className="mx-6 mt-4 shrink-0 rounded-xl border border-red-200 bg-red-50 px-5 py-4 md:mx-8">
@@ -203,7 +195,6 @@ export default async function AdminMemberDetailPage({ params }: PageProps) {
         loansCount={loansCount}
         idDocumentUrl={idDocumentUrl}
         residentBookUrl={residentBookUrl}
-        docsComplete={docsComplete}
         loanInterest={{
           assignedPlanId: member.loan_interest_plan_id ?? null,
           plans: loanInterestPlans,

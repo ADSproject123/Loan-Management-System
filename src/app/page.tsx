@@ -242,8 +242,7 @@ export default function HomePage() {
               សមាគមន៏សន្សំ
             </div>
             <div className="flex gap-6 text-sm text-brand-200">
-              <Link href="/about" className="hover:text-white transition-colors">អំពីយើង</Link>
-              <Link href="/register" className="hover:text-white transition-colors">ចូលរួមជាមួយយើង</Link>
+<Link href="/register" className="hover:text-white transition-colors">ចូលរួមជាមួយយើង</Link>
               <Link href="/login" className="hover:text-white transition-colors">ចូលគណនីសមាជិក</Link>
             </div>
             <p className="text-brand-300 text-sm">&copy; ២០២៥ សន្សំ។ រក្សាសិទ្ធិគ្រប់យ៉ាង។</p>

@@ -8,8 +8,7 @@ import {
 } from '@/lib/admin/savingsChartData'
 import { type LoanChartSourceRow } from '@/lib/admin/loanChartData'
 import { DashboardCharts } from '@/app/admin/DashboardCharts'
-import { AdminPanel, AdminStatCard } from '@/components/admin'
-import { CreditCard, Landmark, PiggyBank, Users, Wallet } from 'lucide-react'
+import { AdminPanel } from '@/components/admin'
 
 export default async function AdminPage() {
   const admin = createAdminClient()
@@ -65,65 +64,49 @@ export default async function AdminPage() {
   const verifiedSavingsCount = verifiedSavings.length
 
   const overviewStats = (
-    <div className="space-y-8">
-      <div className="grid gap-4 sm:grid-cols-2 *:h-full">
-        <AdminStatCard
-          label="សមាជិកសកម្ម"
-          value={activeMembers}
-          subtitle={
-            <>
-              រង់ចាំចូលរួម{' '}
-              <span className="font-semibold tabular-nums">{pendingMemberTotal}</span>
-            </>
-          }
-          icon={Users}
-          tone="blue"
-        />
-        <Link href="/admin/loans" className="block h-full transition hover:opacity-95">
-          <AdminStatCard label="កម្ជីទាំងអស់" value={totalLoans} icon={CreditCard} tone="slate" />
-        </Link>
-      </div>
-
-      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3 *:h-full">
-        <Link href="/admin/savings" className="block h-full transition hover:opacity-95">
-          <AdminStatCard
-            label="សន្សំសរុប"
-            value={money(verifiedSavingsTotal)}
-            icon={PiggyBank}
-            tone="emerald"
-          />
-        </Link>
-        <Link href="/admin/loans/active" className="block h-full transition hover:opacity-95">
-          <AdminStatCard
-            label="កម្ជីសកម្ម"
-            value={money(activeLoanTotal)}
-            subtitle={
-              <>
-                ចំនួន{' '}
-                <span className="font-semibold tabular-nums">{activeLoansCount}</span> កម្ជី
-              </>
-            }
-            icon={Landmark}
-            tone="amber"
-          />
-        </Link>
-        <Link href="/admin/loans/payments" className="block h-full transition hover:opacity-95">
-          <AdminStatCard
-            label="ប្រាក់សងសរុប"
-            value={money(repaymentTotal)}
-            icon={Wallet}
-            tone="blue"
-          />
-        </Link>
-      </div>
-
-      <p className="text-sm text-muted">
-        ការសន្សំផ្ទៀងផ្ទាត់{' '}
-        <span className="font-semibold text-foreground">{verifiedSavingsCount}</span> ដំណើរ ·
-        កម្ជីបានទទួល/សកម្ម{' '}
-        <span className="font-semibold text-foreground">{money(loanPortfolioTotal)}</span>{' '}
-        (បានទទួល + សកម្ម)
-      </p>
+    <div className="overflow-hidden rounded-xl border border-border">
+      <table className="w-full text-sm">
+        <thead className="border-b border-border bg-surface-muted/50">
+          <tr>
+            <th className="px-5 py-3 text-left text-xs font-bold uppercase tracking-wide text-foreground">ប្រភេទ</th>
+            <th className="px-5 py-3 text-left text-xs font-bold uppercase tracking-wide text-foreground">តម្លៃ</th>
+            <th className="px-5 py-3 text-left text-xs font-bold uppercase tracking-wide text-foreground">ព័ត៌មានបន្ថែម</th>
+            <th className="px-5 py-3" />
+          </tr>
+        </thead>
+        <tbody className="divide-y divide-border">
+          <tr className="bg-surface hover:bg-surface-muted/40">
+            <td className="px-5 py-4 text-sm font-semibold text-muted">សមាជិកសកម្ម</td>
+            <td className="px-5 py-4 text-sm font-bold tabular-nums text-foreground">{activeMembers}</td>
+            <td className="px-5 py-4 text-sm text-muted">រង់ចាំចូលរួម <span className="font-semibold text-foreground">{pendingMemberTotal}</span></td>
+            <td className="px-5 py-4 text-right"><Link href="/admin/members" className="text-xs font-semibold text-brand-700 hover:text-brand-900">មើល →</Link></td>
+          </tr>
+          <tr className="bg-surface hover:bg-surface-muted/40">
+            <td className="px-5 py-4 text-sm font-semibold text-muted">កម្ជីទាំងអស់</td>
+            <td className="px-5 py-4 text-sm font-bold tabular-nums text-foreground">{totalLoans}</td>
+            <td className="px-5 py-4 text-sm text-muted">សកម្ម <span className="font-semibold text-foreground">{activeLoansCount}</span> កម្ជី</td>
+            <td className="px-5 py-4 text-right"><Link href="/admin/loans" className="text-xs font-semibold text-brand-700 hover:text-brand-900">មើល →</Link></td>
+          </tr>
+          <tr className="bg-surface hover:bg-surface-muted/40">
+            <td className="px-5 py-4 text-sm font-semibold text-muted">សន្សំសរុប</td>
+            <td className="px-5 py-4 text-sm font-bold tabular-nums text-foreground">{money(verifiedSavingsTotal)}</td>
+            <td className="px-5 py-4 text-sm text-muted">ផ្ទៀងផ្ទាត់ <span className="font-semibold text-foreground">{verifiedSavingsCount}</span> ដំណើរ</td>
+            <td className="px-5 py-4 text-right"><Link href="/admin/savings" className="text-xs font-semibold text-brand-700 hover:text-brand-900">មើល →</Link></td>
+          </tr>
+          <tr className="bg-surface hover:bg-surface-muted/40">
+            <td className="px-5 py-4 text-sm font-semibold text-muted">កម្ជីសកម្ម</td>
+            <td className="px-5 py-4 text-sm font-bold tabular-nums text-foreground">{money(activeLoanTotal)}</td>
+            <td className="px-5 py-4 text-sm text-muted">ផលប័ត្រ <span className="font-semibold text-foreground">{money(loanPortfolioTotal)}</span></td>
+            <td className="px-5 py-4 text-right"><Link href="/admin/loans/active" className="text-xs font-semibold text-brand-700 hover:text-brand-900">មើល →</Link></td>
+          </tr>
+          <tr className="bg-surface hover:bg-surface-muted/40">
+            <td className="px-5 py-4 text-sm font-semibold text-muted">ប្រាក់សងសរុប</td>
+            <td className="px-5 py-4 text-sm font-bold tabular-nums text-foreground">{money(repaymentTotal)}</td>
+            <td className="px-5 py-4 text-sm text-muted" />
+            <td className="px-5 py-4 text-right"><Link href="/admin/loans/payments" className="text-xs font-semibold text-brand-700 hover:text-brand-900">មើល →</Link></td>
+          </tr>
+        </tbody>
+      </table>
     </div>
   )
 
