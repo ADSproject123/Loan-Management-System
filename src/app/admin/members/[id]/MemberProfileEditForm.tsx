@@ -8,6 +8,7 @@ import { Select, type SelectOption } from '@/components/ui/Select'
 import { MEMBER_ROLE_LABELS } from '@/components/ui/Badge'
 import { adminFieldClassName } from '@/components/admin'
 import { updateMemberProfile } from '@/app/actions/admin'
+import { CambodiaAddressSelect, formatCambodiaAddress, parseCambodiaAddress } from '@/components/ui/CambodiaAddressSelect'
 import { showError, showSuccess } from '@/lib/toast'
 import { useRegisterMemberEditForm } from './MemberEditModeContext'
 import { WORKPLACE_OPTIONS } from '@/lib/workplace'
@@ -229,12 +230,12 @@ export function MemberProfileEditForm({ member, onSaved }: MemberProfileEditForm
       </div>
 
       <Field label="អាសយដ្ឋាន">
-        <textarea
-          value={form.address}
-          onChange={(e) => setField('address', e.target.value)}
-          rows={3}
-          className={`${inputClass} resize-none`}
+        <CambodiaAddressSelect
+          value={parseCambodiaAddress(form.address)}
+          onChange={(addr) => setField('address', formatCambodiaAddress(addr))}
           disabled={pending}
+          selectClassName={inputClass}
+          inputClassName={inputClass}
         />
       </Field>
 

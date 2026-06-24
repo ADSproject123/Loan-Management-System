@@ -1,0 +1,411 @@
+export type Village = { name: string }
+export type Commune = { name: string; villages?: Village[] }
+export type District = { name: string; communes: Commune[] }
+export type Province = { name: string; districts: District[] }
+
+export const CAMBODIA_PROVINCES: Province[] = [
+  {
+    name: 'ភ្នំពេញ',
+    districts: [
+      {
+        name: 'ខណ្ឌដូនពេញ',
+        communes: [
+          { name: 'សង្កាត់ចតុមុខ', villages: [{ name: 'ភូមិ ១' }, { name: 'ភូមិ ២' }, { name: 'ភូមិ ៣' }, { name: 'ភូមិ ៤' }, { name: 'ភូមិ ៥' }] },
+          { name: 'សង្កាត់ភ្នំពេញថ្មី', villages: [{ name: 'ភូមិ ១' }, { name: 'ភូមិ ២' }, { name: 'ភូមិ ៣' }, { name: 'ភូមិ ៤' }] },
+          { name: 'សង្កាត់ទឹកល្អក់', villages: [{ name: 'ភូមិ ១' }, { name: 'ភូមិ ២' }, { name: 'ភូមិ ៣' }, { name: 'ភូមិ ៤' }, { name: 'ភូមិ ៥' }, { name: 'ភូមិ ៦' }] },
+          { name: 'សង្កាត់ស្រះចក', villages: [{ name: 'ភូមិ ១' }, { name: 'ភូមិ ២' }, { name: 'ភូមិ ៣' }, { name: 'ភូមិ ៤' }, { name: 'ភូមិ ៥' }] },
+          { name: 'សង្កាត់វត្តភ្នំ', villages: [{ name: 'ភូមិ ១' }, { name: 'ភូមិ ២' }, { name: 'ភូមិ ៣' }] },
+          { name: 'សង្កាត់បឹងរាំង', villages: [{ name: 'ភូមិ ១' }, { name: 'ភូមិ ២' }, { name: 'ភូមិ ៣' }, { name: 'ភូមិ ៤' }] },
+        ],
+      },
+      {
+        name: 'ខណ្ឌ៧មករា',
+        communes: [
+          { name: 'សង្កាត់មិត្តភាព', villages: [{ name: 'ភូមិ ១' }, { name: 'ភូមិ ២' }, { name: 'ភូមិ ៣' }, { name: 'ភូមិ ៤' }, { name: 'ភូមិ ៥' }] },
+          { name: 'សង្កាត់ប៉ាមពេញ', villages: [{ name: 'ភូមិ ១' }, { name: 'ភូមិ ២' }, { name: 'ភូមិ ៣' }, { name: 'ភូមិ ៤' }] },
+          { name: 'សង្កាត់ទួលស្វាយព្រៃ ១', villages: [{ name: 'ភូមិ ១' }, { name: 'ភូមិ ២' }, { name: 'ភូមិ ៣' }, { name: 'ភូមិ ៤' }, { name: 'ភូមិ ៥' }] },
+          { name: 'សង្កាត់ទួលស្វាយព្រៃ ២', villages: [{ name: 'ភូមិ ១' }, { name: 'ភូមិ ២' }, { name: 'ភូមិ ៣' }, { name: 'ភូមិ ៤' }] },
+          { name: 'សង្កាត់ព្រែកព្នៅ', villages: [{ name: 'ភូមិ ១' }, { name: 'ភូមិ ២' }, { name: 'ភូមិ ៣' }] },
+          { name: 'សង្កាត់ម្លូព្រៃ', villages: [{ name: 'ភូមិ ១' }, { name: 'ភូមិ ២' }, { name: 'ភូមិ ៣' }, { name: 'ភូមិ ៤' }] },
+          { name: 'សង្កាត់ព្រះភព', villages: [{ name: 'ភូមិ ១' }, { name: 'ភូមិ ២' }, { name: 'ភូមិ ៣' }] },
+        ],
+      },
+      {
+        name: 'ខណ្ឌទួលគោក',
+        communes: [
+          { name: 'សង្កាត់ទួលគោក', villages: [{ name: 'ភូមិ ១' }, { name: 'ភូមិ ២' }, { name: 'ភូមិ ៣' }, { name: 'ភូមិ ៤' }, { name: 'ភូមិ ៥' }, { name: 'ភូមិ ៦' }] },
+          { name: 'សង្កាត់ទូលសង្កែ', villages: [{ name: 'ភូមិ ១' }, { name: 'ភូមិ ២' }, { name: 'ភូមិ ៣' }, { name: 'ភូមិ ៤' }] },
+          { name: 'សង្កាត់បឹងកក់ ១', villages: [{ name: 'ភូមិ ១' }, { name: 'ភូមិ ២' }, { name: 'ភូមិ ៣' }, { name: 'ភូមិ ៤' }, { name: 'ភូមិ ៥' }] },
+          { name: 'សង្កាត់បឹងកក់ ២', villages: [{ name: 'ភូមិ ១' }, { name: 'ភូមិ ២' }, { name: 'ភូមិ ៣' }, { name: 'ភូមិ ៤' }] },
+          { name: 'សង្កាត់ផ្សារដេប៉ូ ១', villages: [{ name: 'ភូមិ ១' }, { name: 'ភូមិ ២' }, { name: 'ភូមិ ៣' }] },
+          { name: 'សង្កាត់ផ្សារដេប៉ូ ២', villages: [{ name: 'ភូមិ ១' }, { name: 'ភូមិ ២' }, { name: 'ភូមិ ៣' }] },
+          { name: 'សង្កាត់ផ្សារដេប៉ូ ៣', villages: [{ name: 'ភូមិ ១' }, { name: 'ភូមិ ២' }, { name: 'ភូមិ ៣' }] },
+          { name: 'សង្កាត់ទទឹមទួលគោក', villages: [{ name: 'ភូមិ ១' }, { name: 'ភូមិ ២' }, { name: 'ភូមិ ៣' }, { name: 'ភូមិ ៤' }] },
+        ],
+      },
+      {
+        name: 'ខណ្ឌចំការមន',
+        communes: [
+          { name: 'សង្កាត់តឹកឡាក់', villages: [{ name: 'ភូមិ ១' }, { name: 'ភូមិ ២' }, { name: 'ភូមិ ៣' }, { name: 'ភូមិ ៤' }] },
+          { name: 'សង្កាត់ទំនប់ទឹក', villages: [{ name: 'ភូមិ ១' }, { name: 'ភូមិ ២' }, { name: 'ភូមិ ៣' }, { name: 'ភូមិ ៤' }, { name: 'ភូមិ ៥' }] },
+          { name: 'សង្កាត់ទួលទំពូង ១', villages: [{ name: 'ភូមិ ១' }, { name: 'ភូមិ ២' }, { name: 'ភូមិ ៣' }, { name: 'ភូមិ ៤' }] },
+          { name: 'សង្កាត់ទួលទំពូង ២', villages: [{ name: 'ភូមិ ១' }, { name: 'ភូមិ ២' }, { name: 'ភូមិ ៣' }] },
+          { name: 'សង្កាត់ទួលទំពូង ៣', villages: [{ name: 'ភូមិ ១' }, { name: 'ភូមិ ២' }, { name: 'ភូមិ ៣' }, { name: 'ភូមិ ៤' }] },
+          { name: 'សង្កាត់បឹងត្របែក', villages: [{ name: 'ភូមិ ១' }, { name: 'ភូមិ ២' }, { name: 'ភូមិ ៣' }, { name: 'ភូមិ ៤' }, { name: 'ភូមិ ៥' }] },
+          { name: 'សង្កាត់ចំការមន', villages: [{ name: 'ភូមិ ១' }, { name: 'ភូមិ ២' }, { name: 'ភូមិ ៣' }] },
+          { name: 'សង្កាត់ទំរោងអ', villages: [{ name: 'ភូមិ ១' }, { name: 'ភូមិ ២' }, { name: 'ភូមិ ៣' }] },
+        ],
+      },
+      {
+        name: 'ខណ្ឌបឹងកេងកង',
+        communes: [
+          { name: 'សង្កាត់បឹងកេងកង ១', villages: [{ name: 'ភូមិ ១' }, { name: 'ភូមិ ២' }, { name: 'ភូមិ ៣' }, { name: 'ភូមិ ៤' }, { name: 'ភូមិ ៥' }] },
+          { name: 'សង្កាត់បឹងកេងកង ២', villages: [{ name: 'ភូមិ ១' }, { name: 'ភូមិ ២' }, { name: 'ភូមិ ៣' }, { name: 'ភូមិ ៤' }] },
+          { name: 'សង្កាត់បឹងកេងកង ៣', villages: [{ name: 'ភូមិ ១' }, { name: 'ភូមិ ២' }, { name: 'ភូមិ ៣' }] },
+          { name: 'សង្កាត់ទួលព្រែក', villages: [{ name: 'ភូមិ ១' }, { name: 'ភូមិ ២' }, { name: 'ភូមិ ៣' }, { name: 'ភូមិ ៤' }] },
+        ],
+      },
+      {
+        name: 'ខណ្ឌមានជ័យ',
+        communes: [
+          { name: 'សង្កាត់ស្ទឹងមានជ័យ ១', villages: [{ name: 'ភូមិ ១' }, { name: 'ភូមិ ២' }, { name: 'ភូមិ ៣' }, { name: 'ភូមិ ៤' }, { name: 'ភូមិ ៥' }] },
+          { name: 'សង្កាត់ស្ទឹងមានជ័យ ២', villages: [{ name: 'ភូមិ ១' }, { name: 'ភូមិ ២' }, { name: 'ភូមិ ៣' }, { name: 'ភូមិ ៤' }] },
+          { name: 'សង្កាត់ស្ទឹងមានជ័យ ៣', villages: [{ name: 'ភូមិ ១' }, { name: 'ភូមិ ២' }, { name: 'ភូមិ ៣' }] },
+          { name: 'សង្កាត់ចាក់អង្រែ', villages: [{ name: 'ភូមិ ១' }, { name: 'ភូមិ ២' }, { name: 'ភូមិ ៣' }, { name: 'ភូមិ ៤' }, { name: 'ភូមិ ៥' }, { name: 'ភូមិ ៦' }] },
+          { name: 'សង្កាត់ពងទឹក', villages: [{ name: 'ភូមិ ១' }, { name: 'ភូមិ ២' }, { name: 'ភូមិ ៣' }, { name: 'ភូមិ ៤' }] },
+        ],
+      },
+      {
+        name: 'ខណ្ឌច្បារអំពៅ',
+        communes: [
+          { name: 'សង្កាត់ច្បារអំពៅ ១', villages: [{ name: 'ភូមិ ១' }, { name: 'ភូមិ ២' }, { name: 'ភូមិ ៣' }, { name: 'ភូមិ ៤' }, { name: 'ភូមិ ៥' }] },
+          { name: 'សង្កាត់ច្បារអំពៅ ២', villages: [{ name: 'ភូមិ ១' }, { name: 'ភូមិ ២' }, { name: 'ភូមិ ៣' }, { name: 'ភូមិ ៤' }] },
+          { name: 'សង្កាត់ព្រៃស', villages: [{ name: 'ភូមិ ១' }, { name: 'ភូមិ ២' }, { name: 'ភូមិ ៣' }] },
+          { name: 'សង្កាត់និរោធ', villages: [{ name: 'ភូមិ ១' }, { name: 'ភូមិ ២' }, { name: 'ភូមិ ៣' }] },
+          { name: 'សង្កាត់ព្រែកអញ្ចាញ', villages: [{ name: 'ភូមិ ១' }, { name: 'ភូមិ ២' }, { name: 'ភូមិ ៣' }, { name: 'ភូមិ ៤' }] },
+          { name: 'សង្កាត់ព្រែកតាសេក', villages: [{ name: 'ភូមិ ១' }, { name: 'ភូមិ ២' }, { name: 'ភូមិ ៣' }] },
+          { name: 'សង្កាត់ព្រែកប្រជុំ', villages: [{ name: 'ភូមិ ១' }, { name: 'ភូមិ ២' }, { name: 'ភូមិ ៣' }] },
+        ],
+      },
+      {
+        name: 'ខណ្ឌដង្កោ',
+        communes: [
+          { name: 'សង្កាត់ដង្កោ', villages: [{ name: 'ភូមិ ១' }, { name: 'ភូមិ ២' }, { name: 'ភូមិ ៣' }, { name: 'ភូមិ ៤' }, { name: 'ភូមិ ៥' }] },
+          { name: 'សង្កាត់ព្រៃវ', villages: [{ name: 'ភូមិ ១' }, { name: 'ភូមិ ២' }, { name: 'ភូមិ ៣' }, { name: 'ភូមិ ៤' }] },
+          { name: 'សង្កាត់ចំណោម', villages: [{ name: 'ភូមិ ១' }, { name: 'ភូមិ ២' }, { name: 'ភូមិ ៣' }] },
+          { name: 'សង្កាត់ពោធ៍ព្រែកចាន', villages: [{ name: 'ភូមិ ១' }, { name: 'ភូមិ ២' }, { name: 'ភូមិ ៣' }] },
+          { name: 'សង្កាត់ភ្ញើរ', villages: [{ name: 'ភូមិ ១' }, { name: 'ភូមិ ២' }, { name: 'ភូមិ ៣' }, { name: 'ភូមិ ៤' }] },
+          { name: 'សង្កាត់ស្ពៀន ហូ', villages: [{ name: 'ភូមិ ១' }, { name: 'ភូមិ ២' }, { name: 'ភូមិ ៣' }] },
+          { name: 'សង្កាត់ទ្រង់', villages: [{ name: 'ភូមិ ១' }, { name: 'ភូមិ ២' }, { name: 'ភូមិ ៣' }, { name: 'ភូមិ ៤' }] },
+        ],
+      },
+      {
+        name: 'ខណ្ឌសែនសុខ',
+        communes: [
+          { name: 'សង្កាត់ខ្មែរ ថ្មី', villages: [{ name: 'ភូមិ ១' }, { name: 'ភូមិ ២' }, { name: 'ភូមិ ៣' }, { name: 'ភូមិ ៤' }, { name: 'ភូមិ ៥' }] },
+          { name: 'សង្កាត់ភ្នំពេញថ្មី', villages: [{ name: 'ភូមិ ១' }, { name: 'ភូមិ ២' }, { name: 'ភូមិ ៣' }, { name: 'ភូមិ ៤' }] },
+          { name: 'សង្កាត់ទ្វើបក្ស', villages: [{ name: 'ភូមិ ១' }, { name: 'ភូមិ ២' }, { name: 'ភូមិ ៣' }] },
+          { name: 'សង្កាត់ស្ទឹងមានជ័យ', villages: [{ name: 'ភូមិ ១' }, { name: 'ភូមិ ២' }, { name: 'ភូមិ ៣' }, { name: 'ភូមិ ៤' }] },
+        ],
+      },
+      {
+        name: 'ខណ្ឌបឹងទំពន់',
+        communes: [
+          { name: 'សង្កាត់បឹងទំពន់ ១', villages: [{ name: 'ភូមិ ១' }, { name: 'ភូមិ ២' }, { name: 'ភូមិ ៣' }, { name: 'ភូមិ ៤' }] },
+          { name: 'សង្កាត់បឹងទំពន់ ២', villages: [{ name: 'ភូមិ ១' }, { name: 'ភូមិ ២' }, { name: 'ភូមិ ៣' }] },
+        ],
+      },
+      {
+        name: 'ខណ្ឌពោធ៍សែនជ័យ',
+        communes: [
+          { name: 'សង្កាត់កំបូល', villages: [{ name: 'ភូមិ ១' }, { name: 'ភូមិ ២' }, { name: 'ភូមិ ៣' }, { name: 'ភូមិ ៤' }, { name: 'ភូមិ ៥' }] },
+          { name: 'សង្កាត់ការ៉ែ', villages: [{ name: 'ភូមិ ១' }, { name: 'ភូមិ ២' }, { name: 'ភូមិ ៣' }, { name: 'ភូមិ ៤' }] },
+          { name: 'សង្កាត់ក្រាំងធ្នង់', villages: [{ name: 'ភូមិ ១' }, { name: 'ភូមិ ២' }, { name: 'ភូមិ ៣' }] },
+          { name: 'សង្កាត់ក្រាំងអំពិល', villages: [{ name: 'ភូមិ ១' }, { name: 'ភូមិ ២' }, { name: 'ភូមិ ៣' }] },
+          { name: 'សង្កាត់ស្ទឹងមានជ័យ', villages: [{ name: 'ភូមិ ១' }, { name: 'ភូមិ ២' }, { name: 'ភូមិ ៣' }, { name: 'ភូមិ ៤' }] },
+          { name: 'សង្កាត់ពោធ៍សែនជ័យ', villages: [{ name: 'ភូមិ ១' }, { name: 'ភូមិ ២' }, { name: 'ភូមិ ៣' }, { name: 'ភូមិ ៤' }, { name: 'ភូមិ ៥' }] },
+        ],
+      },
+      {
+        name: 'ខណ្ឌឫស្សីកែវ',
+        communes: [
+          { name: 'សង្កាត់ឫស្សីកែវ', villages: [{ name: 'ភូមិ ១' }, { name: 'ភូមិ ២' }, { name: 'ភូមិ ៣' }, { name: 'ភូមិ ៤' }, { name: 'ភូមិ ៥' }] },
+          { name: 'សង្កាត់ទួលរាំង', villages: [{ name: 'ភូមិ ១' }, { name: 'ភូមិ ២' }, { name: 'ភូមិ ៣' }, { name: 'ភូមិ ៤' }] },
+          { name: 'សង្កាត់ក្រោលក្របី', villages: [{ name: 'ភូមិ ១' }, { name: 'ភូមិ ២' }, { name: 'ភូមិ ៣' }] },
+          { name: 'សង្កាត់ចោមចៅ', villages: [{ name: 'ភូមិ ១' }, { name: 'ភូមិ ២' }, { name: 'ភូមិ ៣' }, { name: 'ភូមិ ៤' }] },
+          { name: 'សង្កាត់ត្រាំកក់', villages: [{ name: 'ភូមិ ១' }, { name: 'ភូមិ ២' }, { name: 'ភូមិ ៣' }] },
+        ],
+      },
+    ],
+  },
+  {
+    name: 'ខេត្តបន្ទាយមានជ័យ',
+    districts: [
+      { name: 'ក្រុងស៊ីសុផន', communes: [] },
+      { name: 'ស្រុកមង្គលបូរី', communes: [] },
+      { name: 'ស្រុកភ្នំស្រុក', communes: [] },
+      { name: 'ស្រុករតនៈ​មណ្ឌល', communes: [] },
+      { name: 'ស្រុកស្រ្តប', communes: [] },
+      { name: 'ស្រុកថ្មពួក', communes: [] },
+      { name: 'ស្រុកស្វាយជ្រំ', communes: [] },
+    ],
+  },
+  {
+    name: 'ខេត្តបាត់ដំបង',
+    districts: [
+      { name: 'ក្រុងបាត់ដំបង', communes: [] },
+      { name: 'ស្រុកបាណន់', communes: [] },
+      { name: 'ស្រុកបាវិត', communes: [] },
+      { name: 'ស្រុកឯកភ្នំ', communes: [] },
+      { name: 'ស្រុកកំរៀង', communes: [] },
+      { name: 'ស្រុកមោងឫស្សី', communes: [] },
+      { name: 'ស្រុកផ្សារព្រឹក', communes: [] },
+      { name: 'ស្រុករតនៈ​មណ្ឌល', communes: [] },
+      { name: 'ស្រុករោទ៍ហ', communes: [] },
+      { name: 'ស្រុកសំឡូត', communes: [] },
+      { name: 'ស្រុកស្ទឹងស្សែន', communes: [] },
+      { name: 'ស្រុកវ៉ារិន', communes: [] },
+    ],
+  },
+  {
+    name: 'ខេត្តកំពង់ចាម',
+    districts: [
+      { name: 'ក្រុងកំពង់ចាម', communes: [] },
+      { name: 'ស្រុកចំការលើ', communes: [] },
+      { name: 'ស្រុកជើងព្រៃ', communes: [] },
+      { name: 'ស្រុកខ្មរ', communes: [] },
+      { name: 'ស្រុកក្រូច​ឆ្មារ', communes: [] },
+      { name: 'ស្រុកមេមត់', communes: [] },
+      { name: 'ស្រុកព្រែកស្ដេច', communes: [] },
+      { name: 'ស្រុកស្ទឹងត្រង់', communes: [] },
+    ],
+  },
+  {
+    name: 'ខេត្តកំពង់ឆ្នាំង',
+    districts: [
+      { name: 'ក្រុងកំពង់ឆ្នាំង', communes: [] },
+      { name: 'ស្រុកបារាយណ៍', communes: [] },
+      { name: 'ស្រុកកំពង់ត្រឡាច', communes: [] },
+      { name: 'ស្រុកកំពង់លែង', communes: [] },
+      { name: 'ស្រុករលាប្អៀរ', communes: [] },
+      { name: 'ស្រុកសំបូរ', communes: [] },
+    ],
+  },
+  {
+    name: 'ខេត្តកំពង់ស្ពឺ',
+    districts: [
+      { name: 'ក្រុងចោមចៅ', communes: [] },
+      { name: 'ស្រុកបាសេត', communes: [] },
+      { name: 'ស្រុកកំពង់ស្ពឺ', communes: [] },
+      { name: 'ស្រុកកុំរិទ្ធ', communes: [] },
+      { name: 'ស្រុកអូរតាគីរី', communes: [] },
+      { name: 'ស្រុកពិធាន', communes: [] },
+      { name: 'ស្រុកសំរោងទង', communes: [] },
+      { name: 'ស្រុកថ្នល់ទទឹង', communes: [] },
+    ],
+  },
+  {
+    name: 'ខេត្តកំពង់ធំ',
+    districts: [
+      { name: 'ក្រុងស្ទឹងសែន', communes: [] },
+      { name: 'ស្រុកបារាយណ៍', communes: [] },
+      { name: 'ស្រុកបាំងខ្លាំង', communes: [] },
+      { name: 'ស្រុកកំពង់ស្វាយ', communes: [] },
+      { name: 'ស្រុកព្រៃ​នប', communes: [] },
+      { name: 'ស្រុកសណ្ដាន់', communes: [] },
+      { name: 'ស្រុកស្ទឹងសែន', communes: [] },
+      { name: 'ស្រុកទ្រោ', communes: [] },
+    ],
+  },
+  {
+    name: 'ខេត្តកំពត',
+    districts: [
+      { name: 'ក្រុងកំពត', communes: [] },
+      { name: 'ស្រុកអណ្ដូងខ្មែរ', communes: [] },
+      { name: 'ស្រុកបន្ទាយម្មាស', communes: [] },
+      { name: 'ស្រុកជ្រៃ', communes: [] },
+      { name: 'ស្រុកខេមរភូមិន្ទ', communes: [] },
+      { name: 'ស្រុកទឹកឈូ', communes: [] },
+    ],
+  },
+  {
+    name: 'ខេត្តកណ្ដាល',
+    districts: [
+      { name: 'ក្រុងតាខ្មៅ', communes: [] },
+      { name: 'ស្រុកកៀនស្វាយ', communes: [] },
+      { name: 'ស្រុកខ្សាច់កណ្ដាល', communes: [] },
+      { name: 'ស្រុកល្វាឯម', communes: [] },
+      { name: 'ស្រុកមុខកំពូល', communes: [] },
+      { name: 'ស្រុករកាប្ញូ', communes: [] },
+      { name: 'ស្រុកស ​អាង', communes: [] },
+      { name: 'ស្រុកស្រែអំបិល', communes: [] },
+      { name: 'ស្រុកឧត្ដុង្គ', communes: [] },
+    ],
+  },
+  {
+    name: 'ខេត្តកោះកុង',
+    districts: [
+      { name: 'ក្រុងខេមរភូមិន្ទ', communes: [] },
+      { name: 'ស្រុកបតំបាង', communes: [] },
+      { name: 'ស្រុកព្រៃល', communes: [] },
+      { name: 'ស្រុកស្រែអំបិល', communes: [] },
+      { name: 'ស្រុកថ្ម​ បាំង', communes: [] },
+    ],
+  },
+  {
+    name: 'ខេត្តក្រចេះ',
+    districts: [
+      { name: 'ក្រុងក្រចេះ', communes: [] },
+      { name: 'ស្រុកឆ្លូង', communes: [] },
+      { name: 'ស្រុកព្រះសីហនុ', communes: [] },
+      { name: 'ស្រុកស្នួល', communes: [] },
+    ],
+  },
+  {
+    name: 'ខេត្តមណ្ឌលគីរី',
+    districts: [
+      { name: 'ក្រុងសែនម៉ូណូរ៉ូម', communes: [] },
+      { name: 'ស្រុកកោះណ្ហែ', communes: [] },
+      { name: 'ស្រុកប៉ឺជ្ញ', communes: [] },
+      { name: 'ស្រុករតនៈ​គីរី', communes: [] },
+    ],
+  },
+  {
+    name: 'ខេត្តឧត្ដរមានជ័យ',
+    districts: [
+      { name: 'ក្រុងសាមរង្ស៊ី', communes: [] },
+      { name: 'ស្រុកបន្ទាយអំពិល', communes: [] },
+      { name: 'ស្រុកគោករមៀត', communes: [] },
+      { name: 'ស្រុចំណ', communes: [] },
+    ],
+  },
+  {
+    name: 'ខេត្តប៉ៃលិន',
+    districts: [
+      { name: 'ក្រុងប៉ៃលិន', communes: [] },
+      { name: 'ស្រុកសឡ', communes: [] },
+    ],
+  },
+  {
+    name: 'ខេត្តព្រះវិហារ',
+    districts: [
+      { name: 'ក្រុងត្បែងមានជ័យ', communes: [] },
+      { name: 'ស្រុកជ័យសែន', communes: [] },
+      { name: 'ស្រុកជោបស្វាយ', communes: [] },
+      { name: 'ស្រុកគួន​មាម', communes: [] },
+      { name: 'ស្រុករាំងជ័យ', communes: [] },
+      { name: 'ស្រុចំណ', communes: [] },
+    ],
+  },
+  {
+    name: 'ខេត្តព្រៃវែង',
+    districts: [
+      { name: 'ក្រុងព្រៃវែង', communes: [] },
+      { name: 'ស្រុកកំចាយមារ', communes: [] },
+      { name: 'ស្រុកក្រូចឆ្មារ', communes: [] },
+      { name: 'ស្រុកមេសាង', communes: [] },
+      { name: 'ស្រុកព្រៃជ្រុំ', communes: [] },
+      { name: 'ស្រុកពាមជោ', communes: [] },
+      { name: 'ស្រុករបៀបភ្នំ', communes: [] },
+      { name: 'ស្រុកស៊ីថ្ម', communes: [] },
+      { name: 'ស្រុកស្វាយអន្ទរ', communes: [] },
+    ],
+  },
+  {
+    name: 'ខេត្តពោធិ៍សាត់',
+    districts: [
+      { name: 'ក្រុងពោធិ៍សាត់', communes: [] },
+      { name: 'ស្រុកបាកាន', communes: [] },
+      { name: 'ស្រុកកណ្ដោល​ ដំបូង', communes: [] },
+      { name: 'ស្រុកក្រង', communes: [] },
+      { name: 'ស្រុកវាលវែង', communes: [] },
+    ],
+  },
+  {
+    name: 'ខេត្តរតនគីរី',
+    districts: [
+      { name: 'ក្រុងបាន​លុង', communes: [] },
+      { name: 'ស្រុកបរ​អ', communes: [] },
+      { name: 'ស្រុកករ​ចាំ', communes: [] },
+      { name: 'ស្រុកលំ​ ភាត', communes: [] },
+      { name: 'ស្រុកអូរ​ ចូ', communes: [] },
+      { name: 'ស្រុកពរ', communes: [] },
+      { name: 'ស្រុករំ​ ដួល', communes: [] },
+      { name: 'ស្រុកតាវែ', communes: [] },
+    ],
+  },
+  {
+    name: 'ខេត្តសៀមរាប',
+    districts: [
+      { name: 'ក្រុងសៀមរាប', communes: [] },
+      { name: 'ស្រុកអង្គរធំ', communes: [] },
+      { name: 'ស្រុកបន្ទាយស្រី', communes: [] },
+      { name: 'ស្រុកជីក្រែង', communes: [] },
+      { name: 'ស្រុកគ្រីឡាញ', communes: [] },
+      { name: 'ស្រុកប្រាសាទបាក័ន', communes: [] },
+      { name: 'ស្រុកប្រាសាទបល្ល័ង្គ', communes: [] },
+      { name: 'ស្រុករ.ន. ៣', communes: [] },
+      { name: 'ស្រុចំណ', communes: [] },
+      { name: 'ស្រុកស្វាយ​ ឡើ', communes: [] },
+      { name: 'ស្រុកវរន', communes: [] },
+    ],
+  },
+  {
+    name: 'ខេត្តព្រះសីហនុ',
+    districts: [
+      { name: 'ក្រុងព្រះសីហនុ', communes: [] },
+      { name: 'ស្រុកស្ទឹងហាវ', communes: [] },
+      { name: 'ស្រុកព្រៃនប', communes: [] },
+    ],
+  },
+  {
+    name: 'ខេត្តស្ទឹងត្រែង',
+    districts: [
+      { name: 'ក្រុងស្ទឹងត្រែង', communes: [] },
+      { name: 'ស្រុកស្ទឹងត្រែង', communes: [] },
+      { name: 'ស្រុកថ្ម​ ពួក', communes: [] },
+      { name: 'ស្រុកសៀម​ ប៉ាង', communes: [] },
+    ],
+  },
+  {
+    name: 'ខេត្តស្វាយរៀង',
+    districts: [
+      { name: 'ក្រុងស្វាយរៀង', communes: [] },
+      { name: 'ស្រុកចន្ទ្រា', communes: [] },
+      { name: 'ស្រុកកំពង់រោ', communes: [] },
+      { name: 'ស្រុករំដួល', communes: [] },
+      { name: 'ស្រុកស្វាយចេក', communes: [] },
+      { name: 'ស្រុកស្វាយតេប', communes: [] },
+    ],
+  },
+  {
+    name: 'ខេត្តតាកែវ',
+    districts: [
+      { name: 'ក្រុងដូនកែវ', communes: [] },
+      { name: 'ស្រុកបាទី', communes: [] },
+      { name: 'ស្រុកបូរីជ័យ', communes: [] },
+      { name: 'ស្រុកកំពង់រហូ', communes: [] },
+      { name: 'ស្រុកខ្នុក', communes: [] },
+      { name: 'ស្រុកតាគ្រាំ', communes: [] },
+      { name: 'ស្រុកត្រាំកក់', communes: [] },
+    ],
+  },
+  {
+    name: 'ខេត្តត្បូងឃ្មុំ',
+    districts: [
+      { name: 'ក្រុងស្វាយរៀង', communes: [] },
+      { name: 'ស្រុកដំបែ', communes: [] },
+      { name: 'ស្រុកព្រៃឈរ', communes: [] },
+      { name: 'ស្រុកពងរោ', communes: [] },
+      { name: 'ស្រុកសុវណ្ណព្រែ', communes: [] },
+      { name: 'ស្រុកត្បូងឃ្មុំ', communes: [] },
+    ],
+  },
+  {
+    name: 'ខេត្តកែប',
+    districts: [
+      { name: 'ក្រុងកែប', communes: [] },
+      { name: 'ស្រុកដំណាក់ចង្ក្រាន', communes: [] },
+    ],
+  },
+]

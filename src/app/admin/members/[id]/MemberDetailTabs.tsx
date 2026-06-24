@@ -1,23 +1,20 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useTransition } from 'react'
 import Link from 'next/link'
+import { useRouter } from 'next/navigation'
 import {
   ArrowRight,
-  Briefcase,
-  Calendar,
   Scale,
   CircleAlert,
   CreditCard,
   ExternalLink,
-  FileText,
-  Mail,
-  MapPin,
   Percent,
   Phone,
   PiggyBank,
-  Shield,
+  Plus,
   ShieldCheck,
+  Trash2,
   Wallet,
   User,
   UserCheck,
@@ -27,8 +24,13 @@ import { formatDate, money } from '@/app/admin/adminUtils'
 import { normalizeCurrency } from '@/lib/currency'
 import { monthlySavingInterest } from '@/lib/interestCalculations'
 import type { LoanStatus, MemberRole, MemberStatus, SavingStatus } from '@/types/database'
-import { WORKPLACE_LABELS } from '@/lib/workplace'
-import { MemberProfileEditForm } from './MemberProfileEditForm'
+import { WORKPLACE_LABELS, WORKPLACE_OPTIONS } from '@/lib/workplace'
+import { adminFieldClassName } from '@/components/admin'
+import { updateMemberProfile } from '@/app/actions/admin'
+import { showError, showSuccess } from '@/lib/toast'
+import { useRegisterMemberEditForm } from './MemberEditModeContext'
+import { CambodiaAddressSelect, formatCambodiaAddress, parseCambodiaAddress } from '@/components/ui/CambodiaAddressSelect'
+
 import { MemberDocumentsEditForm } from './MemberDocumentsEditForm'
 import { MemberRefereeEditForm } from './MemberRefereeEditForm'
 import { MemberLoanInterestForm } from './MemberLoanInterestForm'
@@ -105,7 +107,6 @@ export type MemberDetailTabsProps = {
   loansCount: number
   idDocumentUrl: string | null
   residentBookUrl: string | null
-  docsComplete: boolean
   loanInterest?: {
     assignedPlanId: string | null
     plans: LoanInterestPlan[]
@@ -148,7 +149,6 @@ export function MemberDetailTabs({
   loansCount,
   idDocumentUrl,
   residentBookUrl,
-  docsComplete,
   loanInterest,
   savingInterest,
   memberCurrency,
@@ -158,6 +158,41 @@ export function MemberDetailTabs({
 }: MemberDetailTabsProps) {
   const [activeTab, setActiveTab] = useState<TabId>(defaultTab)
   const { isEditing, exitEditMode } = useMemberEditMode()
+  const router = useRouter()
+  const [pending, startTransition] = useTransition()
+  const formRef = useRegisterMemberEditForm(pending)
+  const [form, setForm] = useState({
+    full_name_kh: member.full_name_kh ?? '',
+    full_name_en: member.full_name_en ?? '',
+    email: member.email,
+    phone: member.phone ?? '',
+    date_of_birth: member.date_of_birth ?? '',
+    id_number: member.id_number ?? '',
+    resident_book_number: member.resident_book_number ?? '',
+    workplace: member.workplace ?? '',
+    address: member.address ?? '',
+    role: member.role as string,
+  })
+  const [emergencyContacts, setEmergencyContacts] = useState<{ full_name: string; phone: string }[]>(
+    member.emergency_contacts ?? []
+  )
+
+  function handleProfileSubmit(e: React.FormEvent<HTMLFormElement>) {
+    e.preventDefault()
+    const payload = new FormData()
+    payload.set('id', member.id)
+    Object.entries(form).forEach(([k, v]) => payload.set(k, v))
+    payload.set('emergency_contacts', JSON.stringify(emergencyContacts))
+    startTransition(async () => {
+      const result = await updateMemberProfile(payload)
+      if (!result.success) { showError(result.error ?? 'មិនអាចរក្សាទុកបានទេ។'); return }
+      showSuccess('បានរក្សាទុកព័ត៌មានសមាជិក។')
+      exitEditMode()
+      router.refresh()
+    })
+  }
+
+  const inputCls = `${adminFieldClassName} px-3 py-1.5 text-sm w-full`
 
   return (
     <div className="flex min-h-0 flex-1 flex-col">
@@ -193,121 +228,180 @@ export function MemberDetailTabs({
           <div className="w-full space-y-8">
             <div>
               <div className="mt-6">
-                {isEditing ? (
-                  <MemberProfileEditForm member={member} onSaved={exitEditMode} />
-                ) : (
-                  <>
-                    <div className="grid w-full gap-4 sm:grid-cols-2 xl:grid-cols-3">
-                      <InfoTile
-                        icon={<User className="h-4 w-4" />}
-                        label="ឈ្មោះ (ខ្មែរ)"
-                        value={member.full_name_kh ?? member.full_name}
-                      />
-                      <InfoTile
-                        icon={<User className="h-4 w-4" />}
-                        label="ឈ្មោះ (អង់គ្លេស)"
-                        value={member.full_name_en ?? member.full_name}
-                      />
-                      <InfoTile
-                        icon={<Shield className="h-4 w-4" />}
-                        label="តួនាទី"
-                        value={MEMBER_ROLE_LABELS[member.role]}
-                      />
-                      <InfoTile icon={<Mail className="h-4 w-4" />} label="អ៊ីមែល" value={member.email} />
-                      <InfoTile
-                        icon={<Phone className="h-4 w-4" />}
-                        label="ទូរស័ព្ទ"
-                        value={member.phone ?? 'គ្មាន'}
-                      />
-                      <InfoTile
-                        icon={<Calendar className="h-4 w-4" />}
-                        label="ថ្ងៃខែឆ្នាំកំណើត"
-                        value={formatDate(member.date_of_birth)}
-                      />
-                      <InfoTile
-                        icon={<CreditCard className="h-4 w-4" />}
-                        label="លេខអត្តសញ្ញាណប័ណ្ណ"
-                        value={member.id_number ?? 'គ្មាន'}
-                      />
-                      <InfoTile
-                        icon={<FileText className="h-4 w-4" />}
-                        label="លេខសៀវភៅគ្រួសារ"
-                        value={member.resident_book_number ?? 'គ្មាន'}
-                      />
-                      <InfoTile
-                        icon={<Briefcase className="h-4 w-4" />}
-                        label="កន្លែងធ្វើការ"
-                        value={member.workplace ? (WORKPLACE_LABELS[member.workplace as keyof typeof WORKPLACE_LABELS] ?? member.workplace) : 'គ្មាន'}
-                      />
-                      <InfoTile
-                        icon={<Calendar className="h-4 w-4" />}
-                        label="Telegram"
-                        value={member.telegram_chat_id ?? 'មិនបានភ្ជាប់'}
-                      />
-                      <InfoTile
-                        icon={<MapPin className="h-4 w-4" />}
-                        label="អាសយដ្ឋាន"
-                        value={member.address ?? 'គ្មាន'}
-                        className="sm:col-span-2 xl:col-span-3"
-                      />
-                    </div>
-                    {member.emergency_contacts.length > 0 && (
-                      <div className="mt-6 border-t border-border pt-6">
-                        <h4 className="mb-3 text-sm font-semibold text-foreground">ទំនាក់ទំនងបន្ទាន់</h4>
-                        <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
-                          {member.emergency_contacts.map((contact, index) => (
-                            <div
-                              key={`${contact.full_name}-${contact.phone}-${index}`}
-                              className="rounded-xl border border-border bg-surface-muted/40 p-4"
-                            >
-                              <p className="text-sm font-medium text-foreground">{contact.full_name}</p>
-                              <p className="mt-1 text-sm text-muted">{contact.phone}</p>
-                            </div>
-                          ))}
-                        </div>
+                <form ref={formRef} onSubmit={handleProfileSubmit}>
+                  <div className="overflow-hidden rounded-xl border border-border">
+                    <table className="w-full text-sm">
+                      <tbody className="divide-y divide-border">
+                        {/* ឈ្មោះ (ខ្មែរ) */}
+                        <tr className="bg-surface hover:bg-surface-muted/40">
+                          <td className="w-md px-5 py-3 text-sm font-semibold text-muted">ឈ្មោះ (ខ្មែរ)</td>
+                          <td className="px-5 py-2">
+                            {isEditing ? <input className={inputCls} value={form.full_name_kh} onChange={e => setForm(p => ({ ...p, full_name_kh: e.target.value }))} disabled={pending} /> : <span className="text-sm text-foreground">{member.full_name_kh ?? member.full_name}</span>}
+                          </td>
+                        </tr>
+                        {/* ឈ្មោះ (អង់គ្លេស) */}
+                        <tr className="bg-surface hover:bg-surface-muted/40">
+                          <td className="w-md px-5 py-3 text-sm font-semibold text-muted">ឈ្មោះ (អង់គ្លេស)</td>
+                          <td className="px-5 py-2">
+                            {isEditing ? <input className={inputCls} value={form.full_name_en} onChange={e => setForm(p => ({ ...p, full_name_en: e.target.value }))} disabled={pending} /> : <span className="text-sm text-foreground">{member.full_name_en ?? member.full_name}</span>}
+                          </td>
+                        </tr>
+                        {/* តួនាទី */}
+                        <tr className="bg-surface hover:bg-surface-muted/40">
+                          <td className="w-md px-5 py-3 text-sm font-semibold text-muted">តួនាទី</td>
+                          <td className="px-5 py-2">
+                            {isEditing ? (
+                              <select className={inputCls} value={form.role} onChange={e => setForm(p => ({ ...p, role: e.target.value }))} disabled={pending}>
+                                {(['founder', 'comember', 'member'] as MemberRole[]).map(r => <option key={r} value={r}>{MEMBER_ROLE_LABELS[r]}</option>)}
+                              </select>
+                            ) : <span className="text-sm text-foreground">{MEMBER_ROLE_LABELS[member.role]}</span>}
+                          </td>
+                        </tr>
+                        {/* អ៊ីមែល */}
+                        <tr className="bg-surface hover:bg-surface-muted/40">
+                          <td className="w-md px-5 py-3 text-sm font-semibold text-muted">អ៊ីមែល</td>
+                          <td className="px-5 py-2">
+                            {isEditing ? <input type="email" className={inputCls} value={form.email} onChange={e => setForm(p => ({ ...p, email: e.target.value }))} disabled={pending} /> : <span className="text-sm text-foreground">{member.email}</span>}
+                          </td>
+                        </tr>
+                        {/* ទូរស័ព្ទ */}
+                        <tr className="bg-surface hover:bg-surface-muted/40">
+                          <td className="w-md px-5 py-3 text-sm font-semibold text-muted">ទូរស័ព្ទ</td>
+                          <td className="px-5 py-2">
+                            {isEditing ? <input type="tel" className={inputCls} value={form.phone} onChange={e => setForm(p => ({ ...p, phone: e.target.value }))} disabled={pending} /> : <span className="text-sm text-foreground">{member.phone ?? 'គ្មាន'}</span>}
+                          </td>
+                        </tr>
+                        {/* ថ្ងៃខែឆ្នាំកំណើត */}
+                        <tr className="bg-surface hover:bg-surface-muted/40">
+                          <td className="w-md px-5 py-3 text-sm font-semibold text-muted">ថ្ងៃខែឆ្នាំកំណើត</td>
+                          <td className="px-5 py-2">
+                            {isEditing ? <input type="date" className={inputCls} value={form.date_of_birth} max={new Date().toISOString().slice(0,10)} onChange={e => setForm(p => ({ ...p, date_of_birth: e.target.value }))} disabled={pending} /> : <span className="text-sm text-foreground">{formatDate(member.date_of_birth)}</span>}
+                          </td>
+                        </tr>
+                        {/* លេខអត្តសញ្ញាណប័ណ្ណ */}
+                        <tr className="bg-surface hover:bg-surface-muted/40">
+                          <td className="w-md px-5 py-3 text-sm font-semibold text-muted">លេខអត្តសញ្ញាណប័ណ្ណ</td>
+                          <td className="px-5 py-2">
+                            {isEditing ? <input className={inputCls} value={form.id_number} onChange={e => setForm(p => ({ ...p, id_number: e.target.value }))} disabled={pending} /> : <span className="text-sm text-foreground">{member.id_number ?? 'គ្មាន'}</span>}
+                          </td>
+                        </tr>
+                        {/* លេខសៀវភៅគ្រួសារ */}
+                        <tr className="bg-surface hover:bg-surface-muted/40">
+                          <td className="w-md px-5 py-3 text-sm font-semibold text-muted">លេខសៀវភៅគ្រួសារ</td>
+                          <td className="px-5 py-2">
+                            {isEditing ? <input className={inputCls} value={form.resident_book_number} onChange={e => setForm(p => ({ ...p, resident_book_number: e.target.value }))} disabled={pending} /> : <span className="text-sm text-foreground">{member.resident_book_number ?? 'គ្មាន'}</span>}
+                          </td>
+                        </tr>
+                        {/* កន្លែងធ្វើការ */}
+                        <tr className="bg-surface hover:bg-surface-muted/40">
+                          <td className="w-md px-5 py-3 text-sm font-semibold text-muted">កន្លែងធ្វើការ</td>
+                          <td className="px-5 py-2">
+                            {isEditing ? (
+                              <select className={inputCls} value={form.workplace} onChange={e => setForm(p => ({ ...p, workplace: e.target.value }))} disabled={pending}>
+                                <option value="">-- ជ្រើសរើស --</option>
+                                {WORKPLACE_OPTIONS.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
+                              </select>
+                            ) : <span className="text-sm text-foreground">{member.workplace ? (WORKPLACE_LABELS[member.workplace as keyof typeof WORKPLACE_LABELS] ?? member.workplace) : 'គ្មាន'}</span>}
+                          </td>
+                        </tr>
+                        {/* Telegram */}
+                        <tr className="bg-surface hover:bg-surface-muted/40">
+                          <td className="w-md px-5 py-3 text-sm font-semibold text-muted">Telegram</td>
+                          <td className="px-5 py-3 text-sm text-foreground">{member.telegram_chat_id ?? 'មិនបានភ្ជាប់'}</td>
+                        </tr>
+                        {/* អាសយដ្ឋាន */}
+                        <tr className="bg-surface hover:bg-surface-muted/40">
+                          <td className="w-md px-5 py-3 text-sm font-semibold text-muted align-top pt-4">អាសយដ្ឋាន</td>
+                          <td className="px-5 py-2">
+                            {isEditing ? (
+                              <CambodiaAddressSelect
+                                value={parseCambodiaAddress(form.address)}
+                                onChange={(addr) => setForm(p => ({ ...p, address: formatCambodiaAddress(addr) }))}
+                                disabled={pending}
+                                selectClassName={inputCls}
+                                inputClassName={inputCls}
+                              />
+                            ) : (
+                              <span className="text-sm text-foreground">{member.address ?? 'គ្មាន'}</span>
+                            )}
+                          </td>
+                        </tr>
+                        {/* ព័ត៌មានលម្អិត divider */}
+                        <tr className="bg-surface-muted/50">
+                          <td colSpan={2} className="px-5 py-2 text-xs font-bold uppercase tracking-wide text-muted">ព័ត៌មានលម្អិត</td>
+                        </tr>
+                        <tr className="bg-surface hover:bg-surface-muted/40">
+                          <td className="w-md px-5 py-3 text-sm font-semibold text-muted">ការសន្សំបានទទួល</td>
+                          <td className="px-5 py-3 text-sm text-foreground">{savingsCount} ដង</td>
+                        </tr>
+                        <tr className="bg-surface hover:bg-surface-muted/40">
+                          <td className="w-md px-5 py-3 text-sm font-semibold text-muted">កម្ជីកំពុងដំណើរការ</td>
+                          <td className="px-5 py-3 text-sm text-foreground">{loansCount} កម្ជី</td>
+                        </tr>
+                        {savingInterest && (
+                          <tr className="bg-surface hover:bg-surface-muted/40">
+                            <td className="w-md px-5 py-3 text-sm font-semibold text-muted">អត្រាការប្រាក់សន្សំ</td>
+                            <td className="px-5 py-3 text-sm text-foreground">{savingInterest.monthlyRate}% ប្រចាំខែ</td>
+                          </tr>
+                        )}
+                        <tr className="bg-surface hover:bg-surface-muted/40">
+                          <td className="w-md px-5 py-3 text-sm font-semibold text-muted">សមតុល្យសរុប</td>
+                          <td className="px-5 py-3 text-sm font-semibold text-foreground">{money(savingsTotal + (savingInterest?.accruedTotal ?? 0) - loanRemainingBalance)}</td>
+                        </tr>
+                      </tbody>
+                    </table>
+                  </div>
+
+                  {/* Emergency contacts */}
+                  {(isEditing || emergencyContacts.length > 0) && (
+                    <div className="mt-6 border-t border-border pt-6">
+                      <div className="mb-3 flex items-center justify-between">
+                        <h4 className="text-sm font-semibold text-foreground">ទំនាក់ទំនងបន្ទាន់</h4>
+                        {isEditing && (
+                          <button type="button" onClick={() => setEmergencyContacts(p => [...p, { full_name: '', phone: '' }])} disabled={pending}
+                            className="inline-flex items-center gap-1.5 rounded-lg border border-border bg-surface-muted px-3 py-1.5 text-xs font-semibold text-foreground transition hover:bg-brand-50 disabled:opacity-60">
+                            <Plus className="h-3.5 w-3.5" /> បន្ថែម
+                          </button>
+                        )}
                       </div>
-                    )}
-                  </>
-                )}
+                      <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
+                        {emergencyContacts.map((contact, index) => (
+                          <div key={index} className="rounded-xl border border-border bg-surface-muted/40 p-4">
+                            {isEditing ? (
+                              <>
+                                <div className="mb-2 flex items-center justify-between">
+                                  <span className="text-xs font-semibold text-muted">ទំនាក់ទំនងលេខ {index + 1}</span>
+                                  <button type="button" onClick={() => setEmergencyContacts(p => p.filter((_, i) => i !== index))} disabled={pending}
+                                    className="grid h-7 w-7 place-items-center rounded-lg text-muted transition hover:bg-red-50 hover:text-red-600">
+                                    <Trash2 className="h-3.5 w-3.5" />
+                                  </button>
+                                </div>
+                                <div className="space-y-2">
+                                  <div className="relative">
+                                    <User className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted" />
+                                    <input type="text" placeholder="ឈ្មោះពេញ" value={contact.full_name} onChange={e => setEmergencyContacts(p => p.map((c, i) => i === index ? { ...c, full_name: e.target.value } : c))} className={`${inputCls} pl-9`} disabled={pending} />
+                                  </div>
+                                  <div className="relative">
+                                    <Phone className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted" />
+                                    <input type="tel" placeholder="0812345678" value={contact.phone} onChange={e => setEmergencyContacts(p => p.map((c, i) => i === index ? { ...c, phone: e.target.value } : c))} className={`${inputCls} pl-9`} disabled={pending} />
+                                  </div>
+                                </div>
+                              </>
+                            ) : (
+                              <>
+                                <p className="text-sm font-medium text-foreground">{contact.full_name}</p>
+                                <p className="mt-1 text-sm text-muted">{contact.phone}</p>
+                              </>
+                            )}
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </form>
               </div>
             </div>
 
-            {/* ── ព័ត៌មានលម្អិត ── */}
-            <section className="overflow-hidden rounded-2xl border border-border bg-surface shadow-sm">
-              <div className="border-b border-border bg-surface-muted/50 px-5 py-4 md:px-6">
-                <h3 className="text-sm font-semibold text-foreground">ព័ត៌មានលម្អិត</h3>
-                <p className="mt-0.5 text-xs text-muted">ចំនួន និងអត្រាការប្រាក់ដែលពាក់ព័ន្ធ</p>
-              </div>
-              <dl className="divide-y divide-border">
-                <FinancialDetailRow
-                  icon={PiggyBank}
-                  label="ការសន្សំបានទទួល"
-                  value={`${savingsCount} ដង`}
-                  tone="emerald"
-                />
-                <FinancialDetailRow
-                  icon={CreditCard}
-                  label="កម្ជីកំពុងដំណើរការ"
-                  value={`${loansCount} កម្ជី`}
-                  tone="blue"
-                />
-                {savingInterest && (
-                  <FinancialDetailRow
-                    icon={Percent}
-                    label="អត្រាការប្រាក់សន្សំ"
-                    value={`${savingInterest.monthlyRate}% ប្រចាំខែ`}
-                    tone="amber"
-                  />
-                )}
-                <FinancialDetailRow
-                  icon={Scale}
-                  label="សមតុល្យសរុប"
-                  value={money(savingsTotal + (savingInterest?.accruedTotal ?? 0) - loanRemainingBalance)}
-                  tone="violet"
-                  highlight
-                />
-              </dl>
-            </section>
           </div>
         )}
 
@@ -650,193 +744,72 @@ function FinancialSummary({
   onViewSavings: () => void
   onViewLoans: () => void
 }) {
+  const rows = [
+    {
+      label: 'សន្សំសរុប',
+      value: money(savingsAmount),
+      meta: `${savingsCount} ការសន្សំបានទទួល`,
+      action: { label: 'មើលបញ្ជីសន្សំ', onClick: onViewSavings },
+    },
+    ...(savingInterest ? [{
+      label: 'ការប្រាក់សន្សំប្រចាំខែ',
+      value: money(savingInterest.monthlyAmount),
+      meta: `${savingInterest.monthlyRate}% នៃសន្សំសរុប`,
+      action: null,
+    }] : []),
+    {
+      label: 'កម្ជីសកម្ម (នៅសល់)',
+      value: money(loanRemainingBalance),
+      meta: `${loansCount} កម្ជី · ដើម ${money(loanAmount)}`,
+      action: { label: 'មើលបញ្ជីកម្ជី', onClick: onViewLoans },
+    },
+    {
+      label: 'សមតុល្យសរុប',
+      value: money(savingsAmount + (savingInterest?.accruedTotal ?? 0) - loanRemainingBalance),
+      meta: 'សន្សំ + ការប្រាក់ − កម្ជីនៅសល់',
+      action: null,
+    },
+  ]
+
   return (
-    <div className="w-full space-y-8">
-      <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
-        <div>
-          <div className="flex items-center gap-2.5">
-            <span className="grid h-10 w-10 place-items-center rounded-xl bg-brand-50 text-brand-800 ring-1 ring-brand-100">
-              <Wallet className="h-5 w-5" />
-            </span>
-            <div>
-              <h2 className="text-xl font-bold tracking-tight text-foreground">សង្ខេបហិរញ្ញវត្ថុ</h2>
-              <p className="text-sm text-muted">ទិដ្ឋភាពរួមនៃសន្សំ ការប្រាក់ និងកម្ជីសកម្ម</p>
-            </div>
-          </div>
-        </div>
+    <div className="w-full">
+      <div className="overflow-hidden rounded-xl border border-border">
+        <table className="w-full text-sm">
+          <thead className="border-b border-border bg-surface-muted/50">
+            <tr>
+              <th className="px-5 py-3 text-left text-xs font-bold uppercase tracking-wide text-foreground">ប្រភេទ</th>
+              <th className="px-5 py-3 text-left text-xs font-bold uppercase tracking-wide text-foreground">ចំនួនទឹកប្រាក់</th>
+              <th className="px-5 py-3 text-left text-xs font-bold uppercase tracking-wide text-foreground">ព័ត៌មានបន្ថែម</th>
+              <th className="px-5 py-3 text-right text-xs font-bold uppercase tracking-wide text-foreground"></th>
+            </tr>
+          </thead>
+          <tbody className="divide-y divide-border">
+            {rows.map((row) => (
+              <tr key={row.label} className="bg-surface hover:bg-surface-muted/40">
+                <td className="px-5 py-4 text-sm font-semibold text-muted">{row.label}</td>
+                <td className="px-5 py-4 text-sm font-bold tabular-nums text-foreground">{row.value}</td>
+                <td className="px-5 py-4 text-sm text-muted">{row.meta}</td>
+                <td className="px-5 py-4 text-right">
+                  {row.action && (
+                    <button
+                      type="button"
+                      onClick={row.action.onClick}
+                      className="inline-flex items-center gap-1 text-xs font-semibold text-brand-700 hover:text-brand-900"
+                    >
+                      {row.action.label}
+                      <ArrowRight className="h-3.5 w-3.5" />
+                    </button>
+                  )}
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
       </div>
-
-      <section>
-        <h3 className="mb-4 text-xs font-semibold uppercase tracking-wide text-muted">សង្ខេប</h3>
-        <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
-          <FinancialStatCard
-            label="សន្សំសរុប"
-            amount={savingsAmount}
-            meta={`${savingsCount} ការសន្សំបានទទួល`}
-            icon={PiggyBank}
-            tone="emerald"
-            actionLabel="មើលបញ្ជីសន្សំ"
-            onAction={onViewSavings}
-          />
-          {savingInterest && (
-            <FinancialStatCard
-              label="ការប្រាក់សន្សំប្រចាំខែ"
-              amount={savingInterest.monthlyAmount}
-              meta={`${savingInterest.monthlyRate}% នៃសន្សំសរុប`}
-              icon={Percent}
-              tone="amber"
-            />
-          )}
-          <FinancialStatCard
-            label="កម្ជីសកម្ម (នៅសល់)"
-            amount={loanRemainingBalance}
-            meta={`${loansCount} កម្ជី · ដើម ${money(loanAmount)}`}
-            icon={CreditCard}
-            tone="blue"
-            actionLabel="មើលបញ្ជីកម្ជី"
-            onAction={onViewLoans}
-          />
-          <FinancialStatCard
-            label="សមតុល្យសរុប"
-            amount={savingsAmount + (savingInterest?.accruedTotal ?? 0) - loanRemainingBalance}
-            meta="សន្សំ + ការប្រាក់ − កម្ជីនៅសល់"
-            icon={Scale}
-            tone="violet"
-          />
-        </div>
-      </section>
-
     </div>
   )
 }
 
-function FinancialStatCard({
-  label,
-  amount,
-  meta,
-  icon: Icon,
-  tone,
-  actionLabel,
-  onAction,
-}: {
-  label: string
-  amount: number
-  meta: string
-  icon: React.ComponentType<{ className?: string }>
-  tone: 'emerald' | 'blue' | 'amber' | 'violet'
-  actionLabel?: string
-  onAction?: () => void
-}) {
-  const styles =
-    tone === 'emerald'
-      ? {
-          card: 'hover:border-emerald-200 hover:shadow-emerald-100/50',
-          stripe: 'bg-emerald-500',
-          icon: 'bg-emerald-50 text-emerald-700 ring-emerald-100',
-          badge: 'bg-emerald-50 text-emerald-800',
-        }
-      : tone === 'amber'
-        ? {
-            card: 'hover:border-amber-200 hover:shadow-amber-100/50',
-            stripe: 'bg-amber-500',
-            icon: 'bg-amber-50 text-amber-700 ring-amber-100',
-            badge: 'bg-amber-50 text-amber-800',
-          }
-        : tone === 'violet'
-          ? {
-              card: 'hover:border-violet-200 hover:shadow-violet-100/50',
-              stripe: 'bg-violet-500',
-              icon: 'bg-violet-50 text-violet-700 ring-violet-100',
-              badge: 'bg-violet-50 text-violet-800',
-            }
-          : {
-              card: 'hover:border-brand-200 hover:shadow-brand-100/50',
-              stripe: 'bg-brand-600',
-              icon: 'bg-brand-50 text-brand-700 ring-brand-100',
-              badge: 'bg-brand-50 text-brand-800',
-            }
-
-  return (
-    <div
-      className={`group relative overflow-hidden rounded-2xl border border-border bg-surface p-5 shadow-sm transition hover:shadow-md ${styles.card}`}
-    >
-      <div className={`absolute inset-x-0 top-0 h-1 ${styles.stripe}`} aria-hidden />
-      <div className="flex items-start justify-between gap-4">
-        <div className="min-w-0 flex-1 pt-1">
-          <p className="text-xs font-semibold uppercase tracking-wide text-muted">{label}</p>
-          <p className="mt-3 text-2xl font-bold tabular-nums tracking-tight text-foreground">
-            {money(amount)}
-          </p>
-          <span
-            className={`mt-3 inline-flex rounded-full px-2.5 py-1 text-xs font-medium ${styles.badge}`}
-          >
-            {meta}
-          </span>
-        </div>
-        <span
-          className={`grid h-11 w-11 shrink-0 place-items-center rounded-xl ring-1 ${styles.icon}`}
-        >
-          <Icon className="h-5 w-5" />
-        </span>
-      </div>
-      {actionLabel && onAction ? (
-        <button
-          type="button"
-          onClick={onAction}
-          className="mt-5 inline-flex w-full items-center justify-center gap-1.5 rounded-lg border border-border bg-surface-muted/50 px-3 py-2 text-xs font-semibold text-brand-800 transition hover:border-brand-200 hover:bg-brand-50 group-hover:border-brand-200"
-        >
-          {actionLabel}
-          <ArrowRight className="h-3.5 w-3.5" />
-        </button>
-      ) : null}
-    </div>
-  )
-}
-
-function FinancialDetailRow({
-  icon: Icon,
-  label,
-  value,
-  tone,
-  highlight = false,
-}: {
-  icon: React.ComponentType<{ className?: string }>
-  label: string
-  value: string
-  tone: 'emerald' | 'blue' | 'amber' | 'violet'
-  highlight?: boolean
-}) {
-  const iconTone =
-    tone === 'emerald'
-      ? 'bg-emerald-50 text-emerald-700'
-      : tone === 'amber'
-        ? 'bg-amber-50 text-amber-700'
-        : tone === 'violet'
-          ? 'bg-violet-50 text-violet-700'
-          : 'bg-brand-50 text-brand-700'
-
-  return (
-    <div
-      className={`flex items-center justify-between gap-4 px-5 py-4 md:px-6 ${
-        highlight ? 'bg-surface-muted/40' : ''
-      }`}
-    >
-      <dt className="flex min-w-0 items-center gap-3 text-sm text-muted">
-        <span className={`grid h-9 w-9 shrink-0 place-items-center rounded-lg ${iconTone}`}>
-          <Icon className="h-4 w-4" />
-        </span>
-        {label}
-      </dt>
-      <dd
-        className={`shrink-0 text-sm font-semibold tabular-nums ${
-          highlight ? 'text-base text-foreground' : 'text-foreground'
-        }`}
-      >
-        {value}
-      </dd>
-    </div>
-  )
-}
 
 function SectionTitle({ icon, title }: { icon: React.ReactNode; title: string }) {
   return (
@@ -844,30 +817,6 @@ function SectionTitle({ icon, title }: { icon: React.ReactNode; title: string })
       <span className="text-brand-700">{icon}</span>
       {title}
     </h3>
-  )
-}
-
-function InfoTile({
-  icon,
-  label,
-  value,
-  className = '',
-}: {
-  icon: React.ReactNode
-  label: string
-  value: string
-  className?: string
-}) {
-  return (
-    <div
-      className={`rounded-xl border border-border bg-surface-muted/80 p-4 transition hover:border-border hover:bg-surface-muted ${className}`}
-    >
-      <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-muted">
-        <span className="text-brand-600/70">{icon}</span>
-        {label}
-      </div>
-      <p className="mt-2 text-sm font-medium text-foreground wrap-break-word">{value}</p>
-    </div>
   )
 }
 
@@ -906,21 +855,21 @@ function DocumentPreview({
   const isPdf = /\.pdf$/i.test(storageKey)
 
   return (
-    <div className="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-xs">
+    <div className="overflow-hidden">
       <DocHeader label={label} url={url} />
-      <div className="bg-slate-100 p-3">
+      <div >
         {isPdf ? (
           <iframe
             src={url}
             title={label}
-            className="h-[min(72vh,560px)] w-full rounded-lg border border-gray-200 bg-white"
+            className="h-[min(72vh,560px)]"
           />
         ) : (
           // eslint-disable-next-line @next/next/no-img-element
           <img
             src={url}
             alt={label}
-            className="mx-auto block max-h-[min(72vh,560px)] w-full rounded-lg border border-gray-200 bg-white object-contain"
+            className="mx-auto block max-h-[min(72vh,560px)] w-full object-contain"
           />
         )}
       </div>
@@ -939,22 +888,10 @@ function DocHeader({
 }) {
   return (
     <div
-      className={`flex items-center justify-between gap-3 border-b px-4 py-3 ${
+      className={`flex items-center justify-between gap-3 ${
         warning ? 'border-amber-200 bg-amber-50' : 'border-gray-100 bg-gray-50'
       }`}
-    >
-      <p className={`text-sm font-semibold ${warning ? 'text-amber-950' : 'text-gray-900'}`}>{label}</p>
-      {url && (
-        <a
-          href={url}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="inline-flex items-center gap-1.5 rounded-lg bg-white px-2.5 py-1.5 text-xs font-semibold text-brand-700 ring-1 ring-gray-200 transition hover:bg-brand-50"
-        >
-          បើកផ្ទាំងថ្មី
-          <ExternalLink className="h-3.5 w-3.5" />
-        </a>
-      )}
+    >     
     </div>
   )
 }

@@ -389,7 +389,7 @@ export function CapitalRequestForm({ memberSavings }: { memberSavings: MemberSav
                 href="/dashboard"
                 className="inline-flex items-center gap-2 bg-brand-950 text-white px-5 py-2.5 rounded-lg text-sm font-semibold hover:bg-brand-800 transition-colors"
               >
-                ត្រឡប់ទៅផ្ទាំងគ្រប់គ្រង <ArrowRight className="w-4 h-4" />
+                ត្រឡប់ក្រោយ <ArrowRight className="w-4 h-4" />
               </Link>
             </div>
           </div>

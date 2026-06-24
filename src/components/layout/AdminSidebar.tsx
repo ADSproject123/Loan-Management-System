@@ -3,7 +3,7 @@
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { useState } from 'react'
-import { BarChart3, Building2, ChevronDown, ChevronRight, LayoutDashboard, LogOut } from 'lucide-react'
+import { BarChart3, Building2, ChevronDown, ChevronRight, LogOut } from 'lucide-react'
 import {
   adminNav,
   adminNavExpandedLabels,
@@ -30,12 +30,8 @@ export function AdminSidebar({ adminName }: { adminName: string }) {
           href="/admin"
           className="flex items-center gap-3 rounded-xl transition-opacity hover:opacity-90"
         >
-          <span className="grid h-10 w-10 place-items-center rounded-xl bg-white/15 ring-1 ring-white/20">
-            <Building2 className="h-5 w-5" />
-          </span>
           <div className="min-w-0">
-            <p className="truncate text-lg font-bold leading-tight">សន្សំ</p>
-            <p className="text-xs font-medium text-brand-200/90">កុងសូលអ្នកគ្រប់គ្រង</p>
+            <p className="truncate text-lg font-bold leading-tight">អ្នកគ្រប់គ្រង</p>
           </div>
         </Link>
       </div>
@@ -112,13 +108,6 @@ export function AdminSidebar({ adminName }: { adminName: string }) {
           </div>
           <p className="truncate text-sm font-semibold text-white">{adminName}</p>
           <div className="mt-3 flex gap-2">
-            <Link
-              href="/dashboard"
-              className="inline-flex flex-1 cursor-pointer items-center justify-center gap-2 rounded-xl bg-white/10 px-3 py-2 text-xs font-semibold text-brand-50 ring-1 ring-white/15 transition hover:bg-white/20"
-            >
-              <LayoutDashboard className="h-3.5 w-3.5" />
-              វិបផតថលសមាជិក
-            </Link>
             <form action="/api/auth/signout" method="post">
               <button
                 type="submit"

@@ -9,13 +9,7 @@ export default async function AdminSettingsPage() {
   return (
     <main>
       <AdminPanel
-        title="ការកំណត់អត្រាការប្រាក់"
-        description={
-          settings.updatedAt
-            ? `ធ្វើបច្ចុប្បន្នភាពចុងក្រោយ៖ ${formatDateTime(settings.updatedAt) ?? 'មិនស្គាល់'}`
-            : 'អត្រាលំនាំដើមកំពុងប្រើ។'
-        }
-      >
+        title="ការកំណត់អត្រាការប្រាក់">
         <div className="px-6 py-6 md:px-8">
           <InterestSettingsForm
             monthlySavingInterestRate={settings.monthlySavingInterestRate}

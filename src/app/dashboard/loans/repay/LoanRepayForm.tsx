@@ -291,7 +291,7 @@ export function LoanRepayForm({
                 href="/dashboard/loans/repay"
                 className="inline-flex items-center gap-2 bg-brand-950 text-white px-5 py-2.5 rounded-lg text-sm font-semibold hover:bg-brand-800 transition-colors"
               >
-                ត្រឡប់ទៅតារាបង់ប្រចាំខែ
+                ត្រឡប់ក្រោយ
               </Link>
               <Link
                 href="/dashboard/loans"

@@ -4,13 +4,10 @@ import { useState } from 'react'
 import Link from 'next/link'
 import {
   CheckCircle2,
-  CircleDollarSign,
-  Clock,
   FileCheck2,
   FileText,
   History,
   Info,
-  Landmark,
   XCircle,
 } from 'lucide-react'
 import { LoanStatusBadge, SavingStatusBadge } from '@/components/ui/Badge'
@@ -79,8 +76,6 @@ type LoanDetailViewProps = {
   docChecklist: DocChecklistItem[]
   docsComplete: boolean
   loanRate: number
-  totalPaid: number
-  scheduleTotalDue: number
   paymentSchedule: LoanScheduleRow[]
   repayments: RepaymentRow[]
 }
@@ -114,10 +109,7 @@ export function LoanDetailView({
   refereeEmail,
   hasRefereeInfo,
   docChecklist,
-  docsComplete,
   loanRate,
-  totalPaid,
-  scheduleTotalDue,
   paymentSchedule,
   repayments,
 }: LoanDetailViewProps) {
@@ -126,8 +118,6 @@ export function LoanDetailView({
   const status = loan.status as LoanStatus
   const memberName =
     member?.full_name_kh ?? member?.full_name ?? relatedMemberName({ members: member })
-  const docsDoneCount = docChecklist.filter((item) => item.done).length
-  const remaining = Math.max(scheduleTotalDue - totalPaid, 0)
   const needsAction = ACTIONABLE_STATUSES.includes(status)
 
   return (
@@ -137,7 +127,7 @@ export function LoanDetailView({
         {/* ── Header ── */}
         <header className="flex flex-col gap-4 border-b border-border px-6 py-4 md:flex-row md:items-center md:justify-between md:px-8">
           <div className="flex min-w-0 flex-col gap-3 sm:flex-row sm:items-center sm:gap-4">
-            <AdminBackLink href="/admin/loans">ត្រឡប់</AdminBackLink>
+            <AdminBackLink href="/admin/loans">ត្រឡប់ក្រោយ</AdminBackLink>
             <div className="hidden h-6 w-px bg-border sm:block" aria-hidden />
             <div className="min-w-0">
               <p className="truncate text-sm font-semibold text-foreground">{memberName}</p>
@@ -169,36 +159,6 @@ export function LoanDetailView({
         )}
 
         <div className="space-y-6 px-6 py-6 md:px-8">
-
-          {/* ── Key metrics ── */}
-          <section className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
-            <MetricCard
-              icon={CircleDollarSign}
-              label="ចំនួនកម្ជី"
-              value={money(loan.amount, currency)}
-              hint={loan.purpose || 'គ្មានគោលបំណង'}
-            />
-            <MetricCard
-              icon={Clock}
-              label="រយៈពេល"
-              value={`${loan.term_months ?? 0} ខែ`}
-              hint={`${loanRate}% / ខែ`}
-            />
-            <MetricCard
-              icon={Landmark}
-              label="បានសង"
-              value={money(totalPaid, currency)}
-              hint={scheduleTotalDue > 0 ? `នៅសល់ ${money(remaining, currency)}` : 'មិនទាន់មានតារាបង់'}
-              accent={remaining === 0 && scheduleTotalDue > 0 ? 'success' : 'default'}
-            />
-            <MetricCard
-              icon={FileCheck2}
-              label="ឯកសារ"
-              value={`${docsDoneCount}/${docChecklist.length}`}
-              hint={docsComplete ? 'គ្រប់គ្រាន់' : 'មិនទាន់គ្រប់'}
-              accent={docsComplete ? 'success' : 'warning'}
-            />
-          </section>
 
           {/* ── Tabs ── */}
           <div className="flex min-h-0 flex-1 flex-col">
@@ -400,7 +360,7 @@ export function LoanDetailView({
 function InfoRow({ label, children }: { label: string; children: React.ReactNode }) {
   return (
     <div className="flex items-start gap-6 py-3 first:pt-0 last:pb-0">
-      <dt className="w-36 shrink-0 text-sm text-muted">{label}</dt>
+      <dt className="w-96 shrink-0 text-sm text-muted">{label}</dt>
       <dd className="min-w-0 flex-1 text-sm text-foreground">{children}</dd>
     </div>
   )

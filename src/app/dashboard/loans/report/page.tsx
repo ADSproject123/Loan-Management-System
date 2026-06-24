@@ -55,7 +55,7 @@ export default function LoanReportPage() {
           className="inline-flex items-center gap-2 text-gray-500 hover:text-gray-700 text-sm mb-4 transition-colors"
         >
           <ArrowLeft className="w-4 h-4" />
-          ត្រឡប់ទៅកម្ជី
+          ត្រឡប់ក្រោយ
         </Link>
         <h1 className="text-2xl font-bold text-gray-900">ស្នើសុំរបាយការណ៍កម្ជី</h1>
         <p className="text-gray-500 text-sm mt-1">
@@ -177,7 +177,7 @@ export default function LoanReportPage() {
                 href="/dashboard/loans"
                 className="inline-flex items-center gap-2 bg-brand-950 text-white px-5 py-2.5 rounded-lg text-sm font-semibold hover:bg-brand-800 transition-colors"
               >
-                ត្រឡប់ទៅកម្ជី
+                ត្រឡប់ក្រោយ
               </Link>
             </div>
           </div>

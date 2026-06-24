@@ -2,6 +2,7 @@
 
 import React, { useEffect, useMemo, useState } from 'react'
 import Link from 'next/link'
+import { CambodiaAddressSelect, formatCambodiaAddress, parseCambodiaAddress } from '@/components/ui/CambodiaAddressSelect'
 import {
   ArrowLeft,
   ArrowRight,
@@ -15,7 +16,6 @@ import {
   FileText,
   Lock,
   Mail,
-  MapPin,
   Phone,
   Plus,
   Search,
@@ -165,7 +165,6 @@ export default function RegisterPage() {
 
   const currentStep = STEPS[step - 1]
   const totalSteps = 4
-  const progress = step <= totalSteps ? Math.round(((step - 1) / totalSteps) * 100) : 100
 
   const passwordStrength = useMemo(() => {
     const pwd = formData.password
@@ -274,10 +273,10 @@ export default function RegisterPage() {
 
   return (
     <div className="min-h-screen bg-background">
-      <div className="mx-auto grid min-h-screen w-full max-w-[1400px] grid-cols-1 lg:grid-cols-[440px_1fr]">
+      <div className="min-h-screen w-full">
         <BrandPanel currentStep={step} />
 
-        <main className="relative flex min-h-screen flex-col bg-background">
+        <main className="relative flex min-h-screen flex-col bg-background lg:ml-[30%]">
           <div className="flex items-center justify-between border-b border-border px-6 py-4 sm:px-8">
             <Link href="/" className="flex items-center gap-2 lg:hidden">
               <span className="grid h-8 w-8 place-items-center rounded-lg bg-brand-950 text-white">
@@ -298,31 +297,42 @@ export default function RegisterPage() {
           </div>
 
           <div className="flex flex-1 flex-col px-4 py-8 sm:px-8 lg:px-12 lg:py-12">
-            <div className="mx-auto w-full max-w-2xl">
+            <div className="mx-auto w-full max-w-4xl">
               <MobileStepBar step={step} />
 
               <div className="mb-7">
-                <p className="text-xs font-semibold uppercase tracking-[0.18em] text-brand-700">
-                  {step >= 5 ? currentStep.label : `ជំហានទី ${step} នៃ ${totalSteps}`}
-                </p>
-                <h1 className="mt-2 text-3xl font-bold tracking-tight text-slate-950 sm:text-[34px]">
+                <h1 className="text-3xl font-bold tracking-tight text-slate-950 sm:text-[34px]">
                   {step === 6 ? 'ពាក្យសុំត្រូវបានដាក់ស្នើ' : currentStep.label}
                 </h1>
                 <p className="mt-2 text-[15px] leading-6 text-slate-600">{currentStep.hint}</p>
               </div>
 
               {step < 5 && (
-                <div className="mb-6">
-                  <div className="h-1.5 w-full overflow-hidden rounded-full bg-slate-200">
-                    <div
-                      className="h-full rounded-full bg-brand-800 transition-all duration-500 ease-out"
-                      style={{ width: `${progress}%` }}
-                    />
-                  </div>
+                <div className="mb-6 flex overflow-hidden rounded-full border border-slate-200">
+                  {STEPS.slice(0, 4).map((s, i) => {
+                    const isComplete = step > s.id
+                    const isCurrent = step === s.id
+                    return (
+                      <div
+                        key={s.id}
+                        className={`flex flex-1 items-center justify-center px-3 py-2 text-xs font-semibold transition-colors ${
+                          i > 0 ? 'border-l border-slate-200' : ''
+                        } ${
+                          isCurrent
+                            ? 'bg-brand-950 text-white'
+                            : isComplete
+                            ? 'bg-brand-100 text-brand-800'
+                            : 'bg-white text-slate-400'
+                        }`}
+                      >
+                        {s.label}
+                      </div>
+                    )
+                  })}
                 </div>
               )}
 
-              <div className="rounded-3xl border border-border bg-surface p-6 shadow-sm shadow-slate-200/40 sm:p-8">
+              <div className="border border-border bg-surface p-6 sm:p-8">
                 {step === 1 && (
                   <StepAccount
                     formData={formData}
@@ -388,10 +398,6 @@ export default function RegisterPage() {
                 </div>
               )}
 
-              <p className="mt-8 text-center text-xs text-slate-400 sm:text-left">
-                ដោយការបន្ត អ្នកយល់ព្រមថាព័ត៌មានដែលអ្នកផ្តល់គឺត្រឹមត្រូវ និង យល់ព្រមឱ្យសន្សំ
-                ត្រួតពិនិត្យឯកសាររបស់អ្នកសម្រាប់ការទទួលចូលជាសមាជិក។
-              </p>
             </div>
           </div>
         </main>
@@ -402,7 +408,7 @@ export default function RegisterPage() {
 
 function BrandPanel({ currentStep: _ }: { currentStep: StepId }) {
   return (
-    <aside className="app-brand-panel relative hidden overflow-hidden lg:flex lg:flex-col">
+    <aside className="app-brand-panel fixed inset-y-0 left-0 hidden w-[30%] overflow-hidden lg:flex lg:flex-col">
       <div className="relative flex h-full flex-col px-10 py-10">
         <Link href="/" className="group inline-flex w-fit items-center gap-2.5">
           <span className="grid h-10 w-10 place-items-center rounded-xl bg-white/10 ring-1 ring-white/15 transition group-hover:bg-white/15">
@@ -410,15 +416,6 @@ function BrandPanel({ currentStep: _ }: { currentStep: StepId }) {
           </span>
           <span className="text-lg font-bold tracking-tight">សមាគមន៏សន្សំ</span>
         </Link>
-
-        <div className="mt-14">
-          <h2 className="text-[28px] font-bold leading-[1.2]">
-            ចូលរួមសហគមន៍ដែលគ្រប់គ្រងដោយសមាជិកដែលអាចទុកចិត្តបាន។
-          </h2>
-          <p className="mt-3 text-[15px] leading-7 text-brand-100/85">
-            បំពេញជំហានខ្លីៗបួនដើម្បីបើកគណនី។
-          </p>
-        </div>
 
         <ul className="mt-10 space-y-3">
           {[
@@ -729,19 +726,15 @@ function StepPersonal({ formData, updateField }: StepProps) {
         onChange={(contacts) => updateField('emergency_contacts', contacts)}
       />
 
-      <Field label="អាសយដ្ឋាន" htmlFor="address" optional>
-        <div className="relative">
-          <MapPin className="pointer-events-none absolute left-3.5 top-3.5 h-4.5 w-4.5 text-slate-400" />
-          <textarea
-            id="address"
-            value={formData.address ?? ''}
-            onChange={(e) => updateField('address', e.target.value)}
-            placeholder="អាសយដ្ឋានបច្ចុប្បន្នរបស់អ្នក"
-            rows={3}
-            className={`${inputBase} resize-none pl-11`}
-          />
-        </div>
-      </Field>
+      <div className="space-y-1.5">
+        <p className="text-sm font-semibold text-slate-800">អាសយដ្ឋាន <span className="text-xs font-normal text-slate-400">(ស្រេចចិត្ត)</span></p>
+        <CambodiaAddressSelect
+          value={parseCambodiaAddress(formData.address)}
+          onChange={(addr) => updateField('address', formatCambodiaAddress(addr))}
+          selectClassName={inputBase}
+          inputClassName={inputBase}
+        />
+      </div>
     </div>
   )
 }
@@ -1160,7 +1153,7 @@ function StepTelegram({ connectToken, onDone }: StepTelegramProps) {
           <p className="text-sm font-semibold text-slate-900">ហេតុអ្វីបានជាភ្ជាប់តេលេក្រាម?</p>
           <p className="mt-1 text-[13px] leading-6 text-slate-600">
             យើងផ្ញើការជូនដំណឹងតាមតេលេក្រាមនៅពេលគណនីរបស់អ្នកត្រូវបានទទួល ការសន្សំត្រូវបានផ្ទៀងផ្ទាត់
-            និង កម្ជីមានការផ្លាស់ប្តូរ។ បើកតេលេក្រាម ចុច <strong>Start</strong> រួចត្រឡប់មកទំព័រនេះវិញ។
+            និង កម្ជីមានការផ្លាស់ប្តូរ។ បើកតេលេក្រាម ចុច <strong>Start</strong> រួចត្រឡប់ក្រោយមកទំព័រនេះវិញ។
           </p>
         </div>
       </div>
@@ -1238,7 +1231,7 @@ function StepSuccess() {
           href="/"
           className="inline-flex items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white px-6 py-3 text-sm font-semibold text-slate-700 transition hover:border-slate-300 hover:bg-background"
         >
-          ត្រឡប់ទៅទំព័រដើម
+          ត្រឡប់ក្រោយទៅទំព័រដើម
         </Link>
       </div>
     </div>

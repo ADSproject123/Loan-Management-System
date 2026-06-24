@@ -117,7 +117,7 @@ export function LoanInterestPlansManager({
         {!draft && (
           <Button type="button" size="sm" onClick={startCreate}>
             <Plus className="h-4 w-4" />
-            បន្ថែមអត្រា
+            បង្កើតអត្រា
           </Button>
         )}
       </div>
@@ -220,7 +220,7 @@ export function LoanInterestPlansManager({
       ) : null}
 
       {plans.length === 0 ? (
-        <p className="text-sm text-slate-500">មិនទាន់មានអត្រាកម្ជីជាក្រុមទេ។ ចុច «បន្ថែមអត្រា» ដើម្បីបង្កើត។</p>
+        <p className="text-sm text-slate-500">មិនទាន់មានអត្រាកម្ជីជាក្រុមទេ។ ចុច «បង្កើតអត្រា» ដើម្បីបង្កើត។</p>
       ) : (
         <div className={`${adminTable.wrap} rounded-xl border border-border`}>
           <table className={adminTable.table}>
