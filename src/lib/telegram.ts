@@ -132,6 +132,48 @@ export async function sendTelegramMessageWithAppButton(
 }
 
 /**
+ * The persistent reply keyboard shown at the bottom of every chat.
+ * Tapping a button sends its label text as a message, which the webhook routes
+ * to the matching command handler via MENU_BUTTON_MAP.
+ */
+export const MENU_KEYBOARD = {
+  keyboard: [
+    [{ text: '💰 ការសន្សំ' },     { text: '🏦 ប្រាក់កម្ចី' }],
+    [{ text: '📤 ដាក់ស្នើសន្សំ' }, { text: '💳 សងកម្ចី' }],
+    [{ text: '📝 ស្នើសុំកម្ចី' }],
+  ],
+  resize_keyboard: true,
+  is_persistent: true,
+}
+
+/**
+ * Send a message and (re)show the persistent command menu at the bottom of the chat.
+ * Use this for all main bot responses so the menu stays visible.
+ */
+export async function sendTelegramMessageWithCommandButtons(
+  chatId: string,
+  text: string,
+): Promise<boolean> {
+  const result = await callTelegram('sendMessage', {
+    chat_id: chatId,
+    text,
+    parse_mode: 'HTML',
+    disable_web_page_preview: true,
+    reply_markup: MENU_KEYBOARD,
+  })
+  return result.ok
+}
+
+/**
+ * Answer a callback query (removes the loading spinner on the button).
+ * Must be called within 10 s of receiving the callback_query update.
+ */
+export async function answerTelegramCallbackQuery(callbackQueryId: string): Promise<boolean> {
+  const result = await callTelegram('answerCallbackQuery', { callback_query_id: callbackQueryId })
+  return result.ok
+}
+
+/**
  * Set the bot's persistent menu button to open the site as a Mini App.
  * Call once during bot setup via /api/telegram/setup.
  */
@@ -152,10 +194,52 @@ export async function configureBotMenuButton(): Promise<boolean> {
 export async function setBotCommands(): Promise<boolean> {
   const result = await callTelegram('setMyCommands', {
     commands: [
-      { command: 'start',  description: 'ភ្ជាប់គណនី / Link your account' },
-      { command: 'saving', description: 'មើលការសន្សំ / View my savings' },
-      { command: 'loan',   description: 'មើលប្រាក់កម្ចី / View my loan report' },
+      { command: 'start',      description: 'ភ្ជាប់គណនី / Link your account' },
+      { command: 'saving',     description: 'មើលការសន្សំ / View my savings' },
+      { command: 'loan',       description: 'មើលប្រាក់កម្ចី / View my loan report' },
+      { command: 'paysaving',    description: 'ដាក់ស្នើការសន្សំ / Submit a saving payment' },
+      { command: 'payloan',      description: 'ដាក់ស្នើការសងកម្ចី / Submit a loan repayment' },
+      { command: 'requestloan',  description: 'ស្នើសុំប្រាក់កម្ចី / Request a new loan' },
     ],
   })
   return result.ok
+}
+
+/**
+ * Send a photo to a chat by URL. Caption supports HTML.
+ */
+export async function sendTelegramPhoto(
+  chatId: string,
+  photoUrl: string,
+  caption: string,
+  forceReply = false,
+): Promise<boolean> {
+  const payload: Record<string, unknown> = {
+    chat_id: chatId,
+    photo: photoUrl,
+    caption,
+    parse_mode: 'HTML',
+  }
+  if (forceReply) {
+    payload.reply_markup = { force_reply: true, selective: true }
+  }
+  const result = await callTelegram('sendPhoto', payload)
+  return result.ok
+}
+
+/**
+ * Resolve a Telegram file_id to a direct download URL.
+ * Returns null if the bot token is missing or the file is not found.
+ */
+export async function getTelegramFileDownloadUrl(fileId: string): Promise<string | null> {
+  if (!API_BASE || !BOT_TOKEN) return null
+  try {
+    const res = await fetch(`${API_BASE}/getFile?file_id=${encodeURIComponent(fileId)}`)
+    if (!res.ok) return null
+    const data = (await res.json()) as { ok: boolean; result?: { file_path?: string } }
+    if (!data.ok || !data.result?.file_path) return null
+    return `https://api.telegram.org/file/bot${BOT_TOKEN}/${data.result.file_path}`
+  } catch {
+    return null
+  }
 }
