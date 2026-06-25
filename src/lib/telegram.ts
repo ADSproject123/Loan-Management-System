@@ -24,8 +24,13 @@ export function telegramEnabled(): boolean {
   return Boolean(API_BASE)
 }
 
-async function callTelegram(method: string, payload: Record<string, unknown>): Promise<boolean> {
-  if (!API_BASE) return false
+type TelegramResult = { ok: boolean; errorCode?: number; description?: string }
+
+async function callTelegram(method: string, payload: Record<string, unknown>): Promise<TelegramResult> {
+  if (!API_BASE) {
+    console.warn('[Telegram] TELEGRAM_BOT_TOKEN not set — skipping', method)
+    return { ok: false }
+  }
   try {
     const res = await fetch(`${API_BASE}/${method}`, {
       method: 'POST',
@@ -34,82 +39,123 @@ async function callTelegram(method: string, payload: Record<string, unknown>): P
     })
     if (!res.ok) {
       const body = await res.text().catch(() => '')
-      console.error(`Telegram ${method} failed (${res.status}): ${body}`)
-      return false
+      let errorCode: number | undefined
+      let description: string | undefined
+      try {
+        const json = JSON.parse(body) as { error_code?: number; description?: string }
+        errorCode = json.error_code
+        description = json.description
+      } catch { /* ignore */ }
+      console.error(`[Telegram] ${method} failed (${res.status}): ${body}`)
+      return { ok: false, errorCode, description }
     }
-    return true
+    console.log(`[Telegram] ${method} ✓`)
+    return { ok: true }
   } catch (error) {
-    console.error(`Telegram ${method} error:`, error)
-    return false
+    console.error(`[Telegram] ${method} error:`, error)
+    return { ok: false }
   }
 }
 
 /**
- * Send a message to a chat. Best-effort: never throws, returns false on failure
- * so a Telegram outage can't break the surrounding action (member approval, etc).
- * `text` supports a subset of HTML (<b>, <i>, <a>, ...) via parse_mode.
+ * Send a plain HTML message. Best-effort — never throws.
  */
-export function sendTelegramMessage(chatId: string, text: string): Promise<boolean> {
-  return callTelegram('sendMessage', {
+export async function sendTelegramMessage(chatId: string, text: string): Promise<boolean> {
+  const result = await callTelegram('sendMessage', {
     chat_id: chatId,
     text,
     parse_mode: 'HTML',
     disable_web_page_preview: true,
   })
+  return result.ok
 }
 
-export function sendTelegramMessageRemoveKeyboard(chatId: string, text: string): Promise<boolean> {
-  return callTelegram('sendMessage', {
+export async function sendTelegramMessageRemoveKeyboard(chatId: string, text: string): Promise<boolean> {
+  const result = await callTelegram('sendMessage', {
     chat_id: chatId,
     text,
     parse_mode: 'HTML',
     reply_markup: { remove_keyboard: true },
   })
+  return result.ok
 }
 
 /**
- * Send a message with an inline "Open App" button that launches the site as a
- * Telegram Mini App. Best-effort — never throws.
+ * Send a message with an inline "Open App" button (Telegram Mini App).
+ * Falls back to a plain URL button if the web_app type is rejected (e.g. domain
+ * not yet whitelisted), then falls back to a plain text message — so the user
+ * always receives a reply.
  */
-export function sendTelegramMessageWithAppButton(
+export async function sendTelegramMessageWithAppButton(
   chatId: string,
   text: string,
   buttonLabel = '📱 បើកកម្មវិធី / Open App'
 ): Promise<boolean> {
-  return callTelegram('sendMessage', {
+  const url = appUrl()
+
+  // Attempt 1: web_app button (Mini App)
+  const r1 = await callTelegram('sendMessage', {
     chat_id: chatId,
     text,
     parse_mode: 'HTML',
     disable_web_page_preview: true,
     reply_markup: {
-      inline_keyboard: [[{ text: buttonLabel, web_app: { url: appUrl() } }]],
+      inline_keyboard: [[{ text: buttonLabel, web_app: { url } }]],
     },
   })
+  if (r1.ok) return true
+
+  console.warn(`[Telegram] web_app button rejected (${r1.errorCode}: ${r1.description}), falling back to URL button`)
+
+  // Attempt 2: regular URL button
+  const r2 = await callTelegram('sendMessage', {
+    chat_id: chatId,
+    text,
+    parse_mode: 'HTML',
+    disable_web_page_preview: true,
+    reply_markup: {
+      inline_keyboard: [[{ text: buttonLabel, url }]],
+    },
+  })
+  if (r2.ok) return true
+
+  console.warn(`[Telegram] URL button also rejected, sending plain message`)
+
+  // Attempt 3: plain message with link appended
+  const r3 = await callTelegram('sendMessage', {
+    chat_id: chatId,
+    text: `${text}\n\n🔗 <a href="${url}">${url}</a>`,
+    parse_mode: 'HTML',
+    disable_web_page_preview: false,
+  })
+  return r3.ok
 }
 
 /**
  * Set the bot's persistent menu button to open the site as a Mini App.
- * Call this once during bot setup (see /api/telegram/setup).
- * Omitting chat_id sets the default for every chat.
+ * Call once during bot setup via /api/telegram/setup.
  */
-export function configureBotMenuButton(): Promise<boolean> {
-  return callTelegram('setChatMenuButton', {
+export async function configureBotMenuButton(): Promise<boolean> {
+  const result = await callTelegram('setChatMenuButton', {
     menu_button: {
       type: 'web_app',
       text: '📱 Open App',
       web_app: { url: appUrl() },
     },
   })
+  return result.ok
 }
 
 /**
  * Register the bot's slash-command list shown in the Telegram UI.
  */
-export function setBotCommands(): Promise<boolean> {
-  return callTelegram('setMyCommands', {
+export async function setBotCommands(): Promise<boolean> {
+  const result = await callTelegram('setMyCommands', {
     commands: [
       { command: 'start',  description: 'ភ្ជាប់គណនី / Link your account' },
-      { command: 'saving', description: 'មើលការសន្សំ' },
+      { command: 'saving', description: 'មើលការសន្សំ / View my savings' },
+      { command: 'loan',   description: 'មើលប្រាក់កម្ចី / View my loan report' },
     ],
   })
+  return result.ok
 }
