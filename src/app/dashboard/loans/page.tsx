@@ -6,7 +6,7 @@ import { createAdminClient } from '@/lib/supabase/admin'
 import { formatMoney, normalizeCurrency } from '@/lib/currency'
 import { getInterestSettings, loanRepaymentSummary, resolveLoanInterestRate } from '@/lib/interest'
 import { getLoanEligibility, sumCommittedLoanPrincipal, sumVerifiedSavings } from '@/lib/loanEligibility'
-import { CreditCard, Plus, FileText, ArrowRight, AlertTriangle } from 'lucide-react'
+import { CreditCard, Plus, ArrowRight, AlertTriangle, FileText } from 'lucide-react'
 
 function toNumber(value: unknown) {
   const numberValue = Number(value ?? 0)
@@ -69,13 +69,6 @@ export default async function LoansPage() {
           <p className="text-gray-500 text-sm mt-1">គ្រប់គ្រងពាក្យសុំកម្ជី និង ការសងវិញរបស់អ្នក</p>
         </div>
         <div className="flex gap-3">
-          <Link
-            href="/dashboard/loans/report"
-            className="inline-flex items-center gap-2 bg-white border border-gray-300 text-gray-700 px-4 py-2 rounded-lg text-sm font-medium hover:bg-gray-50 transition-colors"
-          >
-            <FileText className="w-4 h-4" />
-            របាយការណ៍
-          </Link>
           {loanEligibility.canRequestLoan ? (
             <Link
               href="/dashboard/loans/request"
@@ -137,12 +130,6 @@ export default async function LoansPage() {
               className="inline-flex items-center gap-2 bg-white text-brand-900 px-4 py-2 rounded-lg text-sm font-semibold hover:bg-brand-50 transition-colors"
             >
               សងកម្ជី <ArrowRight className="w-4 h-4" />
-            </Link>
-            <Link
-              href="/dashboard/loans/report"
-              className="inline-flex items-center gap-2 rounded-lg border border-white/40 bg-white/15 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-white/25"
-            >
-              មើលរបាយការណ៍
             </Link>
           </div>
         </div>

@@ -1339,10 +1339,39 @@ export async function createMemberByAdmin(formData: FormData): Promise<ActionRes
 
     revalidatePath('/admin')
     revalidatePath('/admin/members')
-    return { success: true }
+    return { success: true, connectToken }
   } catch (error) {
     return { success: false, error: error instanceof Error ? error.message : 'មិនអាចបង្កើតសមាជិកបានទេ។' }
   }
+}
+
+export async function ensureMemberTelegramConnectToken(
+  memberId: string
+): Promise<{ linked: boolean; connectToken: string | null }> {
+  await requireAdmin()
+  const admin = createAdminClient()
+
+  const { data: member, error } = await admin
+    .from('members')
+    .select('id, telegram_chat_id, telegram_connect_token')
+    .eq('id', memberId)
+    .maybeSingle()
+
+  if (error || !member) {
+    return { linked: false, connectToken: null }
+  }
+
+  if (member.telegram_chat_id) {
+    return { linked: true, connectToken: null }
+  }
+
+  let token = member.telegram_connect_token
+  if (!token) {
+    token = crypto.randomUUID()
+    await admin.from('members').update({ telegram_connect_token: token }).eq('id', memberId)
+  }
+
+  return { linked: false, connectToken: token }
 }
 
 export async function markReportSent(formData: FormData): Promise<ActionResult> {

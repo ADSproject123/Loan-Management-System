@@ -22,6 +22,8 @@ import {
 } from 'lucide-react'
 import { LoanStatusBadge, MemberStatusBadge, SavingStatusBadge, MEMBER_ROLE_LABELS } from '@/components/ui/Badge'
 import { formatDate, money } from '@/app/admin/adminUtils'
+import { memberKhmerName } from '@/lib/memberNames'
+import { AdminMemberTelegramLink } from '@/components/telegram/AdminMemberTelegramLink'
 import { normalizeCurrency } from '@/lib/currency'
 import { monthlySavingInterest } from '@/lib/interestCalculations'
 import type { LoanStatus, MemberRole, MemberStatus, SavingStatus } from '@/types/database'
@@ -122,6 +124,8 @@ export type MemberDetailTabsProps = {
   monthlyLoanInterestRate: number
   loanEligibility: LoanEligibility
   defaultTab?: TabId
+  telegramConnectToken?: string | null
+  telegramLinked?: boolean
 }
 
 const TABS: { id: TabId; label: string; icon: React.ReactNode }[] = [
@@ -155,6 +159,8 @@ export function MemberDetailTabs({
   monthlyLoanInterestRate,
   loanEligibility,
   defaultTab = 'profile',
+  telegramConnectToken = null,
+  telegramLinked = false,
 }: MemberDetailTabsProps) {
   const [activeTab, setActiveTab] = useState<TabId>(defaultTab)
   const { isEditing, exitEditMode } = useMemberEditMode()
@@ -236,14 +242,7 @@ export function MemberDetailTabs({
                         <tr className="bg-surface hover:bg-surface-muted/40">
                           <td className="w-md px-5 py-3 text-sm font-semibold text-muted">ឈ្មោះ (ខ្មែរ)</td>
                           <td className="px-5 py-2">
-                            {isEditing ? <input className={inputCls} value={form.full_name_kh} onChange={e => setForm(p => ({ ...p, full_name_kh: e.target.value }))} disabled={pending} /> : <span className="text-sm text-foreground">{member.full_name_kh ?? member.full_name}</span>}
-                          </td>
-                        </tr>
-                        {/* ឈ្មោះ (អង់គ្លេស) */}
-                        <tr className="bg-surface hover:bg-surface-muted/40">
-                          <td className="w-md px-5 py-3 text-sm font-semibold text-muted">ឈ្មោះ (អង់គ្លេស)</td>
-                          <td className="px-5 py-2">
-                            {isEditing ? <input className={inputCls} value={form.full_name_en} onChange={e => setForm(p => ({ ...p, full_name_en: e.target.value }))} disabled={pending} /> : <span className="text-sm text-foreground">{member.full_name_en ?? member.full_name}</span>}
+                            {isEditing ? <input className={inputCls} value={form.full_name_kh} onChange={e => setForm(p => ({ ...p, full_name_kh: e.target.value }))} disabled={pending} /> : <span className="text-sm text-foreground">{memberKhmerName(member)}</span>}
                           </td>
                         </tr>
                         {/* តួនាទី */}
@@ -306,8 +305,14 @@ export function MemberDetailTabs({
                         </tr>
                         {/* Telegram */}
                         <tr className="bg-surface hover:bg-surface-muted/40">
-                          <td className="w-md px-5 py-3 text-sm font-semibold text-muted">Telegram</td>
-                          <td className="px-5 py-3 text-sm text-foreground">{member.telegram_chat_id ?? 'មិនបានភ្ជាប់'}</td>
+                          <td className="w-md px-5 py-3 text-sm font-semibold text-muted align-top">Telegram</td>
+                          <td className="px-5 py-3 text-sm text-foreground">
+                            <AdminMemberTelegramLink
+                              memberName={memberKhmerName(member)}
+                              linked={telegramLinked || Boolean(member.telegram_chat_id)}
+                              connectToken={telegramConnectToken}
+                            />
+                          </td>
                         </tr>
                         {/* អាសយដ្ឋាន */}
                         <tr className="bg-surface hover:bg-surface-muted/40">
@@ -475,12 +480,8 @@ export function MemberDetailTabs({
                       <tr className="transition hover:bg-surface-muted/50">
                         <td className="px-5 py-4 md:px-6">
                           <p className="font-semibold text-foreground">
-                            {referee.full_name_kh ?? referee.full_name_en ?? referee.full_name}
+                            {memberKhmerName(referee)}
                           </p>
-                          {referee.full_name_en &&
-                            referee.full_name_en !== (referee.full_name_kh ?? referee.full_name) && (
-                              <p className="mt-0.5 text-sm text-muted">{referee.full_name_en}</p>
-                            )}
                         </td>
                         <td className="px-5 py-4 text-foreground">{referee.phone ?? '—'}</td>
                         <td className="px-5 py-4">

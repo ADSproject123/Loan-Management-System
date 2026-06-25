@@ -25,7 +25,7 @@ export default async function AdminLoansPaymentsLedgerPage({
       admin
         .from('loans')
         .select(
-          'id, member_id, amount, currency, term_months, monthly_interest_rate, start_date, disbursed_at, created_at, members:members!loans_member_id_fkey(full_name, full_name_kh, phone)'
+          'id, member_id, amount, currency, term_months, monthly_interest_rate, start_date, disbursed_at, created_at, members:members!loans_member_id_fkey(full_name, full_name_kh, full_name_en, phone)'
         )
         .eq('status', 'active')
         .order('disbursed_at', { ascending: false }),
@@ -33,7 +33,7 @@ export default async function AdminLoansPaymentsLedgerPage({
       admin
         .from('loan_repayments')
         .select(
-          'id, loan_id, member_id, amount, currency, status, evidence_url, qr_code_ref, payment_date, created_at, members:members!loan_repayments_member_id_fkey(full_name, email)'
+          'id, loan_id, member_id, amount, currency, status, evidence_url, qr_code_ref, payment_date, created_at, members:members!loan_repayments_member_id_fkey(full_name, full_name_kh, full_name_en, email)'
         )
         .eq('status', 'pending')
         .order('created_at', { ascending: false }),

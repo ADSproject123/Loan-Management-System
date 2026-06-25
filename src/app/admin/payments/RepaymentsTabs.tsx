@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState } from 'react'
 import { CalendarClock, ChevronDown, Clock } from 'lucide-react'
-import { money, relatedMemberEmail, relatedMemberName } from '@/app/admin/adminUtils'
+import { money, relatedMemberEmail, relatedMemberMatchesSearch } from '@/app/admin/adminUtils'
 import { DueThisMonthList } from '@/app/admin/payments/DueThisMonthList'
 import { RepaymentsList, type RepaymentListItem } from '@/app/admin/payments/RepaymentsList'
 import { AdminListToolbar, adminFieldClassName } from '@/components/admin'
@@ -50,7 +50,7 @@ function filterDueRows(
   return rows.filter((row) => {
     const amount = money(row.dueAmount, (row.currency as CurrencyCode) ?? 'USD').toLowerCase()
     return (
-      row.memberName.toLowerCase().includes(q) ||
+      row.memberSearchText.includes(q) ||
       (row.memberPhone ?? '').includes(q) ||
       amount.includes(q)
     )
@@ -61,10 +61,9 @@ function filterPendingRows(rows: RepaymentListItem[], query: string) {
   const q = query.trim().toLowerCase()
   if (!q) return rows
   return rows.filter((row) => {
-    const name = relatedMemberName(row).toLowerCase()
     const email = relatedMemberEmail(row).toLowerCase()
     const amount = money(row.amount, (row.currency as CurrencyCode) ?? 'USD').toLowerCase()
-    return name.includes(q) || email.includes(q) || amount.includes(q)
+    return relatedMemberMatchesSearch(row, q) || email.includes(q) || amount.includes(q)
   })
 }
 

@@ -3,7 +3,7 @@ import type { NextConfig } from "next";
 const nextConfig: NextConfig = {
   // Allow the ngrok tunnel used for Telegram webhook testing to reach dev
   // resources (HMR, etc.). Update this if the ngrok URL changes.
-  allowedDevOrigins: ["2336-203-176-133-182.ngrok-free.app"],
+  allowedDevOrigins: ["d3a9-96-9-79-118.ngrok-free.app"],
   experimental: {
     serverActions: {
       // Registration and payment evidence can include image/PDF uploads (up to 10MB each).

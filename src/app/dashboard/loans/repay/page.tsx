@@ -1,7 +1,7 @@
 import Link from 'next/link'
+import { Suspense } from 'react'
 import { ArrowLeft, CreditCard } from 'lucide-react'
-import { Card } from '@/components/ui/Card'
-import { LoanPaymentSchedule } from '@/components/loans/LoanPaymentSchedule'
+import { LoanRepayPageContent } from './LoanRepayPageContent'
 import { getRepayContext } from './getRepayContext'
 
 export default async function LoanRepayPage() {
@@ -22,13 +22,9 @@ export default async function LoanRepayPage() {
       </div>
 
       {context ? (
-        <Card>
-          <LoanPaymentSchedule
-            schedule={context.paymentSchedule}
-            currency={context.loan.currency}
-            showRowPayButton
-          />
-        </Card>
+        <Suspense fallback={null}>
+          <LoanRepayPageContent context={context} />
+        </Suspense>
       ) : (
         <div className="rounded-xl border border-brand-100 bg-brand-50 p-8 text-center">
           <CreditCard className="mx-auto mb-3 h-10 w-10 text-brand-300" />

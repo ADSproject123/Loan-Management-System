@@ -12,6 +12,7 @@ import {
 } from 'lucide-react'
 import { LoanStatusBadge, SavingStatusBadge } from '@/components/ui/Badge'
 import { formatDate, money, relatedMemberName } from '@/app/admin/adminUtils'
+import { memberKhmerName } from '@/lib/memberNames'
 import { LoanActions } from '@/app/admin/loans/LoanActions'
 import { LoanPaymentSchedule } from '@/components/loans/LoanPaymentSchedule'
 import type { CurrencyCode } from '@/lib/currency'
@@ -116,8 +117,11 @@ export function LoanDetailView({
   const [activeTab, setActiveTab] = useState<TabId>('info')
 
   const status = loan.status as LoanStatus
-  const memberName =
-    member?.full_name_kh ?? member?.full_name ?? relatedMemberName({ members: member })
+  const memberName = memberKhmerName(member ?? { full_name: relatedMemberName({ members: member }) })
+  const refereeDisplayName =
+    memberKhmerName(referee) !== 'សមាជិកមិនស្គាល់'
+      ? memberKhmerName(referee)
+      : refereeNameKh || memberKhmerName({ full_name: referee?.full_name })
   const needsAction = ACTIONABLE_STATUSES.includes(status)
 
   return (
@@ -231,13 +235,8 @@ export function LoanDetailView({
                     {hasRefereeInfo && (
                       <InfoRow label="អ្នកធានា">
                         <div className="space-y-0.5">
-                          {(referee?.full_name_kh || refereeNameKh) && (
-                            <p className="font-medium text-foreground">
-                              {referee?.full_name_kh ?? refereeNameKh}
-                            </p>
-                          )}
-                          {(referee?.full_name_en || refereeNameEn) && (
-                            <p className="text-sm text-muted">{referee?.full_name_en ?? refereeNameEn}</p>
+                          {refereeDisplayName && (
+                            <p className="font-medium text-foreground">{refereeDisplayName}</p>
                           )}
                           {(referee?.phone || refereePhone) && (
                             <p className="text-sm text-muted">{referee?.phone ?? refereePhone}</p>
@@ -273,7 +272,7 @@ export function LoanDetailView({
                       schedule={paymentSchedule}
                       currency={currency}
                       fileBaseName={`loan-${loan.id}-schedule`}
-                      memberName={member?.full_name_kh ?? member?.full_name ?? undefined}
+                      memberName={memberName}
                       showDownload
                     />
                   ) : (

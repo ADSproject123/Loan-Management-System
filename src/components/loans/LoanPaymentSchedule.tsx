@@ -1,3 +1,5 @@
+'use client'
+
 import Link from 'next/link'
 import { ArrowRight } from 'lucide-react'
 import { formatMoney, type CurrencyCode } from '@/lib/currency'
@@ -27,6 +29,7 @@ type LoanPaymentScheduleProps = {
   compact?: boolean
   repayHref?: string
   showRowPayButton?: boolean
+  onPayMonth?: (month: number) => void
   fileBaseName?: string
   memberName?: string
   showDownload?: boolean
@@ -39,6 +42,7 @@ export function LoanPaymentSchedule({
 
   repayHref,
   showRowPayButton = false,
+  onPayMonth,
   fileBaseName,
   memberName,
   showDownload = true,
@@ -114,6 +118,15 @@ export function LoanPaymentSchedule({
                       <span className="inline-flex rounded-full bg-amber-100 px-2.5 py-1 text-xs font-semibold text-amber-800">
                         រង់ចាំទទួល
                       </span>
+                    ) : onPayMonth ? (
+                      <button
+                        type="button"
+                        onClick={() => onPayMonth(row.month)}
+                        className="inline-flex items-center gap-1 rounded-lg bg-brand-950 px-3 py-1.5 text-xs font-semibold text-white transition-colors hover:bg-brand-900"
+                      >
+                        បង់ប្រាក់
+                        <ArrowRight className="h-3.5 w-3.5" />
+                      </button>
                     ) : (
                       <Link
                         href={`/dashboard/loans/repay/${row.month}`}

@@ -7,7 +7,7 @@ import { adminCreateCapitalRequest } from '@/app/actions/admin'
 import { AdminModal } from '@/components/admin/AdminModal'
 import { adminFieldClassName } from '@/components/admin/AdminListToolbar'
 import { Button } from '@/components/ui/Button'
-import { type CurrencyCode } from '@/lib/currency'
+import { formatMoney, type CurrencyCode } from '@/lib/currency'
 import { showError, showSuccess } from '@/lib/toast'
 
 type Props = {
@@ -106,7 +106,7 @@ export function MemberAddCapitalRequestForm({ memberId, currency, savingsTotal, 
               step="0.01"
               disabled={loading}
             />
-            <p className="mt-1 text-xs text-muted">អតិបរមា: {savingsTotal.toLocaleString()} {currency}</p>
+            <p className="mt-1 text-xs text-muted">អតិបរមា: {formatMoney(savingsTotal, currency)}</p>
           </div>
 
           <div>

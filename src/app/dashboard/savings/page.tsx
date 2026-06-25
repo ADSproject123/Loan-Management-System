@@ -3,8 +3,8 @@ import { Card } from '@/components/ui/Card'
 import { SavingStatusBadge } from '@/components/ui/Badge'
 import { requireMember } from '@/lib/auth/member'
 import { createAdminClient } from '@/lib/supabase/admin'
-import { PiggyBank, Plus, FileText, TrendingUp, ChevronRight } from 'lucide-react'
-import { currencySymbol, predominantCurrency } from '@/lib/currency'
+import { PiggyBank, Plus, TrendingUp, ChevronRight } from 'lucide-react'
+import { formatMoney, predominantCurrency } from '@/lib/currency'
 import { getInterestSettings, monthlySavingInterest } from '@/lib/interest'
 
 function toNumber(value: unknown) {
@@ -40,7 +40,6 @@ export default async function SavingsPage() {
   const totalSavings = verifiedSavings.reduce((sum, saving) => sum + toNumber(saving.amount), 0)
   const monthlyInterest = monthlySavingInterest(totalSavings, interestSettings.monthlySavingInterestRate)
   const displayCurrency = predominantCurrency(verifiedSavings)
-  const displaySymbol = currencySymbol(displayCurrency)
 
   return (
     <div className="p-6 md:p-8 max-w-7xl mx-auto">
@@ -51,13 +50,6 @@ export default async function SavingsPage() {
           <p className="text-gray-500 text-sm mt-1">តាមដានការបរិច្ចាគប្រចាំខែ និង ការប្រាក់របស់អ្នក</p>
         </div>
         <div className="flex gap-3">
-          <Link
-            href="/dashboard/savings/report"
-            className="inline-flex items-center gap-2 bg-white border border-gray-300 text-gray-700 px-4 py-2 rounded-lg text-sm font-medium hover:bg-gray-50 transition-colors"
-          >
-            <FileText className="w-4 h-4" />
-            ស្នើសុំរបាយការណ៍
-          </Link>
           <Link
             href="/dashboard/savings/add"
             className="inline-flex items-center gap-2 bg-brand-950 text-white px-4 py-2 rounded-lg text-sm font-semibold hover:bg-brand-800 transition-colors"
@@ -74,14 +66,14 @@ export default async function SavingsPage() {
           <div className="p-2.5 bg-green-100 rounded-lg inline-flex mb-3">
             <PiggyBank className="w-5 h-5 text-green-700" />
           </div>
-          <p className="text-2xl font-bold text-gray-900">{displaySymbol}{totalSavings.toLocaleString()}</p>
+          <p className="text-2xl font-bold text-gray-900">{formatMoney(totalSavings, displayCurrency)}</p>
           <p className="text-gray-500 text-sm mt-1">សមតុល្យសន្សំសរុប</p>
         </Card>
         <Card>
           <div className="p-2.5 bg-brand-100 rounded-lg inline-flex mb-3">
             <TrendingUp className="w-5 h-5 text-brand-700" />
           </div>
-          <p className="text-2xl font-bold text-gray-900">{displaySymbol}{monthlyInterest.toLocaleString()}</p>
+          <p className="text-2xl font-bold text-gray-900">{formatMoney(monthlyInterest, displayCurrency)}</p>
           <p className="text-gray-500 text-sm mt-1">ការប្រាក់ប្រចាំខែ ({interestSettings.monthlySavingInterestRate}%)</p>
         </Card>
         <Card>
@@ -122,7 +114,7 @@ export default async function SavingsPage() {
                     {new Date(saving.saving_date).toLocaleDateString('km-KH', { day: 'numeric', month: 'long', year: 'numeric' })}
                   </td>
                   <td className="px-6 py-4">
-                    <span className="text-sm font-semibold text-green-700">+{currencySymbol(saving.currency ?? 'USD')}{saving.amount.toLocaleString()}</span>
+                    <span className="text-sm font-semibold text-green-700">+{formatMoney(saving.amount, saving.currency ?? 'USD')}</span>
                   </td>
                   <td className="px-6 py-4 text-sm text-gray-500">
                     {saving.status === 'refunded' && saving.refund_reason

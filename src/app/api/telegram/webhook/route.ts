@@ -1,9 +1,13 @@
 import { NextResponse, type NextRequest } from 'next/server'
+import { formatMoney } from '@/lib/currency'
 import { createAdminClient } from '@/lib/supabase/admin'
-import { sendTelegramMessage, sendTelegramMessageWithAppButton } from '@/lib/telegram'
+import {
+  sendTelegramMessage,
+  sendTelegramMessageRemoveKeyboard,
+  sendTelegramMessageWithAppButton,
+} from '@/lib/telegram'
 import type { SavingStatus } from '@/types/database'
 
-// Telegram calls this on every message to the bot. Always run at request time.
 export const dynamic = 'force-dynamic'
 
 interface TelegramUpdate {
@@ -15,42 +19,69 @@ interface TelegramUpdate {
 }
 
 const WELCOME_NO_TOKEN =
-  '👋 សួស្តី! សូមភ្ជាប់គណនីរបស់អ្នកដោយចុចតំណ "ភ្ជាប់តេលេក្រាម" នៅក្នុងទំព័រចុះឈ្មោះ។\n\n' +
-  'Please open the "Connect Telegram" link from the registration page to link your account.'
+  '👋 សួស្តី!\n\n' +
+  'ដើម្បីភ្ជាប់គណនី សូមប្រើ <b>តំណភ្ជាប់ផ្ទាល់ខ្លួន</b> ពីអ្នកគ្រប់គ្រង ឬ ចូលគណនីក្នុងកម្មវិធីហើយទៅ <b>ភ្ជាប់ Telegram</b>។\n\n' +
+  'To link your account, use your personal connect link from the admin, or sign in to the app and open <b>Connect Telegram</b>.'
 
 const NOT_LINKED =
-  '🔗 គណនី Telegram របស់អ្នកមិនទាន់ភ្ជាប់ទេ។ សូមចូល "ភ្ជាប់តេលេក្រាម" ពីទំព័រចុះឈ្មោះ។\n\n' +
-  'Your Telegram account is not linked yet. Please use the "Connect Telegram" link from the registration page.'
+  '🔗 គណនី Telegram របស់អ្នកមិនទាន់ភ្ជាប់ទេ។ សូមប្រើតំណភ្ជាប់ផ្ទាល់ខ្លួនពីអ្នកគ្រប់គ្រង ឬ ចូលគណនីក្នុងកម្មវិធី។\n\n' +
+  'Your Telegram account is not linked yet. Please use your personal connect link or sign in to the app.'
 
 const STATUS_EMOJI: Record<SavingStatus, string> = {
-  pending:   '⏳',
-  verified:  '✅',
+  pending: '⏳',
+  verified: '✅',
   completed: '🏁',
-  refunded:  '↩️',
+  refunded: '↩️',
 }
 
 const STATUS_LABEL: Record<SavingStatus, string> = {
-  pending:   'Pending',
-  verified:  'Verified',
+  pending: 'Pending',
+  verified: 'Verified',
   completed: 'Completed',
-  refunded:  'Refunded',
+  refunded: 'Refunded',
 }
 
 function fmtMoney(amount: number | null) {
-  if (amount === null) return '$0'
-  return `$${Number(amount).toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 2 })}`
+  if (amount === null) return formatMoney(0)
+  return formatMoney(amount)
 }
 
 function fmtDate(iso: string) {
-  // saving_date is stored as YYYY-MM-DD
   const [y, m, d] = iso.split('-')
   return `${d}/${m}/${y}`
+}
+
+async function linkTelegramChat(memberId: string, chatId: string): Promise<{ ok: boolean; duplicate?: boolean }> {
+  const admin = createAdminClient()
+
+  const { data: existing } = await admin
+    .from('members')
+    .select('id')
+    .eq('telegram_chat_id', chatId)
+    .neq('id', memberId)
+    .maybeSingle()
+
+  if (existing) {
+    return { ok: false, duplicate: true }
+  }
+
+  const { error } = await admin
+    .from('members')
+    .update({ telegram_chat_id: chatId })
+    .eq('id', memberId)
+
+  if (error) {
+    const isDuplicate =
+      error.code === '23505' || error.message?.includes('members_telegram_chat_id_unique')
+    return { ok: false, duplicate: isDuplicate }
+  }
+
+  return { ok: true }
 }
 
 async function handleSavingCommand(chatId: string): Promise<void> {
   const admin = createAdminClient()
 
-  // Find the member by their linked chat id
   const { data: member } = await admin
     .from('members')
     .select('id, full_name_kh, full_name_en')
@@ -80,7 +111,6 @@ async function handleSavingCommand(chatId: string): Promise<void> {
     return
   }
 
-  // Totals by status
   let totalVerified = 0
   let totalPending = 0
   for (const r of rows) {
@@ -92,10 +122,9 @@ async function handleSavingCommand(chatId: string): Promise<void> {
 
   const name = member.full_name_kh ?? member.full_name_en ?? ''
 
-  // Last 8 entries for the detail list
   const recent = rows.slice(0, 8)
   const recentLines = recent
-    .map(r => {
+    .map((r) => {
       const st = r.status as SavingStatus
       return `  ${STATUS_EMOJI[st]} ${fmtDate(r.saving_date)}  ${fmtMoney(r.amount)}  <i>${STATUS_LABEL[st]}</i>`
     })
@@ -114,6 +143,43 @@ async function handleSavingCommand(chatId: string): Promise<void> {
     moreNote
 
   await sendTelegramMessageWithAppButton(chatId, msg)
+}
+
+async function handleStartWithToken(chatId: string, token: string) {
+  const admin = createAdminClient()
+  const { data: member } = await admin
+    .from('members')
+    .select('id, full_name_kh, full_name_en')
+    .eq('telegram_connect_token', token)
+    .maybeSingle()
+
+  if (!member) {
+    await sendTelegramMessage(
+      chatId,
+      '⚠️ តំណភ្ជាប់នេះមិនត្រឹមត្រូវ ឬផុតកំណត់។ សូមស្នើតំណថ្មីពីអ្នកគ្រប់គ្រង ឬ ចូលគណនីក្នុងកម្មវិធី។\n\n' +
+        'This connection link is invalid or expired. Please ask the admin for a new link or sign in to the app.'
+    )
+    return
+  }
+
+  const result = await linkTelegramChat(member.id, chatId)
+
+  if (!result.ok) {
+    await sendTelegramMessage(
+      chatId,
+      result.duplicate
+        ? '⛔ គណនី Telegram នេះត្រូវបានភ្ជាប់ជាមួយសមាជិកដទៃរួចហើយ។\n\nThis Telegram account is already linked to another member.'
+        : '❌ មានបញ្ហាក្នុងការភ្ជាប់។ សូមព្យាយាមម្តងទៀតពេលក្រោយ។\n\nSomething went wrong linking your account. Please try again later.'
+    )
+    return
+  }
+
+  const name = member.full_name_kh ?? member.full_name_en ?? ''
+  await sendTelegramMessageRemoveKeyboard(
+    chatId,
+    `✅ <b>បានភ្ជាប់ដោយជោគជ័យ!</b>\nគណនី <b>${name}</b> ត្រូវបានភ្ជាប់ហើយ។\n\n` +
+      '<b>Connected!</b> You will now receive notifications here.'
+  )
 }
 
 export async function POST(request: NextRequest) {
@@ -136,85 +202,27 @@ export async function POST(request: NextRequest) {
   const chatId = message?.chat?.id
   const text = message?.text?.trim() ?? ''
 
-  // Telegram requires a 2xx for every update or it will keep retrying.
   if (!chatId) return NextResponse.json({ ok: true })
 
-  // /saving — show the member's savings summary
+  const chatIdStr = String(chatId)
+
   if (text === '/saving' || text.startsWith('/saving@')) {
-    await handleSavingCommand(String(chatId))
+    await handleSavingCommand(chatIdStr)
     return NextResponse.json({ ok: true })
   }
 
-  // /start <token> — account linking flow
   if (text.startsWith('/start')) {
     const token = text.slice('/start'.length).trim()
 
     if (!token) {
-      await sendTelegramMessageWithAppButton(String(chatId), WELCOME_NO_TOKEN)
+      await sendTelegramMessageWithAppButton(chatIdStr, WELCOME_NO_TOKEN)
       return NextResponse.json({ ok: true })
     }
 
-    const admin = createAdminClient()
-    const { data: member } = await admin
-      .from('members')
-      .select('id, full_name_kh, full_name_en, telegram_chat_id')
-      .eq('telegram_connect_token', token)
-      .maybeSingle()
-
-    if (!member) {
-      await sendTelegramMessage(
-        String(chatId),
-        '⚠️ តំណភ្ជាប់នេះមិនត្រឹមត្រូវ ឬផុតកំណត់។ សូមព្យាយាមម្តងទៀតពីទំព័រចុះឈ្មោះ។\n\n' +
-          'This connection link is invalid or expired. Please try again from the registration page.'
-      )
-      return NextResponse.json({ ok: true })
-    }
-
-    if (member.telegram_chat_id !== String(chatId)) {
-      const { data: existing } = await admin
-        .from('members')
-        .select('id')
-        .eq('telegram_chat_id', String(chatId))
-        .neq('id', member.id)
-        .maybeSingle()
-
-      if (existing) {
-        await sendTelegramMessage(
-          String(chatId),
-          '⛔ គណនី Telegram នេះត្រូវបានភ្ជាប់ជាមួយសមាជិកដទៃរួចហើយ។\n\n' +
-            'This Telegram account is already linked to another member. Please contact the admin.'
-        )
-        return NextResponse.json({ ok: true })
-      }
-    }
-
-    const { error } = await admin
-      .from('members')
-      .update({ telegram_chat_id: String(chatId) })
-      .eq('id', member.id)
-
-    if (error) {
-      const isDuplicate =
-        error.code === '23505' || error.message?.includes('members_telegram_chat_id_unique')
-      await sendTelegramMessage(
-        String(chatId),
-        isDuplicate
-          ? '⛔ គណនី Telegram នេះត្រូវបានភ្ជាប់ជាមួយសមាជិកដទៃរួចហើយ។\n\nThis Telegram account is already linked to another member. Please contact the admin.'
-          : '❌ មានបញ្ហាក្នុងការភ្ជាប់។ សូមព្យាយាមម្តងទៀតពេលក្រោយ។\n\nSomething went wrong linking your account. Please try again later.'
-      )
-      return NextResponse.json({ ok: true })
-    }
-
-    await sendTelegramMessageWithAppButton(
-      String(chatId),
-      '✅ <b>បានភ្ជាប់ដោយជោគជ័យ!</b>\nអ្នកនឹងទទួលបានការជូនដំណឹងពីសមាគមន៏សន្សំនៅទីនេះ។\n\n' +
-        '<b>Connected!</b> You will now receive notifications here.'
-    )
-
+    await handleStartWithToken(chatIdStr, token)
     return NextResponse.json({ ok: true })
   }
 
-  // Any other message → welcome prompt
-  await sendTelegramMessageWithAppButton(String(chatId), WELCOME_NO_TOKEN)
+  await sendTelegramMessageWithAppButton(chatIdStr, WELCOME_NO_TOKEN)
   return NextResponse.json({ ok: true })
 }

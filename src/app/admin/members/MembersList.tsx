@@ -4,6 +4,7 @@ import { useMemo, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { Ban, Trash2, UserCheck, Users, UserX } from 'lucide-react'
 import { formatDate } from '@/app/admin/adminUtils'
+import { memberKhmerName, memberMatchesSearch } from '@/lib/memberNames'
 import { AcceptMemberButton } from '@/app/admin/AcceptMemberButton'
 import { SuspendMemberButton } from '@/app/admin/SuspendMemberButton'
 import { DenyMemberButton } from '@/app/admin/DenyMemberButton'
@@ -16,6 +17,8 @@ import { CreateMemberButton } from '@/app/admin/members/CreateMemberButton'
 export type MemberListItem = {
   id: string
   full_name: string
+  full_name_kh?: string | null
+  full_name_en?: string | null
   phone: string | null
   status: MemberStatus
   role: MemberRole
@@ -45,7 +48,7 @@ export function MembersList({
       if (statusFilter && member.status !== statusFilter) return false
       if (!q) return true
       return (
-        member.full_name.toLowerCase().includes(q) ||
+        memberMatchesSearch(member, q) ||
         (member.phone ?? '').includes(q)
       )
     })
@@ -89,14 +92,16 @@ export function MembersList({
 
             {members.length > 0 && filtered.length === 0 && <AdminTableNoResults colSpan={6} />}
 
-            {filtered.map((member) => (
+            {filtered.map((member) => {
+              const displayName = memberKhmerName(member)
+              return (
               <tr
                 key={member.id}
                 onClick={() => router.push(`/admin/members/${member.id}`)}
                 className={adminTableRowClass({ pending: member.status === 'pending', clickable: true })}
               >
                 <td className={`${adminTable.tdFirst} ${adminTable.namePrimary}`}>
-                  {member.full_name}
+                  {displayName}
                 </td>
                 <td className={adminTable.tdMuted}>{formatDate(member.created_at)}</td>
                 <td className={adminTable.tdMuted}>{member.phone ?? '—'}</td>
@@ -111,7 +116,7 @@ export function MembersList({
                     {member.status !== 'active' && member.status !== 'rejected' && (
                       <AcceptMemberButton
                         memberId={member.id}
-                        memberName={member.full_name}
+                        memberName={displayName}
                         label="ទទួលយក"
                         menuItem
                         icon={UserCheck}
@@ -120,7 +125,7 @@ export function MembersList({
                     {member.status === 'pending' && (
                       <DenyMemberButton
                         memberId={member.id}
-                        memberName={member.full_name}
+                        memberName={displayName}
                         label="បដិសេធ"
                         menuItem
                         icon={UserX}
@@ -129,7 +134,7 @@ export function MembersList({
                     {member.status !== 'suspended' && member.status !== 'pending' && (
                       <SuspendMemberButton
                         memberId={member.id}
-                        memberName={member.full_name}
+                        memberName={displayName}
                         label="ផ្អាក"
                         menuItem
                         icon={Ban}
@@ -145,7 +150,7 @@ export function MembersList({
                   </AdminActionsMenu>
                 </td>
               </tr>
-            ))}
+            )})}
           </tbody>
         </table>
       </div>

@@ -3,7 +3,7 @@ import { Card } from '@/components/ui/Card'
 import { MemberStatusBadge } from '@/components/ui/Badge'
 import { requireMember } from '@/lib/auth/member'
 import { createAdminClient } from '@/lib/supabase/admin'
-import { currencySymbol, predominantCurrency } from '@/lib/currency'
+import { formatMoney, normalizeCurrency, predominantCurrency } from '@/lib/currency'
 import { getInterestSettings, monthlySavingInterest } from '@/lib/interest'
 import { getLoanEligibility, sumCommittedLoanPrincipal } from '@/lib/loanEligibility'
 import {
@@ -12,12 +12,10 @@ import {
   Wallet,
   TrendingUp,
   ArrowRight,
-  Bell,
   Calendar,
   ChevronRight,
   AlertTriangle,
   CheckCircle,
-  Clock,
 } from 'lucide-react'
 
 function toNumber(value: unknown) {
@@ -51,7 +49,7 @@ export default async function DashboardPage() {
   const member = await requireMember()
   const admin = createAdminClient()
 
-  const [savingsResult, loansResult, repaymentsResult, notificationsResult] = await Promise.all([
+  const [savingsResult, loansResult, repaymentsResult] = await Promise.all([
     admin
       .from('savings')
       .select('id, amount, currency, saving_date, status, verified_at, verified_by, created_at')
@@ -69,18 +67,11 @@ export default async function DashboardPage() {
       .eq('member_id', member.id)
       .order('created_at', { ascending: false })
       .limit(5),
-    admin
-      .from('notifications')
-      .select('id, title, message, read, created_at')
-      .eq('member_id', member.id)
-      .order('created_at', { ascending: false })
-      .limit(5),
   ])
 
   const savings = savingsResult.data ?? []
   const loans = loansResult.data ?? []
   const repayments = repaymentsResult.data ?? []
-  const notifications = notificationsResult.data ?? []
   const effectiveSavingStatus = (saving: { status: string; verified_at?: string | null; verified_by?: string | null }) =>
     saving.verified_at || saving.verified_by ? 'completed' : saving.status
 
@@ -95,8 +86,8 @@ export default async function DashboardPage() {
   const activeLoanAmount = activeLoans.reduce((sum, loan) => sum + toNumber(loan.amount), 0)
   const loanEligibility = getLoanEligibility(totalSavings, sumCommittedLoanPrincipal(loans))
   const availableCredit = loanEligibility.availableLoanAmount
-  const savingsSymbol = currencySymbol(predominantCurrency(verifiedSavings))
-  const loanSymbol = currencySymbol(predominantCurrency(activeLoans))
+  const savingsCurrency = predominantCurrency(verifiedSavings)
+  const loanCurrency = predominantCurrency(activeLoans)
   const activity = [
     ...savings.map((saving) => ({
       id: `saving-${saving.id}`,
@@ -118,100 +109,118 @@ export default async function DashboardPage() {
     })),
   ].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()).slice(0, 5)
 
+  const statsRows = [
+    {
+      icon: PiggyBank,
+      iconClass: 'bg-green-100 text-green-700',
+      label: 'ការសន្សំសរុប',
+      amount: formatMoney(totalSavings, savingsCurrency),
+      meta: `+${formatMoney(monthlyInterest, savingsCurrency)} ខែនេះ`,
+      metaClass: 'text-green-600 font-medium',
+      href: '/dashboard/savings' as string | null,
+      linkLabel: 'មើលលម្អិត',
+    },
+    {
+      icon: TrendingUp,
+      iconClass: 'bg-brand-100 text-brand-700',
+      label: 'ការប្រាក់ប្រចាំខែ',
+      amount: formatMoney(monthlyInterest, savingsCurrency),
+      meta: `${interestSettings.monthlySavingInterestRate}% ក្នុងមួយខែ`,
+      metaClass: 'text-brand-600 font-medium',
+      href: null,
+      linkLabel: null,
+    },
+    {
+      icon: CreditCard,
+      iconClass: 'bg-orange-100 text-orange-700',
+      label: 'កម្ជីសកម្ម',
+      amount: formatMoney(activeLoanAmount, loanCurrency),
+      meta: null,
+      metaClass: '',
+      href: '/dashboard/loans',
+      linkLabel: 'មើលលម្អិត',
+    },
+    {
+      icon: Wallet,
+      iconClass: 'bg-purple-100 text-purple-700',
+      label: 'កម្ជីដែលអាចស្នើសុំបាន',
+      amount: formatMoney(availableCredit, savingsCurrency),
+      meta: null,
+      metaClass: '',
+      href: loanEligibility.canRequestLoan ? '/dashboard/loans/request' : '/dashboard/savings/add',
+      linkLabel: loanEligibility.canRequestLoan ? 'ស្នើសុំកម្ជី' : 'ដាក់ស្នើការសន្សំជាមុន',
+    },
+  ]
+
   return (
     <div className="mx-auto max-w-7xl p-6 md:p-10">
-      <div className="mb-8 flex items-start justify-between gap-4">
-        <div>
-          <p className="text-xs font-bold uppercase tracking-wider text-brand-700">វិបផតថលសមាជិក</p>
-          <h1 className="mt-1 text-2xl font-bold tracking-tight text-slate-900 md:text-3xl">
-            សូមស្វាគមន៍, {member.full_name.split(' ')[0]}
-          </h1>
-          <div className="mt-2 flex flex-wrap items-center gap-2 text-sm text-slate-500">
-            <span>
-              សមាជិកតាំងពី{' '}
-              {new Date(member.joined_at).toLocaleDateString('km-KH', { month: 'long', year: 'numeric' })}
-            </span>
-            <span className="text-slate-300">·</span>
-            <MemberStatusBadge status={member.status} />
-          </div>
-        </div>
-        <Link
-          href="/dashboard/notifications"
-          className="relative grid h-11 w-11 shrink-0 place-items-center rounded-xl border border-slate-200/80 bg-white shadow-sm transition hover:border-brand-200 hover:shadow"
-        >
-          <Bell className="h-5 w-5 text-slate-600" />
-          {notifications.some((notification) => !notification.read) && (
-            <span className="absolute right-2 top-2 h-2.5 w-2.5 rounded-full bg-red-500 ring-2 ring-white" />
-          )}
-        </Link>
-      </div>
-
-      <div className="mb-8 flex flex-col gap-4 app-hero-banner p-5 sm:flex-row sm:items-center sm:justify-between md:p-6">
-        <div className="flex items-center gap-3">
-          <span className="grid h-11 w-11 shrink-0 place-items-center rounded-xl bg-white/15 ring-1 ring-white/20">
-            <Calendar className="h-5 w-5 text-brand-100" />
+      <div className="mb-8">
+        <h1 className="mt-1 text-2xl font-bold tracking-tight text-slate-900 md:text-3xl">
+          សូមស្វាគមន៍, {member.full_name.split(' ')[0]}
+        </h1>
+        <div className="mt-2 flex flex-wrap items-center gap-2 text-sm text-slate-500">
+          <span>
+            សមាជិកតាំងពី{' '}
+            {new Date(member.joined_at).toLocaleDateString('km-KH', { month: 'long', year: 'numeric' })}
           </span>
-          <div>
-            <p className="font-semibold">ដល់ពេលសន្សំខែនេះ</p>
-            <p className="text-sm text-brand-100/90">បន្ថែមការសន្សំប្រចាំខែមុនផុតកំណត់</p>
-          </div>
+          <span className="text-slate-300">·</span>
+          <MemberStatusBadge status={member.status} />
         </div>
-        <Link
-          href="/dashboard/savings/add"
-          className="inline-flex cursor-pointer items-center justify-center gap-1.5 rounded-xl bg-white px-5 py-2.5 text-sm font-semibold text-brand-900 shadow-sm transition hover:bg-brand-50"
-        >
-          បន្ថែមឥឡូវនេះ <ArrowRight className="h-4 w-4" />
-        </Link>
-      </div>
+      </div>     
 
-      {/* Stats Grid */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6 mb-8">
-        <Card className="col-span-2 sm:col-span-1">
-          <div className="flex items-start justify-between mb-3">
-            <div className="p-2.5 bg-green-100 rounded-lg">
-              <PiggyBank className="w-5 h-5 text-green-700" />
-            </div>
-            <TrendingUp className="w-4 h-4 text-green-500" />
-          </div>
-          <p className="text-2xl font-bold text-gray-900">{savingsSymbol}{totalSavings.toLocaleString()}</p>
-          <p className="text-gray-500 text-sm mt-1">ការសន្សំសរុប</p>
-          <p className="text-green-600 text-xs mt-2 font-medium">+{savingsSymbol}{monthlyInterest.toLocaleString()} ខែនេះ</p>
-        </Card>
-
-        <Card>
-          <div className="p-2.5 bg-brand-100 rounded-lg inline-flex mb-3">
-            <TrendingUp className="w-5 h-5 text-brand-700" />
-          </div>
-          <p className="text-2xl font-bold text-gray-900">{savingsSymbol}{monthlyInterest.toLocaleString()}</p>
-          <p className="text-gray-500 text-sm mt-1">ការប្រាក់ប្រចាំខែ</p>
-          <p className="text-brand-600 text-xs mt-2 font-medium">{interestSettings.monthlySavingInterestRate}% ក្នុងមួយខែ</p>
-        </Card>
-
-        <Card>
-          <div className="p-2.5 bg-orange-100 rounded-lg inline-flex mb-3">
-            <CreditCard className="w-5 h-5 text-orange-700" />
-          </div>
-          <p className="text-2xl font-bold text-gray-900">{loanSymbol}{activeLoanAmount.toLocaleString()}</p>
-          <p className="text-gray-500 text-sm mt-1">កម្ជីសកម្ម</p>
-          <Link href="/dashboard/loans" className="text-orange-600 text-xs mt-2 font-medium hover:text-orange-700 inline-flex items-center gap-1">
-            មើលលម្អិត <ChevronRight className="w-3 h-3" />
-          </Link>
-        </Card>
-
-        <Card>
-          <div className="p-2.5 bg-purple-100 rounded-lg inline-flex mb-3">
-            <Wallet className="w-5 h-5 text-purple-700" />
-          </div>
-          <p className="text-2xl font-bold text-gray-900">{savingsSymbol}{availableCredit.toLocaleString()}</p>
-          <p className="text-gray-500 text-sm mt-1">កម្ជីដែលអាចស្នើសុំបាន</p>
-          <Link
-            href={loanEligibility.canRequestLoan ? '/dashboard/loans/request' : '/dashboard/savings/add'}
-            className="text-purple-600 text-xs mt-2 font-medium hover:text-purple-700 inline-flex items-center gap-1"
-          >
-            {loanEligibility.canRequestLoan ? 'ស្នើសុំកម្ជី' : 'ដាក់ស្នើការសន្សំជាមុន'} <ChevronRight className="w-3 h-3" />
-          </Link>
-        </Card>
-      </div>
+      {/* Stats Table */}
+      <Card padding="none" className="mb-8 overflow-hidden">
+        <div className="overflow-x-auto">
+          <table className="w-full text-sm">
+            <thead>
+              <tr className="border-b border-gray-100 bg-gray-50">
+                <th className="px-5 py-3 text-left text-xs font-semibold uppercase tracking-wide text-gray-500">
+                  ប្រភេទ
+                </th>
+                <th className="px-5 py-3 text-left text-xs font-semibold uppercase tracking-wide text-gray-500">
+                  ចំនួនទឹកប្រាក់
+                </th>
+                <th className="px-5 py-3 text-left text-xs font-semibold uppercase tracking-wide text-gray-500">
+                  ព័ត៌មានបន្ថែម
+                </th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-gray-100">
+              {statsRows.map((row) => {
+                const Icon = row.icon
+                return (
+                  <tr key={row.label} className="transition-colors hover:bg-gray-50/80">
+                    <td className="px-5 py-4">
+                      <div className="flex items-center gap-3">
+                        <span className={`grid h-9 w-9 shrink-0 place-items-center rounded-lg ${row.iconClass}`}>
+                          <Icon className="h-4 w-4" />
+                        </span>
+                        <span className="font-medium text-gray-900">{row.label}</span>
+                      </div>
+                    </td>
+                    <td className="px-5 py-4 font-bold tabular-nums text-gray-900">{row.amount}</td>
+                    <td className="px-5 py-4 text-gray-600">
+                      {row.meta ? (
+                        <span className={row.metaClass}>{row.meta}</span>
+                      ) : row.href && row.linkLabel ? (
+                        <Link
+                          href={row.href}
+                          className="inline-flex items-center gap-1 text-xs font-medium text-brand-700 transition hover:text-brand-900"
+                        >
+                          {row.linkLabel}
+                          <ChevronRight className="h-3.5 w-3.5" />
+                        </Link>
+                      ) : (
+                        '—'
+                      )}
+                    </td>
+                  </tr>
+                )
+              })}
+            </tbody>
+          </table>
+        </div>
+      </Card>
 
       {/* Two Column Layout */}
       <div className="grid lg:grid-cols-3 gap-6">
@@ -306,7 +315,7 @@ export default async function DashboardPage() {
                     </div>
                     <div className="text-right">
                       <p className={`text-sm font-semibold ${item.type === 'loan_repay' ? 'text-orange-600' : 'text-green-600'}`}>
-                        {item.type === 'loan_repay' ? '-' : '+'}{currencySymbol(item.currency)}{item.amount.toLocaleString()}
+                        {item.type === 'loan_repay' ? '-' : '+'}{formatMoney(item.amount, normalizeCurrency(item.currency))}
                       </p>
                       <div className="flex items-center gap-1 justify-end mt-0.5">
                         <CheckCircle className="w-3 h-3 text-green-500" />
@@ -317,46 +326,6 @@ export default async function DashboardPage() {
                 ))}
               </div>
             </Card>
-          </div>
-
-          {/* Notifications */}
-          <div>
-            <div className="flex items-center justify-between mb-4">
-              <h2 className="text-lg font-semibold text-gray-900">ការជូនដំណឹង</h2>
-              <button className="rounded-lg bg-brand-50 px-3 py-1.5 text-sm font-medium text-brand-700 transition hover:bg-brand-100 hover:text-brand-900">
-                សម្គាល់ថាអានទាំងអស់
-              </button>
-            </div>
-            <div className="space-y-3">
-              {notifications.length === 0 && (
-                <div className="p-4 rounded-xl border bg-white border-gray-200 text-sm text-gray-500">
-                  មិនទាន់មានការជូនដំណឹងនៅឡើយ។
-                </div>
-              )}
-              {notifications.map((notif) => (
-                <div key={notif.id} className={`p-4 rounded-xl border ${notif.read ? 'bg-white border-gray-200' : 'bg-brand-50 border-brand-200'}`}>
-                  <div className="flex items-start gap-3">
-                    <div className={`p-1.5 rounded-full flex-shrink-0 ${notif.read ? 'bg-gray-100' : 'bg-brand-100'}`}>
-                      {notif.read ? (
-                        <CheckCircle className="w-4 h-4 text-gray-400" />
-                      ) : (
-                        <Bell className="w-4 h-4 text-brand-700" />
-                      )}
-                    </div>
-                    <div className="flex-1">
-                      <div className="flex items-center justify-between gap-2">
-                        <p className={`text-sm font-medium ${notif.read ? 'text-gray-700' : 'text-brand-900'}`}>{notif.title}</p>
-                        <div className="flex items-center gap-1 text-gray-400 flex-shrink-0">
-                          <Clock className="w-3 h-3" />
-                          <span className="text-xs">{formatDate(notif.created_at)}</span>
-                        </div>
-                      </div>
-                      <p className={`text-sm mt-1 ${notif.read ? 'text-gray-500' : 'text-brand-700'}`}>{notif.message}</p>
-                    </div>
-                  </div>
-                </div>
-              ))}
-            </div>
           </div>
         </div>
       </div>

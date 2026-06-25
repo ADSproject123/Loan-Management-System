@@ -7,6 +7,7 @@ import { adminFieldClassName } from '@/components/admin'
 import { updateMemberReferee } from '@/app/actions/admin'
 import { searchActiveMembers, type MemberSearchResult } from '@/app/actions/member'
 import { showError, showSuccess } from '@/lib/toast'
+import { memberKhmerName } from '@/lib/memberNames'
 import { useRegisterMemberEditForm } from './MemberEditModeContext'
 
 type MemberRefereeEditFormProps = {
@@ -114,10 +115,7 @@ function RefereeSearch({
                 <User className="h-4 w-4 shrink-0 text-muted" />
                 <div className="min-w-0 flex-1">
                   <p className="truncate text-sm font-medium text-foreground">
-                    {member.full_name_kh ?? member.full_name_en}
-                    {member.full_name_kh && member.full_name_en ? (
-                      <span className="ml-1.5 text-xs text-muted">{member.full_name_en}</span>
-                    ) : null}
+                    {memberKhmerName(member)}
                   </p>
                   {memberSearchSubtitle(member) && (
                     <p className="truncate text-xs text-muted">{memberSearchSubtitle(member)}</p>

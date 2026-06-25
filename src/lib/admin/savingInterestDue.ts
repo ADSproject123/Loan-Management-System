@@ -1,11 +1,13 @@
 import { monthlySavingInterest } from '@/lib/interestCalculations'
 import { isVerifiedSaving } from '@/lib/loanEligibility'
+import { memberKhmerName, memberSearchText } from '@/lib/memberNames'
 import type { SavingInterestPaymentStatus } from '@/types/database'
 
 export type SavingInterestDueRow = {
   recordId: string | null
   memberId: string
   memberName: string
+  memberSearchText: string
   memberPhone: string | null
   savingsBalance: number
   interestDue: number
@@ -38,11 +40,13 @@ export type VerifiedSavingInterestRow = {
     | {
         full_name?: string | null
         full_name_kh?: string | null
+        full_name_en?: string | null
         phone?: string | null
       }
     | {
         full_name?: string | null
         full_name_kh?: string | null
+        full_name_en?: string | null
         phone?: string | null
       }[]
     | null
@@ -63,7 +67,8 @@ function interestPayDateInMonth(savingDay: number, year: number, month: number) 
 function memberDisplayName(members: VerifiedSavingInterestRow['members']) {
   const member = Array.isArray(members) ? members[0] : members
   return {
-    name: member?.full_name_kh ?? member?.full_name ?? 'សមាជិកមិនស្គាល់',
+    name: memberKhmerName(member),
+    searchText: memberSearchText(member),
     phone: member?.phone ?? null,
   }
 }
@@ -94,6 +99,7 @@ export function buildSavingInterestDueRowsForMonth(
     {
       memberId: string
       memberName: string
+      memberSearchText: string
       memberPhone: string | null
       savingsBalance: number
       interestDue: number
@@ -118,13 +124,14 @@ export function buildSavingInterestDueRowsForMonth(
     if (amount <= 0) continue
 
     const interest = monthlySavingInterest(amount, ratePercent)
-    const { name, phone } = memberDisplayName(saving.members)
+    const { name, searchText, phone } = memberDisplayName(saving.members)
     const existing = byMember.get(saving.member_id)
 
     if (!existing) {
       byMember.set(saving.member_id, {
         memberId: saving.member_id,
         memberName: name,
+        memberSearchText: searchText,
         memberPhone: phone,
         savingsBalance: amount,
         interestDue: interest,
@@ -152,6 +159,7 @@ export function buildSavingInterestDueRowsForMonth(
       recordId: payment?.id ?? null,
       memberId: group.memberId,
       memberName: group.memberName,
+      memberSearchText: group.memberSearchText,
       memberPhone: group.memberPhone,
       savingsBalance: group.savingsBalance,
       interestDue: group.interestDue,

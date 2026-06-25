@@ -5,7 +5,7 @@ import Link from 'next/link'
 import { ExternalLink, PiggyBank } from 'lucide-react'
 import { SavingStatusBadge } from '@/components/ui/Badge'
 import { SavingActions } from '@/app/admin/savings/SavingActions'
-import { formatDate, money, relatedMemberEmail, relatedMemberName } from '@/app/admin/adminUtils'
+import { formatDate, money, relatedMemberEmail, relatedMemberMatchesSearch, relatedMemberName } from '@/app/admin/adminUtils'
 import type { CurrencyCode } from '@/lib/currency'
 import type { SavingStatus } from '@/types/database'
 import {
@@ -29,7 +29,7 @@ export type SavingListItem = {
   saving_date: string | null
   created_at: string
   evidenceSignedUrl?: string | null
-  members?: { full_name?: string | null; email?: string | null } | { full_name?: string | null; email?: string | null }[] | null
+  members?: { full_name?: string | null; full_name_kh?: string | null; full_name_en?: string | null; email?: string | null } | { full_name?: string | null; full_name_kh?: string | null; full_name_en?: string | null; email?: string | null }[] | null
 }
 
 type MemberSavingGroup = {
@@ -145,11 +145,10 @@ export function SavingsList({
     if (!q) return filteredByStatusAndDate
 
     return filteredByStatusAndDate.filter((saving) => {
-      const name = relatedMemberName(saving).toLowerCase()
       const email = relatedMemberEmail(saving).toLowerCase()
       const amount = money(saving.amount, (saving.currency as CurrencyCode) ?? 'USD').toLowerCase()
       const currency = (saving.currency ?? '').toLowerCase()
-      return name.includes(q) || email.includes(q) || amount.includes(q) || currency.includes(q)
+      return relatedMemberMatchesSearch(saving, q) || email.includes(q) || amount.includes(q) || currency.includes(q)
     })
   }, [filteredByStatusAndDate, mode, query])
 
@@ -164,10 +163,9 @@ export function SavingsList({
     if (!q) return memberGroups
 
     return memberGroups.filter((group) => {
-      const name = relatedMemberName(group).toLowerCase()
       const email = relatedMemberEmail(group).toLowerCase()
       const amount = money(group.totalAmount, (group.currency as CurrencyCode) ?? 'USD').toLowerCase()
-      return name.includes(q) || email.includes(q) || amount.includes(q)
+      return relatedMemberMatchesSearch(group, q) || email.includes(q) || amount.includes(q)
     })
   }, [memberGroups, mode, query])
 
@@ -306,10 +304,6 @@ export function SavingsList({
                   <td className={adminTable.td}>
                     {saving.evidenceSignedUrl ? (
                       <AdminExternalLink href={saving.evidenceSignedUrl}>មើលភស្តុតាង</AdminExternalLink>
-                    ) : saving.qr_code_ref?.startsWith('KHQR-') ? (
-                      <span className="inline-flex items-center rounded-full bg-green-50 px-2 py-0.5 text-xs font-medium text-green-700 ring-1 ring-green-200">
-                        បានបញ្ជាក់ដោយ Bakong
-                      </span>
                     ) : (
                       <span className={adminTable.missingText}>
                         {saving.evidence_url ? 'មិនអាចបង្ហាញ' : 'មិនមាន'}

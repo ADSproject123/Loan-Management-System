@@ -18,7 +18,7 @@ export default async function AdminSavingReportsPage({
     admin
       .from('report_requests')
       .select(
-        'id, report_type, period_from, period_to, sent_to_telegram, status, created_at, members:members!report_requests_member_id_fkey(full_name, email)'
+        'id, report_type, period_from, period_to, sent_to_telegram, status, created_at, members:members!report_requests_member_id_fkey(full_name, full_name_kh, full_name_en, email)'
       )
       .eq('report_type', 'saving')
       .order('created_at', { ascending: false })

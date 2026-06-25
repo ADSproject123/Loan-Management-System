@@ -4,7 +4,7 @@ import { useMemo, useState } from 'react'
 import { createPortal } from 'react-dom'
 import { useRouter } from 'next/navigation'
 import { CreditCard, X } from 'lucide-react'
-import { formatDate, money, relatedMemberEmail, relatedMemberName } from '@/app/admin/adminUtils'
+import { formatDate, money, relatedMemberEmail, relatedMemberMatchesSearch, relatedMemberName } from '@/app/admin/adminUtils'
 import {
   normalizeRepaymentPaidStatus,
   REPAYMENT_PAID_LABELS,
@@ -32,7 +32,7 @@ export type RepaymentListItem = {
   payment_date: string | null
   created_at: string
   evidenceSignedUrl: string | null
-  members?: { full_name?: string | null; email?: string | null } | { full_name?: string | null; email?: string | null }[] | null
+  members?: { full_name?: string | null; full_name_kh?: string | null; full_name_en?: string | null; email?: string | null } | { full_name?: string | null; full_name_kh?: string | null; full_name_en?: string | null; email?: string | null }[] | null
 }
 
 const STATUS_OPTIONS = [
@@ -69,10 +69,9 @@ export function RepaymentsList({
       const paidStatus = normalizeRepaymentPaidStatus(row.status)
       if (statusFilter && paidStatus !== statusFilter) return false
       if (!q) return true
-      const name = relatedMemberName(row).toLowerCase()
       const email = relatedMemberEmail(row).toLowerCase()
       const amount = money(row.amount, (row.currency as CurrencyCode) ?? 'USD').toLowerCase()
-      return name.includes(q) || email.includes(q) || amount.includes(q)
+      return relatedMemberMatchesSearch(row, q) || email.includes(q) || amount.includes(q)
     })
   }, [repayments, query, statusFilter, embed])
 
@@ -154,10 +153,6 @@ export function RepaymentsList({
                     >
                       មើលភស្តុតាង
                     </button>
-                  ) : repayment.qr_code_ref?.startsWith('KHQR-') ? (
-                    <span className="inline-flex items-center rounded-full bg-green-50 px-2 py-0.5 text-xs font-medium text-green-700 ring-1 ring-green-200">
-                      បានបញ្ជាក់ដោយ Bakong
-                    </span>
                   ) : (
                     <span className={adminTable.missingText}>
                       {repayment.evidence_url ? 'មិនអាចបង្ហាញ' : 'មិនមាន'}

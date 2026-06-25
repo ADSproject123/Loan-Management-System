@@ -1,4 +1,5 @@
 import type { SupabaseClient } from '@supabase/supabase-js'
+import { formatMoney } from '@/lib/currency'
 import type { LoanStatus } from '@/types/database'
 
 export const LOAN_TO_SAVINGS_MULTIPLIER = 5
@@ -90,7 +91,7 @@ export function validateLoanRequestAmount(
   if (amount > eligibility.availableLoanAmount) {
     return {
       valid: false,
-      error: `ចំនួនទឹកប្រាក់កម្ជីមិនអាចលើសអតិបរមា ${eligibility.availableLoanAmount.toLocaleString()} ។ អ្នកអាចស្នើសុំបានរហូតដល់ ${LOAN_TO_SAVINGS_MULTIPLIER} ដងនៃសមតុល្យសន្សំរបស់អ្នក។`,
+      error: `ចំនួនទឹកប្រាក់កម្ជីមិនអាចលើសអតិបរមា ${formatMoney(eligibility.availableLoanAmount)} ។ អ្នកអាចស្នើសុំបានរហូតដល់ ${LOAN_TO_SAVINGS_MULTIPLIER} ដងនៃសមតុល្យសន្សំរបស់អ្នក។`,
     }
   }
 

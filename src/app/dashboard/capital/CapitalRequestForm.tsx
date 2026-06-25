@@ -8,7 +8,7 @@ import { Steps } from '@/components/ui/Steps'
 import { requestCapitalWithdrawal } from '@/app/actions/member'
 
 import { showError } from '@/lib/toast'
-import { currencySymbol, type CurrencyCode } from '@/lib/currency'
+import { currencySymbol, formatMoney, type CurrencyCode } from '@/lib/currency'
 import {
   Wallet,
   CheckCircle,
@@ -52,7 +52,7 @@ export function CapitalRequestForm({ memberSavings }: { memberSavings: MemberSav
       return
     }
     if (amt > memberSavings.totalBalance) {
-      showError(`ចំនួនទឹកប្រាក់មិនអាចលើសសមតុល្យសន្សំរបស់អ្នក ${sym}${memberSavings.totalBalance.toLocaleString()} ។`)
+      showError(`ចំនួនទឹកប្រាក់មិនអាចលើសសមតុល្យសន្សំរបស់អ្នក ${formatMoney(memberSavings.totalBalance, memberSavings.currency)} ។`)
       return
     }
     setStep(2)
@@ -115,8 +115,8 @@ export function CapitalRequestForm({ memberSavings }: { memberSavings: MemberSav
       {step < 4 && (
         <div className="bg-brand-950 text-white rounded-xl p-5 mb-6">
           <p className="text-brand-200 text-xs uppercase tracking-wider font-semibold mb-2">សមតុល្យសន្សំរបស់អ្នក</p>
-          <p className="text-3xl font-bold">{sym}{memberSavings.totalBalance.toLocaleString()}</p>
-          <p className="text-brand-200 text-sm mt-1">ការប្រាក់ប្រចាំខែ៖ {sym}{memberSavings.monthlyInterest.toLocaleString()}</p>
+          <p className="text-3xl font-bold">{formatMoney(memberSavings.totalBalance, memberSavings.currency)}</p>
+          <p className="text-brand-200 text-sm mt-1">ការប្រាក់ប្រចាំខែ៖ {formatMoney(memberSavings.monthlyInterest, memberSavings.currency)}</p>
         </div>
       )}
 
@@ -150,7 +150,7 @@ export function CapitalRequestForm({ memberSavings }: { memberSavings: MemberSav
             </div>
             <div className="flex justify-between text-xs text-gray-400 mt-1">
               <span>អប្បបរមា៖ {sym}១០០</span>
-              <span>អតិបរមា៖ {sym}{memberSavings.totalBalance.toLocaleString()}</span>
+              <span>អតិបរមា៖ {formatMoney(memberSavings.totalBalance, memberSavings.currency)}</span>
             </div>
           </div>
 
@@ -159,12 +159,12 @@ export function CapitalRequestForm({ memberSavings }: { memberSavings: MemberSav
               <div className="space-y-2 text-sm">
                 <div className="flex justify-between">
                   <span className="text-purple-700">ចំនួនទឹកប្រាក់ដក</span>
-                  <span className="font-semibold text-purple-900">{sym}{withdrawAmount.toLocaleString()}</span>
+                  <span className="font-semibold text-purple-900">{formatMoney(withdrawAmount, memberSavings.currency)}</span>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-purple-700">សមតុល្យនៅសល់</span>
                   <span className="font-semibold text-purple-900">
-                    {sym}{(memberSavings.totalBalance - withdrawAmount).toLocaleString()}
+                    {formatMoney(memberSavings.totalBalance - withdrawAmount, memberSavings.currency)}
                   </span>
                 </div>
               </div>
@@ -296,9 +296,9 @@ export function CapitalRequestForm({ memberSavings }: { memberSavings: MemberSav
 
           <div className="space-y-3 mb-6">
             {[
-              { label: 'ចំនួនទឹកប្រាក់ដក', value: `${sym}${withdrawAmount.toLocaleString()}` },
-              { label: 'សមតុល្យបច្ចុប្បន្ន', value: `${sym}${memberSavings.totalBalance.toLocaleString()}` },
-              { label: 'នៅសល់បន្ទាប់ពីដក', value: `${sym}${(memberSavings.totalBalance - withdrawAmount).toLocaleString()}` },
+              { label: 'ចំនួនទឹកប្រាក់ដក', value: formatMoney(withdrawAmount, memberSavings.currency) },
+              { label: 'សមតុល្យបច្ចុប្បន្ន', value: formatMoney(memberSavings.totalBalance, memberSavings.currency) },
+              { label: 'នៅសល់បន្ទាប់ពីដក', value: formatMoney(memberSavings.totalBalance - withdrawAmount, memberSavings.currency) },
               { label: 'មូលហេតុ', value: reason },
               { label: 'បន្ទាប់ពីការដក', value: afterDecision === 'continue' ? 'បន្តសន្សំ' : 'ឈប់ចូលជាសមាជិក' },
             ].map((item) => (
@@ -357,7 +357,7 @@ export function CapitalRequestForm({ memberSavings }: { memberSavings: MemberSav
             </div>
             <h2 className="text-2xl font-bold text-gray-900 mb-2">ពាក្យសុំត្រូវបានដាក់ស្នើ!</h2>
             <p className="text-gray-600 mb-2">
-              ការស្នើសុំដកដើមទុនរបស់អ្នកចំនួន <strong>{sym}{withdrawAmount.toLocaleString()}</strong> ត្រូវបានដាក់ស្នើ។
+              ការស្នើសុំដកដើមទុនរបស់អ្នកចំនួន <strong>{formatMoney(withdrawAmount, memberSavings.currency)}</strong> ត្រូវបានដាក់ស្នើ។
             </p>
             <p className="text-gray-500 text-sm mb-6">
               អ្នកនឹងទទួលបានការជូនដំណឹងជាមួយការសម្រេចចិត្តក្នុងអំឡុង{' '}
@@ -369,7 +369,7 @@ export function CapitalRequestForm({ memberSavings }: { memberSavings: MemberSav
               <div className="space-y-2 text-sm">
                 <div className="flex justify-between">
                   <span className="text-brand-700">ចំនួនទឹកប្រាក់ស្នើសុំ</span>
-                  <span className="font-medium text-brand-900">{sym}{withdrawAmount.toLocaleString()}</span>
+                  <span className="font-medium text-brand-900">{formatMoney(withdrawAmount, memberSavings.currency)}</span>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-brand-700">បន្ទាប់ពីការដក</span>

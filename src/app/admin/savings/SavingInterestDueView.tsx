@@ -36,7 +36,7 @@ function filterRows(
     const balance = money(row.savingsBalance, (row.currency as CurrencyCode) ?? 'USD').toLowerCase()
     const interest = money(row.interestDue, (row.currency as CurrencyCode) ?? 'USD').toLowerCase()
     return (
-      row.memberName.toLowerCase().includes(q) ||
+      row.memberSearchText.includes(q) ||
       (row.memberPhone ?? '').includes(q) ||
       balance.includes(q) ||
       interest.includes(q)
