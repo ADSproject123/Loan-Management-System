@@ -11,7 +11,7 @@ import {
   ChevronRight,
   Building2,
   LogOut,
-  Bell,
+  Send,
 } from 'lucide-react'
 
 interface NavItem {
@@ -34,7 +34,6 @@ const navItems: NavItem[] = [
       { label: 'ទិដ្ឋភាពទូទៅ', href: '/dashboard/savings' },
       { label: 'ស្នើសុំការសន្សំ', href: '/dashboard/savings/add' },
       { label: 'ស្នើសុំដើមទុន', href: '/dashboard/capital' },
-      { label: 'របាយការណ៍សន្សំ', href: '/dashboard/savings/report' },
     ],
   },
   {
@@ -44,16 +43,16 @@ const navItems: NavItem[] = [
       { label: 'ទិដ្ឋភាពទូទៅ', href: '/dashboard/loans' },
       { label: 'ស្នើសុំកម្ជី', href: '/dashboard/loans/request' },
       { label: 'សងកម្ជី', href: '/dashboard/loans/repay' },
-      { label: 'របាយការណ៍កម្ជី', href: '/dashboard/loans/report' },
     ],
   },
 ]
 
 interface SidebarProps {
   memberName?: string
+  telegramLinked?: boolean
 }
 
-export function Sidebar({ memberName = 'សមាជិក' }: SidebarProps) {
+export function Sidebar({ memberName = 'សមាជិក', telegramLinked = true }: SidebarProps) {
   const pathname = usePathname()
   const [expandedItems, setExpandedItems] = useState<string[]>(['ការសន្សំ', 'កម្ជី'])
   const items = navItems
@@ -151,14 +150,17 @@ export function Sidebar({ memberName = 'សមាជិក' }: SidebarProps) {
       </nav>
 
       <div className="space-y-1 border-t border-white/10 p-3">
-        <Link
-          href="/dashboard/notifications"
-          prefetch
-          className="app-sidebar-nav-idle flex cursor-pointer items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition-colors duration-200"
-        >
-          <Bell className="h-5 w-5 shrink-0" />
-          ការជូនដំណឹង
-        </Link>
+        {!telegramLinked && (
+          <Link
+            href="/dashboard/telegram"
+            prefetch
+            className="app-sidebar-nav-idle flex cursor-pointer items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition-colors duration-200"
+          >
+            <Send className="h-5 w-5 shrink-0" />
+            <span className="truncate">ភ្ជាប់ Telegram</span>
+            <span className="ml-auto h-2 w-2 rounded-full bg-amber-300" />
+          </Link>
+        )}
         <form action="/api/auth/signout" method="POST">
           <button
             type="submit"

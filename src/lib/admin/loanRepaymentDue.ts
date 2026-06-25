@@ -3,12 +3,14 @@ import {
   buildLoanPaymentSchedule,
   resolveLoanInterestRate,
 } from '@/lib/interestCalculations'
+import { memberKhmerName, memberSearchText } from '@/lib/memberNames'
 import type { LoanDuePaymentStatus } from '@/types/database'
 
 export type LoanDueThisMonthRow = {
   loanId: string
   memberId: string
   memberName: string
+  memberSearchText: string
   memberPhone: string | null
   month: number
   dueDate: string | null
@@ -43,11 +45,13 @@ export type ActiveLoanDueRow = {
     | {
         full_name?: string | null
         full_name_kh?: string | null
+        full_name_en?: string | null
         phone?: string | null
       }
     | {
         full_name?: string | null
         full_name_kh?: string | null
+        full_name_en?: string | null
         phone?: string | null
       }[]
     | null
@@ -96,10 +100,11 @@ export function isDueInMonth(dueDate: string | null, referenceDate: Date | strin
 
 function memberDisplayName(
   members: ActiveLoanRow['members']
-): { name: string; phone: string | null } {
+): { name: string; searchText: string; phone: string | null } {
   const member = Array.isArray(members) ? members[0] : members
   return {
-    name: member?.full_name_kh ?? member?.full_name ?? 'សមាជិកមិនស្គាល់',
+    name: memberKhmerName(member),
+    searchText: memberSearchText(member),
     phone: member?.phone ?? null,
   }
 }
@@ -174,7 +179,7 @@ export function buildLoanDueRowsForMonth(
     const dueInterest =
       dueRow.amount > 0.01 ? dueRow.interestPortion * (dueAmount / dueRow.amount) : 0
 
-    const { name, phone } = memberDisplayName(loan.members)
+    const { name, searchText, phone } = memberDisplayName(loan.members)
     const payment = paymentsByLoan[loan.id]
     const status = normalizeLoanDuePaymentStatus(payment?.status)
     const dueDate = dueRow.dueDate ?? ''
@@ -184,6 +189,7 @@ export function buildLoanDueRowsForMonth(
       loanId: loan.id,
       memberId: loan.member_id,
       memberName: name,
+      memberSearchText: searchText,
       memberPhone: phone,
       month: dueRow.month,
       dueDate: dueRow.dueDate,

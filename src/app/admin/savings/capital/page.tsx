@@ -16,7 +16,7 @@ export default async function AdminSavingsCapitalPage({
     admin
       .from('capital_requests')
       .select(
-        'id, amount, reason, status, continue_saving, remove_membership, rejection_reason, created_at, members:members!capital_requests_member_id_fkey(full_name, email)'
+        'id, amount, reason, status, continue_saving, remove_membership, rejection_reason, created_at, members:members!capital_requests_member_id_fkey(full_name, full_name_kh, full_name_en, email)'
       )
       .order('created_at', { ascending: false })
       .range(from, to),

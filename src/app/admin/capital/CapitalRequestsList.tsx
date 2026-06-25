@@ -14,7 +14,7 @@ import {
   adminTable,
   adminTableRowClass,
 } from '@/components/admin'
-import { formatDate, money, relatedMemberEmail, relatedMemberName } from '@/app/admin/adminUtils'
+import { formatDate, money, relatedMemberEmail, relatedMemberMatchesSearch, relatedMemberName } from '@/app/admin/adminUtils'
 import type { CapitalRequestStatus } from '@/types/database'
 
 export type CapitalRequestListItem = {
@@ -26,7 +26,7 @@ export type CapitalRequestListItem = {
   remove_membership: boolean
   rejection_reason?: string | null
   created_at: string
-  members?: { full_name?: string | null; email?: string | null } | { full_name?: string | null; email?: string | null }[] | null
+  members?: { full_name?: string | null; full_name_kh?: string | null; full_name_en?: string | null; email?: string | null } | { full_name?: string | null; full_name_kh?: string | null; full_name_en?: string | null; email?: string | null }[] | null
 }
 
 const STATUS_OPTIONS = [
@@ -45,10 +45,9 @@ export function CapitalRequestsList({ requests }: { requests: CapitalRequestList
     return requests.filter((row) => {
       if (statusFilter && row.status !== statusFilter) return false
       if (!q) return true
-      const name = relatedMemberName(row).toLowerCase()
       const email = relatedMemberEmail(row).toLowerCase()
       const amount = money(row.amount).toLowerCase()
-      return name.includes(q) || email.includes(q) || amount.includes(q)
+      return relatedMemberMatchesSearch(row, q) || email.includes(q) || amount.includes(q)
     })
   }, [requests, query, statusFilter])
 

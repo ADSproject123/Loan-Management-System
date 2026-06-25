@@ -11,10 +11,19 @@ export function currencySymbol(_currency: CurrencyCode = 'USD') {
   return '$'
 }
 
-export function formatMoney(value: unknown, _currency: CurrencyCode = 'USD') {
+const MONEY_FRACTION_DIGITS = 2
+
+export function formatAmount(value: unknown) {
   const amount = Number(value ?? 0)
   const safeAmount = Number.isFinite(amount) ? amount : 0
-  return `${currencySymbol()}${safeAmount.toLocaleString('en-US')}`
+  return safeAmount.toLocaleString('en-US', {
+    minimumFractionDigits: MONEY_FRACTION_DIGITS,
+    maximumFractionDigits: MONEY_FRACTION_DIGITS,
+  })
+}
+
+export function formatMoney(value: unknown, _currency: CurrencyCode = 'USD') {
+  return `${currencySymbol()}${formatAmount(value)}`
 }
 
 export function predominantCurrency(

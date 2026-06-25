@@ -15,7 +15,7 @@ export default async function AdminSavingInterestDuePage() {
     admin
       .from('savings')
       .select(
-        'id, member_id, amount, currency, status, saving_date, verified_at, verified_by, members:members!savings_member_id_fkey(full_name, full_name_kh, phone)'
+        'id, member_id, amount, currency, status, saving_date, verified_at, verified_by, members:members!savings_member_id_fkey(full_name, full_name_kh, full_name_en, phone)'
       )
       .order('saving_date', { ascending: true }),
     admin

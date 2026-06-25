@@ -8,7 +8,7 @@ export default async function AdminActiveLoansPage() {
   const { data } = await admin
     .from('loans')
     .select(
-      'id, member_id, amount, currency, purpose, status, created_at, due_date, disbursed_at, members:members!loans_member_id_fkey(full_name, email)'
+      'id, member_id, amount, currency, purpose, status, created_at, due_date, disbursed_at, members:members!loans_member_id_fkey(full_name, full_name_kh, full_name_en, email)'
     )
     .eq('status', 'active')
     .order('disbursed_at', { ascending: false })

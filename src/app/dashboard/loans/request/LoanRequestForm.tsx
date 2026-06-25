@@ -8,7 +8,7 @@ import { Card } from '@/components/ui/Card'
 import { requestLoan } from '@/app/actions/member'
 
 import { showError } from '@/lib/toast'
-import { currencySymbol, type CurrencyCode } from '@/lib/currency'
+import { currencySymbol, formatMoney, type CurrencyCode } from '@/lib/currency'
 import { buildLoanPaymentSchedule, loanRepaymentSummary } from '@/lib/interestCalculations'
 import { LoanPaymentSchedule } from '@/components/loans/LoanPaymentSchedule'
 import {
@@ -214,8 +214,8 @@ export function LoanRequestForm({
               ) : (
                 <>
                   អ្នកអាចស្នើសុំកម្ជីបានរហូតដល់ {LOAN_TO_SAVINGS_MULTIPLIER} ដងនៃសមតុល្យសន្សំរបស់អ្នក
-                  ({sym}{eligibility.maxTotalLoanPrincipal.toLocaleString()})។
-                  សមតុល្យកម្ជីបច្ចុប្បន្នរបស់អ្នកគឺ {sym}{eligibility.committedLoanPrincipal.toLocaleString()}។
+                  ({formatMoney(eligibility.maxTotalLoanPrincipal, currency)})។
+                  សមតុល្យកម្ជីបច្ចុប្បន្នរបស់អ្នកគឺ {formatMoney(eligibility.committedLoanPrincipal, currency)}។
                 </>
               )}
             </p>
@@ -249,9 +249,9 @@ export function LoanRequestForm({
       {step < 4 && (
         <div className="bg-brand-950 text-white rounded-xl p-5 mb-6">
           <p className="text-brand-200 text-xs uppercase tracking-wider font-semibold mb-2">សមតុល្យសន្សំផ្ទៀងផ្ទាត់</p>
-          <p className="text-2xl font-bold">{sym}{eligibility.totalSavings.toLocaleString()}</p>
+          <p className="text-2xl font-bold">{formatMoney(eligibility.totalSavings, currency)}</p>
           <p className="text-brand-200 text-sm mt-1">
-            អតិបរមាកម្ជីអាចស្នើសុំ៖ {sym}{eligibility.availableLoanAmount.toLocaleString()} ({LOAN_TO_SAVINGS_MULTIPLIER} ដងនៃសន្សំ)
+            អតិបរមាកម្ជីអាចស្នើសុំ៖ {formatMoney(eligibility.availableLoanAmount, currency)} ({LOAN_TO_SAVINGS_MULTIPLIER} ដងនៃសន្សំ)
           </p>
         </div>
       )}
@@ -287,7 +287,7 @@ export function LoanRequestForm({
                 />
               </div>
               <p className="text-gray-400 text-xs mt-1">
-                អតិបរមា {sym}{eligibility.availableLoanAmount.toLocaleString()} ({LOAN_TO_SAVINGS_MULTIPLIER} ដងនៃសមតុល្យសន្សំរបស់អ្នក)
+                អតិបរមា {formatMoney(eligibility.availableLoanAmount, currency)} ({LOAN_TO_SAVINGS_MULTIPLIER} ដងនៃសមតុល្យសន្សំរបស់អ្នក)
               </p>
             </div>
 
@@ -338,9 +338,9 @@ export function LoanRequestForm({
                 <p className="text-brand-900 font-semibold text-sm mb-3">ការប៉ាន់ប្រមាណកម្ជី</p>
                 <div className="space-y-2">
                   {[
-                    { label: 'ចំនួនទឹកប្រាក់កម្ជី', value: `${sym}${loanAmount.toLocaleString()}` },
-                    { label: 'ប្រាក់សងប្រមាណប្រចាំខែ', value: `${sym}${monthlyPayment.toFixed(0).replace(/\B(?=(\d{3})+(?!\d))/g, ',')}` },
-                    { label: 'ការសងសរុប', value: `${sym}${totalRepayment.toFixed(0).replace(/\B(?=(\d{3})+(?!\d))/g, ',')}` },
+                    { label: 'ចំនួនទឹកប្រាក់កម្ជី', value: formatMoney(loanAmount, currency) },
+                    { label: 'ប្រាក់សងប្រមាណប្រចាំខែ', value: formatMoney(monthlyPayment, currency) },
+                    { label: 'ការសងសរុប', value: formatMoney(totalRepayment, currency) },
                   ].map((item) => (
                     <div key={item.label} className="flex justify-between text-sm">
                       <span className="text-brand-700">{item.label}</span>
@@ -477,7 +477,7 @@ export function LoanRequestForm({
 
           <div className="space-y-3 mb-6">
             {[
-              { label: 'ចំនួនទឹកប្រាក់កម្ជី', value: `${sym}${loanAmount.toLocaleString()}` },
+              { label: 'ចំនួនទឹកប្រាក់កម្ជី', value: formatMoney(loanAmount, currency) },
               { label: 'គោលបំណង', value: formData.purpose },
               { label: 'រយៈពេល', value: `${formData.start_date} → ${formData.end_date} (${termMonths} ខែ)` },
               { label: 'ឈ្មោះអ្នកធានា (ខ្មែរ)', value: formData.referee_name_kh },
@@ -528,7 +528,7 @@ export function LoanRequestForm({
             </div>
             <h2 className="text-2xl font-bold text-gray-900 mb-2">ពាក្យសុំត្រូវបានដាក់ស្នើ!</h2>
             <p className="text-gray-600 mb-2">
-              ពាក្យសុំកម្ជីរបស់អ្នកសម្រាប់ <strong>{sym}{loanAmount.toLocaleString()}</strong> ត្រូវបានដាក់ស្នើ។
+              ពាក្យសុំកម្ជីរបស់អ្នកសម្រាប់ <strong>{formatMoney(loanAmount, currency)}</strong> ត្រូវបានដាក់ស្នើ។
             </p>
             <p className="text-gray-500 text-sm mb-6">
               គណៈកម្មាធិការនឹងទាក់ទងអ្នកធានារបស់អ្នកដើម្បីបញ្ជាក់ និង ត្រួតពិនិត្យពាក្យសុំក្នុងរយៈពេល ១-៣ ថ្ងៃ។

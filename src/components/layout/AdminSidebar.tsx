@@ -3,7 +3,8 @@
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { useState } from 'react'
-import { BarChart3, Building2, ChevronDown, ChevronRight, LogOut } from 'lucide-react'
+import { BarChart3, ChevronDown, ChevronRight, LogOut } from 'lucide-react'
+import { NotificationBell } from '@/components/layout/NotificationBell'
 import {
   adminNav,
   adminNavExpandedLabels,
@@ -11,7 +12,13 @@ import {
   isAdminParentActive,
 } from '@/lib/admin/nav'
 
-export function AdminSidebar({ adminName }: { adminName: string }) {
+export function AdminSidebar({
+  adminName,
+  initialUnreadCount = 0,
+}: {
+  adminName: string
+  initialUnreadCount?: number
+}) {
   const pathname = usePathname()
   const [expandedItems, setExpandedItems] = useState<string[]>(() =>
     adminNavExpandedLabels(pathname)
@@ -24,16 +31,17 @@ export function AdminSidebar({ adminName }: { adminName: string }) {
   }
 
   return (
-    <aside className="app-sidebar fixed inset-y-0 left-0 z-40 flex h-screen w-68 flex-col text-white">
+    <aside className="app-sidebar fixed inset-y-0 left-0 z-40 flex h-screen w-68 flex-col overflow-visible text-white">
       <div className="border-b border-white/10 p-5">
-        <Link
-          href="/admin"
-          className="flex items-center gap-3 rounded-xl transition-opacity hover:opacity-90"
-        >
-          <div className="min-w-0">
+        <div className="flex items-center justify-between gap-3">
+          <Link
+            href="/admin"
+            className="min-w-0 flex-1 rounded-xl transition-opacity hover:opacity-90"
+          >
             <p className="truncate text-lg font-bold leading-tight">អ្នកគ្រប់គ្រង</p>
-          </div>
-        </Link>
+          </Link>
+          <NotificationBell initialUnreadCount={initialUnreadCount} variant="sidebar" />
+        </div>
       </div>
 
       <nav className="flex-1 space-y-1 overflow-y-auto p-3">
@@ -107,7 +115,7 @@ export function AdminSidebar({ adminName }: { adminName: string }) {
             <span className="text-[10px] font-bold uppercase tracking-wider">ចូលជា</span>
           </div>
           <p className="truncate text-sm font-semibold text-white">{adminName}</p>
-          <div className="mt-3 flex gap-2">
+          <div className="mt-3">
             <form action="/api/auth/signout" method="post">
               <button
                 type="submit"

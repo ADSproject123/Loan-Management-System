@@ -8,6 +8,7 @@ import { isVerifiedSavingForChart } from '@/lib/admin/savingsChartData'
 import { getPrivateFileUrl } from '@/lib/uploads'
 import { predominantCurrency } from '@/lib/currency'
 import { fetchMemberLoanEligibility } from '@/lib/loanEligibility'
+import { ensureMemberTelegramConnectToken } from '@/app/actions/admin'
 import type { MemberRole, MemberStatus } from '@/types/database'
 import { MemberDetailTabs, type TabId } from './MemberDetailTabs'
 import { MemberEditModeProvider } from './MemberEditModeContext'
@@ -38,6 +39,8 @@ export default async function AdminMemberDetailPage({ params }: PageProps) {
     .maybeSingle()
 
   if (!member) notFound()
+
+  const telegramConnect = await ensureMemberTelegramConnectToken(member.id)
 
   const [interestSettings, loanInterestPlans] = await Promise.all([
     getInterestSettings(),
@@ -208,6 +211,8 @@ export default async function AdminMemberDetailPage({ params }: PageProps) {
         memberCurrency={memberCurrency}
         monthlyLoanInterestRate={monthlyLoanInterestRate}
         loanEligibility={loanEligibility}
+        telegramConnectToken={telegramConnect.connectToken}
+        telegramLinked={telegramConnect.linked}
       />
         </div>
       </AdminPanel>

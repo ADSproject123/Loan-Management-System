@@ -9,7 +9,7 @@ import { KhqrPaymentCard } from '@/components/loans/KhqrPaymentCard'
 
 import { repayLoan } from '@/app/actions/member'
 import { showError } from '@/lib/toast'
-import { currencySymbol, type CurrencyCode } from '@/lib/currency'
+import { currencySymbol, formatMoney, type CurrencyCode } from '@/lib/currency'
 import { formatKhmerDate } from '@/lib/dates'
 import { CreditCard, QrCode, Upload, CheckCircle, Info } from 'lucide-react'
 
@@ -33,10 +33,12 @@ export function LoanRepayForm({
   activeLoan,
   scheduleMonth,
   defaultAmount,
+  onComplete,
 }: {
   activeLoan: ActiveLoan
   scheduleMonth?: number
   defaultAmount?: number
+  onComplete?: () => void
 }) {
   const initialAmount = defaultAmount ?? activeLoan.monthly_payment
   const [step, setStep] = useState(1)
@@ -52,7 +54,7 @@ export function LoanRepayForm({
       return
     }
     if (amt > activeLoan.remaining) {
-      showError(`ចំនួនទឹកប្រាក់មិនអាចលើសសមតុល្យកម្ជីនៅសល់ ${currencySymbol(currency)}${activeLoan.remaining.toLocaleString()} ។`)
+      showError(`ចំនួនទឹកប្រាក់មិនអាចលើសសមតុល្យកម្ជីនៅសល់ ${formatMoney(activeLoan.remaining, currency)} ។`)
       return
     }
     setStep(3)
@@ -100,11 +102,11 @@ export function LoanRepayForm({
           </p>
           <div className="flex justify-between items-start">
             <div>
-              <p className="text-2xl font-bold">{currencySymbol(currency)}{activeLoan.remaining.toLocaleString()}</p>
+              <p className="text-2xl font-bold">{formatMoney(activeLoan.remaining, currency)}</p>
               <p className="text-brand-200 text-sm mt-1">សមតុល្យនៅសល់</p>
             </div>
             <div className="text-right">
-              <p className="text-lg font-semibold">{currencySymbol(currency)}{initialAmount.toLocaleString()}</p>
+              <p className="text-lg font-semibold">{formatMoney(initialAmount, currency)}</p>
               <p className="text-brand-200 text-sm mt-1">
                 {scheduleMonth ? 'ចំនួនត្រូវបង់ខែនេះ' : 'បង់ប្រចាំខែ'}
               </p>
@@ -156,16 +158,16 @@ export function LoanRepayForm({
               <div className="space-y-2 text-sm">
                 <div className="flex justify-between">
                   <span className="text-brand-700">ចំនួនទឹកប្រាក់បង់</span>
-                  <span className="font-semibold text-brand-900">{currencySymbol(currency)}{amount.toLocaleString()}</span>
+                  <span className="font-semibold text-brand-900">{formatMoney(amount, currency)}</span>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-brand-700">នៅសល់បច្ចុប្បន្ន</span>
-                  <span className="font-semibold text-brand-900">{currencySymbol(currency)}{activeLoan.remaining.toLocaleString()}</span>
+                  <span className="font-semibold text-brand-900">{formatMoney(activeLoan.remaining, currency)}</span>
                 </div>
                 <div className="flex justify-between border-t border-brand-200 pt-2">
                   <span className="text-brand-700 font-medium">នៅសល់ថ្មី</span>
                   <span className={`font-bold ${newRemaining <= 0 ? 'text-green-700' : 'text-brand-900'}`}>
-                    {newRemaining <= 0 ? 'បានបង់ពេញ!' : `${currencySymbol(currency)}${newRemaining.toLocaleString()}`}
+                    {newRemaining <= 0 ? 'បានបង់ពេញ!' : formatMoney(newRemaining, currency)}
                   </span>
                 </div>
               </div>
@@ -199,7 +201,7 @@ export function LoanRepayForm({
             <div className="flex items-start gap-2">
               <Info className="w-4 h-4 text-yellow-600 flex-shrink-0 mt-0.5" />
               <div className="text-xs text-yellow-700 space-y-1">
-                <p>ស្កេន QR ខាងលើ ហើយផ្ទេរចំនួនពិតប្រាកដ <strong>{currencySymbol(currency)}{amount.toLocaleString()}</strong>។</p>
+                <p>ស្កេន QR ខាងលើ ហើយផ្ទេរចំនួនពិតប្រាកដ <strong>{formatMoney(amount, currency)}</strong>។</p>
                 <p>បន្ទាប់ពីបង់រួច សូមផ្ទុកភស្តុតាងខាងក្រោម ហើយចុច «ដាក់ស្នើការសង»។</p>
               </div>
             </div>
@@ -232,11 +234,11 @@ export function LoanRepayForm({
           <div className="bg-gray-50 rounded-lg p-4 mb-5 text-sm">
             <div className="flex justify-between text-sm mb-1">
               <span className="text-gray-500">ចំនួនទឹកប្រាក់បង់</span>
-              <span className="font-semibold text-gray-900">{currencySymbol(currency)}{amount.toLocaleString()}</span>
+              <span className="font-semibold text-gray-900">{formatMoney(amount, currency)}</span>
             </div>
             <div className="flex justify-between text-sm">
               <span className="text-gray-500">សមតុល្យនៅសល់ថ្មី</span>
-              <span className="font-semibold text-gray-900">{newRemaining <= 0 ? 'បានបង់ពេញ' : `${currencySymbol(currency)}${newRemaining.toLocaleString()}`}</span>
+              <span className="font-semibold text-gray-900">{newRemaining <= 0 ? 'បានបង់ពេញ' : formatMoney(newRemaining, currency)}</span>
             </div>
           </div>
 
@@ -260,7 +262,7 @@ export function LoanRepayForm({
               ការសងត្រូវបានដាក់ស្នើ!
             </h2>
             <p className="text-gray-600 mb-2">
-              ការសងរបស់អ្នកចំនួន <strong>{currencySymbol(currency)}{amount.toLocaleString()}</strong> ត្រូវបានទទួល។
+              ការសងរបស់អ្នកចំនួន <strong>{formatMoney(amount, currency)}</strong> ត្រូវបានទទួល។
             </p>
             <p className="text-gray-500 text-sm mb-6">
               អ្នកគ្រប់គ្រងនឹងទទួលការបង់ប្រាក់របស់អ្នកក្នុងរយៈពេល ២៤ ម៉ោង និង ធ្វើបច្ចុប្បន្នភាពសមតុល្យកម្ជីរបស់អ្នក។
@@ -271,7 +273,7 @@ export function LoanRepayForm({
               <div className="space-y-2 text-sm">
                 <div className="flex justify-between">
                   <span className="text-green-700">ចំនួនបានបង់</span>
-                  <span className="font-medium text-green-900">{currencySymbol(currency)}{amount.toLocaleString()}</span>
+                  <span className="font-medium text-green-900">{formatMoney(amount, currency)}</span>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-green-700">ស្ថានភាព</span>
@@ -280,25 +282,37 @@ export function LoanRepayForm({
                 {newRemaining > 0 && (
                   <div className="flex justify-between">
                     <span className="text-green-700">នៅសល់ថ្មី</span>
-                    <span className="font-medium text-green-900">{currencySymbol(currency)}{newRemaining.toLocaleString()}</span>
+                    <span className="font-medium text-green-900">{formatMoney(newRemaining, currency)}</span>
                   </div>
                 )}
               </div>
             </div>
 
             <div className="flex gap-3 justify-center">
-              <Link
-                href="/dashboard/loans/repay"
-                className="inline-flex items-center gap-2 bg-brand-950 text-white px-5 py-2.5 rounded-lg text-sm font-semibold hover:bg-brand-800 transition-colors"
-              >
-                ត្រឡប់ក្រោយ
-              </Link>
-              <Link
-                href="/dashboard/loans"
-                className="inline-flex items-center gap-2 bg-white border border-gray-300 text-gray-700 px-5 py-2.5 rounded-lg text-sm font-semibold hover:bg-gray-50 transition-colors"
-              >
-                មើលកម្ជីរបស់ខ្ញុំ
-              </Link>
+              {onComplete ? (
+                <button
+                  type="button"
+                  onClick={onComplete}
+                  className="inline-flex items-center gap-2 rounded-lg bg-brand-950 px-5 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-brand-800"
+                >
+                  បិទ
+                </button>
+              ) : (
+                <>
+                  <Link
+                    href="/dashboard/loans/repay"
+                    className="inline-flex items-center gap-2 bg-brand-950 text-white px-5 py-2.5 rounded-lg text-sm font-semibold hover:bg-brand-800 transition-colors"
+                  >
+                    ត្រឡប់ក្រោយ
+                  </Link>
+                  <Link
+                    href="/dashboard/loans"
+                    className="inline-flex items-center gap-2 bg-white border border-gray-300 text-gray-700 px-5 py-2.5 rounded-lg text-sm font-semibold hover:bg-gray-50 transition-colors"
+                  >
+                    មើលកម្ជីរបស់ខ្ញុំ
+                  </Link>
+                </>
+              )}
             </div>
           </div>
         </Card>

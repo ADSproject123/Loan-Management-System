@@ -4,14 +4,17 @@ import { revalidatePath } from 'next/cache'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { requireActiveMember } from '@/lib/auth/member'
 import { uploadPrivateFile } from '@/lib/uploads'
-import { MIN_SAVING_AMOUNT, normalizeCurrency } from '@/lib/currency'
+import { MIN_SAVING_AMOUNT, normalizeCurrency, formatMoney } from '@/lib/currency'
 import { fetchMemberLoanInterestRate, getInterestSettings } from '@/lib/interest'
 import { fetchMemberLoanEligibility, validateLoanRequestAmount } from '@/lib/loanEligibility'
+import { notifyAdmins } from '@/lib/notifyAdmins'
+import { memberKhmerName } from '@/lib/memberNames'
 
 export type ActionResult = {
   success: boolean
   error?: string
   redirectTo?: string
+  connectToken?: string
 }
 
 export type MemberSearchResult = {
@@ -209,6 +212,12 @@ export async function registerMember(formData: FormData): Promise<RegisterResult
 
     if (memberError) throw memberError
 
+    await notifyAdmins(
+      'សមាជិកថ្មីចុះឈ្មោះ',
+      `${fullNameKh} បានដាក់ពាក្យសុំចូលរួម។ សូមពិនិត្យនៅផ្នែកស្នើសុំចូលរួម។`,
+      'member_request'
+    )
+
     return { success: true, connectToken }
   } catch (error) {
     const message = error instanceof Error ? error.message : 'ការចុះឈ្មោះបរាជ័យ។ សូមព្យាយាមម្តងទៀត។'
@@ -232,6 +241,27 @@ export async function checkTelegramConnected(connectToken: string): Promise<bool
     .maybeSingle()
 
   return Boolean(data?.telegram_chat_id)
+}
+
+export async function getTelegramConnectState(): Promise<{
+  linked: boolean
+  connectToken: string | null
+}> {
+  const member = await requireActiveMember()
+
+  if (member.telegram_chat_id) {
+    return { linked: true, connectToken: null }
+  }
+
+  const admin = createAdminClient()
+  let token = member.telegram_connect_token
+
+  if (!token) {
+    token = crypto.randomUUID()
+    await admin.from('members').update({ telegram_connect_token: token }).eq('id', member.id)
+  }
+
+  return { linked: false, connectToken: token }
 }
 
 export async function addSaving(formData: FormData): Promise<ActionResult> {
@@ -272,6 +302,12 @@ export async function addSaving(formData: FormData): Promise<ActionResult> {
     })
 
     if (error) throw error
+
+    await notifyAdmins(
+      'ការសន្សំថ្មី',
+      `${memberKhmerName(member)} បានដាក់ស្នើការសន្សំ ${formatMoney(amount, currency)}។ សូមពិនិត្យនៅផ្នែកសំណើសន្សំ។`,
+      'saving_request'
+    )
 
     revalidatePath('/dashboard')
     revalidatePath('/dashboard/savings')
@@ -368,6 +404,12 @@ export async function requestLoan(formData: FormData): Promise<ActionResult> {
       }
     }
 
+    await notifyAdmins(
+      'ពាក្យសុំកម្ជីថ្មី',
+      `${memberKhmerName(member)} បានដាក់ស្នើកម្ជី ${formatMoney(amount, currency)}។ សូមពិនិត្យនៅផ្នែកពិនិត្យពាក្យសុំ។`,
+      'loan_request'
+    )
+
     revalidatePath('/dashboard')
     revalidatePath('/dashboard/loans')
     return { success: true }
@@ -428,6 +470,12 @@ export async function repayLoan(formData: FormData): Promise<ActionResult> {
 
     if (error) throw error
 
+    await notifyAdmins(
+      'ការសងកម្ជីថ្មី',
+      `${memberKhmerName(member)} បានដាក់ស្នើការសង ${formatMoney(amount, currency)}។ សូមពិនិត្យនៅផ្នែកបញ្ជីការសងកម្ជី។`,
+      'loan_repayment'
+    )
+
     revalidatePath('/dashboard')
     revalidatePath('/dashboard/loans')
     revalidatePath('/dashboard/loans/repay')
@@ -460,6 +508,12 @@ export async function requestReport(formData: FormData): Promise<ActionResult> {
     })
 
     if (error) throw error
+
+    await notifyAdmins(
+      'ស្នើសុំរបាយការណ៍ថ្មី',
+      `${memberKhmerName(member)} បានស្នើសុំរបាយការណ៍${reportType === 'saving' ? 'សន្សំ' : 'កម្ជី'}។`,
+      'report_request'
+    )
 
     revalidatePath('/dashboard')
     return { success: true }
@@ -494,6 +548,12 @@ export async function requestCapitalWithdrawal(formData: FormData): Promise<Acti
     })
 
     if (error) throw error
+
+    await notifyAdmins(
+      'ស្នើសុំដើមទុនថ្មី',
+      `${memberKhmerName(member)} បានដាក់ស្នើដកដើមទុន ${formatMoney(amount, currency)}។ សូមពិនិត្យនៅផ្នែកស្នើសុំដកដើមទុន។`,
+      'capital_request'
+    )
 
     revalidatePath('/dashboard')
     return { success: true }

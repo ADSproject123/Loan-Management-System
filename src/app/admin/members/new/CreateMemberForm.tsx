@@ -7,6 +7,8 @@ import { CambodiaAddressSelect, formatCambodiaAddress, parseCambodiaAddress } fr
 import { createMemberByAdmin } from '@/app/actions/admin'
 import { searchActiveMembers, type MemberSearchResult } from '@/app/actions/member'
 import { showError, showSuccess } from '@/lib/toast'
+import { memberKhmerName } from '@/lib/memberNames'
+import { AdminMemberTelegramConnectCard } from '@/components/telegram/AdminMemberTelegramLink'
 import { adminFieldClassName } from '@/components/admin/AdminListToolbar'
 import { WORKPLACE_OPTIONS } from '@/lib/workplace'
 
@@ -169,8 +171,7 @@ function RefereeSearch({
                 <User className="h-4 w-4 shrink-0 text-slate-400" />
                 <div className="min-w-0 flex-1">
                   <p className="truncate text-sm font-medium text-slate-800">
-                    {m.full_name_kh ?? m.full_name_en}
-                    {m.full_name_kh && m.full_name_en && <span className="ml-1.5 text-xs text-slate-400">{m.full_name_en}</span>}
+                    {memberKhmerName(m)}
                   </p>
                   {[m.phone, m.email].filter(Boolean).join(' · ') && (
                     <p className="truncate text-xs text-slate-500">{[m.phone, m.email].filter(Boolean).join(' · ')}</p>
@@ -196,6 +197,11 @@ export function CreateMemberForm() {
   const [idDocument, setIdDocument] = useState<File | null>(null)
   const [residentBook, setResidentBook] = useState<File | null>(null)
   const [pending, startTransition] = useTransition()
+  const [createdMember, setCreatedMember] = useState<{
+    name: string
+    phone: string
+    connectToken: string
+  } | null>(null)
 
   function set(field: keyof typeof EMPTY_FORM, value: string) {
     setForm((prev) => ({ ...prev, [field]: value }))
@@ -229,11 +235,46 @@ export function CreateMemberForm() {
       const result = await createMemberByAdmin(payload)
       if (result.success) {
         showSuccess('បានបង្កើតសមាជិកដោយជោគជ័យ។')
+        if (result.connectToken) {
+          setCreatedMember({
+            name: form.full_name_kh || form.full_name_en,
+            phone: form.phone,
+            connectToken: result.connectToken,
+          })
+          return
+        }
         router.push('/admin/members')
         return
       }
       showError(result.error ?? 'មិនអាចបង្កើតសមាជិកបានទេ។')
     })
+  }
+
+  if (createdMember) {
+    return (
+      <div className="space-y-6">
+        <div className="rounded-2xl border border-emerald-200 bg-emerald-50/60 p-5">
+          <p className="text-lg font-bold text-emerald-950">បានបង្កើតសមាជិកដោយជោគជ័យ</p>
+          <p className="mt-1 text-sm text-emerald-800">
+            ឥឡូវនេះផ្ញើតំណ Telegram ផ្ទាល់ខ្លួនឱ្យសមាជិក ដើម្បីភ្ជាប់ការជូនដំណឹង។
+          </p>
+        </div>
+        <AdminMemberTelegramConnectCard
+          connectToken={createdMember.connectToken}
+          memberName={createdMember.name}
+          memberPhone={createdMember.phone}
+        />
+        <div className="flex justify-end">
+          <button
+            type="button"
+            onClick={() => router.push('/admin/members')}
+            className="inline-flex items-center gap-2 rounded-xl bg-brand-950 px-6 py-2.5 text-sm font-semibold text-white transition hover:bg-brand-900"
+          >
+            ទៅបញ្ជីសមាជិក
+          </button>
+        </div>
+      </div>
+    )
   }
 
   return (

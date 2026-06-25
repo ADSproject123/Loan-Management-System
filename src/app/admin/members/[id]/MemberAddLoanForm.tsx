@@ -7,7 +7,7 @@ import { addLoanByAdmin } from '@/app/actions/admin'
 import { AdminModal } from '@/components/admin/AdminModal'
 import { adminFieldClassName } from '@/components/admin/AdminListToolbar'
 import { Button } from '@/components/ui/Button'
-import { currencySymbol, type CurrencyCode } from '@/lib/currency'
+import { currencySymbol, formatMoney, type CurrencyCode } from '@/lib/currency'
 import {
   LOAN_TO_SAVINGS_MULTIPLIER,
   type LoanEligibility,
@@ -68,7 +68,7 @@ export function MemberAddLoanForm({
     if (eligibility.totalSavings <= 0) {
       return 'សមាជិកមិនទាន់មានសន្សំដែលបានទទួលយក — ត្រូវបន្ថែមសន្សំមុនពេលបង្កើតកម្ជី។'
     }
-    return `អាចបន្ថែមបានរហូតដល់ ${currencySymbol(currency)}${eligibility.availableLoanAmount.toLocaleString()} (${LOAN_TO_SAVINGS_MULTIPLIER}x សន្សំ) · អត្រា ${monthlyLoanInterestRate}%/ខែ`
+    return `អាចបន្ថែមបានរហូតដល់ ${formatMoney(eligibility.availableLoanAmount, currency)} (${LOAN_TO_SAVINGS_MULTIPLIER}x សន្សំ) · អត្រា ${monthlyLoanInterestRate}%/ខែ`
   }, [currency, eligibility, monthlyLoanInterestRate])
 
   function resetForm() {

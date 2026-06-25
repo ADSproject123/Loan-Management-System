@@ -16,7 +16,7 @@ export default async function AdminLoansRequestsPage({
     admin
       .from('loans')
       .select(
-        'id, member_id, amount, currency, purpose, status, created_at, members:members!loans_member_id_fkey(full_name, email)'
+        'id, member_id, amount, currency, purpose, status, created_at, members:members!loans_member_id_fkey(full_name, full_name_kh, full_name_en, email)'
       )
       .in('status', ['under_review', 'approved'])
       .order('created_at', { ascending: false })

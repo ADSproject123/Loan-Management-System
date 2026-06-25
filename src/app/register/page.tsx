@@ -27,8 +27,11 @@ import {
   UserCheck,
   X,
 } from 'lucide-react'
-import { registerMember, checkTelegramConnected, searchActiveMembers, type MemberSearchResult } from '@/app/actions/member'
+import { registerMember, searchActiveMembers, type MemberSearchResult } from '@/app/actions/member'
+import { TelegramConnectPanel } from '@/components/telegram/TelegramConnectPanel'
+import { TelegramConnectSteps } from '@/components/telegram/TelegramConnectBanner'
 import { WORKPLACE_OPTIONS } from '@/lib/workplace'
+import { memberKhmerName } from '@/lib/memberNames'
 import { LoadingDots, LoadingSpinner } from '@/components/ui/Loading'
 import { showError } from '@/lib/toast'
 
@@ -934,11 +937,8 @@ function StepReferee({ formData, updateField }: StepProps) {
                         </span>
                         <div className="min-w-0 flex-1">
                           <p className="text-sm font-semibold text-slate-900">
-                            {member.full_name_kh ?? member.full_name_en}
+                            {memberKhmerName(member)}
                           </p>
-                          {member.full_name_kh && member.full_name_en && (
-                            <p className="text-xs text-slate-500">{member.full_name_en}</p>
-                          )}
                           {(member.phone || member.email) && (
                             <p className="truncate text-xs text-slate-500">
                               {[member.phone, member.email].filter(Boolean).join(' · ')}
@@ -1067,123 +1067,15 @@ interface StepTelegramProps {
 }
 
 function StepTelegram({ connectToken, onDone }: StepTelegramProps) {
-  const [connected, setConnected] = useState(false)
-  const [checking, setChecking] = useState(true)
-  const botUsername = process.env.NEXT_PUBLIC_TELEGRAM_BOT_USERNAME
-
-  const deepLink =
-    botUsername && connectToken
-      ? `https://t.me/${botUsername}?start=${connectToken}`
-      : null
-
-  useEffect(() => {
-    if (!connectToken) {
-      setChecking(false)
-      return
-    }
-    let active = true
-
-    // Immediate check on mount — detects if the user already connected before landing here.
-    checkTelegramConnected(connectToken)
-      .then((isConnected) => {
-        if (!active) return
-        if (isConnected) setConnected(true)
-      })
-      .catch(() => {})
-      .finally(() => {
-        if (active) setChecking(false)
-      })
-
-    // Continue polling so we detect connections made after the page loads.
-    const interval = setInterval(async () => {
-      try {
-        const isConnected = await checkTelegramConnected(connectToken)
-        if (active && isConnected) {
-          setConnected(true)
-          clearInterval(interval)
-        }
-      } catch {
-        // transient — keep polling
-      }
-    }, 3000)
-
-    return () => {
-      active = false
-      clearInterval(interval)
-    }
-  }, [connectToken])
-
-  if (checking) {
-    return (
-      <div className="flex items-center justify-center py-12">
-        <LoadingSpinner size="md" color="brand" />
-      </div>
-    )
-  }
-
-  if (connected) {
-    return (
-      <div className="py-4 text-center">
-        <div className="mx-auto grid h-20 w-20 place-items-center rounded-full bg-emerald-100 ring-8 ring-emerald-50">
-          <CheckCircle2 className="h-10 w-10 text-emerald-600" />
-        </div>
-        <h2 className="mt-6 text-2xl font-bold text-slate-950">តេលេក្រាមត្រូវបានភ្ជាប់</h2>
-        <p className="mx-auto mt-3 max-w-md text-[15px] leading-7 text-slate-600">
-          អ្នកបានភ្ជាប់តេលេក្រាមជាមួយប៊ូតនេះរួចហើយ។ អ្នកនឹងទទួលបានការជូនដំណឹងពីសមាគមន៏សន្សំនៅពេលគណនីរបស់អ្នកមានការផ្លាស់ប្តូរ។
-        </p>
-        <button
-          type="button"
-          onClick={onDone}
-          className="mt-8 inline-flex items-center justify-center gap-2 rounded-xl bg-brand-950 px-6 py-3 text-sm font-semibold text-white transition hover:bg-brand-950"
-        >
-          បន្ត
-          <ArrowRight className="h-4 w-4" />
-        </button>
-      </div>
-    )
-  }
-
   return (
-    <div className="space-y-6">
-      <div className="flex items-start gap-3 rounded-2xl border border-sky-100 bg-sky-50/70 p-5">
-        <span className="grid h-11 w-11 shrink-0 place-items-center rounded-xl bg-white text-sky-600 ring-1 ring-sky-100">
-          <Send className="h-5 w-5" />
-        </span>
-        <div>
-          <p className="text-sm font-semibold text-slate-900">ហេតុអ្វីបានជាភ្ជាប់តេលេក្រាម?</p>
-          <p className="mt-1 text-[13px] leading-6 text-slate-600">
-            យើងផ្ញើការជូនដំណឹងតាមតេលេក្រាមនៅពេលគណនីរបស់អ្នកត្រូវបានទទួល ការសន្សំត្រូវបានផ្ទៀងផ្ទាត់
-            និង កម្ជីមានការផ្លាស់ប្តូរ។ បើកតេលេក្រាម ចុច <strong>Start</strong> រួចត្រឡប់ក្រោយមកទំព័រនេះវិញ។
-          </p>
-        </div>
-      </div>
-
-      {deepLink ? (
-        <>
-          <a
-            href={deepLink}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-[#229ED9] px-6 py-3.5 text-sm font-semibold text-white shadow-sm transition hover:bg-[#1c8dc2]"
-          >
-            <Send className="h-4 w-4" />
-            បើកតេលេក្រាម និង ភ្ជាប់
-          </a>
-
-          <div className="flex items-center justify-center gap-2 text-xs text-slate-500">
-            <LoadingDots size="sm" color="brand" />
-            កំពុងរង់ចាំការភ្ជាប់... ទំព័រនេះនឹងធ្វើបច្ចុប្បន្នភាពដោយស្វ័យប្រវត្តិ។
-          </div>
-
-          <p className="text-center text-xs text-slate-400">
-            ការភ្ជាប់តេលេក្រាមត្រូវបានទាមទារដើម្បីបញ្ចប់ការចុះឈ្មោះ។
-          </p>
-        </>
-      ) : (
-        <div className="rounded-xl border border-amber-200 bg-amber-50/70 px-4 py-3 text-[13px] leading-6 text-amber-800">
-          តេលេក្រាមមិនទាន់ត្រូវបានកំណត់រចនាសម្ព័ន្ធនៅឡើយទេ។ សូមទាក់ទងអ្នកគ្រប់គ្រង។
-        </div>
-      )}
+    <div className="space-y-5">
+      <TelegramConnectSteps />
+      <TelegramConnectPanel
+        connectToken={connectToken}
+        required
+        onContinue={onDone}
+        description="តំណនេះភ្ជាប់ពាក្យសុំចុះឈ្មោះរបស់អ្នកទៅ Telegram។ បើក Telegram ហើយចុច Start។"
+      />
     </div>
   )
 }

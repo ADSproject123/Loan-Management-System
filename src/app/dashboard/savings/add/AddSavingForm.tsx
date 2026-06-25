@@ -9,7 +9,7 @@ import { KhqrPaymentCard } from '@/components/loans/KhqrPaymentCard'
 
 import { addSaving } from '@/app/actions/member'
 import { showError } from '@/lib/toast'
-import { currencySymbol, MIN_SAVING_AMOUNT } from '@/lib/currency'
+import { currencySymbol, formatMoney, MIN_SAVING_AMOUNT } from '@/lib/currency'
 import { monthlySavingInterest } from '@/lib/interestCalculations'
 import {
   PiggyBank,
@@ -43,7 +43,7 @@ export function AddSavingForm({ monthlySavingInterestRate }: { monthlySavingInte
       return
     }
     if (num < MIN_SAVING_AMOUNT) {
-      showError(`ចំនួនទឹកប្រាក់សន្សំអប្បបរមាគឺ ${currencySymbol(currency)}${MIN_SAVING_AMOUNT}។`)
+      showError(`ចំនួនទឹកប្រាក់សន្សំអប្បបរមាគឺ ${formatMoney(MIN_SAVING_AMOUNT, currency)}។`)
       return
     }
     setStep(3)
@@ -135,11 +135,11 @@ export function AddSavingForm({ monthlySavingInterestRate }: { monthlySavingInte
             <div className="bg-brand-50 rounded-lg p-4 mb-5">
               <div className="flex justify-between items-center">
                 <span className="text-brand-700 text-sm">ចំនួនទឹកប្រាក់សន្សំ</span>
-                <span className="text-brand-900 font-semibold">{currencySymbol()}{parsedAmount.toLocaleString()}</span>
+                <span className="text-brand-900 font-semibold">{formatMoney(parsedAmount, currency)}</span>
               </div>
               <div className="flex justify-between items-center mt-1">
                 <span className="text-brand-700 text-sm">ការប្រាក់ប្រចាំខែ ({monthlySavingInterestRate}%)</span>
-                <span className="text-green-600 font-semibold">+{currencySymbol()}{estimatedInterest.toFixed(2)}</span>
+                <span className="text-green-600 font-semibold">+{formatMoney(estimatedInterest, currency)}</span>
               </div>
             </div>
           )}
@@ -173,7 +173,7 @@ export function AddSavingForm({ monthlySavingInterestRate }: { monthlySavingInte
               <div className="text-sm text-yellow-700">
                 <p className="font-medium mb-1">សំខាន់៖</p>
                 <ul className="space-y-1 list-disc list-inside text-xs">
-                  <li>ស្កេន QR ខាងលើ ហើយផ្ទេរចំនួនពិតប្រាកដ <strong>{currencySymbol()}{parsedAmount.toLocaleString()}</strong></li>
+                  <li>ស្កេន QR ខាងលើ ហើយផ្ទេរចំនួនពិតប្រាកដ <strong>{formatMoney(parsedAmount, currency)}</strong></li>
                   <li>បន្ទាប់ពីបង់រួច សូមផ្ទុកភស្តុតាងខាងក្រោម ហើយចុច «ដាក់ស្នើភស្តុតាង»</li>
                 </ul>
               </div>
@@ -207,7 +207,7 @@ export function AddSavingForm({ monthlySavingInterestRate }: { monthlySavingInte
           <div className="bg-gray-50 rounded-lg p-4 mb-6">
             <div className="flex justify-between items-center text-sm">
               <span className="text-gray-500">ចំនួនទឹកប្រាក់សន្សំ</span>
-              <span className="font-semibold text-gray-900">{currencySymbol()}{parsedAmount.toLocaleString()}</span>
+              <span className="font-semibold text-gray-900">{formatMoney(parsedAmount, currency)}</span>
             </div>
             {notes && (
               <div className="flex justify-between items-center text-sm mt-1">
@@ -239,7 +239,7 @@ export function AddSavingForm({ monthlySavingInterestRate }: { monthlySavingInte
               ការសន្សំបានដាក់ស្នើ!
             </h2>
             <p className="text-gray-600 mb-2">
-              ការសន្សំរបស់អ្នកចំនួន <strong>{currencySymbol()}{parsedAmount.toLocaleString()}</strong> ត្រូវបានដាក់ស្នើដោយជោគជ័យ។
+              ការសន្សំរបស់អ្នកចំនួន <strong>{formatMoney(parsedAmount, currency)}</strong> ត្រូវបានដាក់ស្នើដោយជោគជ័យ។
             </p>
             <p className="text-gray-500 text-sm mb-6">
               អ្នកគ្រប់គ្រងនឹងទទួលភស្តុតាងបង់ប្រាក់របស់អ្នកក្នុងរយៈពេល ២៤ ម៉ោង។
@@ -251,7 +251,7 @@ export function AddSavingForm({ monthlySavingInterestRate }: { monthlySavingInte
               <div className="space-y-1">
                 <div className="flex justify-between text-sm">
                   <span className="text-green-700">ចំនួនទឹកប្រាក់</span>
-                  <span className="font-medium text-green-900">{currencySymbol()}{parsedAmount.toLocaleString()}</span>
+                  <span className="font-medium text-green-900">{formatMoney(parsedAmount, currency)}</span>
                 </div>
                 <div className="flex justify-between text-sm">
                   <span className="text-green-700">ស្ថានភាព</span>

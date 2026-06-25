@@ -58,6 +58,15 @@ export function sendTelegramMessage(chatId: string, text: string): Promise<boole
   })
 }
 
+export function sendTelegramMessageRemoveKeyboard(chatId: string, text: string): Promise<boolean> {
+  return callTelegram('sendMessage', {
+    chat_id: chatId,
+    text,
+    parse_mode: 'HTML',
+    reply_markup: { remove_keyboard: true },
+  })
+}
+
 /**
  * Send a message with an inline "Open App" button that launches the site as a
  * Telegram Mini App. Best-effort — never throws.

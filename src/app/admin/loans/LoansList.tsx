@@ -4,7 +4,7 @@ import { useMemo, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { ChevronRight, Landmark } from 'lucide-react'
 import { LoanStatusBadge } from '@/components/ui/Badge'
-import { formatDate, money, relatedMemberEmail, relatedMemberName } from '@/app/admin/adminUtils'
+import { formatDate, money, relatedMemberEmail, relatedMemberMatchesSearch, relatedMemberName } from '@/app/admin/adminUtils'
 import type { CurrencyCode } from '@/lib/currency'
 import type { LoanStatus } from '@/types/database'
 import {
@@ -27,7 +27,7 @@ export type LoanListItem = {
   due_date?: string | null
   disbursed_at?: string | null
   term_months?: number | null
-  members?: { full_name?: string | null; email?: string | null } | { full_name?: string | null; email?: string | null }[] | null
+  members?: { full_name?: string | null; full_name_kh?: string | null; full_name_en?: string | null; email?: string | null } | { full_name?: string | null; full_name_kh?: string | null; full_name_en?: string | null; email?: string | null }[] | null
 }
 
 type LoansListVariant = 'all' | 'active' | 'requests'
@@ -178,13 +178,12 @@ export function LoansList({
     if (!q) return filteredByStatus
 
     return filteredByStatus.filter((loan) => {
-      const name = relatedMemberName(loan).toLowerCase()
       const email = relatedMemberEmail(loan).toLowerCase()
       const purpose = (loan.purpose ?? '').toLowerCase()
       const amount = money(loan.amount, (loan.currency as CurrencyCode) ?? 'USD').toLowerCase()
 
       return (
-        name.includes(q) ||
+        relatedMemberMatchesSearch(loan, q) ||
         email.includes(q) ||
         purpose.includes(q) ||
         amount.includes(q)
@@ -203,10 +202,9 @@ export function LoansList({
     if (!q) return memberGroups
 
     return memberGroups.filter((group) => {
-      const name = relatedMemberName(group).toLowerCase()
       const email = relatedMemberEmail(group).toLowerCase()
       const amount = money(group.totalAmount, (group.currency as CurrencyCode) ?? 'USD').toLowerCase()
-      return name.includes(q) || email.includes(q) || amount.includes(q)
+      return relatedMemberMatchesSearch(group, q) || email.includes(q) || amount.includes(q)
     })
   }, [isLedgerView, memberGroups, query])
 
