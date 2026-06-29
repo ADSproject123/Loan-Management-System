@@ -11,11 +11,7 @@ import {
   resolveLoanInterestRate,
 } from '@/lib/interest'
 import type { LoanScheduleRow } from '@/lib/interestCalculations'
-
-function toNumber(value: unknown) {
-  const numberValue = Number(value ?? 0)
-  return Number.isFinite(numberValue) ? numberValue : 0
-}
+import { toNumber } from '@/lib/utils'
 
 export type RepayContext = {
   loan: {

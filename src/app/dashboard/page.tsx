@@ -17,11 +17,7 @@ import {
   AlertTriangle,
   CheckCircle,
 } from 'lucide-react'
-
-function toNumber(value: unknown) {
-  const numberValue = Number(value ?? 0)
-  return Number.isFinite(numberValue) ? numberValue : 0
-}
+import { toNumber } from '@/lib/utils'
 
 function formatDate(value: string) {
   return new Date(value).toLocaleDateString('km-KH', { day: 'numeric', month: 'short', year: 'numeric' })

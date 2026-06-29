@@ -6,11 +6,7 @@ import { createAdminClient } from '@/lib/supabase/admin'
 import { PiggyBank, Plus, TrendingUp, ChevronRight } from 'lucide-react'
 import { formatMoney, predominantCurrency } from '@/lib/currency'
 import { getInterestSettings, monthlySavingInterest } from '@/lib/interest'
-
-function toNumber(value: unknown) {
-  const numberValue = Number(value ?? 0)
-  return Number.isFinite(numberValue) ? numberValue : 0
-}
+import { toNumber } from '@/lib/utils'
 
 export default async function SavingsPage() {
   const member = await requireMember()

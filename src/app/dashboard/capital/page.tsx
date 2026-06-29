@@ -5,11 +5,7 @@ import { createAdminClient } from '@/lib/supabase/admin'
 import { predominantCurrency } from '@/lib/currency'
 import { getInterestSettings, monthlySavingInterest } from '@/lib/interest'
 import { CapitalRequestForm } from './CapitalRequestForm'
-
-function toNumber(value: unknown) {
-  const numberValue = Number(value ?? 0)
-  return Number.isFinite(numberValue) ? numberValue : 0
-}
+import { toNumber } from '@/lib/utils'
 
 export default async function CapitalRequestPage() {
   const member = await requireMember()
