@@ -1,27 +1,24 @@
 import Link from 'next/link'
 import { Card } from '@/components/ui/Card'
+import { StatsTable, type StatsRow } from '@/components/ui/StatsTable'
+import { AlertBanner } from '@/components/ui/AlertBanner'
 import { MemberStatusBadge } from '@/components/ui/Badge'
 import { requireMember } from '@/lib/auth/member'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { formatMoney, normalizeCurrency, predominantCurrency } from '@/lib/currency'
 import { getInterestSettings, monthlySavingInterest } from '@/lib/interest'
 import { getLoanEligibility, sumCommittedLoanPrincipal } from '@/lib/loanEligibility'
+import { toNumber } from '@/lib/utils'
+import { formatKhmerDate, formatKhmerMonthYear } from '@/lib/dates'
 import {
   PiggyBank,
   CreditCard,
   Wallet,
   TrendingUp,
   ArrowRight,
-  Calendar,
   ChevronRight,
-  AlertTriangle,
   CheckCircle,
 } from 'lucide-react'
-import { toNumber } from '@/lib/utils'
-
-function formatDate(value: string) {
-  return new Date(value).toLocaleDateString('km-KH', { day: 'numeric', month: 'short', year: 'numeric' })
-}
 
 const STATUS_LABELS: Record<string, string> = {
   pending: 'រង់ចាំ',
@@ -105,22 +102,22 @@ export default async function DashboardPage() {
     })),
   ].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()).slice(0, 5)
 
-  const statsRows = [
+  const statsRows: StatsRow[] = [
     {
       icon: PiggyBank,
       iconClass: 'bg-green-100 text-green-700',
       label: 'ការសន្សំសរុប',
-      amount: formatMoney(totalSavings, savingsCurrency),
+      value: formatMoney(totalSavings, savingsCurrency),
       meta: `+${formatMoney(monthlyInterest, savingsCurrency)} ខែនេះ`,
       metaClass: 'text-green-600 font-medium',
-      href: '/dashboard/savings' as string | null,
+      href: '/dashboard/savings',
       linkLabel: 'មើលលម្អិត',
     },
     {
       icon: TrendingUp,
       iconClass: 'bg-brand-100 text-brand-700',
       label: 'ការប្រាក់ប្រចាំខែ',
-      amount: formatMoney(monthlyInterest, savingsCurrency),
+      value: formatMoney(monthlyInterest, savingsCurrency),
       meta: `${interestSettings.monthlySavingInterestRate}% ក្នុងមួយខែ`,
       metaClass: 'text-brand-600 font-medium',
       href: null,
@@ -130,7 +127,7 @@ export default async function DashboardPage() {
       icon: CreditCard,
       iconClass: 'bg-orange-100 text-orange-700',
       label: 'កម្ជីសកម្ម',
-      amount: formatMoney(activeLoanAmount, loanCurrency),
+      value: formatMoney(activeLoanAmount, loanCurrency),
       meta: null,
       metaClass: '',
       href: '/dashboard/loans',
@@ -140,7 +137,7 @@ export default async function DashboardPage() {
       icon: Wallet,
       iconClass: 'bg-purple-100 text-purple-700',
       label: 'កម្ជីដែលអាចស្នើសុំបាន',
-      amount: formatMoney(availableCredit, savingsCurrency),
+      value: formatMoney(availableCredit, savingsCurrency),
       meta: null,
       metaClass: '',
       href: loanEligibility.canRequestLoan ? '/dashboard/loans/request' : '/dashboard/savings/add',
@@ -157,7 +154,7 @@ export default async function DashboardPage() {
         <div className="mt-2 flex flex-wrap items-center gap-2 text-sm text-slate-500">
           <span>
             សមាជិកតាំងពី{' '}
-            {new Date(member.joined_at).toLocaleDateString('km-KH', { month: 'long', year: 'numeric' })}
+            {formatKhmerMonthYear(member.joined_at)}
           </span>
           <span className="text-slate-300">·</span>
           <MemberStatusBadge status={member.status} />
@@ -165,58 +162,7 @@ export default async function DashboardPage() {
       </div>     
 
       {/* Stats Table */}
-      <Card padding="none" className="mb-8 overflow-hidden">
-        <div className="overflow-x-auto">
-          <table className="w-full text-sm">
-            <thead>
-              <tr className="border-b border-gray-100 bg-gray-50">
-                <th className="px-5 py-3 text-left text-xs font-semibold uppercase tracking-wide text-gray-500">
-                  ប្រភេទ
-                </th>
-                <th className="px-5 py-3 text-left text-xs font-semibold uppercase tracking-wide text-gray-500">
-                  ចំនួនទឹកប្រាក់
-                </th>
-                <th className="px-5 py-3 text-left text-xs font-semibold uppercase tracking-wide text-gray-500">
-                  ព័ត៌មានបន្ថែម
-                </th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-gray-100">
-              {statsRows.map((row) => {
-                const Icon = row.icon
-                return (
-                  <tr key={row.label} className="transition-colors hover:bg-gray-50/80">
-                    <td className="px-5 py-4">
-                      <div className="flex items-center gap-3">
-                        <span className={`grid h-9 w-9 shrink-0 place-items-center rounded-lg ${row.iconClass}`}>
-                          <Icon className="h-4 w-4" />
-                        </span>
-                        <span className="font-medium text-gray-900">{row.label}</span>
-                      </div>
-                    </td>
-                    <td className="px-5 py-4 font-bold tabular-nums text-gray-900">{row.amount}</td>
-                    <td className="px-5 py-4 text-gray-600">
-                      {row.meta ? (
-                        <span className={row.metaClass}>{row.meta}</span>
-                      ) : row.href && row.linkLabel ? (
-                        <Link
-                          href={row.href}
-                          className="inline-flex items-center gap-1 text-xs font-medium text-brand-700 transition hover:text-brand-900"
-                        >
-                          {row.linkLabel}
-                          <ChevronRight className="h-3.5 w-3.5" />
-                        </Link>
-                      ) : (
-                        '—'
-                      )}
-                    </td>
-                  </tr>
-                )
-              })}
-            </tbody>
-          </table>
-        </div>
-      </Card>
+      <StatsTable rows={statsRows} className="mb-8" />
 
       {/* Two Column Layout */}
       <div className="grid lg:grid-cols-3 gap-6">
@@ -307,7 +253,7 @@ export default async function DashboardPage() {
                     </div>
                     <div className="flex-1">
                       <p className="text-sm font-medium text-gray-900">{item.description}</p>
-                      <p className="text-xs text-gray-400 mt-0.5">{formatDate(item.date)}</p>
+                      <p className="text-xs text-gray-400 mt-0.5">{formatKhmerDate(item.date)}</p>
                     </div>
                     <div className="text-right">
                       <p className={`text-sm font-semibold ${item.type === 'loan_repay' ? 'text-orange-600' : 'text-green-600'}`}>
@@ -327,8 +273,7 @@ export default async function DashboardPage() {
       </div>
 
       {/* Important Notice */}
-      <div className="mt-8 bg-yellow-50 border border-yellow-200 rounded-xl p-5 flex items-start gap-3">
-        <AlertTriangle className="w-5 h-5 text-yellow-600 flex-shrink-0 mt-0.5" />
+      <AlertBanner variant="info" className="mt-8">
         <div>
           <p className="text-yellow-900 font-semibold text-sm">អំឡុងពេលដកដើមទុន</p>
           <p className="text-yellow-700 text-sm mt-1">
@@ -339,7 +284,7 @@ export default async function DashboardPage() {
             ស្វែងយល់អំពីការស្នើសុំដើមទុន <ArrowRight className="w-4 h-4" />
           </Link>
         </div>
-      </div>
+      </AlertBanner>
     </div>
   )
 }
