@@ -1,7 +1,6 @@
 'use client'
 
 import React, { useState } from 'react'
-import Link from 'next/link'
 import { Steps } from '@/components/ui/Steps'
 import { Button } from '@/components/ui/Button'
 import { Card } from '@/components/ui/Card'
@@ -299,18 +298,12 @@ export function LoanRepayForm({
                 </button>
               ) : (
                 <>
-                  <Link
-                    href="/dashboard/loans/repay"
-                    className="inline-flex items-center gap-2 bg-brand-950 text-white px-5 py-2.5 rounded-lg text-sm font-semibold hover:bg-brand-800 transition-colors"
-                  >
+                  <Button href="/dashboard/loans/repay">
                     ត្រឡប់ក្រោយ
-                  </Link>
-                  <Link
-                    href="/dashboard/loans"
-                    className="inline-flex items-center gap-2 bg-white border border-gray-300 text-gray-700 px-5 py-2.5 rounded-lg text-sm font-semibold hover:bg-gray-50 transition-colors"
-                  >
+                  </Button>
+                  <Button href="/dashboard/loans" variant="outline">
                     មើលកម្ជីរបស់ខ្ញុំ
-                  </Link>
+                  </Button>
                 </>
               )}
             </div>
