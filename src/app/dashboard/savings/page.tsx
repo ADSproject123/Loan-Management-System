@@ -1,12 +1,15 @@
-import Link from 'next/link'
 import { Card } from '@/components/ui/Card'
 import { SavingStatusBadge } from '@/components/ui/Badge'
+import { PageHeader } from '@/components/ui/PageHeader'
+import { StatsTable, type StatsRow } from '@/components/ui/StatsTable'
+import { Button } from '@/components/ui/Button'
 import { requireMember } from '@/lib/auth/member'
 import { createAdminClient } from '@/lib/supabase/admin'
-import { PiggyBank, Plus, TrendingUp, ChevronRight } from 'lucide-react'
 import { formatMoney, predominantCurrency } from '@/lib/currency'
+import { formatKhmerDate } from '@/lib/dates'
 import { getInterestSettings, monthlySavingInterest } from '@/lib/interest'
 import { toNumber } from '@/lib/utils'
+import { PiggyBank, Plus, TrendingUp, ChevronRight } from 'lucide-react'
 
 export default async function SavingsPage() {
   const member = await requireMember()
@@ -37,51 +40,41 @@ export default async function SavingsPage() {
   const monthlyInterest = monthlySavingInterest(totalSavings, interestSettings.monthlySavingInterestRate)
   const displayCurrency = predominantCurrency(verifiedSavings)
 
+  const statsRows: StatsRow[] = [
+    {
+      icon: PiggyBank,
+      iconClass: 'bg-green-100 text-green-700',
+      label: 'សមតុល្យសន្សំសរុប',
+      value: formatMoney(totalSavings, displayCurrency),
+    },
+    {
+      icon: TrendingUp,
+      iconClass: 'bg-brand-100 text-brand-700',
+      label: 'ការប្រាក់ប្រចាំខែ',
+      value: formatMoney(monthlyInterest, displayCurrency),
+      meta: `${interestSettings.monthlySavingInterestRate}% ក្នុងមួយខែ`,
+      metaClass: 'text-brand-600 font-medium',
+    },
+    {
+      icon: ChevronRight,
+      iconClass: 'bg-purple-100 text-purple-700',
+      label: 'ការបរិច្ចាគសរុប',
+      value: String(savings.length),
+    },
+  ]
+
   return (
     <div className="p-6 md:p-8 max-w-7xl mx-auto">
-      {/* Header */}
-      <div className="flex items-start justify-between mb-8">
-        <div>
-          <h1 className="text-2xl md:text-3xl font-bold text-gray-900">ការសន្សំរបស់ខ្ញុំ</h1>
-          <p className="text-gray-500 text-sm mt-1">តាមដានការបរិច្ចាគប្រចាំខែ និង ការប្រាក់របស់អ្នក</p>
-        </div>
-        <div className="flex gap-3">
-          <Link
-            href="/dashboard/savings/add"
-            className="inline-flex items-center gap-2 bg-brand-950 text-white px-4 py-2 rounded-lg text-sm font-semibold hover:bg-brand-800 transition-colors"
-          >
-            <Plus className="w-4 h-4" />
-            បន្ថែមការសន្សំ
-          </Link>
-        </div>
-      </div>
+      <PageHeader title="ការសន្សំរបស់ខ្ញុំ" subtitle="តាមដានការបរិច្ចាគប្រចាំខែ និង ការប្រាក់របស់អ្នក">
+        <Button href="/dashboard/savings/add" size="sm">
+          <Plus className="w-4 h-4" />
+          បន្ថែមការសន្សំ
+        </Button>
+      </PageHeader>
 
-      {/* Stats */}
-      <div className="grid sm:grid-cols-3 gap-4 md:gap-6 mb-8">
-        <Card>
-          <div className="p-2.5 bg-green-100 rounded-lg inline-flex mb-3">
-            <PiggyBank className="w-5 h-5 text-green-700" />
-          </div>
-          <p className="text-2xl font-bold text-gray-900">{formatMoney(totalSavings, displayCurrency)}</p>
-          <p className="text-gray-500 text-sm mt-1">សមតុល្យសន្សំសរុប</p>
-        </Card>
-        <Card>
-          <div className="p-2.5 bg-brand-100 rounded-lg inline-flex mb-3">
-            <TrendingUp className="w-5 h-5 text-brand-700" />
-          </div>
-          <p className="text-2xl font-bold text-gray-900">{formatMoney(monthlyInterest, displayCurrency)}</p>
-          <p className="text-gray-500 text-sm mt-1">ការប្រាក់ប្រចាំខែ ({interestSettings.monthlySavingInterestRate}%)</p>
-        </Card>
-        <Card>
-          <div className="p-2.5 bg-purple-100 rounded-lg inline-flex mb-3">
-            <ChevronRight className="w-5 h-5 text-purple-700" />
-          </div>
-          <p className="text-2xl font-bold text-gray-900">{savings.length}</p>
-          <p className="text-gray-500 text-sm mt-1">ការបរិច្ចាគសរុប</p>
-        </Card>
-      </div>
+      <StatsTable rows={statsRows} className="mb-8" />
 
-      {/* Savings Table */}
+      {/* Savings History */}
       <Card padding="none">
         <div className="px-6 py-4 border-b border-gray-100">
           <h2 className="font-semibold text-gray-900">ប្រវត្តិការសន្សំ</h2>
@@ -107,7 +100,7 @@ export default async function SavingsPage() {
               {savings.map((saving) => (
                 <tr key={saving.id} className="hover:bg-gray-50 transition-colors">
                   <td className="px-6 py-4 text-sm text-gray-900">
-                    {new Date(saving.saving_date).toLocaleDateString('km-KH', { day: 'numeric', month: 'long', year: 'numeric' })}
+                    {formatKhmerDate(saving.saving_date)}
                   </td>
                   <td className="px-6 py-4">
                     <span className="text-sm font-semibold text-green-700">+{formatMoney(saving.amount, saving.currency ?? 'USD')}</span>
