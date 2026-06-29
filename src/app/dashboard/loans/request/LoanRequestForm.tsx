@@ -10,6 +10,7 @@ import { requestLoan } from '@/app/actions/member'
 import { showError } from '@/lib/toast'
 import { currencySymbol, formatMoney, type CurrencyCode } from '@/lib/currency'
 import { buildLoanPaymentSchedule, loanRepaymentSummary } from '@/lib/interestCalculations'
+import { addMonths, todayIso } from '@/lib/dates'
 import { LoanPaymentSchedule } from '@/components/loans/LoanPaymentSchedule'
 import {
   LOAN_TO_SAVINGS_MULTIPLIER,
@@ -48,9 +49,7 @@ interface LoanFormData {
 
 /** YYYY-MM-DD for a date offset from today by the given number of months. */
 function dateFromToday(monthsAhead: number) {
-  const d = new Date()
-  d.setMonth(d.getMonth() + monthsAhead)
-  return d.toISOString().slice(0, 10)
+  return addMonths(todayIso(), monthsAhead)
 }
 
 /** Whole months between two YYYY-MM-DD dates, floored, minimum 1. */
@@ -221,20 +220,14 @@ export function LoanRequestForm({
             </p>
             <div className="flex flex-wrap justify-center gap-3">
               {eligibility.totalSavings <= 0 ? (
-                <Link
-                  href="/dashboard/savings/add"
-                  className="inline-flex items-center gap-2 bg-brand-950 text-white px-5 py-2.5 rounded-lg text-sm font-semibold hover:bg-brand-800 transition-colors"
-                >
+                <Button href="/dashboard/savings/add" size="md">
                   <PiggyBank className="w-4 h-4" />
                   ស្នើសុំការសន្សំ
-                </Link>
+                </Button>
               ) : null}
-              <Link
-                href="/dashboard/loans"
-                className="inline-flex items-center gap-2 bg-white border border-gray-300 text-gray-700 px-5 py-2.5 rounded-lg text-sm font-semibold hover:bg-gray-50 transition-colors"
-              >
+              <Button href="/dashboard/loans" variant="outline" size="md">
                 ត្រឡប់ក្រោយ
-              </Link>
+              </Button>
             </div>
           </div>
         </Card>
@@ -535,18 +528,12 @@ export function LoanRequestForm({
             </p>
 
             <div className="flex gap-3 justify-center">
-              <Link
-                href="/dashboard/loans"
-                className="inline-flex items-center gap-2 bg-brand-950 text-white px-5 py-2.5 rounded-lg text-sm font-semibold hover:bg-brand-800 transition-colors"
-              >
+              <Button href="/dashboard/loans" size="md">
                 មើលកម្ជីរបស់ខ្ញុំ
-              </Link>
-              <Link
-                href="/dashboard"
-                className="inline-flex items-center gap-2 bg-white border border-gray-300 text-gray-700 px-5 py-2.5 rounded-lg text-sm font-semibold hover:bg-gray-50 transition-colors"
-              >
+              </Button>
+              <Button href="/dashboard" variant="outline" size="md">
                 ផ្ទាំងគ្រប់គ្រង
-              </Link>
+              </Button>
             </div>
           </div>
         </Card>

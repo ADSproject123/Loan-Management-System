@@ -1,7 +1,6 @@
 'use client'
 
 import React, { useState } from 'react'
-import Link from 'next/link'
 import { Button } from '@/components/ui/Button'
 import { Card } from '@/components/ui/Card'
 import { Steps } from '@/components/ui/Steps'
@@ -385,12 +384,9 @@ export function CapitalRequestForm({ memberSavings }: { memberSavings: MemberSav
             </div>
 
             <div className="flex gap-3 justify-center">
-              <Link
-                href="/dashboard"
-                className="inline-flex items-center gap-2 bg-brand-950 text-white px-5 py-2.5 rounded-lg text-sm font-semibold hover:bg-brand-800 transition-colors"
-              >
+              <Button href="/dashboard" size="md">
                 ត្រឡប់ក្រោយ <ArrowRight className="w-4 h-4" />
-              </Link>
+              </Button>
             </div>
           </div>
         </Card>
