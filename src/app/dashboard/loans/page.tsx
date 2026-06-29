@@ -7,11 +7,7 @@ import { formatMoney, normalizeCurrency } from '@/lib/currency'
 import { getInterestSettings, loanRepaymentSummary, resolveLoanInterestRate } from '@/lib/interest'
 import { getLoanEligibility, sumCommittedLoanPrincipal, sumVerifiedSavings } from '@/lib/loanEligibility'
 import { CreditCard, Plus, ArrowRight, AlertTriangle, FileText } from 'lucide-react'
-
-function toNumber(value: unknown) {
-  const numberValue = Number(value ?? 0)
-  return Number.isFinite(numberValue) ? numberValue : 0
-}
+import { toNumber } from '@/lib/utils'
 
 export default async function LoansPage() {
   const member = await requireMember()

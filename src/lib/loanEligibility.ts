@@ -1,6 +1,7 @@
 import type { SupabaseClient } from '@supabase/supabase-js'
 import { formatMoney } from '@/lib/currency'
 import type { LoanStatus } from '@/types/database'
+import { toNumber } from '@/lib/utils'
 
 export const LOAN_TO_SAVINGS_MULTIPLIER = 5
 
@@ -21,11 +22,6 @@ type SavingRow = {
 type LoanRow = {
   amount: unknown
   status: string
-}
-
-function toNumber(value: unknown) {
-  const numberValue = Number(value ?? 0)
-  return Number.isFinite(numberValue) ? numberValue : 0
 }
 
 export function isVerifiedSaving(saving: SavingRow) {
