@@ -89,7 +89,7 @@ export async function sendTelegramMessageRemoveKeyboard(chatId: string, text: st
 export async function sendTelegramMessageWithAppButton(
   chatId: string,
   text: string,
-  buttonLabel = '📱 បើកកម្មវិធី / Open App'
+  buttonLabel = '📱 បើកកម្មវិធី'
 ): Promise<boolean> {
   const url = appUrl()
 
@@ -181,7 +181,7 @@ export async function configureBotMenuButton(): Promise<boolean> {
   const result = await callTelegram('setChatMenuButton', {
     menu_button: {
       type: 'web_app',
-      text: '📱 Open App',
+      text: '📱 បើកកម្មវិធី',
       web_app: { url: appUrl() },
     },
   })
@@ -194,12 +194,12 @@ export async function configureBotMenuButton(): Promise<boolean> {
 export async function setBotCommands(): Promise<boolean> {
   const result = await callTelegram('setMyCommands', {
     commands: [
-      { command: 'start',      description: 'ភ្ជាប់គណនី / Link your account' },
-      { command: 'saving',     description: 'មើលការសន្សំ / View my savings' },
-      { command: 'loan',       description: 'មើលប្រាក់កម្ចី / View my loan report' },
-      { command: 'paysaving',    description: 'ដាក់ស្នើការសន្សំ / Submit a saving payment' },
-      { command: 'payloan',      description: 'ដាក់ស្នើការសងកម្ចី / Submit a loan repayment' },
-      { command: 'requestloan',  description: 'ស្នើសុំប្រាក់កម្ចី / Request a new loan' },
+      { command: 'start',      description: 'ភ្ជាប់គណនី' },
+      { command: 'saving',     description: 'មើលការសន្សំ' },
+      { command: 'loan',       description: 'មើលរបាយការណ៍កម្ជី' },
+      { command: 'paysaving',    description: 'ដាក់ស្នើការសន្សំ' },
+      { command: 'payloan',      description: 'ដាក់ស្នើការសងកម្ជី' },
+      { command: 'requestloan',  description: 'ស្នើសុំកម្ជី' },
     ],
   })
   return result.ok

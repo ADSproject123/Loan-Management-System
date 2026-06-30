@@ -57,12 +57,42 @@ interface TelegramUpdate {
 
 const WELCOME_NO_TOKEN =
   '👋 សួស្តី!\n\n' +
-  'ដើម្បីភ្ជាប់គណនី សូមប្រើ <b>តំណភ្ជាប់ផ្ទាល់ខ្លួន</b> ពីអ្នកគ្រប់គ្រង ឬ ចូលគណនីក្នុងកម្មវិធីហើយទៅ <b>ភ្ជាប់ Telegram</b>។\n\n' +
-  'To link your account, use your personal connect link from the admin, or sign in to the app and open <b>Connect Telegram</b>.'
+  'ដើម្បីភ្ជាប់គណនី សូមប្រើ <b>តំណភ្ជាប់ផ្ទាល់ខ្លួន</b> ពីអ្នកគ្រប់គ្រង ឬ ចូលគណនីក្នុងកម្មវិធីហើយទៅ <b>ភ្ជាប់ Telegram</b>។'
 
 const NOT_LINKED =
-  '🔗 គណនី Telegram របស់អ្នកមិនទាន់ភ្ជាប់ទេ។ សូមប្រើតំណភ្ជាប់ផ្ទាល់ខ្លួនពីអ្នកគ្រប់គ្រង ឬ ចូលគណនីក្នុងកម្មវិធី។\n\n' +
-  'Your Telegram account is not linked yet. Please use your personal connect link or sign in to the app.'
+  '🔗 គណនី Telegram របស់អ្នកមិនទាន់ភ្ជាប់ទេ។ សូមប្រើតំណភ្ជាប់ផ្ទាល់ខ្លួនពីអ្នកគ្រប់គ្រង ឬ ចូលគណនីក្នុងកម្មវិធី។'
+
+const NOT_ACTIVE_MEMBER =
+  '⏳ គណនីរបស់អ្នកមិនទាន់សកម្មទេ។ អ្នកមិនអាចប្រើការសន្សំ ឬ កម្ជីបានទេ រហូតដល់អ្នកគ្រប់គ្រងទទួលយកគណនីរបស់អ្នក។'
+
+type LinkedMember = {
+  id: string
+  status: string
+  full_name_kh?: string | null
+  full_name_en?: string | null
+}
+
+async function requireLinkedActiveMember(chatId: string): Promise<LinkedMember | null> {
+  const admin = createAdminClient()
+  const { data: member } = await admin
+    .from('members')
+    .select('id, status, full_name_kh, full_name_en')
+    .eq('telegram_chat_id', chatId)
+    .maybeSingle()
+
+  if (!member) {
+    await sendTelegramMessageWithCommandButtons(chatId, NOT_LINKED)
+    return null
+  }
+
+  const linked = member as LinkedMember
+  if (linked.status !== 'active') {
+    await sendTelegramMessageWithCommandButtons(chatId, NOT_ACTIVE_MEMBER)
+    return null
+  }
+
+  return linked
+}
 
 const STATUS_EMOJI: Record<SavingStatus, string> = {
   pending:   '⏳',
@@ -72,19 +102,19 @@ const STATUS_EMOJI: Record<SavingStatus, string> = {
 }
 
 const STATUS_LABEL: Record<SavingStatus, string> = {
-  pending:   'Pending',
-  verified:  'Verified',
-  completed: 'Completed',
-  refunded:  'Refunded',
+  pending:   'រង់ចាំ',
+  verified:  'បានផ្ទៀងផ្ទាត់',
+  completed: 'បានបញ្ចប់',
+  refunded:  'បានសងត្រឡប់',
 }
 
 const LOAN_STATUS_LABEL: Record<string, string> = {
-  pending:      'Pending',
-  under_review: 'Under Review',
-  approved:     'Approved',
-  active:       'Active',
-  completed:    'Completed',
-  rejected:     'Rejected',
+  pending:      'រង់ចាំ',
+  under_review: 'កំពុងពិនិត្យ',
+  approved:     'បានអនុម័ត',
+  active:       'សកម្ម',
+  completed:    'បានបញ្ចប់',
+  rejected:     'បានបដិសេធ',
 }
 
 const SCHEDULE_STATUS_EMOJI: Record<string, string> = {
@@ -143,8 +173,7 @@ async function handleStartWithToken(chatId: string, token: string) {
   if (!member) {
     await sendTelegramMessage(
       chatId,
-      '⚠️ តំណភ្ជាប់នេះមិនត្រឹមត្រូវ ឬផុតកំណត់។ សូមស្នើតំណថ្មីពីអ្នកគ្រប់គ្រង ឬ ចូលគណនីក្នុងកម្មវិធី។\n\n' +
-        'This connection link is invalid or expired. Please ask the admin for a new link or sign in to the app.'
+      '⚠️ តំណភ្ជាប់នេះមិនត្រឹមត្រូវ ឬផុតកំណត់។ សូមស្នើតំណថ្មីពីអ្នកគ្រប់គ្រង ឬ ចូលគណនីក្នុងកម្មវិធី។'
     )
     return
   }
@@ -155,8 +184,8 @@ async function handleStartWithToken(chatId: string, token: string) {
     await sendTelegramMessage(
       chatId,
       result.duplicate
-        ? '⛔ គណនី Telegram នេះត្រូវបានភ្ជាប់ជាមួយសមាជិកដទៃរួចហើយ។\n\nThis Telegram account is already linked to another member.'
-        : '❌ មានបញ្ហាក្នុងការភ្ជាប់។ សូមព្យាយាមម្តងទៀតពេលក្រោយ។\n\nSomething went wrong linking your account. Please try again later.'
+        ? '⛔ គណនី Telegram នេះត្រូវបានភ្ជាប់ជាមួយសមាជិកដទៃរួចហើយ។'
+        : '❌ មានបញ្ហាក្នុងការភ្ជាប់។ សូមព្យាយាមម្តងទៀតពេលក្រោយ។'
     )
     return
   }
@@ -164,25 +193,15 @@ async function handleStartWithToken(chatId: string, token: string) {
   const name = member.full_name_kh ?? member.full_name_en ?? ''
   await sendTelegramMessageWithCommandButtons(
     chatId,
-    `✅ <b>បានភ្ជាប់ដោយជោគជ័យ!</b>\nគណនី <b>${name}</b> ត្រូវបានភ្ជាប់ហើយ។\n\n` +
-      '<b>Connected!</b> You will now receive notifications here.'
+    `✅ <b>បានភ្ជាប់ដោយជោគជ័យ!</b>\nគណនី <b>${name}</b> ត្រូវបានភ្ជាប់ហើយ។ អ្នកនឹងទទួលការជូនដំណឹងនៅទីនេះ។`
   )
 }
 
 async function handleSavingCommand(chatId: string): Promise<void> {
+  const member = await requireLinkedActiveMember(chatId)
+  if (!member) return
+
   const admin = createAdminClient()
-
-  const { data: member } = await admin
-    .from('members')
-    .select('id, full_name_kh, full_name_en')
-    .eq('telegram_chat_id', chatId)
-    .maybeSingle()
-
-  if (!member) {
-    await sendTelegramMessageWithCommandButtons(chatId, NOT_LINKED)
-    return
-  }
-
   const { data: savings } = await admin
     .from('savings')
     .select('amount, saving_date, status, currency')
@@ -196,7 +215,7 @@ async function handleSavingCommand(chatId: string): Promise<void> {
   if (rows.length === 0) {
     await sendTelegramMessageWithCommandButtons(
       chatId,
-      '💰 <b>ការសន្សំ / Savings</b>\n\nអ្នកមិនទាន់មានការសន្សំណាមួយទេ។\nYou have no savings records yet.'
+      '💰 <b>ការសន្សំ</b>\n\nអ្នកមិនទាន់មានការសន្សំណាមួយទេ។'
     )
     return
   }
@@ -220,7 +239,7 @@ async function handleSavingCommand(chatId: string): Promise<void> {
     })
     .join('\n')
 
-  const moreNote = rows.length > 8 ? `\n<i>… and ${rows.length - 8} more. Open the app to see all.</i>` : ''
+  const moreNote = rows.length > 8 ? `\n<i>… និង ${rows.length - 8} ទៀត។ បើកកម្មវិធីដើម្បីមើលទាំងអស់។</i>` : ''
 
   const msg =
     `💰 <b>ការសន្សំ</b>\n` +
@@ -236,19 +255,10 @@ async function handleSavingCommand(chatId: string): Promise<void> {
 }
 
 async function handleLoanCommand(chatId: string): Promise<void> {
+  const member = await requireLinkedActiveMember(chatId)
+  if (!member) return
+
   const admin = createAdminClient()
-
-  const { data: member } = await admin
-    .from('members')
-    .select('id, full_name_kh, full_name_en')
-    .eq('telegram_chat_id', chatId)
-    .maybeSingle()
-
-  if (!member) {
-    await sendTelegramMessageWithCommandButtons(chatId, NOT_LINKED)
-    return
-  }
-
   const { data: loan } = await admin
     .from('loans')
     .select('id, amount, currency, status, term_months, monthly_interest_rate, start_date, due_date')
@@ -274,7 +284,7 @@ async function handleLoanCommand(chatId: string): Promise<void> {
 
     await sendTelegramMessageWithCommandButtons(
       chatId,
-      `🏦 <b>ប្រាក់កម្ចី / Loan</b>\n\nអ្នកមិនមានប្រាក់កម្ចីសកម្មទេ។\nYou have no active loan.${statusMsg}`
+      `🏦 <b>កម្ជី</b>\n\nអ្នកមិនមានកម្ជីសកម្មទេ។${statusMsg}`
     )
     return
   }
@@ -314,7 +324,7 @@ async function handleLoanCommand(chatId: string): Promise<void> {
   const unpaidCount = annotated.filter(r => r.status !== 'paid').length
 
   const parts: string[] = [
-    `🏦 <b>ប្រាក់កម្ចី / Loan Report</b>`,
+    `🏦 <b>របាយការណ៍កម្ជី</b>`,
     `👤 ${name}`,
     ``,
     `💵 <b>ចំនួន:</b> ${fmtMoney(principal)}  |  📅 <b>រយៈពេល:</b> ${termMonths} ខែ`,
@@ -331,7 +341,7 @@ async function handleLoanCommand(chatId: string): Promise<void> {
   if (unpaid.length === 0) {
     parts.push(``, `🎉 <b>អ្នកបានសងកម្ចីទាំងស្រុងហើយ!</b>`)
   } else {
-    parts.push(``, `<b>📋 ការបង់ប្រចាំខែ / Monthly Schedule:</b>`)
+    parts.push(``, `<b>📋 តារាបង់ប្រចាំខែ:</b>`)
 
     const shown = unpaid.slice(0, 12)
     for (const row of shown) {
@@ -371,28 +381,18 @@ async function uploadBufferToR2(memberId: string, folder: string, buf: Buffer, e
 // /paysaving — send QR, prompt for proof photo
 // ---------------------------------------------------------------------------
 async function handlePaySavingCommand(chatId: string): Promise<void> {
-  const admin = createAdminClient()
-  const { data: member } = await admin
-    .from('members')
-    .select('id')
-    .eq('telegram_chat_id', chatId)
-    .maybeSingle()
-
-  if (!member) {
-    await sendTelegramMessageWithCommandButtons(chatId, NOT_LINKED)
-    return
-  }
+  const member = await requireLinkedActiveMember(chatId)
+  if (!member) return
 
   const qrUrl = `${process.env.NEXT_PUBLIC_APP_URL ?? 'http://localhost:3000'}/khqr-payment.png`
 
   const ok = await sendTelegramPhoto(
     chatId,
     qrUrl,
-    '💰 <b>ដាក់ស្នើការសន្សំ / Submit Saving</b>\n\n' +
-    'ស្កេន KHQR ខាងលើដើម្បីបង់ប្រាក់។\n' +
-    'Scan the KHQR above to pay.\n\n' +
-    '📸 <b>បន្ទាប់មកផ្ញើរូបភាពបញ្ជាក់ (screenshot) ហើយសរសេរចំនួន (ដុល្លារ) ក្នុង caption</b>\n' +
-    'Then upload your payment screenshot and <b>write the amount in the caption</b> (e.g. <code>50</code> for $50).',
+    '💰 <b>ដាក់ស្នើការសន្សំ</b>\n\n' +
+    'ស្កេន KHQR ខាងលើដើម្បីបង់ប្រាក់។\n\n' +
+    '📸 <b>បន្ទាប់មកផ្ញើរូបភាពបញ្ជាក់ ហើយសរសេរចំនួន (ដុល្លារ) ក្នុង caption</b>\n' +
+    '<i>ឧ. <code>50</code> សម្រាប់ $50</i>',
     true, // force reply
   )
 
@@ -403,18 +403,10 @@ async function handlePaySavingCommand(chatId: string): Promise<void> {
 // /payloan — send QR with the next due amount, prompt for proof photo
 // ---------------------------------------------------------------------------
 async function handlePayLoanCommand(chatId: string): Promise<void> {
+  const member = await requireLinkedActiveMember(chatId)
+  if (!member) return
+
   const admin = createAdminClient()
-  const { data: member } = await admin
-    .from('members')
-    .select('id')
-    .eq('telegram_chat_id', chatId)
-    .maybeSingle()
-
-  if (!member) {
-    await sendTelegramMessageWithCommandButtons(chatId, NOT_LINKED)
-    return
-  }
-
   const { data: loan } = await admin
     .from('loans')
     .select('id, amount, term_months, monthly_interest_rate, start_date')
@@ -425,7 +417,7 @@ async function handlePayLoanCommand(chatId: string): Promise<void> {
     .maybeSingle()
 
   if (!loan) {
-    await sendTelegramMessageWithCommandButtons(chatId, '🏦 អ្នកមិនមានប្រាក់កម្ចីសកម្មទេ។\nYou have no active loan.')
+    await sendTelegramMessageWithCommandButtons(chatId, '🏦 អ្នកមិនមានកម្ជីសកម្មទេ។')
     return
   }
 
@@ -457,12 +449,10 @@ async function handlePayLoanCommand(chatId: string): Promise<void> {
   const ok = await sendTelegramPhoto(
     chatId,
     qrUrl,
-    `🏦 <b>ដាក់ស្នើការសងកម្ចី / Submit Loan Repayment</b>\n\n` +
+    `🏦 <b>ដាក់ស្នើការសងកម្ជី</b>\n\n` +
     `💵 <b>ចំនួនត្រូវបង់ប្រចាំខែ:</b> ${fmtMoney(dueAmount)}\n\n` +
-    'ស្កេន KHQR ខាងលើដើម្បីបង់ប្រាក់។\n' +
-    'Scan the KHQR above to pay.\n\n' +
-    '📸 <b>បន្ទាប់មកផ្ញើរូបភាពបញ្ជាក់ (screenshot)</b>\n' +
-    'Then upload your payment screenshot as a reply to this message.',
+    'ស្កេន KHQR ខាងលើដើម្បីបង់ប្រាក់។\n\n' +
+    '📸 <b>បន្ទាប់មកផ្ញើរូបភាពបញ្ជាក់</b> ជាការឆ្លើយតបទៅសារនេះ។',
     true, // force reply
   )
 
@@ -477,29 +467,22 @@ async function handlePhotoMessage(chatId: string, fileId: string, caption?: stri
   if (!pending) {
     await sendTelegramMessage(
       chatId,
-      '📸 ដើម្បីដាក់ស្នើការបង់ប្រាក់ សូមប្រើ /paysaving ឬ /payloan ជាមុនសិន។\n' +
-      'To submit a payment, please use /paysaving or /payloan first.'
+      '📸 ដើម្បីដាក់ស្នើការបង់ប្រាក់ សូមប្រើ /paysaving ឬ /payloan ជាមុនសិន។'
     )
     return
   }
 
   const admin = createAdminClient()
-  const { data: member } = await admin
-    .from('members')
-    .select('id')
-    .eq('telegram_chat_id', chatId)
-    .maybeSingle()
-
+  const member = await requireLinkedActiveMember(chatId)
   if (!member) {
     await clearPendingPayment(chatId)
-    await sendTelegramMessageWithCommandButtons(chatId, NOT_LINKED)
     return
   }
 
   // Download the photo from Telegram
   const downloadUrl = await getTelegramFileDownloadUrl(fileId)
   if (!downloadUrl) {
-    await sendTelegramMessage(chatId, '❌ មិនអាចទាញយករូបភាពបានទេ។ សូមព្យាយាមម្តងទៀត។\nCould not download photo. Please try again.')
+    await sendTelegramMessage(chatId, '❌ មិនអាចទាញយករូបភាពបានទេ។ សូមព្យាយាមម្តងទៀត។')
     return
   }
 
@@ -509,7 +492,7 @@ async function handlePhotoMessage(chatId: string, fileId: string, caption?: stri
     if (!res.ok) throw new Error(`HTTP ${res.status}`)
     photoBuffer = Buffer.from(await res.arrayBuffer())
   } catch {
-    await sendTelegramMessage(chatId, '❌ មិនអាចទាញយករូបភាពបានទេ។\nFailed to download photo.')
+    await sendTelegramMessage(chatId, '❌ មិនអាចទាញយករូបភាពបានទេ។')
     return
   }
 
@@ -520,7 +503,7 @@ async function handlePhotoMessage(chatId: string, fileId: string, caption?: stri
     const folder = pending.type === 'saving' ? 'savings' : 'repayments'
     evidenceUrl = await uploadBufferToR2(member.id, folder, photoBuffer, ext)
   } catch {
-    await sendTelegramMessage(chatId, '❌ មិនអាចរក្សាទុករូបភាពបានទេ។\nFailed to save photo.')
+    await sendTelegramMessage(chatId, '❌ មិនអាចរក្សាទុករូបភាពបានទេ។')
     return
   }
 
@@ -533,8 +516,7 @@ async function handlePhotoMessage(chatId: string, fileId: string, caption?: stri
     if (!amount || amount <= 0) {
       await sendTelegramMessage(
         chatId,
-        '⚠️ រូបភាពបានទទួល ប៉ុន្តែចំនួនមិនត្រឹមត្រូវ។ សូមប្រើ /paysaving ម្តងទៀត ហើយសរសេរចំនួន (ដែ. "50") ក្នុង caption។\n' +
-        'Photo received but amount was missing. Use /paysaving again and include the amount in the caption (e.g. "50").'
+        '⚠️ រូបភាពបានទទួល ប៉ុន្តែចំនួនមិនត្រឹមត្រូវ។ សូមប្រើ /paysaving ម្តងទៀត ហើយសរសេរចំនួន (ឧ. <code>50</code>) ក្នុង caption។'
       )
       return
     }
@@ -549,7 +531,7 @@ async function handlePhotoMessage(chatId: string, fileId: string, caption?: stri
     })
 
     if (error) {
-      await sendTelegramMessage(chatId, '❌ មានបញ្ហាក្នុងការរក្សាទុក។\nSomething went wrong saving your record.')
+      await sendTelegramMessage(chatId, '❌ មានបញ្ហាក្នុងការរក្សាទុក។')
       return
     }
 
@@ -558,7 +540,7 @@ async function handlePhotoMessage(chatId: string, fileId: string, caption?: stri
       `✅ <b>ទទួលបានដោយជោគជ័យ!</b>\n` +
       `💰 ចំនួន: <b>${fmtMoney(amount)}</b>\n` +
       `⏳ ស្ថានភាព: <b>កំពុងរង់ចាំការផ្ទៀងផ្ទាត់</b>\n\n` +
-      `Saving of <b>${fmtMoney(amount)}</b> submitted — pending admin verification.`
+      `បានដាក់ស្នើការសន្សំ <b>${fmtMoney(amount)}</b> — រង់ចាំអ្នកគ្រប់គ្រងផ្ទៀងផ្ទាត់។`
     )
 
   } else {
@@ -573,7 +555,7 @@ async function handlePhotoMessage(chatId: string, fileId: string, caption?: stri
     })
 
     if (error) {
-      await sendTelegramMessage(chatId, '❌ មានបញ្ហាក្នុងការរក្សាទុក។\nSomething went wrong saving your record.')
+      await sendTelegramMessage(chatId, '❌ មានបញ្ហាក្នុងការរក្សាទុក។')
       return
     }
 
@@ -582,7 +564,7 @@ async function handlePhotoMessage(chatId: string, fileId: string, caption?: stri
       `✅ <b>ទទួលបានដោយជោគជ័យ!</b>\n` +
       `💳 ចំនួន: <b>${fmtMoney(pending.amount)}</b>\n` +
       `⏳ ស្ថានភាព: <b>កំពុងរង់ចាំការផ្ទៀងផ្ទាត់</b>\n\n` +
-      `Loan repayment of <b>${fmtMoney(pending.amount)}</b> submitted — pending admin verification.`
+      `បានដាក់ស្នើការសងកម្ជី <b>${fmtMoney(pending.amount)}</b> — រង់ចាំអ្នកគ្រប់គ្រងផ្ទៀងផ្ទាត់។`
     )
   }
 }
@@ -591,17 +573,10 @@ async function handlePhotoMessage(chatId: string, fileId: string, caption?: stri
 // /requestloan — multi-step conversation to submit a loan request
 // ---------------------------------------------------------------------------
 async function handleRequestLoanCommand(chatId: string): Promise<void> {
-  const admin = createAdminClient()
-  const { data: member } = await admin
-    .from('members')
-    .select('id, full_name_kh, full_name_en')
-    .eq('telegram_chat_id', chatId)
-    .maybeSingle()
+  const member = await requireLinkedActiveMember(chatId)
+  if (!member) return
 
-  if (!member) {
-    await sendTelegramMessageWithCommandButtons(chatId, NOT_LINKED)
-    return
-  }
+  const admin = createAdminClient()
 
   // Block if they already have a non-rejected/completed loan
   const { data: existingLoan } = await admin
@@ -615,9 +590,8 @@ async function handleRequestLoanCommand(chatId: string): Promise<void> {
   if (existingLoan) {
     await sendTelegramMessageWithCommandButtons(
       chatId,
-      `🏦 អ្នកមានប្រាក់កម្ចី<b>${LOAN_STATUS_LABEL[existingLoan.status] ?? existingLoan.status}</b>រួចហើយ។\n` +
-      'You already have an active or pending loan.\n\n' +
-      'Use /loan to check its status.'
+      `🏦 អ្នកមានកម្ជី <b>${LOAN_STATUS_LABEL[existingLoan.status] ?? existingLoan.status}</b> រួចហើយ។\n\n` +
+      'ប្រើ /loan ដើម្បីមើលស្ថានភាព។'
     )
     return
   }
@@ -627,9 +601,8 @@ async function handleRequestLoanCommand(chatId: string): Promise<void> {
   if (eligibility.totalSavings <= 0) {
     await sendTelegramMessageWithCommandButtons(
       chatId,
-      '⚠️ អ្នកត្រូវមានការសន្សំដែលបានផ្ទៀងផ្ទាត់មុនពេលអាចស្នើសុំប្រាក់កម្ចីបាន។\n' +
-      'You need verified savings before you can request a loan.\n\n' +
-      'Use /saving to check your savings balance.'
+      '⚠️ អ្នកត្រូវមានការសន្សំដែលបានផ្ទៀងផ្ទាត់មុនពេលអាចស្នើសុំកម្ជីបាន។\n\n' +
+      'ប្រើ /saving ដើម្បីមើលសមតុល្យសន្សំរបស់អ្នក។'
     )
     return
   }
@@ -638,10 +611,9 @@ async function handleRequestLoanCommand(chatId: string): Promise<void> {
 
   await sendTelegramMessage(
     chatId,
-    `🏦 <b>ស្នើសុំប្រាក់កម្ចី / Loan Request</b>\n\n` +
+    `🏦 <b>ស្នើសុំកម្ជី</b>\n\n` +
     `💰 ចំនួនអតិបរមាដែលអ្នកអាចស្នើសុំ: <b>${fmtMoney(eligibility.availableLoanAmount)}</b>\n\n` +
     `<b>សូមវាយចំនួនដែលអ្នកចង់កម្ចី (ដុល្លារ):</b>\n` +
-    `Please type the amount you want to borrow (USD):\n` +
     `<i>ឧ. <code>500</code> សម្រាប់ $500</i>`
   )
 }
@@ -651,22 +623,16 @@ async function handleLoanRequestStep(chatId: string, input: string): Promise<voi
   if (!state) return
 
   const admin = createAdminClient()
-  const { data: member } = await admin
-    .from('members')
-    .select('id')
-    .eq('telegram_chat_id', chatId)
-    .maybeSingle()
-
+  const member = await requireLinkedActiveMember(chatId)
   if (!member) {
     await clearPendingLoanRequest(chatId)
-    await sendTelegramMessageWithCommandButtons(chatId, NOT_LINKED)
     return
   }
 
   if (state.step === 'amount') {
     const amount = parseFloat(input.replace(/[^0-9.]/g, ''))
     if (!amount || amount <= 0) {
-      await sendTelegramMessage(chatId, '⚠️ ចំនួនមិនត្រឹមត្រូវ។ សូមវាយចំនួនជាលេខ (ឧ. <code>500</code>).\nInvalid amount. Please type a number (e.g. <code>500</code>).')
+      await sendTelegramMessage(chatId, '⚠️ ចំនួនមិនត្រឹមត្រូវ។ សូមវាយចំនួនជាលេខ (ឧ. <code>500</code>)។')
       return
     }
 
@@ -681,9 +647,8 @@ async function handleLoanRequestStep(chatId: string, input: string): Promise<voi
     await sendTelegramMessage(
       chatId,
       `✅ ចំនួន: <b>${fmtMoney(amount)}</b>\n\n` +
-      `<b>រយៈពេលប្រាក់កម្ចី (ខែ):</b>\n` +
-      `How many months do you need? (e.g. <code>12</code> for 1 year)\n` +
-      `<i>អប្បបរមា 1 ខែ — អតិបរមា 60 ខែ</i>`
+      `<b>រយៈពេលកម្ជី (ខែ):</b>\n` +
+      `<i>ឧ. <code>12</code> សម្រាប់ ១ ឆ្នាំ — អប្បបរមា ១ ខែ ដល់ អតិបរមា ៦០ ខែ</i>`
     )
     return
   }
@@ -691,7 +656,7 @@ async function handleLoanRequestStep(chatId: string, input: string): Promise<voi
   if (state.step === 'term') {
     const termMonths = parseInt(input.replace(/[^0-9]/g, ''), 10)
     if (!termMonths || termMonths < 1 || termMonths > 60) {
-      await sendTelegramMessage(chatId, '⚠️ រយៈពេលមិនត្រឹមត្រូវ។ សូមវាយចំនួនខែពី 1 ដល់ 60.\nInvalid term. Please enter months between 1 and 60.')
+      await sendTelegramMessage(chatId, '⚠️ រយៈពេលមិនត្រឹមត្រូវ។ សូមវាយចំនួនខែពី ១ ដល់ ៦០។')
       return
     }
 
@@ -699,8 +664,7 @@ async function handleLoanRequestStep(chatId: string, input: string): Promise<voi
     await sendTelegramMessage(
       chatId,
       `✅ រយៈពេល: <b>${termMonths} ខែ</b>\n\n` +
-      `<b>គោលបំណងនៃប្រាក់កម្ចី:</b>\n` +
-      `Purpose of the loan:\n` +
+      `<b>គោលបំណងនៃកម្ជី:</b>\n` +
       `<i>ឧ. ជួសជុលផ្ទះ, ការអប់រំ, អាជីវកម្ម...</i>`
     )
     return
@@ -709,7 +673,7 @@ async function handleLoanRequestStep(chatId: string, input: string): Promise<voi
   if (state.step === 'purpose') {
     const purpose = input.trim()
     if (purpose.length < 3) {
-      await sendTelegramMessage(chatId, '⚠️ គោលបំណងខ្លីពេក។ សូមពិពណ៌នាបន្ថែម។\nPurpose is too short. Please describe it briefly.')
+      await sendTelegramMessage(chatId, '⚠️ គោលបំណងខ្លីពេក។ សូមពិពណ៌នាបន្ថែម។')
       return
     }
 
@@ -736,19 +700,19 @@ async function handleLoanRequestStep(chatId: string, input: string): Promise<voi
     })
 
     if (error) {
-      await sendTelegramMessage(chatId, '❌ មានបញ្ហាក្នុងការដាក់ស្នើ។ សូមព្យាយាមម្តងទៀត។\nSomething went wrong submitting your request. Please try again.')
+      await sendTelegramMessage(chatId, '❌ មានបញ្ហាក្នុងការដាក់ស្នើ។ សូមព្យាយាមម្តងទៀត។')
       return
     }
 
     await sendTelegramMessageWithCommandButtons(
       chatId,
-      `✅ <b>ស្នើសុំប្រាក់កម្ចីបានដោយជោគជ័យ!</b>\n\n` +
+      `✅ <b>ស្នើសុំកម្ជីបានដោយជោគជ័យ!</b>\n\n` +
       `💵 ចំនួន: <b>${fmtMoney(state.amount)}</b>\n` +
       `📅 រយៈពេល: <b>${state.termMonths} ខែ</b>\n` +
       `📈 ការប្រាក់: <b>${rate}%/ខែ</b>\n` +
       `📝 គោលបំណង: <i>${purpose}</i>\n\n` +
-      `⏳ ស្ថានភាព: <b>Under Review</b>\n\n` +
-      `Loan request of <b>${fmtMoney(state.amount)}</b> submitted. Admin will review it shortly. Use /loan to check status.`
+      `⏳ ស្ថានភាព: <b>កំពុងពិនិត្យ</b>\n\n` +
+      `អ្នកគ្រប់គ្រងនឹងពិនិត្យពាក្យសុំរបស់អ្នកឆាប់ៗនេះ។ ប្រើ /loan ដើម្បីមើលស្ថានភាព។`
     )
   }
 }
