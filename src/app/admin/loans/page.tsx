@@ -1,6 +1,5 @@
 import { createAdminClient } from '@/lib/supabase/admin'
 import { LoansList } from '@/app/admin/loans/LoansList'
-import { AdminPanel } from '@/components/admin'
 
 export default async function AdminLoansLedgerPage() {
   const admin = createAdminClient()
@@ -12,11 +11,5 @@ export default async function AdminLoansLedgerPage() {
     )
     .order('created_at', { ascending: false })
 
-  return (
-    <main>
-      <AdminPanel title="បញ្ជីកម្ជីទាំងអស់">
-        <LoansList loans={data ?? []} variant="all" mode="ledger" />
-      </AdminPanel>
-    </main>
-  )
+  return <LoansList loans={data ?? []} variant="all" mode="ledger" />
 }

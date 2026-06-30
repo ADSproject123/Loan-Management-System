@@ -134,7 +134,6 @@ export default async function AdminMemberDetailPage({ params }: PageProps) {
       <MemberEditModeProvider>
       <AdminPanel
         backHref="/admin/members"
-        description={`ព័ត៌មានលម្អិតសមាជិក · ចូលរួម ${formatDate(member.joined_at ?? member.created_at)}`}
         headerActions={
           <MemberDetailHeaderActions
             memberId={member.id}
@@ -143,10 +142,9 @@ export default async function AdminMemberDetailPage({ params }: PageProps) {
           />
         }
       >
-        <div className="flex min-h-0 flex-1 flex-col">
-
+        <div className="flex min-h-0 flex-1 flex-col gap-6 px-6 py-6 md:px-8">
       {member.status === 'rejected' && member.rejection_reason && (
-        <div className="mx-6 mt-4 shrink-0 rounded-xl border border-red-200 bg-red-50 px-5 py-4 md:mx-8">
+        <div className="shrink-0 rounded-xl border border-red-200 bg-red-50 px-5 py-4">
           <p className="text-sm font-semibold text-red-950">មូលហេតុបដិសេធ</p>
           <p className="mt-2 whitespace-pre-wrap text-sm leading-6 text-red-900">{member.rejection_reason}</p>
           {member.rejected_at && (

@@ -35,8 +35,10 @@ const STATUS_FILTER_OPTIONS = [
 
 export function MembersList({
   members,
+  mode = 'ledger',
 }: {
   members: MemberListItem[]
+  mode?: 'ledger' | 'requests'
 }) {
   const router = useRouter()
   const [query, setQuery] = useState('')
@@ -60,12 +62,12 @@ export function MembersList({
         searchValue={query}
         onSearchChange={setQuery}
         searchPlaceholder="ស្វែងរកតាមឈ្មោះ ឬទូរស័ព្ទ..."
-        selectLabel="ស្ថានភាព"
+        selectLabel={mode === 'ledger' ? 'ស្ថានភាព' : undefined}
         selectId="members-status-filter"
         selectValue={statusFilter}
         onSelectChange={setStatusFilter}
-        selectOptions={STATUS_FILTER_OPTIONS}
-        actions={<CreateMemberButton />}
+        selectOptions={mode === 'ledger' ? STATUS_FILTER_OPTIONS : undefined}
+        actions={mode === 'ledger' ? <CreateMemberButton /> : undefined}
       />
 
       <div className={adminTable.wrap}>

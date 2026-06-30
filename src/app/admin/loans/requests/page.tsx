@@ -1,6 +1,6 @@
 import { createAdminClient } from '@/lib/supabase/admin'
 import { LoansList } from '@/app/admin/loans/LoansList'
-import { AdminPagination, AdminPanel } from '@/components/admin'
+import { AdminPagination } from '@/components/admin'
 import { parseAdminListParams } from '@/lib/admin/pagination'
 
 export default async function AdminLoansRequestsPage({
@@ -32,22 +32,18 @@ export default async function AdminLoansRequestsPage({
   const hasPrev = page > 1
 
   return (
-    <main>
-      <AdminPanel
-        title="បញ្ជីពាក្យសុំកម្ជី"
-        footer={
-          <AdminPagination
-            basePath="/admin/loans/requests"
-            page={page}
-            pageSize={pageSize}
-            hasPrev={hasPrev}
-            hasNext={hasNext}
-            totalCount={requestsTotal}
-          />
-        }
-      >
-        <LoansList loans={loanRows} variant="requests" />
-      </AdminPanel>
-    </main>
+    <div className="flex min-h-0 flex-1 flex-col">
+      <LoansList loans={loanRows} variant="requests" />
+      <div className="-mx-6 mt-6 border-t border-border bg-surface-muted/50 px-6 py-4 md:-mx-8 md:px-8">
+        <AdminPagination
+          basePath="/admin/loans/requests"
+          page={page}
+          pageSize={pageSize}
+          hasPrev={hasPrev}
+          hasNext={hasNext}
+          totalCount={requestsTotal}
+        />
+      </div>
+    </div>
   )
 }

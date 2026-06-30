@@ -1,6 +1,6 @@
 import { createAdminClient } from '@/lib/supabase/admin'
 import { CapitalRequestsList } from '@/app/admin/capital/CapitalRequestsList'
-import { AdminPagination, AdminPanel } from '@/components/admin'
+import { AdminPagination } from '@/components/admin'
 import { parseAdminListParams } from '@/lib/admin/pagination'
 
 export default async function AdminSavingsCapitalPage({
@@ -28,22 +28,18 @@ export default async function AdminSavingsCapitalPage({
   const hasPrev = page > 1
 
   return (
-    <main>
-      <AdminPanel
-        title="ស្នើសុំដកដើមទុន"
-        footer={
-          <AdminPagination
-            basePath="/admin/savings/capital"
-            page={page}
-            pageSize={pageSize}
-            hasPrev={hasPrev}
-            hasNext={hasNext}
-            totalCount={requestsTotal}
-          />
-        }
-      >
-        <CapitalRequestsList requests={requests} />
-      </AdminPanel>
-    </main>
+    <div className="flex min-h-0 flex-1 flex-col">
+      <CapitalRequestsList requests={requests} />
+      <div className="-mx-6 mt-6 border-t border-border bg-surface-muted/50 px-6 py-4 md:-mx-8 md:px-8">
+        <AdminPagination
+          basePath="/admin/savings/capital"
+          page={page}
+          pageSize={pageSize}
+          hasPrev={hasPrev}
+          hasNext={hasNext}
+          totalCount={requestsTotal}
+        />
+      </div>
+    </div>
   )
 }

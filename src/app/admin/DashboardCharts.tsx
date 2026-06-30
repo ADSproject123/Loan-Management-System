@@ -2,7 +2,9 @@
 
 import { useMemo, useState, type ReactNode } from 'react'
 import { format, subMonths } from 'date-fns'
+import type { LucideIcon } from 'lucide-react'
 import { LayoutDashboard, ChartPie, PiggyBank, Landmark, Coins, TrendingUp } from 'lucide-react'
+import { AdminSegmentedTabs } from '@/components/admin'
 import { SavingsAmountChart } from '@/app/admin/SavingsAmountChart'
 import { LoanAmountChart } from '@/app/admin/LoanAmountChart'
 import { InterestAmountChart } from '@/app/admin/InterestAmountChart'
@@ -24,40 +26,40 @@ import type { VerifiedSavingInterestRow } from '@/lib/admin/savingInterestDue'
 
 type TabId = 'overview' | 'portfolio' | 'savings' | 'loans' | 'saving-interest' | 'loan-interest'
 
-const TABS: { id: TabId; label: string; icon: React.ReactNode; subtitle?: string }[] = [
+const TABS: { id: TabId; label: string; icon: LucideIcon; subtitle?: string }[] = [
   {
     id: 'overview',
     label: 'ទិដ្ឋភាពទូទៅ',
-    icon: <LayoutDashboard className="h-4 w-4" />,
+    icon: LayoutDashboard,
   },
   {
     id: 'portfolio',
     label: 'សមាមាត្រផលប័ត្រ',
-    icon: <ChartPie className="h-4 w-4" />,
+    icon: ChartPie,
     subtitle: 'ការបែងចែករវាង សន្សំ · កម្ជីសកម្ម · ប្រាក់សង',
   },
   {
     id: 'savings',
     label: 'ក្រាប់ការសន្សំ',
-    icon: <PiggyBank className="h-4 w-4" />,
+    icon: PiggyBank,
     subtitle: 'ចំនួនដាក់សន្សំផ្ទៀងផ្ទាត់ប្រចាំខែ',
   },
   {
     id: 'loans',
     label: 'ក្រាប់កម្ជី',
-    icon: <Landmark className="h-4 w-4" />,
+    icon: Landmark,
     subtitle: 'ចំនួនកម្ជីដែលបានផ្តល់ប្រចាំខែ',
   },
   {
     id: 'saving-interest',
     label: 'ការប្រាក់សន្សំ',
-    icon: <Coins className="h-4 w-4" />,
+    icon: Coins,
     subtitle: 'ការប្រាក់សន្សំត្រូវបង់ប្រចាំខែ',
   },
   {
     id: 'loan-interest',
     label: 'ការប្រាក់កម្ជី',
-    icon: <TrendingUp className="h-4 w-4" />,
+    icon: TrendingUp,
     subtitle: 'ការប្រាក់កម្ជីដែលទទួលបានប្រចាំខែ',
   },
 ]
@@ -158,38 +160,26 @@ export function DashboardCharts({
   }
 
   return (
-    <div className="flex min-h-0 flex-1 flex-col border-t border-border pt-8">
-      <nav
-        className="-mb-px flex w-full shrink-0 gap-1 overflow-x-auto"
-        aria-label="ក្រាប់ផ្ទាំងគ្រប់គ្រង"
-      >
-        {TABS.map((tab) => {
-          const isActive = activeTab === tab.id
-          return (
-            <button
-              key={tab.id}
-              type="button"
-              onClick={() => setActiveTab(tab.id)}
-              className={`flex items-center gap-2 whitespace-nowrap border-b-2 px-4 py-3 text-sm font-semibold transition ${
-                isActive
-                  ? 'border-brand-900 text-brand-900'
-                  : 'border-transparent text-muted hover:border-border hover:text-foreground'
-              }`}
-            >
-              <span className={isActive ? 'text-brand-900' : 'text-muted'}>{tab.icon}</span>
-              {tab.label}
-            </button>
-          )
-        })}
-      </nav>
+    <div className="flex min-h-0 flex-1 flex-col gap-6">
+      <AdminSegmentedTabs
+        tabs={TABS}
+        activeTab={activeTab}
+        onChange={setActiveTab}
+        ariaLabel="ផ្ទាំងគ្រប់គ្រង"
+        size="md"
+        className="w-full sm:w-auto"
+      />
 
-      <div className="flex min-h-0 flex-1 flex-col border-t border-border pt-6">
-        <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
-          {active.subtitle && (
-            <p className="shrink-0 text-sm text-muted">{active.subtitle}</p>
-          )}
-          {showFilter && (
-            <div className="flex flex-wrap items-end gap-3">
+      <div className="flex min-h-0 flex-1 flex-col gap-6">
+        {(active.subtitle || showFilter) && (
+          <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+            {active.subtitle ? (
+              <p className="shrink-0 text-sm text-muted">{active.subtitle}</p>
+            ) : (
+              <span />
+            )}
+            {showFilter && (
+              <div className="flex flex-wrap items-end gap-3 sm:ml-auto">
               <label className="flex flex-col gap-1 text-xs font-semibold text-muted">
                 ពីខែ
                 <input
@@ -230,10 +220,12 @@ export function DashboardCharts({
                   )
                 })}
               </div>
-            </div>
-          )}
-        </div>
-        <div className="mt-6 flex min-h-0 flex-1 flex-col">
+              </div>
+            )}
+          </div>
+        )}
+
+        <div className="flex min-h-0 flex-1 flex-col">
           {activeTab === 'overview' && overview}
           {activeTab === 'portfolio' && <PortfolioPieChart data={portfolioData} />}
           {activeTab === 'savings' && <SavingsAmountChart data={savingsData} />}

@@ -1,6 +1,5 @@
 import { createAdminClient } from '@/lib/supabase/admin'
 import { LoansList } from '@/app/admin/loans/LoansList'
-import { AdminPanel } from '@/components/admin'
 
 export default async function AdminActiveLoansPage() {
   const admin = createAdminClient()
@@ -13,11 +12,5 @@ export default async function AdminActiveLoansPage() {
     .eq('status', 'active')
     .order('disbursed_at', { ascending: false })
 
-  return (
-    <main>
-      <AdminPanel title="កម្ជីកំពុងដំណើរការ">
-        <LoansList loans={data ?? []} variant="active" mode="ledger" />
-      </AdminPanel>
-    </main>
-  )
+  return <LoansList loans={data ?? []} variant="active" mode="ledger" />
 }

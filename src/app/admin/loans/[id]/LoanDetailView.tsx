@@ -20,7 +20,6 @@ import type { LoanScheduleRow } from '@/lib/interestCalculations'
 import type { LoanStatus, SavingStatus } from '@/types/database'
 import type { AdminLoanDetailRecord } from '@/lib/admin/loanDetail'
 import {
-  AdminBackLink,
   AdminPanel,
   adminTable,
 } from '@/components/admin'
@@ -126,23 +125,15 @@ export function LoanDetailView({
 
   return (
     <main>
-      <AdminPanel title={memberName}>
-
-        {/* ── Header ── */}
-        <header className="flex flex-col gap-4 border-b border-border px-6 py-4 md:flex-row md:items-center md:justify-between md:px-8">
-          <div className="flex min-w-0 flex-col gap-3 sm:flex-row sm:items-center sm:gap-4">
-            <AdminBackLink href="/admin/loans">ត្រឡប់ក្រោយ</AdminBackLink>
-            <div className="hidden h-6 w-px bg-border sm:block" aria-hidden />
-            <div className="min-w-0">
-              <p className="truncate text-sm font-semibold text-foreground">{memberName}</p>
-              <p className="text-xs text-muted">ដាក់ស្នើ {formatDate(loan.created_at)}</p>
-            </div>
-          </div>
-          <div className="flex flex-wrap items-center gap-3">
+      <AdminPanel
+        backHref="/admin/loans"
+        headerActions={
+          <>
             <LoanStatusBadge status={status} plain />
             <LoanActions loanId={loan.id} status={status} />
-          </div>
-        </header>
+          </>
+        }
+      >
 
         {/* ── Alerts ── */}
         {needsAction && (

@@ -1,7 +1,7 @@
 import { createAdminClient } from '@/lib/supabase/admin'
 import { getPrivateFileUrl } from '@/lib/uploads'
 import { SavingsList } from '@/app/admin/savings/SavingsList'
-import { AdminPagination, AdminPanel } from '@/components/admin'
+import { AdminPagination } from '@/components/admin'
 import { parseAdminListParams } from '@/lib/admin/pagination'
 
 export default async function AdminSavingsRequestsPage({
@@ -36,22 +36,18 @@ export default async function AdminSavingsRequestsPage({
   const hasPrev = page > 1
 
   return (
-    <main>
-      <AdminPanel
-        title="បញ្ជីសំណើសន្សំ"
-        footer={
-          <AdminPagination
-            basePath="/admin/savings/requests"
-            page={page}
-            pageSize={pageSize}
-            hasPrev={hasPrev}
-            hasNext={hasNext}
-            totalCount={pendingTotal}
-          />
-        }
-      >
-        <SavingsList savings={savingRows} mode="requests" />
-      </AdminPanel>
-    </main>
+    <div className="flex min-h-0 flex-1 flex-col">
+      <SavingsList savings={savingRows} mode="requests" />
+      <div className="-mx-6 mt-6 border-t border-border bg-surface-muted/50 px-6 py-4 md:-mx-8 md:px-8">
+        <AdminPagination
+          basePath="/admin/savings/requests"
+          page={page}
+          pageSize={pageSize}
+          hasPrev={hasPrev}
+          hasNext={hasNext}
+          totalCount={pendingTotal}
+        />
+      </div>
+    </div>
   )
 }

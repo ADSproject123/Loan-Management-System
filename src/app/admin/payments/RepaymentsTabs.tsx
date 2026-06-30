@@ -5,7 +5,7 @@ import { CalendarClock, Clock } from 'lucide-react'
 import { money, relatedMemberEmail, relatedMemberMatchesSearch } from '@/app/admin/adminUtils'
 import { DueThisMonthList } from '@/app/admin/payments/DueThisMonthList'
 import { RepaymentsList, type RepaymentListItem } from '@/app/admin/payments/RepaymentsList'
-import { AdminListToolbar, adminFieldClassName } from '@/components/admin'
+import { AdminListToolbar, AdminSegmentedTabs, adminFieldClassName } from '@/components/admin'
 import { Select } from '@/components/ui/Select'
 import {
   buildLoanDueRowsForMonth,
@@ -30,16 +30,11 @@ type RepaymentsTabsProps = {
   defaultTab?: RepaymentsTabId
 }
 
-const TAB_LIST_CLASS =
-  'flex shrink-0 items-center gap-1 overflow-x-auto rounded-xl border border-border bg-surface-muted/50 p-1'
-
-
-
 const SEARCH_PLACEHOLDER = 'ស្វែងរកតាមឈ្មោះ ឬចំនួនទឹកប្រាក់...'
 
-const TABS: { id: RepaymentsTabId; label: string; Icon: typeof CalendarClock }[] = [
-  { id: 'due', label: 'ត្រូវបង់ខែនេះ', Icon: CalendarClock },
-  { id: 'pending', label: 'រង់ចាំទទួល', Icon: Clock },
+const TABS = [
+  { id: 'due' as const, label: 'ត្រូវបង់ខែនេះ', icon: CalendarClock },
+  { id: 'pending' as const, label: 'រង់ចាំទទួល', icon: Clock },
 ]
 
 function filterDueRows(
@@ -126,29 +121,12 @@ export function RepaymentsTabs({
         searchPlaceholder={SEARCH_PLACEHOLDER}
         extra={
           <div className="flex shrink-0 flex-wrap items-center gap-2">
-            <div role="tablist" aria-label="ផ្ទាំងការសងកម្ជី" className={TAB_LIST_CLASS}>
-              {TABS.map((tab) => {
-                const isActive = activeTab === tab.id
-                const TabIcon = tab.Icon
-                return (
-                  <button
-                    key={tab.id}
-                    type="button"
-                    role="tab"
-                    aria-selected={isActive}
-                    onClick={() => setActiveTab(tab.id)}
-                    className={`inline-flex shrink-0 items-center gap-1.5 rounded-lg px-3 py-2 text-xs font-semibold transition ${
-                      isActive
-                        ? 'bg-surface text-brand-900 shadow-xs ring-1 ring-border'
-                        : 'text-muted hover:bg-surface/80 hover:text-foreground'
-                    }`}
-                  >
-                    <TabIcon className={`h-3.5 w-3.5 ${isActive ? 'text-brand-900' : 'text-muted'}`} />
-                    {tab.label}
-                  </button>
-                )
-              })}
-            </div>
+            <AdminSegmentedTabs
+              tabs={TABS}
+              activeTab={activeTab}
+              onChange={setActiveTab}
+              ariaLabel="ផ្ទាំងការសងកម្ជី"
+            />
 
             {activeTab === 'due' && (
               <Select

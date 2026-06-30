@@ -5,14 +5,12 @@ import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import {
   ArrowRight,
-  Scale,
   CircleAlert,
   CreditCard,
   ExternalLink,
   Pencil,
   Save,
   X,
-  Percent,
   Phone,
   PiggyBank,
   Plus,
@@ -30,7 +28,7 @@ import { normalizeCurrency } from '@/lib/currency'
 import { monthlySavingInterest } from '@/lib/interestCalculations'
 import type { LoanStatus, MemberRole, MemberStatus, SavingStatus } from '@/types/database'
 import { WORKPLACE_LABELS, WORKPLACE_OPTIONS } from '@/lib/workplace'
-import { adminFieldClassName } from '@/components/admin'
+import { adminFieldClassName, AdminSegmentedTabs, type AdminSegmentedTab } from '@/components/admin'
 import { Button } from '@/components/ui/Button'
 import { updateMemberProfile } from '@/app/actions/admin'
 import { showError, showSuccess } from '@/lib/toast'
@@ -133,13 +131,13 @@ export type MemberDetailTabsProps = {
   telegramLinked?: boolean
 }
 
-const TABS: { id: TabId; label: string; icon: React.ReactNode }[] = [
-  { id: 'profile', label: 'ព័ត៌មាន', icon: <User className="h-4 w-4" /> },
-  { id: 'finance', label: 'សង្ខេបហិរញ្ញវត្ថុ', icon: <Wallet className="h-4 w-4" /> },
-  { id: 'documents', label: 'ឯកសារ', icon: <ShieldCheck className="h-4 w-4" /> },
-  { id: 'referee', label: 'អ្នកធានា', icon: <UserCheck className="h-4 w-4" /> },
-  { id: 'savings', label: 'សន្សំ', icon: <PiggyBank className="h-4 w-4" /> },
-  { id: 'loans', label: 'កម្ជី', icon: <CreditCard className="h-4 w-4" /> },
+const MEMBER_DETAIL_TABS: readonly AdminSegmentedTab<TabId>[] = [
+  { id: 'profile', label: 'ព័ត៌មាន', icon: User },
+  { id: 'finance', label: 'សង្ខេបហិរញ្ញវត្ថុ', icon: Wallet },
+  { id: 'documents', label: 'ឯកសារ', icon: ShieldCheck },
+  { id: 'referee', label: 'អ្នកធានា', icon: UserCheck },
+  { id: 'savings', label: 'សន្សំ', icon: PiggyBank },
+  { id: 'loans', label: 'កម្ជី', icon: CreditCard },
 ]
 
 function isVerifiedSavingStatus(status: string) {
@@ -206,35 +204,17 @@ export function MemberDetailTabs({
   const inputCls = `${adminFieldClassName} px-3 py-1.5 text-sm w-full`
 
   return (
-    <div className="flex min-h-0 flex-1 flex-col">
-      <nav
-        className="shrink-0 w-full overflow-x-auto rounded-t-2xl border border-b-0 border-border bg-surface shadow-sm"
-        aria-label="ផ្ទាំងព័ត៌មានសមាជិក"
-      >
-        <div className="flex w-full min-w-max sm:min-w-0">
-          {TABS.map((tab) => {
-            const isActive = activeTab === tab.id
-            return (
-              <button
-                key={tab.id}
-                type="button"
-                onClick={() => setActiveTab(tab.id)}
-                className={`flex flex-1 items-center justify-center gap-2 border-b-2 px-3 py-4 text-sm font-semibold transition sm:px-5 ${
-                  isActive
-                    ? 'border-brand-900 text-brand-900'
-                    : 'border-transparent text-muted hover:border-border hover:bg-surface-muted hover:text-foreground'
-                }`}
-              >
-                <span className={isActive ? 'text-brand-900' : 'text-muted'}>{tab.icon}</span>
-                {tab.label}
-              </button>
-            )
-          })}
-        </div>
-      </nav>
+    <div className="flex min-h-0 flex-1 flex-col gap-6">
+      <AdminSegmentedTabs
+        tabs={MEMBER_DETAIL_TABS}
+        activeTab={activeTab}
+        onChange={setActiveTab}
+        ariaLabel="ផ្ទាំងព័ត៌មានសមាជិក"
+        size="md"
+        className="w-full sm:w-auto"
+      />
 
-      <div className="flex min-h-0 flex-1 flex-col overflow-hidden rounded-b-2xl border border-border bg-surface shadow-sm">
-        <div className="flex min-h-0 flex-1 flex-col overflow-y-auto p-6 md:p-8">
+      <div className="flex min-h-0 flex-1 flex-col">
         {activeTab === 'profile' && (
           <div className="w-full space-y-8">
             <div>
@@ -747,7 +727,6 @@ export function MemberDetailTabs({
           </div>
         )}
 
-        </div>
       </div>
     </div>
   )
