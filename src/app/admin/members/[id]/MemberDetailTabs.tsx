@@ -101,6 +101,8 @@ export type MemberDetailTabsProps = {
     referee_id: string | null
     telegram_chat_id: string | null
     emergency_contacts: EmergencyContact[]
+    suspension_reason?: string | null
+    suspended_at?: string | null
   }
   referee: RefereeRecord | null
   savings: SavingRow[]
@@ -278,6 +280,17 @@ export function MemberDetailTabs({
                             ) : <span className="text-sm text-foreground">{MEMBER_ROLE_LABELS[member.role]}</span>}
                           </td>
                         </tr>
+                        {member.status === 'suspended' && member.suspension_reason && (
+                          <tr className="bg-red-50/40 hover:bg-red-50/60">
+                            <td className="w-md px-5 py-3 text-sm font-semibold text-red-800 align-top">មូលហេតុផ្អាក</td>
+                            <td className="px-5 py-3">
+                              <p className="whitespace-pre-wrap text-sm leading-6 text-red-900">{member.suspension_reason}</p>
+                              {member.suspended_at && (
+                                <p className="mt-1 text-xs text-red-700">ផ្អាកនៅ {formatDate(member.suspended_at)}</p>
+                              )}
+                            </td>
+                          </tr>
+                        )}
                         {/* អ៊ីមែល */}
                         <tr className="bg-surface hover:bg-surface-muted/40">
                           <td className="w-md px-5 py-3 text-sm font-semibold text-muted">អ៊ីមែល</td>

@@ -145,16 +145,6 @@ export default async function AdminMemberDetailPage({ params }: PageProps) {
       >
         <div className="flex min-h-0 flex-1 flex-col">
 
-      {member.status === 'suspended' && member.suspension_reason && (
-        <div className="mx-6 mt-4 shrink-0 rounded-xl border border-red-200 bg-red-50 px-5 py-4 md:mx-8">
-          <p className="text-sm font-semibold text-red-950">មូលហេតុផ្អាក</p>
-          <p className="mt-2 whitespace-pre-wrap text-sm leading-6 text-red-900">{member.suspension_reason}</p>
-          {member.suspended_at && (
-            <p className="mt-2 text-xs text-red-700">ផ្អាកនៅ {formatDate(member.suspended_at)}</p>
-          )}
-        </div>
-      )}
-
       {member.status === 'rejected' && member.rejection_reason && (
         <div className="mx-6 mt-4 shrink-0 rounded-xl border border-red-200 bg-red-50 px-5 py-4 md:mx-8">
           <p className="text-sm font-semibold text-red-950">មូលហេតុបដិសេធ</p>
@@ -186,6 +176,8 @@ export default async function AdminMemberDetailPage({ params }: PageProps) {
           telegram_chat_id: member.telegram_chat_id,
           referee_id: member.referee_id,
           emergency_contacts: parseEmergencyContacts(member.emergency_contacts),
+          suspension_reason: member.suspension_reason,
+          suspended_at: member.suspended_at,
         }}
         referee={referee}
         savings={savings}

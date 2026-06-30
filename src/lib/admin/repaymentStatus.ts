@@ -18,8 +18,22 @@ export const REPAYMENT_PAID_LABELS: Record<RepaymentPaidStatus, string> = {
 
 export const REPAYMENT_PAID_STYLES: Record<RepaymentPaidStatus, string> = {
   pending: 'text-muted',
-  completed: 'text-foreground',
+  completed: 'font-bold text-green-700',
 }
 
 export const LOAN_DUE_STATUS_LABELS = REPAYMENT_PAID_LABELS
 export const LOAN_DUE_STATUS_STYLES = REPAYMENT_PAID_STYLES
+
+export function loanDueStatusDisplay(row: {
+  status: RepaymentPaidStatus
+  isOverdue: boolean
+}) {
+  if (row.isOverdue) {
+    return { label: 'ហួសកំណត់', className: 'font-bold text-red-700' }
+  }
+
+  return {
+    label: REPAYMENT_PAID_LABELS[row.status],
+    className: REPAYMENT_PAID_STYLES[row.status],
+  }
+}
