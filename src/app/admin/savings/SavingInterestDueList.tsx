@@ -24,8 +24,19 @@ const STATUS_LABELS: Record<SavingInterestPaymentStatus, string> = {
 
 const STATUS_STYLES: Record<SavingInterestPaymentStatus, string> = {
   pending: 'text-muted',
-  completed: 'text-foreground',
+  completed: 'font-bold text-green-700',
   rejected: 'text-red-700',
+}
+
+function savingInterestStatusDisplay(row: SavingInterestDueRow) {
+  if (row.isOverdue) {
+    return { label: 'ហួសកំណត់', className: 'font-bold text-red-700' }
+  }
+
+  return {
+    label: STATUS_LABELS[row.status],
+    className: STATUS_STYLES[row.status],
+  }
 }
 
 export function SavingInterestDueList({
@@ -82,11 +93,15 @@ export function SavingInterestDueList({
             )}
             {listTotal > 0 && rows.length === 0 && <AdminTableNoResults colSpan={7} />}
 
-            {rows.map((row) => (
+            {rows.map((row) => {
+              const statusDisplay = savingInterestStatusDisplay(row)
+
+              return (
               <tr
                 key={row.memberId}
                 className={adminTableRowClass({
                   clickable: true,
+                  overdue: row.isOverdue,
                 })}
                 onClick={() => router.push(`/admin/members/${row.memberId}`)}
               >
@@ -104,8 +119,8 @@ export function SavingInterestDueList({
                 </td>
                 <td className={adminTable.tdMuted}>{formatDate(row.interestDate)}</td>
                 <td className={adminTable.td}>
-                  <span className={`text-xs font-semibold ${STATUS_STYLES[row.status]}`}>
-                    {STATUS_LABELS[row.status]}
+                  <span className={`text-xs font-semibold ${statusDisplay.className}`}>
+                    {statusDisplay.label}
                   </span>
                 </td>
                 <td className={adminTable.tdLast} onClick={(event) => event.stopPropagation()}>
@@ -120,7 +135,7 @@ export function SavingInterestDueList({
                   />
                 </td>
               </tr>
-            ))}
+            )})}
           </tbody>
           {rows.length > 0 && (
             <tfoot className="border-t-2 border-border bg-surface-muted/60">
