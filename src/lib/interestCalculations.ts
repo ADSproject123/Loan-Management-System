@@ -1,3 +1,5 @@
+import { addMonths } from '@/lib/dates'
+
 export const DEFAULT_SAVING_INTEREST_RATE = 3
 export const DEFAULT_LOAN_INTEREST_RATE = 2
 
@@ -105,9 +107,7 @@ export type LoanScheduleRow = LoanScheduleEntry & {
 }
 
 function addMonthsToDate(isoDate: string, monthsAhead: number) {
-  const date = new Date(isoDate)
-  date.setMonth(date.getMonth() + monthsAhead)
-  return date.toISOString().slice(0, 10)
+  return addMonths(isoDate, monthsAhead)
 }
 
 export function buildLoanPaymentSchedule(

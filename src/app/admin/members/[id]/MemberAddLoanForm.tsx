@@ -8,6 +8,7 @@ import { AdminModal } from '@/components/admin/AdminModal'
 import { adminFieldClassName } from '@/components/admin/AdminListToolbar'
 import { Button } from '@/components/ui/Button'
 import { currencySymbol, formatMoney, type CurrencyCode } from '@/lib/currency'
+import { addMonths, todayIso } from '@/lib/dates'
 import {
   LOAN_TO_SAVINGS_MULTIPLIER,
   type LoanEligibility,
@@ -35,9 +36,7 @@ const inputClass = `${adminFieldClassName} px-3 py-2.5`
 const labelClass = 'mb-1.5 block text-xs font-semibold text-muted'
 
 function dateFromToday(monthsAhead: number) {
-  const date = new Date()
-  date.setMonth(date.getMonth() + monthsAhead)
-  return date.toISOString().slice(0, 10)
+  return addMonths(todayIso(), monthsAhead)
 }
 
 export function MemberAddLoanForm({

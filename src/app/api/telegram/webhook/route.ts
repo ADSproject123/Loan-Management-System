@@ -18,27 +18,22 @@ import {
   DEFAULT_LOAN_INTEREST_RATE,
 } from '@/lib/interestCalculations'
 import { getInterestSettings, fetchMemberLoanInterestRate } from '@/lib/interest'
+import { addMonths, todayIso } from '@/lib/dates'
 import { fetchMemberLoanEligibility, validateLoanRequestAmount } from '@/lib/loanEligibility'
+import {
+  getPendingPayment,
+  setPendingPayment,
+  clearPendingPayment,
+  getPendingLoanRequest,
+  setPendingLoanRequest,
+  clearPendingLoanRequest,
+} from '@/lib/telegramConversationState'
 import type { SavingStatus } from '@/types/database'
 
 export const dynamic = 'force-dynamic'
 
-// ---------------------------------------------------------------------------
-// Conversation state — tracks users mid-payment flow
-// ---------------------------------------------------------------------------
-type PendingPayment =
-  | { type: 'saving' }
-  | { type: 'loan'; loanId: string; amount: number }
-
-const pendingPayments = new Map<string, PendingPayment>()
-
-// Multi-step loan request conversation state
-type PendingLoanRequest =
-  | { step: 'amount' }
-  | { step: 'term'; amount: number }
-  | { step: 'purpose'; amount: number; termMonths: number }
-
-const pendingLoanRequests = new Map<string, PendingLoanRequest>()
+// Conversation state (mid-payment / mid-loan-request) is persisted in Supabase
+// via telegramConversationState — it must survive across serverless instances.
 
 // ---------------------------------------------------------------------------
 // Telegram update shape
@@ -401,7 +396,7 @@ async function handlePaySavingCommand(chatId: string): Promise<void> {
     true, // force reply
   )
 
-  if (ok) pendingPayments.set(chatId, { type: 'saving' })
+  if (ok) await setPendingPayment(chatId, { type: 'saving' })
 }
 
 // ---------------------------------------------------------------------------
@@ -471,14 +466,14 @@ async function handlePayLoanCommand(chatId: string): Promise<void> {
     true, // force reply
   )
 
-  if (ok) pendingPayments.set(chatId, { type: 'loan', loanId: loan.id, amount: dueAmount })
+  if (ok) await setPendingPayment(chatId, { type: 'loan', loanId: loan.id, amount: dueAmount })
 }
 
 // ---------------------------------------------------------------------------
 // Photo received — store proof and create pending record
 // ---------------------------------------------------------------------------
 async function handlePhotoMessage(chatId: string, fileId: string, caption?: string): Promise<void> {
-  const pending = pendingPayments.get(chatId)
+  const pending = await getPendingPayment(chatId)
   if (!pending) {
     await sendTelegramMessage(
       chatId,
@@ -496,7 +491,7 @@ async function handlePhotoMessage(chatId: string, fileId: string, caption?: stri
     .maybeSingle()
 
   if (!member) {
-    pendingPayments.delete(chatId)
+    await clearPendingPayment(chatId)
     await sendTelegramMessageWithCommandButtons(chatId, NOT_LINKED)
     return
   }
@@ -529,7 +524,7 @@ async function handlePhotoMessage(chatId: string, fileId: string, caption?: stri
     return
   }
 
-  pendingPayments.delete(chatId)
+  await clearPendingPayment(chatId)
 
   // Create the pending record
   if (pending.type === 'saving') {
@@ -639,7 +634,7 @@ async function handleRequestLoanCommand(chatId: string): Promise<void> {
     return
   }
 
-  pendingLoanRequests.set(chatId, { step: 'amount' })
+  await setPendingLoanRequest(chatId, { step: 'amount' })
 
   await sendTelegramMessage(
     chatId,
@@ -652,7 +647,7 @@ async function handleRequestLoanCommand(chatId: string): Promise<void> {
 }
 
 async function handleLoanRequestStep(chatId: string, input: string): Promise<void> {
-  const state = pendingLoanRequests.get(chatId)
+  const state = await getPendingLoanRequest(chatId)
   if (!state) return
 
   const admin = createAdminClient()
@@ -663,7 +658,7 @@ async function handleLoanRequestStep(chatId: string, input: string): Promise<voi
     .maybeSingle()
 
   if (!member) {
-    pendingLoanRequests.delete(chatId)
+    await clearPendingLoanRequest(chatId)
     await sendTelegramMessageWithCommandButtons(chatId, NOT_LINKED)
     return
   }
@@ -682,7 +677,7 @@ async function handleLoanRequestStep(chatId: string, input: string): Promise<voi
       return
     }
 
-    pendingLoanRequests.set(chatId, { step: 'term', amount })
+    await setPendingLoanRequest(chatId, { step: 'term', amount })
     await sendTelegramMessage(
       chatId,
       `✅ ចំនួន: <b>${fmtMoney(amount)}</b>\n\n` +
@@ -700,7 +695,7 @@ async function handleLoanRequestStep(chatId: string, input: string): Promise<voi
       return
     }
 
-    pendingLoanRequests.set(chatId, { step: 'purpose', amount: state.amount, termMonths })
+    await setPendingLoanRequest(chatId, { step: 'purpose', amount: state.amount, termMonths })
     await sendTelegramMessage(
       chatId,
       `✅ រយៈពេល: <b>${termMonths} ខែ</b>\n\n` +
@@ -718,16 +713,15 @@ async function handleLoanRequestStep(chatId: string, input: string): Promise<voi
       return
     }
 
-    pendingLoanRequests.delete(chatId)
+    await clearPendingLoanRequest(chatId)
 
     // Fetch interest rate
     const interestSettings = await getInterestSettings()
     const rate = await fetchMemberLoanInterestRate(member.id, interestSettings.monthlyLoanInterestRate)
 
     // Compute start/end dates
-    const today = new Date()
-    const startDate = today.toISOString().slice(0, 10)
-    const endDate = new Date(today.setMonth(today.getMonth() + state.termMonths)).toISOString().slice(0, 10)
+    const startDate = todayIso()
+    const endDate = addMonths(startDate, state.termMonths)
 
     const { error } = await admin.from('loans').insert({
       member_id: member.id,
@@ -843,7 +837,7 @@ export async function POST(request: NextRequest) {
   }
 
   // Mid-conversation loan request — intercept plain text replies
-  if (pendingLoanRequests.has(chatIdStr) && text && !text.startsWith('/')) {
+  if (text && !text.startsWith('/') && (await getPendingLoanRequest(chatIdStr))) {
     await handleLoanRequestStep(chatIdStr, text)
     return NextResponse.json({ ok: true })
   }

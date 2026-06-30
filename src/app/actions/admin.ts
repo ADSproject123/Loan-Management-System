@@ -9,6 +9,7 @@ import { fetchMemberLoanInterestRate, getInterestSettings } from '@/lib/interest
 import { fetchMemberLoanEligibility, validateLoanRequestAmount } from '@/lib/loanEligibility'
 import { sendTelegramMessage } from '@/lib/telegram'
 import { uploadPrivateFile } from '@/lib/uploads'
+import { addMonths, todayIso } from '@/lib/dates'
 import type { LoanDuePaymentStatus, SavingInterestPaymentStatus, SavingStatus } from '@/types/database'
 
 const REPAYMENT_STATUSES: SavingStatus[] = ['pending', 'verified', 'completed', 'refunded']
@@ -947,9 +948,7 @@ export async function activateLoan(formData: FormData): Promise<ActionResult> {
     if (loan?.end_date) {
       dueDate = loan.end_date
     } else {
-      const d = new Date()
-      d.setMonth(d.getMonth() + (loan?.term_months ?? 12))
-      dueDate = d.toISOString().slice(0, 10)
+      dueDate = addMonths(todayIso(), loan?.term_months ?? 12)
     }
 
     const { data, error } = await admin

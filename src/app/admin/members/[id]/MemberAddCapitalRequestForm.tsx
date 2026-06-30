@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { PiggyBank, Plus, XCircle } from 'lucide-react'
+import { MinusCircle, PiggyBank, XCircle } from 'lucide-react'
 import { adminCreateCapitalRequest } from '@/app/actions/admin'
 import { AdminModal } from '@/components/admin/AdminModal'
 import { adminFieldClassName } from '@/components/admin/AdminListToolbar'
@@ -78,17 +78,15 @@ export function MemberAddCapitalRequestForm({ memberId, currency, savingsTotal, 
 
   return (
     <>
-      <Button
+      <button
         type="button"
-        variant="outline"
-        size="sm"
         onClick={() => setOpen(true)}
         disabled={disabled}
-        className="gap-1.5"
+        className="inline-flex cursor-pointer items-center gap-1.5 rounded-xl bg-red-600 px-3 py-1.5 text-sm font-semibold text-white transition-all hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-60"
       >
-        <Plus className="h-4 w-4" />
+        <MinusCircle className="h-4 w-4" />
         ដកដើមទុន
-      </Button>
+      </button>
 
       <AdminModal open={open} onClose={handleClose} title="ដកដើមទុន">
         <form onSubmit={handleSubmit} className="space-y-5">

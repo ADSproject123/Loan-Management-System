@@ -9,6 +9,8 @@ import {
   CircleAlert,
   CreditCard,
   ExternalLink,
+  Pencil,
+  Save,
   X,
   Percent,
   Phone,
@@ -29,6 +31,7 @@ import { monthlySavingInterest } from '@/lib/interestCalculations'
 import type { LoanStatus, MemberRole, MemberStatus, SavingStatus } from '@/types/database'
 import { WORKPLACE_LABELS, WORKPLACE_OPTIONS } from '@/lib/workplace'
 import { adminFieldClassName } from '@/components/admin'
+import { Button } from '@/components/ui/Button'
 import { updateMemberProfile } from '@/app/actions/admin'
 import { showError, showSuccess } from '@/lib/toast'
 import { useRegisterMemberEditForm } from './MemberEditModeContext'
@@ -163,7 +166,7 @@ export function MemberDetailTabs({
   telegramLinked = false,
 }: MemberDetailTabsProps) {
   const [activeTab, setActiveTab] = useState<TabId>(defaultTab)
-  const { isEditing, exitEditMode } = useMemberEditMode()
+  const { isEditing, setIsEditing, exitEditMode, isSaving, hasSaveForm, triggerSave } = useMemberEditMode()
   const router = useRouter()
   const [pending, startTransition] = useTransition()
   const formRef = useRegisterMemberEditForm(pending)
@@ -233,7 +236,26 @@ export function MemberDetailTabs({
         {activeTab === 'profile' && (
           <div className="w-full space-y-8">
             <div>
-              <div className="mt-6">
+              <div className="flex items-center justify-end gap-2">
+                {isEditing ? (
+                  <>
+                    <Button type="button" variant="outline" size="sm" onClick={exitEditMode} disabled={isSaving}>
+                      <X className="h-4 w-4" />
+                      បោះបង់
+                    </Button>
+                    <Button type="button" size="sm" loading={isSaving} disabled={!hasSaveForm || isSaving} onClick={triggerSave}>
+                      <Save className="h-4 w-4" />
+                      រក្សាទុក
+                    </Button>
+                  </>
+                ) : (
+                  <Button type="button" variant="outline" size="sm" onClick={() => setIsEditing(true)}>
+                    <Pencil className="h-4 w-4" />
+                    កែប្រែ
+                  </Button>
+                )}
+              </div>
+              <div className="mt-4">
                 <form ref={formRef} onSubmit={handleProfileSubmit}>
                   <div className="overflow-hidden rounded-xl border border-border">
                     <table className="w-full text-sm">
