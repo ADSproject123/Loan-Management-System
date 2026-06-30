@@ -1,11 +1,12 @@
 'use client'
 
 import { useEffect, useMemo, useState } from 'react'
-import { CalendarClock, ChevronDown, Clock } from 'lucide-react'
+import { CalendarClock, Clock } from 'lucide-react'
 import { money, relatedMemberEmail, relatedMemberMatchesSearch } from '@/app/admin/adminUtils'
 import { DueThisMonthList } from '@/app/admin/payments/DueThisMonthList'
 import { RepaymentsList, type RepaymentListItem } from '@/app/admin/payments/RepaymentsList'
 import { AdminListToolbar, adminFieldClassName } from '@/components/admin'
+import { Select } from '@/components/ui/Select'
 import {
   buildLoanDueRowsForMonth,
   type ActiveLoanDueRow,
@@ -32,7 +33,7 @@ type RepaymentsTabsProps = {
 const TAB_LIST_CLASS =
   'flex shrink-0 items-center gap-1 overflow-x-auto rounded-xl border border-border bg-surface-muted/50 p-1'
 
-const MONTH_SELECT_CLASS = `${adminFieldClassName} appearance-none py-2.5 pl-3 pr-9 text-xs font-semibold`
+
 
 const SEARCH_PLACEHOLDER = 'ស្វែងរកតាមឈ្មោះ ឬចំនួនទឹកប្រាក់...'
 
@@ -150,25 +151,18 @@ export function RepaymentsTabs({
             </div>
 
             {activeTab === 'due' && (
-              <div className="relative min-w-36">
-                <label htmlFor="due-month-filter" className="sr-only">
-                  ខែ
-                </label>
-                <select
-                  id="due-month-filter"
-                  value={selectedMonth}
-                  onChange={(event) => setSelectedMonth(Number(event.target.value))}
-                  className={MONTH_SELECT_CLASS}
-                  aria-label="ជ្រើសរើសខែ"
-                >
-                  {KHMER_MONTHS.map((label, index) => (
-                    <option key={label} value={index + 1}>
-                      {label}
-                    </option>
-                  ))}
-                </select>
-                <ChevronDown className="pointer-events-none absolute right-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted" />
-              </div>
+              <Select
+                id="due-month-filter"
+                value={String(selectedMonth)}
+                onChange={(v) => setSelectedMonth(Number(v))}
+                options={KHMER_MONTHS.map((label, index) => ({
+                  value: String(index + 1),
+                  label,
+                }))}
+                aria-label="ជ្រើសរើសខែ"
+                className="min-w-36"
+                triggerClassName={`${adminFieldClassName} flex cursor-pointer items-center justify-between gap-2 py-2.5 pl-3 pr-3 text-xs font-semibold`}
+              />
             )}
           </div>
         }
