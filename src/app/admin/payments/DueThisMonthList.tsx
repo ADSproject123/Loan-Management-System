@@ -7,7 +7,7 @@ import { formatDate, money } from '@/app/admin/adminUtils'
 import { LoanDueActions } from '@/app/admin/payments/LoanDueActions'
 import { KHMER_MONTHS } from '@/lib/dates'
 import type { LoanDueThisMonthRow } from '@/lib/admin/loanRepaymentDue'
-import { LOAN_DUE_STATUS_LABELS, LOAN_DUE_STATUS_STYLES } from '@/lib/admin/repaymentStatus'
+import { loanDueStatusDisplay } from '@/lib/admin/repaymentStatus'
 import type { CurrencyCode } from '@/lib/currency'
 import {
   AdminTableEmpty,
@@ -74,11 +74,15 @@ export function DueThisMonthList({
             )}
             {listTotal > 0 && rows.length === 0 && <AdminTableNoResults colSpan={8} />}
 
-            {rows.map((row) => (
+            {rows.map((row) => {
+              const statusDisplay = loanDueStatusDisplay(row)
+
+              return (
               <tr
                 key={row.loanId}
                 className={adminTableRowClass({
                   clickable: true,
+                  overdue: row.isOverdue,
                 })}
                 onClick={() => router.push(`/admin/loans/${row.loanId}`)}
               >
@@ -97,8 +101,8 @@ export function DueThisMonthList({
                   </p>
                 </td>
                 <td className={adminTable.td}>
-                  <span className={`text-xs font-semibold ${LOAN_DUE_STATUS_STYLES[row.status]}`}>
-                    {LOAN_DUE_STATUS_LABELS[row.status]}
+                  <span className={`text-xs font-semibold ${statusDisplay.className}`}>
+                    {statusDisplay.label}
                   </span>
                 </td>
                 <td className={adminTable.tdLast} onClick={(event) => event.stopPropagation()}>
@@ -118,7 +122,7 @@ export function DueThisMonthList({
                   ) : null}
                 </td>
               </tr>
-            ))}
+            )})}
           </tbody>
           {rows.length > 0 && (
             <tfoot className="border-t-2 border-border bg-surface-muted/60">
