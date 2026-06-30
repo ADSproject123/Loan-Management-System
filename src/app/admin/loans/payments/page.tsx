@@ -2,7 +2,6 @@ import { createAdminClient } from '@/lib/supabase/admin'
 import { getPrivateFileUrl } from '@/lib/uploads'
 import { getInterestSettings } from '@/lib/interest'
 import { RepaymentsTabs, type RepaymentsTabId } from '@/app/admin/payments/RepaymentsTabs'
-import { AdminPanel } from '@/components/admin'
 
 export default async function AdminLoansPaymentsLedgerPage({
   searchParams,
@@ -48,21 +47,17 @@ export default async function AdminLoansPaymentsLedgerPage({
   )
 
   return (
-    <main>
-      <AdminPanel title="បញ្ជីការសងកម្ជី">
-        <RepaymentsTabs
-          key={defaultTab}
-          activeLoans={activeLoans ?? []}
-          loanRepayments={loanRepayments ?? []}
-          loanDuePayments={loanDuePayments ?? []}
-          monthlyLoanInterestRate={interestSettings.monthlyLoanInterestRate}
-          asOfDate={todayIso}
-          currentYear={currentYear}
-          currentMonth={currentMonth}
-          pendingRepayments={pendingRows}
-          defaultTab={defaultTab}
-        />
-      </AdminPanel>
-    </main>
+    <RepaymentsTabs
+      key={defaultTab}
+      activeLoans={activeLoans ?? []}
+      loanRepayments={loanRepayments ?? []}
+      loanDuePayments={loanDuePayments ?? []}
+      monthlyLoanInterestRate={interestSettings.monthlyLoanInterestRate}
+      asOfDate={todayIso}
+      currentYear={currentYear}
+      currentMonth={currentMonth}
+      pendingRepayments={pendingRows}
+      defaultTab={defaultTab}
+    />
   )
 }

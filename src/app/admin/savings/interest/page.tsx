@@ -1,7 +1,6 @@
 import { createAdminClient } from '@/lib/supabase/admin'
 import { getInterestSettings } from '@/lib/interest'
 import { SavingInterestDueView } from '@/app/admin/savings/SavingInterestDueView'
-import { AdminPanel } from '@/components/admin'
 
 export default async function AdminSavingInterestDuePage() {
   const admin = createAdminClient()
@@ -24,17 +23,13 @@ export default async function AdminSavingInterestDuePage() {
   ])
 
   return (
-    <main>
-      <AdminPanel title="បញ្ជីការប្រាក់សន្សំ">
-        <SavingInterestDueView
-          savings={savings ?? []}
-          interestPayments={interestPayments ?? []}
-          monthlySavingInterestRate={interestSettings.monthlySavingInterestRate}
-          asOfDate={todayIso}
-          currentYear={currentYear}
-          currentMonth={currentMonth}
-        />
-      </AdminPanel>
-    </main>
+    <SavingInterestDueView
+      savings={savings ?? []}
+      interestPayments={interestPayments ?? []}
+      monthlySavingInterestRate={interestSettings.monthlySavingInterestRate}
+      asOfDate={todayIso}
+      currentYear={currentYear}
+      currentMonth={currentMonth}
+    />
   )
 }

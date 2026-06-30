@@ -1,5 +1,5 @@
-import { PageLoader } from '@/components/ui/Loading'
+import { AdminDashboardLoading } from '@/components/admin'
 
 export default function AdminLoading() {
-  return <PageLoader label="កំពុងផ្ទុក..." />
+  return <AdminDashboardLoading />
 }
