@@ -1,14 +1,10 @@
 'use client'
 
 import { useMemo, useState } from 'react'
-import { CheckCircle2, Trash2, Wallet } from 'lucide-react'
+import { Wallet } from 'lucide-react'
 import { CapitalRequestStatusBadge } from '@/components/ui/Badge'
-import { decideCapitalRequest } from '@/app/actions/admin'
 import {
-  AdminActionButton,
-  AdminActionsMenu,
   AdminListToolbar,
-  AdminReasonDialogButton,
   AdminTableEmpty,
   AdminTableNoResults,
   adminTable,
@@ -79,20 +75,19 @@ export function CapitalRequestsList({ requests }: { requests: CapitalRequestList
               <th className={adminTable.th}>ចំនួនទឹកប្រាក់</th>
               <th className={adminTable.th}>មូលហេតុ</th>
               <th className={adminTable.th}>បន្ទាប់ពីដក</th>
-              <th className={adminTable.th}>ស្ថានភាព</th>
-              <th className={adminTable.thLast}>សកម្មភាព</th>
+              <th className={adminTable.thLast}>ស្ថានភាព</th>
             </tr>
           </thead>
           <tbody className={adminTable.tbody}>
             {requests.length === 0 && (
               <AdminTableEmpty
-                colSpan={7}
+                colSpan={6}
                 icon={Wallet}
                 title="មិនមានស្នើសុំ"
                 description="ស្នើសុំដកដើមទុនរបស់សមាជិកនឹងបង្ហាញនៅទីនេះ។"
               />
             )}
-            {requests.length > 0 && filtered.length === 0 && <AdminTableNoResults colSpan={7} />}
+            {requests.length > 0 && filtered.length === 0 && <AdminTableNoResults colSpan={6} />}
 
             {filtered.map((request) => (
               <tr
@@ -110,41 +105,10 @@ export function CapitalRequestsList({ requests }: { requests: CapitalRequestList
                 <td className={adminTable.tdMuted}>
                   {request.remove_membership ? 'ឈប់ចូលជាសមាជិក' : 'បន្តសន្សំ'}
                 </td>
-                <td className={adminTable.td}>
+                <td className={adminTable.tdLast}>
                   <CapitalRequestStatusBadge status={request.status as CapitalRequestStatus} plain />
                   {request.status === 'rejected' && request.rejection_reason && (
                     <p className="mt-1 max-w-xs text-xs text-red-700">{request.rejection_reason}</p>
-                  )}
-                </td>
-                <td className={adminTable.tdLast}>
-                  {request.status === 'pending' ? (
-                    <AdminActionsMenu>
-                      <AdminActionButton
-                        action={decideCapitalRequest}
-                        id={request.id}
-                        decision="approved"
-                        menuItem
-                        icon={CheckCircle2}
-                      >
-                        ទទួលយក
-                      </AdminActionButton>
-                      <AdminReasonDialogButton
-                        action={decideCapitalRequest}
-                        id={request.id}
-                        label="បដិសេធ"
-                        menuItem
-                        icon={Trash2}
-                        extraFields={{ decision: 'rejected' }}
-                        dialogTitle="បដិសេធស្នើសុំដកដើមទុន"
-                        dialogDescription="សមាជិកនឹងទទួលការជូនដំណឹងជាមួយមូលហេតុបដិសេធ។"
-                        reasonLabel="មូលហេតុបដិសេធ"
-                        reasonPlaceholder="ពិពណ៌នាមូលហេតុដែលស្នើសុំត្រូវបានបដិសេធ..."
-                        confirmLabel="បញ្ជាក់បដិសេធ"
-                        successMessage="បានបដិសេធស្នើសុំដើមទុន។"
-                      />
-                    </AdminActionsMenu>
-                  ) : (
-                    <span className="text-xs text-muted">—</span>
                   )}
                 </td>
               </tr>

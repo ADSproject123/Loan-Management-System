@@ -1,5 +1,6 @@
 import { createServerClient } from '@supabase/ssr'
 import { NextResponse, type NextRequest } from 'next/server'
+import { isStaleAuthSessionError } from '@/lib/auth/session'
 
 export async function updateSession(request: NextRequest) {
   let supabaseResponse = NextResponse.next({ request })
@@ -23,7 +24,17 @@ export async function updateSession(request: NextRequest) {
 
   const pathname = request.nextUrl.pathname
   const isProtectedRoute = pathname.startsWith('/dashboard') || pathname.startsWith('/admin')
-  const { data: { user } } = await supabase.auth.getUser()
+  const { data: { user }, error } = await supabase.auth.getUser()
+
+  if (error && isStaleAuthSessionError(error)) {
+    await supabase.auth.signOut()
+    if (isProtectedRoute) {
+      const url = request.nextUrl.clone()
+      url.pathname = '/login'
+      return NextResponse.redirect(url)
+    }
+    return supabaseResponse
+  }
 
   if (!user && isProtectedRoute) {
     const url = request.nextUrl.clone()

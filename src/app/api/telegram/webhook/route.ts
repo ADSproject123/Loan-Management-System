@@ -1,7 +1,8 @@
 import { NextResponse, type NextRequest } from 'next/server'
 import { randomUUID } from 'crypto'
+import { revalidatePath } from 'next/cache'
 import { PutObjectCommand } from '@aws-sdk/client-s3'
-import { formatMoney } from '@/lib/currency'
+import { formatMoney, MIN_SAVING_AMOUNT } from '@/lib/currency'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { getR2Client, getR2BucketName } from '@/lib/r2'
 import {
@@ -20,6 +21,8 @@ import {
 import { getInterestSettings, fetchMemberLoanInterestRate } from '@/lib/interest'
 import { addMonths, todayIso } from '@/lib/dates'
 import { fetchMemberLoanEligibility, validateLoanRequestAmount } from '@/lib/loanEligibility'
+import { memberKhmerName } from '@/lib/memberNames'
+import { notifyAdmins } from '@/lib/notifyAdmins'
 import {
   getPendingPayment,
   setPendingPayment,
@@ -68,6 +71,7 @@ const NOT_ACTIVE_MEMBER =
 type LinkedMember = {
   id: string
   status: string
+  full_name?: string | null
   full_name_kh?: string | null
   full_name_en?: string | null
 }
@@ -76,7 +80,7 @@ async function requireLinkedActiveMember(chatId: string): Promise<LinkedMember |
   const admin = createAdminClient()
   const { data: member } = await admin
     .from('members')
-    .select('id, status, full_name_kh, full_name_en')
+    .select('id, status, full_name, full_name_kh, full_name_en')
     .eq('telegram_chat_id', chatId)
     .maybeSingle()
 
@@ -377,6 +381,101 @@ async function uploadBufferToR2(memberId: string, folder: string, buf: Buffer, e
   return key
 }
 
+function parseTelegramAmount(text?: string) {
+  const rawAmount = text?.replace(/[^0-9.]/g, '') ?? ''
+  const amount = parseFloat(rawAmount)
+  return Number.isFinite(amount) && amount > 0 ? amount : null
+}
+
+async function submitSavingRequest(
+  chatId: string,
+  member: LinkedMember,
+  amount: number,
+  evidenceUrl: string
+): Promise<boolean> {
+  if (amount < MIN_SAVING_AMOUNT) {
+    await sendTelegramMessage(
+      chatId,
+      `⚠️ ចំនួនទឹកប្រាក់សន្សំអប្បបរមាគឺ ${fmtMoney(MIN_SAVING_AMOUNT)}។`
+    )
+    return false
+  }
+
+  const admin = createAdminClient()
+  const { error } = await admin.from('savings').insert({
+    member_id: member.id,
+    amount,
+    currency: 'USD',
+    evidence_url: evidenceUrl,
+    qr_code_ref: `SAV-BOT-${Date.now()}`,
+    saving_date: todayIso(),
+    status: 'pending',
+  })
+
+  if (error) {
+    console.error('[Telegram] savings insert failed:', error.message)
+    await sendTelegramMessage(chatId, '❌ មានបញ្ហាក្នុងការរក្សាទុក។ សូមព្យាយាមម្តងទៀត។')
+    return false
+  }
+
+  await clearPendingPayment(chatId)
+  await notifyAdmins(
+    'ការសន្សំថ្មី',
+    `${memberKhmerName(member)} បានដាក់ស្នើការសន្សំ ${fmtMoney(amount)} តាម Telegram។ សូមពិនិត្យនៅផ្នែកសំណើសន្សំ។`,
+    'saving_request'
+  )
+  revalidatePath('/admin')
+  revalidatePath('/admin/savings')
+  revalidatePath('/admin/savings/requests')
+
+  await sendTelegramMessageWithCommandButtons(
+    chatId,
+    `✅ <b>ទទួលបានដោយជោគជ័យ!</b>\n` +
+      `💰 ចំនួន: <b>${fmtMoney(amount)}</b>\n` +
+      `⏳ ស្ថានភាព: <b>កំពុងរង់ចាំការផ្ទៀងផ្ទាត់</b>\n\n` +
+      `បានដាក់ស្នើការសន្សំ <b>${fmtMoney(amount)}</b> — រង់ចាំអ្នកគ្រប់គ្រងផ្ទៀងផ្ទាត់។`
+  )
+
+  return true
+}
+
+async function handlePendingSavingAmount(chatId: string, text: string): Promise<boolean> {
+  const pending = await getPendingPayment(chatId)
+  if (!pending || pending.type !== 'saving') return false
+
+  const amount = parseTelegramAmount(text)
+  if (!amount) {
+    await sendTelegramMessage(
+      chatId,
+      '⚠️ សូមផ្ញើចំនួនទឹកប្រាក់ត្រឹមត្រូវ (ឧ. <code>50</code>)។'
+    )
+    return true
+  }
+
+  const member = await requireLinkedActiveMember(chatId)
+  if (!member) {
+    await clearPendingPayment(chatId)
+    return true
+  }
+
+  if (pending.evidenceUrl) {
+    await submitSavingRequest(chatId, member, amount, pending.evidenceUrl)
+    return true
+  }
+
+  const saved = await setPendingPayment(chatId, { type: 'saving', amount })
+  if (!saved) {
+    await sendTelegramMessage(chatId, '❌ មិនអាចរក្សាទុកចំនួនបានទេ។ សូមប្រើ /paysaving ម្តងទៀត។')
+    return true
+  }
+
+  await sendTelegramMessage(
+    chatId,
+    `✅ បានរក្សាទុកចំនួន <b>${fmtMoney(amount)}</b>។\n📸 ឥឡូវនេះ សូមផ្ញើរូបភាពបញ្ជាក់ការបង់ប្រាក់។`
+  )
+  return true
+}
+
 // ---------------------------------------------------------------------------
 // /paysaving — send QR, prompt for proof photo
 // ---------------------------------------------------------------------------
@@ -391,12 +490,21 @@ async function handlePaySavingCommand(chatId: string): Promise<void> {
     qrUrl,
     '💰 <b>ដាក់ស្នើការសន្សំ</b>\n\n' +
     'ស្កេន KHQR ខាងលើដើម្បីបង់ប្រាក់។\n\n' +
-    '📸 <b>បន្ទាប់មកផ្ញើរូបភាពបញ្ជាក់ ហើយសរសេរចំនួន (ដុល្លារ) ក្នុង caption</b>\n' +
-    '<i>ឧ. <code>50</code> សម្រាប់ $50</i>',
+    '📸 <b>បន្ទាប់មកផ្ញើរូបភាពបញ្ជាក់</b>\n' +
+    'អាចសរសេរចំនួន (ដុល្លារ) ក្នុង caption ឬ ផ្ញើចំនួនជាសារបន្ទាប់\n' +
+    '<i>ឧ. caption: <code>50</code> ឬសារបន្ទាប់: <code>50</code></i>',
     true, // force reply
   )
 
-  if (ok) await setPendingPayment(chatId, { type: 'saving' })
+  if (ok) {
+    const saved = await setPendingPayment(chatId, { type: 'saving' })
+    if (!saved) {
+      await sendTelegramMessage(
+        chatId,
+        '❌ មិនអាចចាប់ផ្ទុកស្ថានភាពបានទេ។ សូមព្យាយាម /paysaving ម្តងទៀត។'
+      )
+    }
+  }
 }
 
 // ---------------------------------------------------------------------------
@@ -456,7 +564,15 @@ async function handlePayLoanCommand(chatId: string): Promise<void> {
     true, // force reply
   )
 
-  if (ok) await setPendingPayment(chatId, { type: 'loan', loanId: loan.id, amount: dueAmount })
+  if (ok) {
+    const saved = await setPendingPayment(chatId, { type: 'loan', loanId: loan.id, amount: dueAmount })
+    if (!saved) {
+      await sendTelegramMessage(
+        chatId,
+        '❌ មិនអាចចាប់ផ្ទុកស្ថានភាពបានទេ។ សូមព្យាយាម /payloan ម្តងទៀត។'
+      )
+    }
+  }
 }
 
 // ---------------------------------------------------------------------------
@@ -507,66 +623,52 @@ async function handlePhotoMessage(chatId: string, fileId: string, caption?: stri
     return
   }
 
-  await clearPendingPayment(chatId)
-
-  // Create the pending record
   if (pending.type === 'saving') {
-    const rawAmount = caption?.replace(/[^0-9.]/g, '') ?? ''
-    const amount = parseFloat(rawAmount)
-    if (!amount || amount <= 0) {
+    const amount = parseTelegramAmount(caption) ?? pending.amount ?? null
+
+    if (!amount) {
+      const saved = await setPendingPayment(chatId, { type: 'saving', evidenceUrl })
+      if (!saved) {
+        await sendTelegramMessage(chatId, '❌ មិនអាចរក្សាទុករូបភាពបានទេ។ សូមប្រើ /paysaving ម្តងទៀត។')
+        return
+      }
       await sendTelegramMessage(
         chatId,
-        '⚠️ រូបភាពបានទទួល ប៉ុន្តែចំនួនមិនត្រឹមត្រូវ។ សូមប្រើ /paysaving ម្តងទៀត ហើយសរសេរចំនួន (ឧ. <code>50</code>) ក្នុង caption។'
+        '✅ រូបភាពបានរក្សាទុក។\nសូមផ្ញើ <b>ចំនួនទឹកប្រាក់</b> ជាសារបន្ទាប់ (ឧ. <code>50</code>)។'
       )
       return
     }
 
-    const { error } = await admin.from('savings').insert({
-      member_id: member.id,
-      amount,
-      currency: 'USD',
-      evidence_url: evidenceUrl,
-      qr_code_ref: `SAV-BOT-${Date.now()}`,
-      status: 'pending',
-    })
+    await submitSavingRequest(chatId, member, amount, pending.evidenceUrl ?? evidenceUrl)
+    return
+  }
 
-    if (error) {
-      await sendTelegramMessage(chatId, '❌ មានបញ្ហាក្នុងការរក្សាទុក។')
-      return
-    }
+  const { error } = await admin.from('loan_repayments').insert({
+    loan_id: pending.loanId,
+    member_id: member.id,
+    amount: pending.amount,
+    currency: 'USD',
+    evidence_url: evidenceUrl,
+    qr_code_ref: `REP-BOT-${Date.now()}`,
+    status: 'pending',
+  })
 
-    await sendTelegramMessageWithCommandButtons(
-      chatId,
-      `✅ <b>ទទួលបានដោយជោគជ័យ!</b>\n` +
-      `💰 ចំនួន: <b>${fmtMoney(amount)}</b>\n` +
-      `⏳ ស្ថានភាព: <b>កំពុងរង់ចាំការផ្ទៀងផ្ទាត់</b>\n\n` +
-      `បានដាក់ស្នើការសន្សំ <b>${fmtMoney(amount)}</b> — រង់ចាំអ្នកគ្រប់គ្រងផ្ទៀងផ្ទាត់។`
-    )
+  if (error) {
+    console.error('[Telegram] loan repayment insert failed:', error.message)
+    await sendTelegramMessage(chatId, '❌ មានបញ្ហាក្នុងការរក្សាទុក។')
+    return
+  }
 
-  } else {
-    const { error } = await admin.from('loan_repayments').insert({
-      loan_id: pending.loanId,
-      member_id: member.id,
-      amount: pending.amount,
-      currency: 'USD',
-      evidence_url: evidenceUrl,
-      qr_code_ref: `REP-BOT-${Date.now()}`,
-      status: 'pending',
-    })
+  await clearPendingPayment(chatId)
+  revalidatePath('/admin/loans/payments')
 
-    if (error) {
-      await sendTelegramMessage(chatId, '❌ មានបញ្ហាក្នុងការរក្សាទុក។')
-      return
-    }
-
-    await sendTelegramMessageWithCommandButtons(
-      chatId,
-      `✅ <b>ទទួលបានដោយជោគជ័យ!</b>\n` +
+  await sendTelegramMessageWithCommandButtons(
+    chatId,
+    `✅ <b>ទទួលបានដោយជោគជ័យ!</b>\n` +
       `💳 ចំនួន: <b>${fmtMoney(pending.amount)}</b>\n` +
       `⏳ ស្ថានភាព: <b>កំពុងរង់ចាំការផ្ទៀងផ្ទាត់</b>\n\n` +
       `បានដាក់ស្នើការសងកម្ជី <b>${fmtMoney(pending.amount)}</b> — រង់ចាំអ្នកគ្រប់គ្រងផ្ទៀងផ្ទាត់។`
-    )
-  }
+  )
 }
 
 // ---------------------------------------------------------------------------
@@ -797,6 +899,12 @@ export async function POST(request: NextRequest) {
   }
   if (text && menuButtonHandlers[text]) {
     await menuButtonHandlers[text](chatIdStr)
+    return NextResponse.json({ ok: true })
+  }
+
+  // Pending saving amount after photo, or amount before photo
+  if (text && !text.startsWith('/') && (await getPendingPayment(chatIdStr))?.type === 'saving') {
+    await handlePendingSavingAmount(chatIdStr, text)
     return NextResponse.json({ ok: true })
   }
 

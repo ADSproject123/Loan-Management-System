@@ -2,8 +2,8 @@ import { notFound } from 'next/navigation'
 import { AdminPanel } from '@/components/admin'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { formatDate, sumAmounts } from '@/app/admin/adminUtils'
-import { getInterestSettings, getLoanInterestPlans, monthlySavingInterest, fetchMemberLoanInterestRate } from '@/lib/interest'
-import { accruedSavingInterestTotal, nextInterestDate, buildLoanPaymentSchedule, annotateLoanPaymentSchedule } from '@/lib/interestCalculations'
+import { getInterestSettings, getLoanInterestPlans, monthlySavingInterestForCombinedSavings, fetchMemberLoanInterestRate } from '@/lib/interest'
+import { accruedSavingInterestTotal, annotateLoanPaymentSchedule, buildLoanPaymentSchedule, nextInterestDate } from '@/lib/interestCalculations'
 import { isVerifiedSavingForChart } from '@/lib/admin/savingsChartData'
 import { getPrivateFileUrl } from '@/lib/uploads'
 import { predominantCurrency } from '@/lib/currency'
@@ -103,8 +103,8 @@ export default async function AdminMemberDetailPage({ params }: PageProps) {
   }
   const savingsCount = verifiedSavings.length
   const loansCount = activeLoans.length
-  const monthlySavingInterestAmount = monthlySavingInterest(
-    savingsTotal,
+  const monthlySavingInterestAmount = monthlySavingInterestForCombinedSavings(
+    verifiedSavings,
     interestSettings.monthlySavingInterestRate
   )
   const accruedSavingInterest = accruedSavingInterestTotal(

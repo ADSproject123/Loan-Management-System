@@ -25,7 +25,6 @@ import { formatDate, money } from '@/app/admin/adminUtils'
 import { memberKhmerName } from '@/lib/memberNames'
 import { AdminMemberTelegramLink } from '@/components/telegram/AdminMemberTelegramLink'
 import { normalizeCurrency } from '@/lib/currency'
-import { monthlySavingInterest } from '@/lib/interestCalculations'
 import type { LoanStatus, MemberRole, MemberStatus, SavingStatus } from '@/types/database'
 import { WORKPLACE_LABELS, WORKPLACE_OPTIONS } from '@/lib/workplace'
 import { adminFieldClassName, AdminSegmentedTabs, type AdminSegmentedTab } from '@/components/admin'
@@ -548,9 +547,6 @@ export function MemberDetailTabs({
                 <thead className="border-b border-border bg-surface-muted/80">
                   <tr className="text-xs font-semibold uppercase tracking-wide text-muted">
                     <th className="px-5 py-3.5 md:px-6">ចំនួនទឹកប្រាក់</th>
-                    <th className="px-5 py-3.5">
-                      ការប្រាក់ប្រចាំខែ
-                      </th>
                     <th className="px-5 py-3.5">ថ្ងៃសន្សំ</th>
                     <th className="px-5 py-3.5">ដាក់ស្នើ</th>
                     <th className="px-5 py-3.5 md:px-6">ស្ថានភាព</th>
@@ -559,17 +555,13 @@ export function MemberDetailTabs({
                 <tbody className="divide-y divide-border">
                   {savings.length === 0 ? (
                     <tr>
-                      <td colSpan={5} className="px-5 py-12 text-center text-sm text-muted md:px-6">
+                      <td colSpan={4} className="px-5 py-12 text-center text-sm text-muted md:px-6">
                         មិនមានការសន្សំទេ។
                       </td>
                     </tr>
                   ) : (
                     savings.map((saving) => {
                       const currency = normalizeCurrency(saving.currency)
-                      const rowInterest =
-                        savingInterest && isVerifiedSavingStatus(saving.status)
-                          ? monthlySavingInterest(Number(saving.amount ?? 0), savingInterest.monthlyRate)
-                          : null
 
                       return (
                         <tr key={saving.id} className="transition hover:bg-surface-muted/50">
@@ -577,15 +569,6 @@ export function MemberDetailTabs({
                             <p className="font-bold tabular-nums text-foreground">
                               {money(saving.amount, currency)}
                             </p>
-                          </td>
-                          <td className="px-5 py-4">
-                            {rowInterest !== null ? (
-                              <p className="font-semibold tabular-nums text-emerald-700">
-                                {money(rowInterest, currency)}
-                              </p>
-                            ) : (
-                              <span className="text-muted">—</span>
-                            )}
                           </td>
                           <td className="px-5 py-4 text-foreground">
                             {formatDate(saving.saving_date)}
@@ -603,16 +586,17 @@ export function MemberDetailTabs({
                   <tfoot className="border-t-2 border-border bg-surface-muted/60">
                     <tr>
                       <td className="px-5 py-4 md:px-6">
-                        <p className="text-xs font-semibold uppercase tracking-wide text-muted">សរុប</p>
+                        <p className="text-xs font-semibold uppercase tracking-wide text-muted">សមតុល្យសន្សំសរុប</p>
                         <p className="mt-1 font-bold tabular-nums text-foreground">{money(savingsTotal)}</p>
                       </td>
                       <td className="px-5 py-4">
                         <p className="text-xs font-semibold uppercase tracking-wide text-muted">
-                          សរុបការប្រាក់
+                          ការប្រាក់ប្រចាំខែ
                         </p>
                         <p className="mt-1 font-bold tabular-nums text-emerald-700">
                           {money(savingInterest.monthlyAmount)}
                         </p>
+                        <p className="mt-1 text-xs text-muted">{savingInterest.monthlyRate}% លើសមតុល្យសរុប</p>
                       </td>
                       <td className="px-5 py-4">
                         <p className="text-xs font-semibold uppercase tracking-wide text-muted">
@@ -622,8 +606,8 @@ export function MemberDetailTabs({
                           {savingInterest.nextDate ? formatDate(savingInterest.nextDate) : '—'}
                         </p>
                       </td>
-                      <td colSpan={2} className="px-5 py-4 text-sm text-muted md:px-6">
-                        {savingsCount} ការសន្សំបានទទួល
+                      <td className="px-5 py-4 text-sm text-muted md:px-6">
+                        {savingsCount} ដំណើរសន្សំ
                       </td>
                     </tr>
                   </tfoot>
@@ -766,7 +750,7 @@ function FinancialSummary({
     ...(savingInterest ? [{
       label: 'ការប្រាក់សន្សំប្រចាំខែ',
       value: money(savingInterest.monthlyAmount),
-      meta: `${savingInterest.monthlyRate}% នៃសន្សំសរុប`,
+      meta: `${savingInterest.monthlyRate}% លើសមតុល្យសរុប`,
       action: null,
     }] : []),
     {

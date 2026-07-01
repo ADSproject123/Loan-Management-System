@@ -3,13 +3,20 @@ import 'server-only'
 import { cache } from 'react'
 import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
+import { isStaleAuthSessionError } from '@/lib/auth/session'
 import type { Member } from '@/types/database'
 
 export const getCurrentMember = cache(async (): Promise<Member | null> => {
   const supabase = await createClient()
   const {
     data: { user },
+    error,
   } = await supabase.auth.getUser()
+
+  if (error && isStaleAuthSessionError(error)) {
+    await supabase.auth.signOut()
+    return null
+  }
 
   if (!user) return null
 

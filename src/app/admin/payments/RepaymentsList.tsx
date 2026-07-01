@@ -1,9 +1,8 @@
 'use client'
 
 import { useMemo, useState } from 'react'
-import { createPortal } from 'react-dom'
 import { useRouter } from 'next/navigation'
-import { CreditCard, X } from 'lucide-react'
+import { CreditCard } from 'lucide-react'
 import { formatDate, money, relatedMemberEmail, relatedMemberMatchesSearch, relatedMemberName } from '@/app/admin/adminUtils'
 import {
   normalizeRepaymentPaidStatus,
@@ -15,6 +14,8 @@ import {
   AdminListToolbar,
   AdminTableEmpty,
   AdminTableNoResults,
+  EvidencePreviewButton,
+  EvidencePreviewModal,
   adminTable,
   adminTableRowClass,
 } from '@/components/admin'
@@ -146,13 +147,7 @@ export function RepaymentsList({
                 <td className={adminTable.tdMuted}>{formatDate(repayment.payment_date)}</td>
                 <td className={adminTable.td} onClick={(event) => event.stopPropagation()}>
                   {repayment.evidenceSignedUrl ? (
-                    <button
-                      type="button"
-                      onClick={() => setPreviewUrl(repayment.evidenceSignedUrl)}
-                      className="inline-flex items-center rounded-lg border border-brand-200 bg-brand-50 px-3 py-1.5 text-xs font-semibold text-brand-800 transition hover:bg-brand-100"
-                    >
-                      មើលភស្តុតាង
-                    </button>
+                    <EvidencePreviewButton onClick={() => setPreviewUrl(repayment.evidenceSignedUrl)} />
                   ) : (
                     <span className={adminTable.missingText}>
                       {repayment.evidence_url ? 'មិនអាចបង្ហាញ' : 'មិនមាន'}
@@ -179,50 +174,7 @@ export function RepaymentsList({
       </div>
     </div>
 
-      {previewUrl && createPortal(
-        <div
-          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/70 backdrop-blur-sm"
-          onClick={() => setPreviewUrl(null)}
-        >
-          <div
-            className="relative max-h-[90vh] max-w-3xl w-full overflow-hidden rounded-2xl bg-white shadow-2xl"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <div className="flex items-center justify-between border-b border-slate-200 px-5 py-3.5">
-              <p className="text-sm font-semibold text-slate-800">ភស្តុតាង</p>
-              <button
-                type="button"
-                onClick={() => setPreviewUrl(null)}
-                className="grid h-8 w-8 place-items-center rounded-lg text-slate-400 hover:bg-slate-100 hover:text-slate-700"
-              >
-                <X className="h-4 w-4" />
-              </button>
-            </div>
-            {previewUrl.toLowerCase().includes('.pdf') ? (
-              <div className="flex flex-col items-center gap-4 p-8 text-center">
-                <p className="text-sm text-slate-600">មិនអាចបង្ហាញ PDF នៅក្នុងផ្ទាំងនេះ</p>
-                <a
-                  href={previewUrl}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="rounded-lg bg-brand-950 px-4 py-2 text-sm font-semibold text-white hover:bg-brand-800"
-                >
-                  បើក PDF
-                </a>
-              </div>
-            ) : (
-              <div className="overflow-auto">
-                <img
-                  src={previewUrl}
-                  alt="ភស្តុតាង"
-                  className="block max-h-[80vh] w-full object-contain"
-                />
-              </div>
-            )}
-          </div>
-        </div>,
-        document.body
-      )}
+      <EvidencePreviewModal url={previewUrl} onClose={() => setPreviewUrl(null)} />
     </>
   )
 }

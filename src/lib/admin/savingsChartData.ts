@@ -16,6 +16,7 @@ const KHMER_MONTHS = [
 ]
 
 export type SavingChartSourceRow = {
+  member_id?: string | null
   amount: number | null
   currency: string | null
   status: string

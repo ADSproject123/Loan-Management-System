@@ -8,6 +8,127 @@ export function monthlySavingInterest(balance: number, ratePercent: number) {
   return balance * (rate / 100)
 }
 
+export type SavingInterestSource = {
+  member_id?: string | null
+  amount: number | null | undefined
+  saving_date?: string | null
+  verified_at?: string | null
+  created_at?: string | null
+}
+
+export function savingInterestStartDate(saving: SavingInterestSource): string | null {
+  if (saving.saving_date) return saving.saving_date.slice(0, 10)
+  if (saving.verified_at) return saving.verified_at.slice(0, 10)
+  if (saving.created_at) return saving.created_at.slice(0, 10)
+  return null
+}
+
+export function combinedSavingsBalance(savings: SavingInterestSource[]) {
+  return savings.reduce((sum, saving) => sum + Number(saving.amount ?? 0), 0)
+}
+
+/** Monthly interest on the member's combined verified savings balance. */
+export function monthlySavingInterestForCombinedSavings(
+  savings: SavingInterestSource[],
+  ratePercent: number
+) {
+  return monthlySavingInterest(combinedSavingsBalance(savings), ratePercent)
+}
+
+type DatedDeposit = {
+  saving: SavingInterestSource
+  start: string
+  amount: number
+}
+
+function datedDeposits(savings: SavingInterestSource[]): DatedDeposit[] {
+  return savings
+    .map((saving) => ({
+      saving,
+      start: savingInterestStartDate(saving) ?? '',
+      amount: Number(saving.amount ?? 0),
+    }))
+    .filter((row): row is DatedDeposit => Boolean(row.start) && row.amount > 0)
+    .sort((a, b) => a.start.localeCompare(b.start))
+}
+
+function lastDayOfMonth(year: number, month: number) {
+  const day = new Date(year, month, 0).getDate()
+  return `${year}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`
+}
+
+function interestPayDateInMonth(savingDay: number, year: number, month: number) {
+  const lastDay = new Date(year, month, 0).getDate()
+  const day = Math.min(savingDay, lastDay)
+  return `${year}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`
+}
+
+function combinedBalanceThroughDate(deposits: DatedDeposit[], throughDate: string) {
+  return deposits
+    .filter((deposit) => deposit.start <= throughDate)
+    .reduce((sum, deposit) => sum + deposit.amount, 0)
+}
+
+function groupSavingsByMember(savings: SavingInterestSource[]) {
+  const byMember = new Map<string, SavingInterestSource[]>()
+  for (const saving of savings) {
+    const memberId = saving.member_id ?? '__member__'
+    const list = byMember.get(memberId) ?? []
+    list.push(saving)
+    byMember.set(memberId, list)
+  }
+  return byMember
+}
+
+function monthInterestShouldAccrue(
+  year: number,
+  month: number,
+  firstStart: string,
+  today = new Date()
+) {
+  const monthEnd = lastDayOfMonth(year, month)
+  if (monthEnd < firstStart) return false
+
+  const payDay = new Date(firstStart).getDate()
+  const payDate = interestPayDateInMonth(payDay, year, month)
+  const todayIso = today.toISOString().slice(0, 10)
+  return payDate <= todayIso
+}
+
+export function accruedCombinedSavingInterest(
+  savings: SavingInterestSource[],
+  ratePercent: number,
+  today = new Date()
+) {
+  const deposits = datedDeposits(savings)
+  if (deposits.length === 0) return 0
+
+  const firstStart = deposits[0].start
+  const [startYear, startMonth] = firstStart.split('-').map(Number)
+  let year = startYear
+  let month = startMonth
+  const endYear = today.getFullYear()
+  const endMonth = today.getMonth() + 1
+  let accrued = 0
+
+  while (year < endYear || (year === endYear && month <= endMonth)) {
+    if (monthInterestShouldAccrue(year, month, firstStart, today)) {
+      const balance = combinedBalanceThroughDate(deposits, lastDayOfMonth(year, month))
+      if (balance > 0) {
+        accrued += monthlySavingInterest(balance, ratePercent)
+      }
+    }
+
+    month += 1
+    if (month > 12) {
+      month = 1
+      year += 1
+    }
+  }
+
+  return accrued
+}
+
 /**
  * Full months of interest that have accrued since fromDateStr.
  * The current month counts only once today's date has reached the same
@@ -40,27 +161,25 @@ function nextInterestDateForSaving(savingDateStr: string, today = new Date()): D
  * saving's monthly interest will next click over).
  */
 export function nextInterestDate(
-  savings: { saving_date: string }[],
+  savings: SavingInterestSource[],
   today = new Date()
 ): Date | null {
-  if (savings.length === 0) return null
-  return savings.reduce<Date | null>((earliest, s) => {
-    const d = nextInterestDateForSaving(s.saving_date, today)
-    return earliest === null || d < earliest ? d : earliest
-  }, null)
+  const deposits = datedDeposits(savings)
+  if (deposits.length === 0) return null
+  return nextInterestDateForSaving(deposits[0].start, today)
 }
 
-/** Total saving interest accrued across all savings up to today. */
+/** Total saving interest accrued on combined balances (per member), up to today. */
 export function accruedSavingInterestTotal(
-  savings: { amount: number; saving_date: string }[],
+  savings: SavingInterestSource[],
   ratePercent: number,
   today = new Date()
 ): number {
-  const rate = Number.isFinite(ratePercent) ? ratePercent : DEFAULT_SAVING_INTEREST_RATE
-  return savings.reduce((sum, s) => {
-    const months = monthsAccrued(s.saving_date, today)
-    return sum + s.amount * (rate / 100) * months
-  }, 0)
+  let total = 0
+  for (const memberSavings of groupSavingsByMember(savings).values()) {
+    total += accruedCombinedSavingInterest(memberSavings, ratePercent, today)
+  }
+  return total
 }
 
 function safePrincipal(principal: number) {

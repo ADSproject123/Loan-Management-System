@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation'
 import { ChevronRight, Landmark } from 'lucide-react'
 import { LoanStatusBadge } from '@/components/ui/Badge'
 import { formatDate, money, relatedMemberEmail, relatedMemberMatchesSearch, relatedMemberName } from '@/app/admin/adminUtils'
+import type { LoanScheduleMeta } from '@/lib/admin/loanScheduleMeta'
 import type { CurrencyCode } from '@/lib/currency'
 import type { LoanStatus } from '@/types/database'
 import {
@@ -28,7 +29,7 @@ export type LoanListItem = {
   disbursed_at?: string | null
   term_months?: number | null
   members?: { full_name?: string | null; full_name_kh?: string | null; full_name_en?: string | null; email?: string | null } | { full_name?: string | null; full_name_kh?: string | null; full_name_en?: string | null; email?: string | null }[] | null
-}
+} & Partial<LoanScheduleMeta>
 
 type LoansListVariant = 'all' | 'active' | 'requests'
 
@@ -42,6 +43,8 @@ type MemberLoanGroup = {
   latestCreatedAt: string
   latestDisbursedAt: string | null
   nearestDueDate: string | null
+  monthsOverdue: number
+  monthsLeft: number | null
   hasPending: boolean
 }
 
@@ -57,6 +60,12 @@ function pickNearestDueDate(existing: string | null, candidate: string | null) {
   if (!candidate) return existing
   if (!existing) return candidate
   return new Date(candidate).getTime() < new Date(existing).getTime() ? candidate : existing
+}
+
+function pickSoonestMonthsLeft(existing: number | null, candidate: number | null) {
+  if (candidate == null) return existing
+  if (existing == null) return candidate
+  return Math.min(existing, candidate)
 }
 
 function aggregateLoansByMember(
@@ -88,7 +97,9 @@ function aggregateLoansByMember(
         loanCount: 1,
         latestCreatedAt: loan.created_at,
         latestDisbursedAt: disbursedAt,
-        nearestDueDate: loan.due_date ?? null,
+        nearestDueDate: loan.nextDueDate ?? loan.due_date ?? null,
+        monthsOverdue: loan.monthsOverdue ?? 0,
+        monthsLeft: loan.monthsLeft ?? null,
         hasPending: allLoans.some(
           (row) => row.member_id === loan.member_id && isPendingLoanStatus(row.status)
         ),
@@ -112,7 +123,12 @@ function aggregateLoansByMember(
       existing.primaryLoanId = loan.id
     }
 
-    existing.nearestDueDate = pickNearestDueDate(existing.nearestDueDate, loan.due_date ?? null)
+    existing.nearestDueDate = pickNearestDueDate(
+      existing.nearestDueDate,
+      loan.nextDueDate ?? loan.due_date ?? null
+    )
+    existing.monthsOverdue = Math.max(existing.monthsOverdue, loan.monthsOverdue ?? 0)
+    existing.monthsLeft = pickSoonestMonthsLeft(existing.monthsLeft, loan.monthsLeft ?? null)
   }
 
   return Array.from(groups.values()).sort(
@@ -142,6 +158,89 @@ const EMPTY_COPY: Record<LoansListVariant, { title: string }> = {
   },
 }
 
+type DueDateMeta = {
+  label: string
+  monthsLeft: string | null
+  monthsOverdue: number | null
+  tone: 'muted' | 'warning' | 'error'
+}
+
+function getLoanScheduleDisplay(loan: Pick<LoanListItem, 'nextDueDate' | 'monthsLeft' | 'monthsOverdue' | 'due_date'>): DueDateMeta {
+  const nextDueDate = loan.nextDueDate ?? loan.due_date ?? null
+  const monthsOverdue = loan.monthsOverdue ?? 0
+  const monthsLeft = loan.monthsLeft ?? null
+
+  if (!nextDueDate && monthsOverdue === 0) {
+    return { label: '—', monthsLeft: null, monthsOverdue: null, tone: 'muted' }
+  }
+
+  if (monthsOverdue > 0) {
+    return {
+      label: nextDueDate ? formatDate(nextDueDate) : '—',
+      monthsLeft: null,
+      monthsOverdue,
+      tone: 'error',
+    }
+  }
+
+  if (monthsLeft === 0) {
+    return {
+      label: nextDueDate ? formatDate(nextDueDate) : '—',
+      monthsLeft: 'ខែនេះ',
+      monthsOverdue: null,
+      tone: 'warning',
+    }
+  }
+
+  if (monthsLeft != null && monthsLeft <= 1) {
+    return {
+      label: nextDueDate ? formatDate(nextDueDate) : '—',
+      monthsLeft: `${monthsLeft} ខែ`,
+      monthsOverdue: null,
+      tone: 'warning',
+    }
+  }
+
+  if (monthsLeft != null) {
+    return {
+      label: nextDueDate ? formatDate(nextDueDate) : '—',
+      monthsLeft: `${monthsLeft} ខែ`,
+      monthsOverdue: null,
+      tone: 'muted',
+    }
+  }
+
+  return {
+    label: nextDueDate ? formatDate(nextDueDate) : '—',
+    monthsLeft: null,
+    monthsOverdue: null,
+    tone: 'muted',
+  }
+}
+
+const EMPTY_CELL = 'គ្មាន'
+
+function MonthsLeftCell({ meta }: { meta: DueDateMeta | null }) {
+  if (!meta?.monthsLeft) return <span className="text-muted">{EMPTY_CELL}</span>
+
+  const toneClass =
+    meta.tone === 'warning'
+      ? 'text-amber-600'
+      : 'text-foreground'
+
+  return <p className={`text-sm font-semibold tabular-nums ${toneClass}`}>{meta.monthsLeft}</p>
+}
+
+function OverdueMonthsCell({ meta }: { meta: DueDateMeta | null }) {
+  if (!meta?.monthsOverdue) return <span className="text-muted">{EMPTY_CELL}</span>
+
+  return (
+    <p className="text-sm font-semibold tabular-nums text-red-600">
+      {meta.monthsOverdue} ខែ
+    </p>
+  )
+}
+
 export function LoansList({
   loans,
   showActions = true,
@@ -161,8 +260,8 @@ export function LoansList({
   const showStatusColumn = !isActiveView
   const showStatusFilter = variant === 'all'
   const colSpan =
-    (showStatusColumn ? 1 : 0) + (isActiveView ? 1 : 0) + 3 + (showActions ? 1 : 0)
-  const ledgerColSpan = 6
+    (showStatusColumn ? 1 : 0) + (isActiveView ? 3 : 0) + 3 + (showActions ? 1 : 0)
+  const ledgerColSpan = 8
 
   const filteredByStatus = useMemo(() => {
     return loans.filter((loan) => {
@@ -281,6 +380,8 @@ export function LoansList({
                 <>
                   <th className={adminTable.th}>ចាប់ផ្តើម</th>
                   <th className={adminTable.th}>កំណត់បង់</th>
+                  <th className={adminTable.th}>ខែនៅសល់</th>
+                  <th className={adminTable.th}>ហួសកំណត់</th>
                 </>
               ) : (
                 <th className={adminTable.th}>ដាក់ស្នើ</th>
@@ -304,7 +405,12 @@ export function LoansList({
             {isLedgerView &&
               ledgerFiltered.map((group) => {
                 const memberName = relatedMemberName(group)
-                const dueMeta = getDueDateMeta(group.nearestDueDate)
+                const dueMeta = getLoanScheduleDisplay({
+                  nextDueDate: group.nearestDueDate,
+                  monthsLeft: group.monthsLeft,
+                  monthsOverdue: group.monthsOverdue,
+                  due_date: group.nearestDueDate,
+                })
                 const openLedgerRow = isActiveView
                   ? () => openLoan(group.primaryLoanId)
                   : () => openMember(group.member_id)
@@ -342,8 +448,14 @@ export function LoansList({
                     <td className={adminTable.tdMuted}>
                       {formatDate(group.latestDisbursedAt ?? group.latestCreatedAt)}
                     </td>
+                    <td className={adminTable.tdMuted}>
+                      {dueMeta.label}
+                    </td>
                     <td className={adminTable.td}>
-                      <DueDateCell meta={dueMeta} />
+                      <MonthsLeftCell meta={dueMeta} />
+                    </td>
+                    <td className={adminTable.td}>
+                      <OverdueMonthsCell meta={dueMeta} />
                     </td>
                   </tr>
                 )
@@ -352,7 +464,7 @@ export function LoansList({
             {!isLedgerView &&
               filtered.map((loan) => {
               const memberName = relatedMemberName(loan)
-              const dueMeta = isActiveView ? getDueDateMeta(loan.due_date) : null
+              const dueMeta = isActiveView ? getLoanScheduleDisplay(loan) : null
               const isPending =
                 loan.status === 'pending' || loan.status === 'under_review'
 
@@ -396,8 +508,14 @@ export function LoansList({
                       <td className={adminTable.tdMuted}>
                         {formatDate(loan.disbursed_at ?? loan.created_at)}
                       </td>
+                      <td className={adminTable.tdMuted}>
+                        {dueMeta?.label ?? '—'}
+                      </td>
                       <td className={adminTable.td}>
-                        <DueDateCell meta={dueMeta} />
+                        <MonthsLeftCell meta={dueMeta} />
+                      </td>
+                      <td className={adminTable.td}>
+                        <OverdueMonthsCell meta={dueMeta} />
                       </td>
                     </>
                   ) : (
@@ -429,71 +547,12 @@ export function LoansList({
                 <td className={`${adminTable.tdMuted} font-semibold`}>
                   {ledgerTotals.totalLoans} កម្ជី
                 </td>
-                <td colSpan={2} />
+                <td colSpan={4} />
               </tr>
             </tfoot>
           )}
         </table>
       </div>
-    </div>
-  )
-}
-
-type DueDateMeta = {
-  label: string
-  sub: string
-  tone: 'muted' | 'warning' | 'error'
-}
-
-function getDueDateMeta(dueDate?: string | null): DueDateMeta {
-  if (!dueDate) {
-    return { label: '—', sub: 'មិនបានកំណត់', tone: 'muted' }
-  }
-
-  const due = new Date(dueDate)
-  const today = new Date()
-  today.setHours(0, 0, 0, 0)
-  due.setHours(0, 0, 0, 0)
-
-  if (Number.isNaN(due.getTime())) {
-    return { label: formatDate(dueDate), sub: '', tone: 'muted' }
-  }
-
-  const diffDays = Math.round((due.getTime() - today.getTime()) / 86_400_000)
-
-  if (diffDays < 0) {
-    return {
-      label: formatDate(dueDate),
-      sub: `ហួស ${Math.abs(diffDays)} ថ្ងៃ`,
-      tone: 'error',
-    }
-  }
-
-  if (diffDays === 0) {
-    return { label: formatDate(dueDate), sub: 'ត្រូវបង់ថ្ងៃនេះ', tone: 'warning' }
-  }
-
-  if (diffDays <= 7) {
-    return { label: formatDate(dueDate), sub: `នៅសល់ ${diffDays} ថ្ងៃ`, tone: 'warning' }
-  }
-
-  return { label: formatDate(dueDate), sub: `នៅសល់ ${diffDays} ថ្ងៃ`, tone: 'muted' }
-}
-
-function DueDateCell({ meta }: { meta: DueDateMeta | null }) {
-  if (!meta) return null
-
-  const toneClass =
-    meta.tone === 'error'
-      ? 'text-red-600'
-      : meta.tone === 'warning'
-        ? 'text-amber-600'
-        : 'text-muted'
-
-  return (
-    <div>
-      <p className="text-sm font-medium text-foreground">{meta.label}</p>
-      {meta.sub ? <p className={`text-xs font-medium ${toneClass}`}>{meta.sub}</p> : null}
     </div>
   )
 }

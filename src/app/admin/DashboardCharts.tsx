@@ -226,7 +226,9 @@ export function DashboardCharts({
         )}
 
         <div className="flex min-h-0 flex-1 flex-col">
-          {activeTab === 'overview' && overview}
+          {activeTab === 'overview' && (
+            <div className="flex min-h-0 flex-1 flex-col">{overview}</div>
+          )}
           {activeTab === 'portfolio' && <PortfolioPieChart data={portfolioData} />}
           {activeTab === 'savings' && <SavingsAmountChart data={savingsData} />}
           {activeTab === 'loans' && <LoanAmountChart data={loanData} />}

@@ -5,6 +5,7 @@ import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { Menu, X, Building2 } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
+import { isStaleAuthSessionError } from '@/lib/auth/session'
 
 
 export function Navbar() {
@@ -26,7 +27,13 @@ export function Navbar() {
     const supabase = createClient()
 
     const loadUser = async () => {
-      const { data } = await supabase.auth.getUser()
+      const { data, error } = await supabase.auth.getUser()
+      if (error && isStaleAuthSessionError(error)) {
+        await supabase.auth.signOut()
+        setIsAuthenticated(false)
+        setAuthResolved(true)
+        return
+      }
       setIsAuthenticated(Boolean(data.user))
       setAuthResolved(true)
     }

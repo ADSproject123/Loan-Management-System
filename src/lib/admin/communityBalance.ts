@@ -73,8 +73,11 @@ export function computeCommunityBalance(
   const savingsTotal = verifiedSavings.reduce((sum, row) => sum + Number(row.amount ?? 0), 0)
   const accruedInterest = accruedSavingInterestTotal(
     verifiedSavings.map((row) => ({
+      member_id: row.member_id,
       amount: Number(row.amount ?? 0),
-      saving_date: row.saving_date ?? row.created_at,
+      saving_date: row.saving_date,
+      verified_at: row.verified_at,
+      created_at: row.created_at,
     })),
     monthlySavingInterestRate
   )
