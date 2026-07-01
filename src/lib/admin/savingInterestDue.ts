@@ -1,4 +1,4 @@
-import { monthlySavingInterest } from '@/lib/interestCalculations'
+import { monthlySavingInterest, savingInterestStartDate } from '@/lib/interestCalculations'
 import { isVerifiedSaving } from '@/lib/loanEligibility'
 import { memberKhmerName, memberSearchText } from '@/lib/memberNames'
 import type { SavingInterestPaymentStatus } from '@/types/database'
@@ -64,6 +64,11 @@ function interestPayDateInMonth(savingDay: number, year: number, month: number) 
   return `${year}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`
 }
 
+function lastDayOfMonth(year: number, month: number) {
+  const day = new Date(year, month, 0).getDate()
+  return `${year}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`
+}
+
 function memberDisplayName(members: VerifiedSavingInterestRow['members']) {
   const member = Array.isArray(members) ? members[0] : members
   return {
@@ -79,6 +84,29 @@ function normalizeInterestPaymentStatus(status: string | undefined): SavingInter
   return 'pending'
 }
 
+type DatedDepositRow = {
+  row: VerifiedSavingInterestRow
+  start: string
+  amount: number
+}
+
+function datedDeposits(deposits: VerifiedSavingInterestRow[]): DatedDepositRow[] {
+  return deposits
+    .map((row) => ({
+      row,
+      start: savingInterestStartDate(row) ?? '',
+      amount: Number(row.amount ?? 0),
+    }))
+    .filter((entry): entry is DatedDepositRow => Boolean(entry.start) && entry.amount > 0)
+    .sort((a, b) => a.start.localeCompare(b.start))
+}
+
+function combinedBalanceThroughDate(deposits: DatedDepositRow[], throughDate: string) {
+  return deposits
+    .filter((deposit) => deposit.start <= throughDate)
+    .reduce((sum, deposit) => sum + deposit.amount, 0)
+}
+
 export function buildSavingInterestDueRowsForMonth(
   savings: VerifiedSavingInterestRow[],
   ratePercent: number,
@@ -88,83 +116,53 @@ export function buildSavingInterestDueRowsForMonth(
   payments: SavingInterestPaymentRow[] = []
 ): SavingInterestDueRow[] {
   const asOf = asOfDate.slice(0, 10)
+  const monthEnd = lastDayOfMonth(year, month)
   const paymentsByMember = payments.reduce<Record<string, SavingInterestPaymentRow>>((acc, row) => {
     if (row.period_year === year && row.period_month === month) {
       acc[row.member_id] = row
     }
     return acc
   }, {})
-  const byMember = new Map<
-    string,
-    {
-      memberId: string
-      memberName: string
-      memberSearchText: string
-      memberPhone: string | null
-      savingsBalance: number
-      interestDue: number
-      currency: string
-      interestDates: string[]
-    }
-  >()
 
+  const memberDeposits = new Map<string, VerifiedSavingInterestRow[]>()
   for (const saving of savings) {
     if (!isVerifiedSaving(saving)) continue
-
-    const startDate = saving.saving_date?.slice(0, 10) ?? null
-    if (!startDate) continue
-
-    const startParts = datePartsFromIso(startDate)
-    if (!startParts) continue
-
-    const payDate = interestPayDateInMonth(startParts.day, year, month)
-    if (startDate > payDate) continue
-
-    const amount = Number(saving.amount ?? 0)
-    if (amount <= 0) continue
-
-    const interest = monthlySavingInterest(amount, ratePercent)
-    const { name, searchText, phone } = memberDisplayName(saving.members)
-    const existing = byMember.get(saving.member_id)
-
-    if (!existing) {
-      byMember.set(saving.member_id, {
-        memberId: saving.member_id,
-        memberName: name,
-        memberSearchText: searchText,
-        memberPhone: phone,
-        savingsBalance: amount,
-        interestDue: interest,
-        currency: saving.currency ?? 'USD',
-        interestDates: [payDate],
-      })
-      continue
-    }
-
-    existing.savingsBalance += amount
-    existing.interestDue += interest
-    existing.interestDates.push(payDate)
-    if (!existing.memberPhone && phone) existing.memberPhone = phone
+    const list = memberDeposits.get(saving.member_id) ?? []
+    list.push(saving)
+    memberDeposits.set(saving.member_id, list)
   }
 
   const rows: SavingInterestDueRow[] = []
 
-  for (const group of byMember.values()) {
-    const interestDate = group.interestDates.sort()[0]
-    const payment = paymentsByMember[group.memberId]
+  for (const [memberId, deposits] of memberDeposits) {
+    const dated = datedDeposits(deposits)
+    if (dated.length === 0) continue
+
+    const firstStart = dated[0].start
+    const firstParts = datePartsFromIso(firstStart)
+    if (!firstParts) continue
+    if (firstStart > monthEnd) continue
+
+    const balance = combinedBalanceThroughDate(dated, monthEnd)
+    if (balance <= 0) continue
+
+    const payDate = interestPayDateInMonth(firstParts.day, year, month)
+    const interestDue = monthlySavingInterest(balance, ratePercent)
+    const { name, searchText, phone } = memberDisplayName(dated[0].row.members)
+    const payment = paymentsByMember[memberId]
     const status = normalizeInterestPaymentStatus(payment?.status)
-    const isOverdue = status === 'pending' && interestDate < asOf
+    const isOverdue = status === 'pending' && payDate < asOf
 
     rows.push({
       recordId: payment?.id ?? null,
-      memberId: group.memberId,
-      memberName: group.memberName,
-      memberSearchText: group.memberSearchText,
-      memberPhone: group.memberPhone,
-      savingsBalance: group.savingsBalance,
-      interestDue: group.interestDue,
-      currency: group.currency,
-      interestDate,
+      memberId,
+      memberName: name,
+      memberSearchText: searchText,
+      memberPhone: phone,
+      savingsBalance: balance,
+      interestDue,
+      currency: dated[0].row.currency ?? 'USD',
+      interestDate: payDate,
       periodYear: year,
       periodMonth: month,
       status,

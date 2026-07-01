@@ -7,7 +7,7 @@ import { createAdminClient } from '@/lib/supabase/admin'
 // survives across serverless invocations. See migration 030.
 
 export type PendingPayment =
-  | { type: 'saving' }
+  | { type: 'saving'; amount?: number; evidenceUrl?: string }
   | { type: 'loan'; loanId: string; amount: number }
 
 export type PendingLoanRequest =
@@ -29,23 +29,34 @@ async function readState<T>(chatId: string, flow: string): Promise<T | null> {
   return (data?.state as T | undefined) ?? null
 }
 
-async function writeState(chatId: string, flow: string, state: unknown): Promise<void> {
+async function writeState(chatId: string, flow: string, state: unknown): Promise<boolean> {
   const admin = createAdminClient()
-  await admin
+  const { error } = await admin
     .from('telegram_conversation_state')
     .upsert(
       { chat_id: chatId, flow, state, updated_at: new Date().toISOString() },
       { onConflict: 'chat_id,flow' }
     )
+
+  if (error) {
+    console.error('[telegramConversationState] write failed:', error.message)
+    return false
+  }
+
+  return true
 }
 
 async function clearState(chatId: string, flow: string): Promise<void> {
   const admin = createAdminClient()
-  await admin
+  const { error } = await admin
     .from('telegram_conversation_state')
     .delete()
     .eq('chat_id', chatId)
     .eq('flow', flow)
+
+  if (error) {
+    console.error('[telegramConversationState] clear failed:', error.message)
+  }
 }
 
 // Payment proof flow (/paysaving, /payloan → photo upload)

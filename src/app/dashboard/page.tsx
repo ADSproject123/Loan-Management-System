@@ -6,7 +6,7 @@ import { MemberStatusBadge } from '@/components/ui/Badge'
 import { requireMember } from '@/lib/auth/member'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { formatMoney, normalizeCurrency, predominantCurrency } from '@/lib/currency'
-import { getInterestSettings, monthlySavingInterest } from '@/lib/interest'
+import { getInterestSettings, monthlySavingInterestForCombinedSavings } from '@/lib/interest'
 import { getLoanEligibility, sumCommittedLoanPrincipal } from '@/lib/loanEligibility'
 import { toNumber } from '@/lib/utils'
 import { formatKhmerDate, formatKhmerMonthYear } from '@/lib/dates'
@@ -74,7 +74,10 @@ export default async function DashboardPage() {
   })
   const interestSettings = await getInterestSettings()
   const totalSavings = verifiedSavings.reduce((sum, saving) => sum + toNumber(saving.amount), 0)
-  const monthlyInterest = monthlySavingInterest(totalSavings, interestSettings.monthlySavingInterestRate)
+  const monthlyInterest = monthlySavingInterestForCombinedSavings(
+    verifiedSavings,
+    interestSettings.monthlySavingInterestRate
+  )
   const activeLoans = loans.filter((loan) => loan.status === 'active')
   const activeLoanAmount = activeLoans.reduce((sum, loan) => sum + toNumber(loan.amount), 0)
   const loanEligibility = getLoanEligibility(totalSavings, sumCommittedLoanPrincipal(loans))

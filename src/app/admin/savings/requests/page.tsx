@@ -4,6 +4,8 @@ import { SavingsList } from '@/app/admin/savings/SavingsList'
 import { AdminPagination } from '@/components/admin'
 import { parseAdminListParams } from '@/lib/admin/pagination'
 
+export const dynamic = 'force-dynamic'
+
 export default async function AdminSavingsRequestsPage({
   searchParams,
 }: {

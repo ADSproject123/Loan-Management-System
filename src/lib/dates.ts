@@ -60,6 +60,44 @@ export function todayIso(): string {
   return new Date().toISOString().slice(0, 10)
 }
 
+/** Whole calendar months from one YYYY-MM-DD date to another (exclusive of partial month). */
+export function calendarMonthsBetween(fromIso: string, toIso: string): number | null {
+  const from = parseDateParts(fromIso)
+  const to = parseDateParts(toIso)
+  if (!from || !to) return null
+
+  let months = (to.year - from.year) * 12 + (to.month - from.month)
+  if (to.day < from.day) months -= 1
+  return months
+}
+
+/** Signed calendar months from today to a due date (negative = overdue). */
+export function monthsUntilDueDate(dueIso: string, fromIso = todayIso()): number | null {
+  const due = parseDateParts(dueIso)
+  const from = parseDateParts(fromIso)
+  if (!due || !from) return null
+
+  const dueTime = Date.UTC(due.year, due.month - 1, due.day)
+  const fromTime = Date.UTC(from.year, from.month - 1, from.day)
+
+  if (dueTime === fromTime) return 0
+  if (dueTime < fromTime) {
+    const overdue = calendarMonthsBetween(dueIso, fromIso)
+    return overdue == null ? null : -overdue
+  }
+
+  const remaining = calendarMonthsBetween(fromIso, dueIso)
+  return remaining == null ? null : Math.max(0, remaining)
+}
+
+/** Calendar months past due (null if not overdue). */
+export function monthsOverdueSinceDueDate(dueIso: string, fromIso = todayIso()): number | null {
+  const diffMonths = monthsUntilDueDate(dueIso, fromIso)
+  if (diffMonths == null || diffMonths >= 0) return null
+  return Math.abs(diffMonths)
+}
+
+
 /** Fixed Khmer formatting — safe for SSR and client hydration. */
 export function formatKhmerDate(value?: string | null, fallback = 'មិនកំណត់') {
   if (!value) return fallback

@@ -11,11 +11,15 @@ type AdminPanelProps = {
   headerActions?: React.ReactNode
 }
 
-export function AdminPanel({ children, footer, backHref, backLabel = 'ត្រឡប់ក្រោយ', headerActions }: AdminPanelProps) {
+export function AdminPanel({ children, footer, backHref, backLabel = 'ត្រឡប់ក្រោយ', headerActions, fill }: AdminPanelProps) {
   const showToolbar = Boolean(backHref || headerActions)
 
   return (
-    <section className="flex min-h-screen w-full flex-col overflow-hidden bg-surface">
+    <section
+      className={`flex w-full flex-col overflow-hidden bg-surface ${
+        fill ? 'h-full min-h-0' : 'min-h-screen'
+      }`}
+    >
       {showToolbar && (
         <div className="flex flex-col gap-3 border-b border-border px-6 py-4 md:flex-row md:items-center md:justify-between md:px-8">
           <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:gap-4">

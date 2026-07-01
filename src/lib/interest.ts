@@ -13,12 +13,18 @@ export type InterestSettings = {
 export {
   DEFAULT_LOAN_INTEREST_RATE,
   DEFAULT_SAVING_INTEREST_RATE,
+  accruedCombinedSavingInterest,
+  accruedSavingInterestTotal,
   annotateLoanPaymentSchedule,
   buildLoanPaymentSchedule,
+  combinedSavingsBalance,
   loanRepaymentSummary,
   loanTotalOwed,
   monthlySavingInterest,
+  monthlySavingInterestForCombinedSavings,
+  nextInterestDate,
   resolveLoanInterestRate,
+  savingInterestStartDate,
 } from '@/lib/interestCalculations'
 
 export {

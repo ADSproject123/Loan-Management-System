@@ -17,6 +17,8 @@ type Props = {
   loanRemaining: number
   memberCount: number
   savingsCount: number
+  compact?: boolean
+  fillHeight?: boolean
 }
 
 function ChartTooltip({
@@ -50,6 +52,8 @@ export function CommunityBalanceCircle({
   loanRemaining,
   memberCount,
   savingsCount,
+  compact = false,
+  fillHeight = false,
 }: Props) {
   const balanceSlices: BalanceSlice[] = [
     { label: 'សន្សំ', value: savingsTotal, color: '#10b981' },
@@ -59,9 +63,24 @@ export function CommunityBalanceCircle({
 
   const hasChartData = balanceSlices.length > 0
 
+  const chartSizeClass = fillHeight
+    ? 'aspect-square h-full max-h-full w-full max-w-[min(100%,72vh)] min-h-48'
+    : compact
+      ? 'h-52 w-52 sm:h-56 sm:w-56'
+      : 'h-64 w-64 sm:h-72 sm:w-72'
+
   return (
-    <div className="flex flex-col items-center px-4 py-6 md:py-8">
-      <div className="relative mx-auto h-64 w-64 max-w-full sm:h-72 sm:w-72">
+    <div
+      className={`flex flex-col items-center px-4 ${
+        fillHeight
+          ? 'h-full min-h-0 justify-center gap-4 py-4'
+          : compact
+            ? 'h-full justify-center py-5 lg:py-6'
+            : 'py-6 md:py-8'
+      }`}
+    >
+      <div className={fillHeight ? 'flex min-h-0 w-full flex-1 items-center justify-center' : 'w-full'}>
+        <div className={`relative mx-auto max-w-full ${chartSizeClass}`}>
         {hasChartData ? (
           <ResponsiveContainer width="100%" height="100%">
             <PieChart>
@@ -92,17 +111,22 @@ export function CommunityBalanceCircle({
         <div className="pointer-events-none absolute inset-0 flex flex-col items-center justify-center px-6 text-center">
           <p className="text-xs font-semibold uppercase tracking-wide text-muted">សមតុល្យសហគមន៍សរុប</p>
           <p
-            className={`mt-1 text-2xl font-bold tabular-nums tracking-tight sm:text-3xl ${
-              netTotal < 0 ? 'text-red-600' : 'text-foreground'
-            }`}
+            className={`mt-1 font-bold tabular-nums tracking-tight ${
+              fillHeight ? 'text-3xl sm:text-4xl' : 'text-2xl sm:text-3xl'
+            } ${netTotal < 0 ? 'text-red-600' : 'text-foreground'}`}
           >
             {formatMoney(netTotal)}
           </p>
           <p className="mt-1 text-[11px] leading-snug text-muted">សន្សំ + ការប្រាក់ − កម្ជីនៅសល់</p>
         </div>
+        </div>
       </div>
 
-      <ul className="mt-6 flex w-full max-w-md flex-wrap items-center justify-center gap-x-5 gap-y-2 text-sm">
+      <ul
+        className={`shrink-0 flex w-full flex-wrap items-center justify-center gap-x-4 gap-y-2 text-sm ${
+          fillHeight ? 'mt-4 max-w-lg' : compact ? 'mt-5 max-w-xs lg:max-w-sm' : 'mt-6 max-w-md'
+        }`}
+      >
         <li className="flex items-center gap-2 text-muted">
           <span className="inline-block h-2.5 w-2.5 rounded-full bg-emerald-500" />
           សន្សំ
@@ -120,11 +144,11 @@ export function CommunityBalanceCircle({
         </li>
       </ul>
 
-      <p className="mt-4 text-center text-xs text-muted">
+      <p className={`shrink-0 text-center text-xs text-muted ${fillHeight || compact ? 'mt-3' : 'mt-4'}`}>
         សមាជិក {memberCount} នាក់ · ការសន្សំផ្ទៀងផ្ទាត់ {savingsCount} ដំណើរ
       </p>
 
-      <div className="mt-4 flex flex-wrap items-center justify-center gap-4">
+      <div className={`shrink-0 flex flex-wrap items-center justify-center gap-4 ${fillHeight || compact ? 'mt-3' : 'mt-4'}`}>
         <Link href="/admin/savings" className="text-sm font-semibold text-brand-700 hover:text-brand-900">
           មើលសន្សំ →
         </Link>

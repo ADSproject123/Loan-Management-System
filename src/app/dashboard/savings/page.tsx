@@ -7,7 +7,7 @@ import { requireMember } from '@/lib/auth/member'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { formatMoney, predominantCurrency } from '@/lib/currency'
 import { formatKhmerDate } from '@/lib/dates'
-import { getInterestSettings, monthlySavingInterest } from '@/lib/interest'
+import { getInterestSettings, monthlySavingInterestForCombinedSavings } from '@/lib/interest'
 import { toNumber } from '@/lib/utils'
 import { PiggyBank, Plus, TrendingUp, ChevronRight } from 'lucide-react'
 
@@ -37,7 +37,10 @@ export default async function SavingsPage() {
   })
   const interestSettings = await getInterestSettings()
   const totalSavings = verifiedSavings.reduce((sum, saving) => sum + toNumber(saving.amount), 0)
-  const monthlyInterest = monthlySavingInterest(totalSavings, interestSettings.monthlySavingInterestRate)
+  const monthlyInterest = monthlySavingInterestForCombinedSavings(
+    verifiedSavings,
+    interestSettings.monthlySavingInterestRate
+  )
   const displayCurrency = predominantCurrency(verifiedSavings)
 
   const statsRows: StatsRow[] = [
@@ -52,7 +55,7 @@ export default async function SavingsPage() {
       iconClass: 'bg-brand-100 text-brand-700',
       label: 'ការប្រាក់ប្រចាំខែ',
       value: formatMoney(monthlyInterest, displayCurrency),
-      meta: `${interestSettings.monthlySavingInterestRate}% ក្នុងមួយខែ`,
+      meta: `${interestSettings.monthlySavingInterestRate}% លើសមតុល្យសរុប`,
       metaClass: 'text-brand-600 font-medium',
     },
     {

@@ -2,7 +2,7 @@
 
 import { useMemo, useState } from 'react'
 import Link from 'next/link'
-import { ExternalLink, PiggyBank } from 'lucide-react'
+import { PiggyBank } from 'lucide-react'
 import { SavingStatusBadge } from '@/components/ui/Badge'
 import { SavingActions } from '@/app/admin/savings/SavingActions'
 import { formatDate, money, relatedMemberEmail, relatedMemberMatchesSearch, relatedMemberName } from '@/app/admin/adminUtils'
@@ -10,10 +10,11 @@ import type { CurrencyCode } from '@/lib/currency'
 import type { SavingStatus } from '@/types/database'
 import {
   AdminDateField,
-  AdminExternalLink,
   AdminListToolbar,
   AdminTableEmpty,
   AdminTableNoResults,
+  EvidencePreviewButton,
+  EvidencePreviewModal,
   adminTable,
   adminTableRowClass,
 } from '@/components/admin'
@@ -119,6 +120,7 @@ export function SavingsList({
   const [statusFilter, setStatusFilter] = useState('')
   const [dateFrom, setDateFrom] = useState('')
   const [dateTo, setDateTo] = useState('')
+  const [previewUrl, setPreviewUrl] = useState<string | null>(null)
 
   const filteredByStatusAndDate = useMemo(() => {
     const fromMs = dateFrom ? startOfDay(dateFrom) : null
@@ -176,6 +178,7 @@ export function SavingsList({
   }, [mode, savings, statusFilter])
 
   return (
+    <>
     <div className="flex flex-col flex-1 min-h-0">
       <AdminListToolbar
         searchValue={query}
@@ -301,9 +304,9 @@ export function SavingsList({
                     </p>
                   </td>
                   <td className={adminTable.tdMuted}>{formatDate(saving.saving_date)}</td>
-                  <td className={adminTable.td}>
+                  <td className={adminTable.td} onClick={(event) => event.stopPropagation()}>
                     {saving.evidenceSignedUrl ? (
-                      <AdminExternalLink href={saving.evidenceSignedUrl}>មើលភស្តុតាង</AdminExternalLink>
+                      <EvidencePreviewButton onClick={() => setPreviewUrl(saving.evidenceSignedUrl!)} />
                     ) : (
                       <span className={adminTable.missingText}>
                         {saving.evidence_url ? 'មិនអាចបង្ហាញ' : 'មិនមាន'}
@@ -328,6 +331,9 @@ export function SavingsList({
         </table>
       </div>
     </div>
+
+    <EvidencePreviewModal url={previewUrl} onClose={() => setPreviewUrl(null)} />
+    </>
   )
 }
 
