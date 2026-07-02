@@ -6,7 +6,7 @@ import { CalendarClock } from 'lucide-react'
 import { formatDate, money } from '@/app/admin/adminUtils'
 import { LoanDueActions } from '@/app/admin/payments/LoanDueActions'
 import { KHMER_MONTHS } from '@/lib/dates'
-import type { LoanDueThisMonthRow } from '@/lib/admin/loanRepaymentDue'
+import type { CombinedLoanDueThisMonthRow } from '@/lib/loan/memberCombinedLoans'
 import { loanDueStatusDisplay } from '@/lib/admin/repaymentStatus'
 import type { CurrencyCode } from '@/lib/currency'
 import {
@@ -22,7 +22,7 @@ export function DueThisMonthList({
   month,
   year,
 }: {
-  rows: LoanDueThisMonthRow[]
+  rows: CombinedLoanDueThisMonthRow[]
   totalCount?: number
   month: number
   year: number
@@ -55,6 +55,7 @@ export function DueThisMonthList({
             <tr className={adminTable.thRow}>
               <th className={adminTable.thFirst}>សមាជិក</th>
               <th className={adminTable.th}>ទូរស័ព្ទ</th>
+              <th className={adminTable.th}>កម្ជី</th>
               <th className={adminTable.th}>ខែ</th>
               <th className={adminTable.th}>ថ្ងៃត្រូវបង់</th>
               <th className={adminTable.th}>ចំនួនត្រូវបង់</th>
@@ -66,28 +67,31 @@ export function DueThisMonthList({
           <tbody className={adminTable.tbody}>
             {listTotal === 0 && (
               <AdminTableEmpty
-                colSpan={8}
+                colSpan={9}
                 icon={CalendarClock}
                 title={emptyTitle}
                 description={emptyDescription}
               />
             )}
-            {listTotal > 0 && rows.length === 0 && <AdminTableNoResults colSpan={8} />}
+            {listTotal > 0 && rows.length === 0 && <AdminTableNoResults colSpan={9} />}
 
             {rows.map((row) => {
               const statusDisplay = loanDueStatusDisplay(row)
 
               return (
               <tr
-                key={row.loanId}
+                key={row.memberId}
                 className={adminTableRowClass({
                   clickable: true,
                   overdue: row.isOverdue,
                 })}
-                onClick={() => router.push(`/admin/loans/${row.loanId}`)}
+                onClick={() => router.push(`/admin/members/${row.memberId}`)}
               >
                 <td className={`${adminTable.tdFirst} ${adminTable.namePrimary}`}>{row.memberName}</td>
                 <td className={adminTable.tdMuted}>{row.memberPhone ?? '—'}</td>
+                <td className={adminTable.tdMuted}>
+                  {row.loanCount === 1 ? '១ កម្ជី' : `${row.loanCount} កម្ជី`}
+                </td>
                 <td className={adminTable.tdMuted}>ខែ {row.month}</td>
                 <td className={adminTable.tdMuted}>{formatDate(row.dueDate)}</td>
                 <td className={adminTable.td}>
@@ -108,7 +112,8 @@ export function DueThisMonthList({
                 <td className={adminTable.tdLast} onClick={(event) => event.stopPropagation()}>
                   {row.dueDate ? (
                     <LoanDueActions
-                      loanId={row.loanId}
+                      loanIds={row.loanIds}
+                      breakdown={row.breakdown}
                       memberId={row.memberId}
                       periodYear={row.periodYear}
                       periodMonth={row.periodMonth}
@@ -127,8 +132,8 @@ export function DueThisMonthList({
           {rows.length > 0 && (
             <tfoot className="border-t-2 border-border bg-surface-muted/60">
               <tr>
-                <td className={`${adminTable.tdFirst} font-semibold text-foreground`} colSpan={4}>
-                  សរុប ({rows.length} កម្ជី)
+                <td className={`${adminTable.tdFirst} font-semibold text-foreground`} colSpan={5}>
+                  សរុប ({rows.length} សមាជិក)
                 </td>
                 <td className={adminTable.td}>
                   <p className={`${adminTable.amountPrimary} font-bold`}>

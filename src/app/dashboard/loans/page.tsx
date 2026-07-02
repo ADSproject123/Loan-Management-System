@@ -9,8 +9,9 @@ import { requireMember } from '@/lib/auth/member'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { formatMoney, normalizeCurrency } from '@/lib/currency'
 import { formatKhmerDate } from '@/lib/dates'
-import { getInterestSettings, loanRepaymentSummary, resolveLoanInterestRate } from '@/lib/interest'
+import { getInterestSettings } from '@/lib/interest'
 import { getLoanEligibility, sumCommittedLoanPrincipal, sumVerifiedSavings } from '@/lib/loanEligibility'
+import { buildMemberCombinedLoansContext } from '@/lib/loan/memberCombinedLoans'
 import { toNumber } from '@/lib/utils'
 import { CreditCard, Plus, FileText, AlertTriangle, ArrowRight } from 'lucide-react'
 
@@ -20,7 +21,7 @@ export default async function LoansPage() {
   const [loansResult, repaymentsResult, savingsResult] = await Promise.all([
     admin
       .from('loans')
-      .select('id, amount, currency, purpose, term_months, monthly_interest_rate, status, disbursed_at, due_date, created_at')
+      .select('id, amount, currency, purpose, term_months, monthly_interest_rate, status, start_date, disbursed_at, due_date, created_at')
       .eq('member_id', member.id)
       .order('created_at', { ascending: false }),
     admin
@@ -36,31 +37,25 @@ export default async function LoansPage() {
   const interestSettings = await getInterestSettings()
   const loans = loansResult.data ?? []
   const repayments = repaymentsResult.data ?? []
-  const paidByLoan = new Map<string, number>()
 
-  repayments
-    .filter((repayment) => repayment.status === 'verified' || repayment.status === 'completed')
-    .forEach((repayment) => {
-      paidByLoan.set(
-        repayment.loan_id,
-        (paidByLoan.get(repayment.loan_id) ?? 0) + toNumber(repayment.amount)
-      )
-    })
+  const combinedActiveLoans = buildMemberCombinedLoansContext(
+    member.id,
+    loans.map((loan) => ({ ...loan, member_id: member.id, created_at: loan.created_at })),
+    repayments,
+    interestSettings.monthlyLoanInterestRate
+  )
 
-  const activeLoan = loans.find((loan) => loan.status === 'active')
-  const activeLoanPaid = activeLoan ? paidByLoan.get(activeLoan.id) ?? 0 : 0
-  const activeLoanPrincipal = activeLoan ? toNumber(activeLoan.amount) : 0
-  const activeLoanTerm = activeLoan ? toNumber(activeLoan.term_months) || 12 : 12
-  const activeLoanRate = activeLoan
-    ? resolveLoanInterestRate(activeLoan, interestSettings.monthlyLoanInterestRate)
-    : interestSettings.monthlyLoanInterestRate
-  const activeLoanTotalOwed = activeLoan
-    ? loanRepaymentSummary(activeLoanPrincipal, activeLoanTerm, activeLoanRate).totalRepayment
-    : 0
-  const remaining = activeLoan ? Math.max(activeLoanTotalOwed - activeLoanPaid, 0) : 0
+  const activeLoanPrincipal = combinedActiveLoans?.totalPrincipal ?? 0
+  const activeLoanPaid = combinedActiveLoans?.totalPaid ?? 0
+  const activeLoanTotalOwed = combinedActiveLoans?.totalOwed ?? 0
+  const remaining = combinedActiveLoans?.totalRemaining ?? 0
+  const hasActiveLoans = Boolean(combinedActiveLoans)
+  const activeLoanCount = combinedActiveLoans?.loanCount ?? 0
   const totalSavings = sumVerifiedSavings(savingsResult.data ?? [])
   const loanEligibility = getLoanEligibility(totalSavings, sumCommittedLoanPrincipal(loans))
-  const loanCurrency = activeLoan ? normalizeCurrency(activeLoan.currency) : 'USD'
+  const loanCurrency = combinedActiveLoans
+    ? normalizeCurrency(combinedActiveLoans.currency)
+    : 'USD'
   const paidPercent = activeLoanTotalOwed > 0 ? Math.round((activeLoanPaid / activeLoanTotalOwed) * 100) : 0
 
   const statsRows: StatsRow[] = [
@@ -68,8 +63,12 @@ export default async function LoansPage() {
       icon: CreditCard,
       iconClass: 'bg-brand-100 text-brand-700',
       label: 'កម្ជីសកម្ម',
-      value: activeLoan ? formatMoney(activeLoanPrincipal, loanCurrency) : formatMoney(0, 'USD'),
-      meta: activeLoan ? `${paidPercent}% បានសង` : null,
+      value: hasActiveLoans ? formatMoney(activeLoanPrincipal, loanCurrency) : formatMoney(0, 'USD'),
+      meta: hasActiveLoans
+        ? activeLoanCount > 1
+          ? `${activeLoanCount} កម្ជី · ${paidPercent}% បានសង`
+          : `${paidPercent}% បានសង`
+        : null,
       metaClass: 'text-green-600 font-medium',
     },
     {
@@ -77,8 +76,8 @@ export default async function LoansPage() {
       iconClass: 'bg-orange-100 text-orange-700',
       label: 'នៅសល់សរុប',
       value: formatMoney(remaining, loanCurrency),
-      href: activeLoan ? '/dashboard/loans/repay' : null,
-      linkLabel: activeLoan ? 'សងកម្ជី' : null,
+      href: hasActiveLoans ? '/dashboard/loans/repay' : null,
+      linkLabel: hasActiveLoans ? 'សងកម្ជី' : null,
     },
     {
       icon: FileText,
@@ -91,7 +90,7 @@ export default async function LoansPage() {
   return (
     <div className="p-6 md:p-8 max-w-7xl mx-auto">
       <PageHeader title="កម្ជីរបស់ខ្ញុំ" subtitle="គ្រប់គ្រងពាក្យសុំកម្ជី និង ការសងវិញរបស់អ្នក">
-        {activeLoan && (
+        {hasActiveLoans && (
           <Button href="/dashboard/loans/repay" variant="outline" size="sm">
             សងកម្ជី <ArrowRight className="w-4 h-4" />
           </Button>
