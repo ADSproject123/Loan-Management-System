@@ -3,12 +3,13 @@
 import { revalidatePath } from 'next/cache'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { requireActiveMember } from '@/lib/auth/member'
-import { uploadPrivateFile } from '@/lib/uploads'
-import { MIN_SAVING_AMOUNT, normalizeCurrency, formatMoney } from '@/lib/currency'
-import { fetchMemberLoanInterestRate, getInterestSettings } from '@/lib/interest'
+import { formatMoney, MIN_SAVING_AMOUNT, normalizeCurrency } from '@/lib/currency'
+import { getInterestSettings, fetchMemberLoanInterestRate } from '@/lib/interest'
 import { fetchMemberLoanEligibility, validateLoanRequestAmount } from '@/lib/loanEligibility'
+import { allocateRepaymentAcrossLoans } from '@/lib/loan/memberCombinedLoans'
 import { notifyAdmins } from '@/lib/notifyAdmins'
 import { memberKhmerName } from '@/lib/memberNames'
+import { uploadPrivateFile } from '@/lib/uploads'
 
 export type ActionResult = {
   success: boolean
@@ -433,18 +434,39 @@ export async function repayLoan(formData: FormData): Promise<ActionResult> {
     }
 
     const admin = createAdminClient()
-    const { data: activeLoan, error: loanError } = await admin
+    const interestSettings = await getInterestSettings()
+    const { data: activeLoans, error: loanError } = await admin
       .from('loans')
-      .select('id')
+      .select('id, member_id, amount, currency, term_months, monthly_interest_rate, start_date, disbursed_at, created_at, status')
       .eq('member_id', member.id)
       .eq('status', 'active')
-      .order('created_at', { ascending: false })
-      .limit(1)
-      .maybeSingle()
+      .order('created_at', { ascending: true })
 
     if (loanError) throw loanError
-    if (!activeLoan) {
+    if (!activeLoans?.length) {
       return { success: false, error: 'រកមិនឃើញកម្ជីសកម្មសម្រាប់ការសង។' }
+    }
+
+    const { data: repayments } = await admin
+      .from('loan_repayments')
+      .select('loan_id, amount, status')
+      .eq('member_id', member.id)
+
+    const { allocations, unallocated } = allocateRepaymentAcrossLoans(
+      amount,
+      activeLoans,
+      repayments ?? [],
+      interestSettings.monthlyLoanInterestRate
+    )
+
+    if (allocations.length === 0) {
+      return { success: false, error: 'មិនមានសមតុល្យកម្ជីនៅសល់សម្រាប់ការសង។' }
+    }
+    if (unallocated > 0.01) {
+      return {
+        success: false,
+        error: `ចំនួនទឹកប្រាក់លើសសមតុល្យកម្ជីនៅសល់រួម ${formatMoney(unallocated, currency)} ។`,
+      }
     }
 
     const evidenceUrl = await uploadPrivateFile(
@@ -458,17 +480,19 @@ export async function repayLoan(formData: FormData): Promise<ActionResult> {
       return { success: false, error: 'សូមផ្ទុកភស្តុតាងបង់ប្រាក់។' }
     }
 
-    const { error } = await admin.from('loan_repayments').insert({
-      loan_id: activeLoan.id,
-      member_id: member.id,
-      amount,
-      currency,
-      evidence_url: evidenceUrl,
-      qr_code_ref: `REP-${Date.now()}`,
-      status: 'pending',
-    })
+    for (const allocation of allocations) {
+      const { error } = await admin.from('loan_repayments').insert({
+        loan_id: allocation.loanId,
+        member_id: member.id,
+        amount: allocation.amount,
+        currency,
+        evidence_url: evidenceUrl,
+        qr_code_ref: `REP-${Date.now()}-${allocation.loanId.slice(0, 8)}`,
+        status: 'pending',
+      })
 
-    if (error) throw error
+      if (error) throw error
+    }
 
     await notifyAdmins(
       'ការសងកម្ជីថ្មី',

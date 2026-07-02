@@ -2,18 +2,15 @@ import 'server-only'
 
 import { requireMember } from '@/lib/auth/member'
 import { createAdminClient } from '@/lib/supabase/admin'
-import { normalizeCurrency, type CurrencyCode } from '@/lib/currency'
-import {
-  annotateLoanPaymentSchedule,
-  buildLoanPaymentSchedule,
-  getInterestSettings,
-  loanRepaymentSummary,
-  resolveLoanInterestRate,
-} from '@/lib/interest'
+import { getInterestSettings } from '@/lib/interest'
 import type { LoanScheduleRow } from '@/lib/interestCalculations'
-import { toNumber } from '@/lib/utils'
+import { buildMemberCombinedLoansContext } from '@/lib/loan/memberCombinedLoans'
+import type { CurrencyCode } from '@/lib/currency'
 
 export type RepayContext = {
+  memberId: string
+  loanIds: string[]
+  loanCount: number
   loan: {
     id: string
     amount: number
@@ -33,61 +30,55 @@ export async function getRepayContext(): Promise<RepayContext | null> {
   const member = await requireMember()
   const admin = createAdminClient()
 
-  const [loanResult, repaymentsResult, interestSettings] = await Promise.all([
+  const [loansResult, repaymentsResult, interestSettings] = await Promise.all([
     admin
       .from('loans')
       .select(
-        'id, amount, currency, purpose, term_months, monthly_interest_rate, start_date, disbursed_at, due_date, status, created_at'
+        'id, member_id, amount, currency, purpose, term_months, monthly_interest_rate, start_date, disbursed_at, due_date, status, created_at'
       )
       .eq('member_id', member.id)
       .eq('status', 'active')
-      .order('created_at', { ascending: false })
-      .limit(1)
-      .maybeSingle(),
+      .order('created_at', { ascending: true }),
     admin.from('loan_repayments').select('loan_id, amount, status').eq('member_id', member.id),
     getInterestSettings(),
   ])
 
-  const loan = loanResult.data
-  if (!loan) return null
+  const loans = loansResult.data ?? []
+  if (loans.length === 0) return null
 
-  const repayments = repaymentsResult.data ?? []
-  const loanRepayments = repayments.filter((repayment) => repayment.loan_id === loan.id)
-  const paid = loanRepayments
-    .filter((repayment) => repayment.status === 'verified' || repayment.status === 'completed')
-    .reduce((sum, repayment) => sum + toNumber(repayment.amount), 0)
-  const pending = loanRepayments
-    .filter((repayment) => repayment.status === 'pending')
-    .reduce((sum, repayment) => sum + toNumber(repayment.amount), 0)
-
-  const amount = toNumber(loan.amount)
-  const termMonths = toNumber(loan.term_months) || 12
-  const loanRate = resolveLoanInterestRate(loan, interestSettings.monthlyLoanInterestRate)
-  const summary = loanRepaymentSummary(amount, termMonths, loanRate)
-  const totalOwed = summary.totalRepayment
-  const remaining = Math.max(totalOwed - paid, 0)
-  const scheduleStart =
-    loan.disbursed_at?.slice(0, 10) ?? loan.start_date ?? loan.created_at?.slice(0, 10) ?? null
-  const paymentSchedule = annotateLoanPaymentSchedule(
-    buildLoanPaymentSchedule(amount, termMonths, loanRate, scheduleStart),
-    paid,
-    new Date(),
-    pending
+  const combined = buildMemberCombinedLoansContext(
+    member.id,
+    loans,
+    repaymentsResult.data ?? [],
+    interestSettings.monthlyLoanInterestRate
   )
 
+  if (!combined) return null
+
+  const primaryLoan = combined.loans[0]
+  const totalTermMonths = combined.loans.reduce((max, snapshot) => {
+    return Math.max(max, snapshot.schedule.length)
+  }, 0)
+
   return {
+    memberId: member.id,
+    loanIds: combined.loanIds,
+    loanCount: combined.loanCount,
     loan: {
-      id: loan.id,
-      amount,
-      currency: normalizeCurrency(loan.currency),
-      purpose: loan.purpose ?? '',
-      term_months: termMonths,
-      due_date: loan.due_date ?? null,
+      id: primaryLoan.loanId,
+      amount: combined.totalPrincipal,
+      currency: combined.currency as CurrencyCode,
+      purpose: combined.purposeLabel,
+      term_months: totalTermMonths,
+      due_date: combined.earliestDueDate,
     },
-    paid,
-    remaining,
-    totalOwed,
-    monthlyPayment: Math.round(summary.monthlyPayment),
-    paymentSchedule,
+    paid: combined.totalPaid,
+    remaining: combined.totalRemaining,
+    totalOwed: combined.totalOwed,
+    monthlyPayment: Math.round(combined.combinedMonthlyPayment),
+    paymentSchedule: combined.paymentSchedule.map((row, index) => ({
+      ...row,
+      month: index + 1,
+    })),
   }
 }

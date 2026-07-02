@@ -13,6 +13,7 @@ import {
   type LoanDuePaymentRow,
   type LoanRepaymentAmountRow,
 } from '@/lib/admin/loanRepaymentDue'
+import { aggregateLoanDueRowsByMember } from '@/lib/loan/memberCombinedLoans'
 import { KHMER_MONTHS } from '@/lib/dates'
 import type { CurrencyCode } from '@/lib/currency'
 
@@ -38,7 +39,7 @@ const TABS = [
 ]
 
 function filterDueRows(
-  rows: ReturnType<typeof buildLoanDueRowsForMonth>,
+  rows: ReturnType<typeof aggregateLoanDueRowsByMember>,
   query: string
 ) {
   const q = query.trim().toLowerCase()
@@ -84,14 +85,16 @@ export function RepaymentsTabs({
 
   const dueRows = useMemo(
     () =>
-      buildLoanDueRowsForMonth(
-        activeLoans,
-        loanRepayments,
-        monthlyLoanInterestRate,
-        currentYear,
-        selectedMonth,
-        asOfDate,
-        loanDuePayments
+      aggregateLoanDueRowsByMember(
+        buildLoanDueRowsForMonth(
+          activeLoans,
+          loanRepayments,
+          monthlyLoanInterestRate,
+          currentYear,
+          selectedMonth,
+          asOfDate,
+          loanDuePayments
+        )
       ),
     [
       activeLoans,

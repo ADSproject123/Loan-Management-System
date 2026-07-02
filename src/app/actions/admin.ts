@@ -707,6 +707,8 @@ export async function updateLoanDueStatus(formData: FormData): Promise<ActionRes
   try {
     const approver = await requireAdmin()
     const loanId = (formData.get('loan_id') as string | null)?.trim() ?? ''
+    const loanIdsRaw = (formData.get('loan_ids') as string | null)?.trim() ?? ''
+    const breakdownRaw = (formData.get('loan_breakdown') as string | null)?.trim() ?? ''
     const memberId = (formData.get('member_id') as string | null)?.trim() ?? ''
     const year = Number(formData.get('year'))
     const month = Number(formData.get('month'))
@@ -717,7 +719,51 @@ export async function updateLoanDueStatus(formData: FormData): Promise<ActionRes
     const dueDate = (formData.get('due_date') as string | null)?.trim() ?? ''
     const status = (formData.get('status') as string | null)?.trim() ?? ''
 
-    if (!loanId || !memberId) {
+    type DueBreakdownItem = {
+      loanId: string
+      scheduleMonth: number
+      dueAmount: number
+      dueInterest: number
+      dueDate: string | null
+    }
+
+    let breakdown: DueBreakdownItem[] = []
+    if (breakdownRaw) {
+      try {
+        const parsed = JSON.parse(breakdownRaw) as DueBreakdownItem[]
+        if (Array.isArray(parsed)) breakdown = parsed
+      } catch {
+        breakdown = []
+      }
+    }
+
+    if (breakdown.length === 0 && loanId) {
+      breakdown = [
+        {
+          loanId,
+          scheduleMonth,
+          dueAmount: amount,
+          dueInterest: interestAmount,
+          dueDate,
+        },
+      ]
+    }
+
+    if (breakdown.length === 0 && loanIdsRaw) {
+      breakdown = loanIdsRaw
+        .split(',')
+        .map((id) => id.trim())
+        .filter(Boolean)
+        .map((id) => ({
+          loanId: id,
+          scheduleMonth,
+          dueAmount: amount,
+          dueInterest: interestAmount,
+          dueDate,
+        }))
+    }
+
+    if (breakdown.length === 0 || !memberId) {
       return { success: false, error: 'បាត់លេខសម្គាល់កម្ជី ឬសមាជិក។' }
     }
     if (!Number.isFinite(year) || !Number.isFinite(month) || month < 1 || month > 12) {
@@ -728,12 +774,6 @@ export async function updateLoanDueStatus(formData: FormData): Promise<ActionRes
     }
     if (!Number.isFinite(amount) || amount <= 0) {
       return { success: false, error: 'ចំនួនត្រូវបង់មិនត្រឹមត្រូវ។' }
-    }
-    if (!Number.isFinite(interestAmount) || interestAmount < 0) {
-      return { success: false, error: 'ចំនួនការប្រាក់មិនត្រឹមត្រូវ។' }
-    }
-    if (!dueDate) {
-      return { success: false, error: 'បាត់ថ្ងៃត្រូវបង់។' }
     }
     if (!LOAN_DUE_STATUSES.includes(status as (typeof LOAN_DUE_STATUSES)[number])) {
       return { success: false, error: 'ស្ថានភាពមិនត្រឹមត្រូវ។' }
@@ -746,34 +786,39 @@ export async function updateLoanDueStatus(formData: FormData): Promise<ActionRes
         ? { verified_by: approver.id, verified_at: new Date().toISOString() }
         : { verified_by: null, verified_at: null }
 
-    const { data, error } = await admin
-      .from('loan_due_payments')
-      .upsert(
+    let lastLoanId = breakdown[0]?.loanId ?? ''
+    for (const item of breakdown) {
+      if (!item.loanId || !Number.isFinite(item.dueAmount) || item.dueAmount <= 0) continue
+      if (!item.dueDate) {
+        return { success: false, error: 'បាត់ថ្ងៃត្រូវបង់។' }
+      }
+
+      const { error } = await admin.from('loan_due_payments').upsert(
         {
-          loan_id: loanId,
+          loan_id: item.loanId,
           member_id: memberId,
           period_year: year,
           period_month: month,
-          schedule_month: scheduleMonth,
-          amount,
-          interest_amount: interestAmount,
+          schedule_month: item.scheduleMonth,
+          amount: item.dueAmount,
+          interest_amount: item.dueInterest,
           currency,
-          due_date: dueDate,
+          due_date: item.dueDate,
           status: nextStatus,
           ...verifiedFields,
         },
         { onConflict: 'loan_id,period_year,period_month' }
       )
-      .select('member_id, loan_id, amount, currency, status')
-      .single()
 
-    if (error) throw error
+      if (error) throw error
+      lastLoanId = item.loanId
+    }
 
     if (nextStatus === 'completed') {
       await notify(
-        data.member_id,
+        memberId,
         'ការសងកម្ជីត្រូវបានទទួល',
-        `ការសងកម្ជីរបស់អ្នកចំនួន ${formatMoney(data.amount, data.currency ?? 'USD')} ត្រូវបានទទួល។`
+        `ការសងកម្ជីរបស់អ្នកចំនួន ${formatMoney(amount, currency)} ត្រូវបានទទួល។`
       )
     }
 
@@ -782,8 +827,8 @@ export async function updateLoanDueStatus(formData: FormData): Promise<ActionRes
     revalidatePath('/admin/loans/payments/requests')
     revalidatePath('/admin/payments')
     revalidatePath('/admin/payments/requests')
-    revalidatePath(`/admin/loans/${data.loan_id}`)
-    revalidatePath(`/admin/members/${data.member_id}`)
+    if (lastLoanId) revalidatePath(`/admin/loans/${lastLoanId}`)
+    revalidatePath(`/admin/members/${memberId}`)
     revalidatePath('/dashboard')
     revalidatePath('/dashboard/loans')
     return { success: true }

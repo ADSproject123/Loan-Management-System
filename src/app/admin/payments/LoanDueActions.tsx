@@ -18,7 +18,8 @@ const STATUS_ACTIONS: {
 ]
 
 export function LoanDueActions({
-  loanId,
+  loanIds,
+  breakdown,
   memberId,
   periodYear,
   periodMonth,
@@ -29,7 +30,14 @@ export function LoanDueActions({
   dueDate,
   status,
 }: {
-  loanId: string
+  loanIds: string[]
+  breakdown: {
+    loanId: string
+    scheduleMonth: number
+    dueAmount: number
+    dueInterest: number
+    dueDate: string | null
+  }[]
   memberId: string
   periodYear: number
   periodMonth: number
@@ -47,7 +55,8 @@ export function LoanDueActions({
     if (next === status || pending) return
 
     const formData = new FormData()
-    formData.set('loan_id', loanId)
+    formData.set('loan_ids', loanIds.join(','))
+    formData.set('loan_breakdown', JSON.stringify(breakdown))
     formData.set('member_id', memberId)
     formData.set('year', String(periodYear))
     formData.set('month', String(periodMonth))
