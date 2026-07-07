@@ -8,6 +8,7 @@ import { formatMoney, MIN_SAVING_AMOUNT, normalizeCurrency } from '@/lib/currenc
 import { fetchMemberLoanInterestRate, getInterestSettings } from '@/lib/interest'
 import { fetchMemberLoanEligibility, validateLoanRequestAmount } from '@/lib/loanEligibility'
 import { sendTelegramMessage } from '@/lib/telegram'
+import { formatTelegramNotification, tgMemberUpdateBody } from '@/lib/telegramMessages'
 import { uploadPrivateFile } from '@/lib/uploads'
 import { addMonths, todayIso } from '@/lib/dates'
 import type { LoanDuePaymentStatus, SavingInterestPaymentStatus, SavingStatus } from '@/types/database'
@@ -43,7 +44,7 @@ async function notify(memberId: string, title: string, message: string) {
     .maybeSingle()
 
   if (member?.telegram_chat_id) {
-    await sendTelegramMessage(member.telegram_chat_id, `<b>${title}</b>\n${message}`)
+    await sendTelegramMessage(member.telegram_chat_id, formatTelegramNotification(title, message))
   }
 }
 
@@ -106,7 +107,10 @@ export async function updateMemberRole(formData: FormData): Promise<ActionResult
     await notify(
       id,
       'តួនាទីត្រូវបានធ្វើបច្ចុប្បន្នភាព',
-      `តួនាទីរបស់អ្នកត្រូវបានកំណត់ជា ${MEMBER_ROLE_LABELS[role]}។`
+      tgMemberUpdateBody({
+        fields: [{ label: 'តួនាទី', value: MEMBER_ROLE_LABELS[role] }],
+        message: 'តួនាទីរបស់អ្នកត្រូវបានអ្នកគ្រប់គ្រងធ្វើបច្ចុប្បន្នភាព។',
+      })
     )
     revalidatePath('/admin/members')
     revalidatePath(`/admin/members/${id}`)
@@ -242,7 +246,10 @@ export async function updateMemberProfile(formData: FormData): Promise<ActionRes
       await notify(
         id,
         'តួនាទីត្រូវបានធ្វើបច្ចុប្បន្នភាព',
-        `តួនាទីរបស់អ្នកត្រូវបានកំណត់ជា ${MEMBER_ROLE_LABELS[role]}។`
+        tgMemberUpdateBody({
+          fields: [{ label: 'តួនាទី', value: MEMBER_ROLE_LABELS[role] }],
+          message: 'តួនាទីរបស់អ្នកត្រូវបានអ្នកគ្រប់គ្រងធ្វើបច្ចុប្បន្នភាព។',
+        })
       )
     } else {
       await notify(id, 'ព័ត៌មានត្រូវបានធ្វើបច្ចុប្បន្នភាព', 'ព័ត៌មានផ្ទាល់ខ្លួនរបស់អ្នកត្រូវបានអ្នកគ្រប់គ្រងធ្វើបច្ចុប្បន្នភាព។')
@@ -394,7 +401,10 @@ export async function suspendMember(formData: FormData): Promise<ActionResult> {
     await notify(
       data.id,
       'គណនីត្រូវបានផ្អាក',
-      `គណនីរបស់អ្នកត្រូវបានផ្អាក។ មូលហេតុ៖ ${trimmedReason}`
+      tgMemberUpdateBody({
+        message: 'គណនីរបស់អ្នកត្រូវបានផ្អាក។',
+        reason: trimmedReason,
+      })
     )
 
     revalidatePath('/admin')
@@ -434,7 +444,10 @@ export async function denyMember(formData: FormData): Promise<ActionResult> {
     await notify(
       data.id,
       'ការចុះឈ្មោះត្រូវបានបដិសេធ',
-      `ការចុះឈ្មោះរបស់អ្នកមិនត្រូវបានទទួលយកទេ។ មូលហេតុ៖ ${trimmedReason}`
+      tgMemberUpdateBody({
+        message: 'ការចុះឈ្មោះរបស់អ្នកមិនត្រូវបានទទួលយកទេ។',
+        reason: trimmedReason,
+      })
     )
 
     revalidatePath('/admin')
@@ -535,7 +548,10 @@ export async function deleteMember(formData: FormData): Promise<ActionResult> {
     if (target.telegram_chat_id) {
       await sendTelegramMessage(
         target.telegram_chat_id,
-        '<b>គណនីត្រូវបានលុប</b>\nគណនីសមាជិករបស់អ្នកត្រូវបានលុបចេញពីប្រព័ន្ធដោយអ្នកគ្រប់គ្រង។'
+        formatTelegramNotification(
+          'គណនីត្រូវបានលុប',
+          'គណនីសមាជិករបស់អ្នកត្រូវបានលុបចេញពីប្រព័ន្ធដោយអ្នកគ្រប់គ្រង។'
+        )
       )
     }
 
@@ -574,7 +590,10 @@ export async function approveSaving(formData: FormData): Promise<ActionResult> {
     await notify(
       data.member_id,
       'ការសន្សំត្រូវបានទទួល',
-      `ការសន្សំរបស់អ្នកចំនួន ${formatMoney(data.amount, data.currency ?? 'USD')} ត្រូវបានទទួលដោយជោគជ័យ។`
+      tgMemberUpdateBody({
+        fields: [{ label: 'ចំនួន', value: formatMoney(data.amount, data.currency ?? 'USD') }],
+        message: 'ការសន្សំរបស់អ្នកត្រូវបានទទួលដោយជោគជ័យ។',
+      })
     )
     revalidatePath('/admin')
     revalidatePath('/admin/savings')
@@ -627,7 +646,11 @@ export async function refundSaving(formData: FormData): Promise<ActionResult> {
     await notify(
       data.member_id,
       'ការសន្សំត្រូវបានសងប្រាក់វិញ',
-      `ការសន្សំចំនួន ${formatMoney(data.amount, data.currency ?? 'USD')} ត្រូវបានសងប្រាក់វិញ។ មូលហេតុ៖ ${trimmedReason}`
+      tgMemberUpdateBody({
+        fields: [{ label: 'ចំនួន', value: formatMoney(data.amount, data.currency ?? 'USD') }],
+        message: 'ការសន្សំរបស់អ្នកត្រូវបានសងប្រាក់វិញ។',
+        reason: trimmedReason,
+      })
     )
     revalidatePath('/admin')
     revalidatePath('/admin/savings')
@@ -681,7 +704,10 @@ export async function updateRepaymentStatus(formData: FormData): Promise<ActionR
       await notify(
         data.member_id,
         'ការសងត្រូវបានទទួល',
-        `ការសងរបស់អ្នកចំនួន ${formatMoney(data.amount, data.currency ?? 'USD')} ត្រូវបានទទួល។`
+        tgMemberUpdateBody({
+          fields: [{ label: 'ចំនួន', value: formatMoney(data.amount, data.currency ?? 'USD') }],
+          message: 'ការសងរបស់អ្នកត្រូវបានទទួល។',
+        })
       )
     }
 
@@ -818,7 +844,10 @@ export async function updateLoanDueStatus(formData: FormData): Promise<ActionRes
       await notify(
         memberId,
         'ការសងកម្ជីត្រូវបានទទួល',
-        `ការសងកម្ជីរបស់អ្នកចំនួន ${formatMoney(amount, currency)} ត្រូវបានទទួល។`
+        tgMemberUpdateBody({
+          fields: [{ label: 'ចំនួន', value: formatMoney(amount, currency) }],
+          message: 'ការសងកម្ជីរបស់អ្នកត្រូវបានទទួល។',
+        })
       )
     }
 
@@ -898,13 +927,19 @@ export async function updateSavingInterestStatus(formData: FormData): Promise<Ac
       await notify(
         data.member_id,
         'ការប្រាក់សន្សំត្រូវបានបង់',
-        `ការប្រាក់សន្សំរបស់អ្នកចំនួន ${formatMoney(data.amount, data.currency ?? 'USD')} ត្រូវបានបង់។`
+        tgMemberUpdateBody({
+          fields: [{ label: 'ចំនួន', value: formatMoney(data.amount, data.currency ?? 'USD') }],
+          message: 'ការប្រាក់សន្សំរបស់អ្នកត្រូវបានបង់។',
+        })
       )
     } else if (nextStatus === 'rejected') {
       await notify(
         data.member_id,
         'ការប្រាក់សន្សំត្រូវបានបដិសេធ',
-        `ការប្រាក់សន្សំចំនួន ${formatMoney(data.amount, data.currency ?? 'USD')} ត្រូវបានបដិសេធ។`
+        tgMemberUpdateBody({
+          fields: [{ label: 'ចំនួន', value: formatMoney(data.amount, data.currency ?? 'USD') }],
+          message: 'ការប្រាក់សន្សំរបស់អ្នកត្រូវបានបដិសេធ។',
+        })
       )
     }
 
@@ -935,7 +970,14 @@ export async function verifyRepayment(formData: FormData): Promise<ActionResult>
       .single()
 
     if (error) throw error
-    await notify(data.member_id, 'ការសងត្រូវបានទទួល', `ការសងរបស់អ្នកចំនួន ${formatMoney(data.amount, data.currency ?? 'USD')} ត្រូវបានទទួល។`)
+    await notify(
+      data.member_id,
+      'ការសងត្រូវបានទទួល',
+      tgMemberUpdateBody({
+        fields: [{ label: 'ចំនួន', value: formatMoney(data.amount, data.currency ?? 'USD') }],
+        message: 'ការសងរបស់អ្នកត្រូវបានទទួល។',
+      })
+    )
     revalidatePath('/admin')
     revalidatePath('/admin/loans/payments')
     revalidatePath('/admin/loans/payments/requests')
@@ -962,7 +1004,14 @@ export async function approveLoan(formData: FormData): Promise<ActionResult> {
       .single()
 
     if (error) throw error
-    await notify(data.member_id, 'កម្ជីត្រូវបានទទួលយក', `ការស្នើសុំកម្ជីរបស់អ្នកចំនួន ${formatMoney(data.amount, data.currency ?? 'USD')} ត្រូវបានទទួលយក។ សូមដាក់ស្នើឯកសារច្បាប់ដើមមុនការបើកប្រាក់។`)
+    await notify(
+      data.member_id,
+      'កម្ជីត្រូវបានទទួលយក',
+      tgMemberUpdateBody({
+        fields: [{ label: 'ចំនួន', value: formatMoney(data.amount, data.currency ?? 'USD') }],
+        message: 'ការស្នើសុំកម្ជីរបស់អ្នកត្រូវបានទទួលយក។ សូមដាក់ស្នើឯកសារច្បាប់ដើមមុនការបើកប្រាក់។',
+      })
+    )
     revalidatePath('/admin')
     revalidatePath('/admin/loans')
     revalidatePath('/admin/loans/requests')
@@ -1010,7 +1059,14 @@ export async function activateLoan(formData: FormData): Promise<ActionResult> {
       .single()
 
     if (error) throw error
-    await notify(data.member_id, 'កម្ជីត្រូវបានបើក', `កម្ជីរបស់អ្នកចំនួន ${formatMoney(data.amount, data.currency ?? 'USD')} ត្រូវបានសម្គាល់ថាសកម្ម។`)
+    await notify(
+      data.member_id,
+      'កម្ជីត្រូវបានបើក',
+      tgMemberUpdateBody({
+        fields: [{ label: 'ចំនួន', value: formatMoney(data.amount, data.currency ?? 'USD') }],
+        message: 'កម្ជីរបស់អ្នកត្រូវបានសម្គាល់ថាសកម្ម។',
+      })
+    )
     revalidatePath('/admin')
     revalidatePath('/admin/loans')
     revalidatePath('/admin/loans/requests')
@@ -1048,7 +1104,10 @@ export async function rejectLoan(formData: FormData): Promise<ActionResult> {
     await notify(
       data.member_id,
       'កម្ជីត្រូវបានបដិសេធ',
-      `ការស្នើសុំកម្ជីរបស់អ្នកមិនត្រូវបានទទួលយកទេ។ មូលហេតុ៖ ${trimmedReason}`
+      tgMemberUpdateBody({
+        message: 'ការស្នើសុំកម្ជីរបស់អ្នកមិនត្រូវបានទទួលយកទេ។',
+        reason: trimmedReason,
+      })
     )
     revalidatePath('/admin')
     revalidatePath('/admin/loans')
@@ -1138,7 +1197,14 @@ export async function adminCreateCapitalRequest(formData: FormData): Promise<Act
     if (error) throw error
 
     const label = `${formatMoney(amount, currency)}`
-    await notify(memberId, 'ការដកដើមទុន', `អ្នកគ្រប់គ្រងបានដំណើរការការដកដើមទុនចំនួន ${label} ។`)
+    await notify(
+      memberId,
+      'ការដកដើមទុន',
+      tgMemberUpdateBody({
+        fields: [{ label: 'ចំនួន', value: label }],
+        message: 'អ្នកគ្រប់គ្រងបានដំណើរការការដកដើមទុនរបស់អ្នក។',
+      })
+    )
 
     revalidatePath('/admin')
     revalidatePath(`/admin/members/${memberId}`)
@@ -1559,7 +1625,10 @@ export async function addSavingByAdmin(formData: FormData): Promise<ActionResult
     await notify(
       memberId,
       'ការសន្សំត្រូវបានបន្ថែម',
-      `ការសន្សំចំនួន ${formatMoney(amount, currency)} ត្រូវបានបន្ថែមដោយអ្នកគ្រប់គ្រង។`
+      tgMemberUpdateBody({
+        fields: [{ label: 'ចំនួន', value: formatMoney(amount, currency) }],
+        message: 'ការសន្សំត្រូវបានបន្ថែមដោយអ្នកគ្រប់គ្រង។',
+      })
     )
     revalidateMemberFinancialPaths(memberId)
     return { success: true }
@@ -1673,9 +1742,12 @@ export async function addLoanByAdmin(formData: FormData): Promise<ActionResult> 
     await notify(
       memberId,
       autoApprove ? 'កម្ជីត្រូវបានបន្ថែម និងទទួលយក' : 'កម្ជីត្រូវបានបន្ថែម',
-      autoApprove
-        ? `កម្ជីចំនួន ${formatMoney(amount, currency)} ត្រូវបានបន្ថែម និងទទួលយកដោយអ្នកគ្រប់គ្រង។`
-        : `កម្ជីចំនួន ${formatMoney(amount, currency)} ត្រូវបានបន្ថែមដោយអ្នកគ្រប់គ្រង។`
+      tgMemberUpdateBody({
+        fields: [{ label: 'ចំនួន', value: formatMoney(amount, currency) }],
+        message: autoApprove
+          ? 'កម្ជីត្រូវបានបន្ថែម និងទទួលយកដោយអ្នកគ្រប់គ្រង។'
+          : 'កម្ជីត្រូវបានបន្ថែមដោយអ្នកគ្រប់គ្រង។',
+      })
     )
     revalidateMemberFinancialPaths(memberId)
     return { success: true }

@@ -277,6 +277,7 @@ export function LoanDetailView({
                     <p className="text-sm text-muted">មិនទាន់មានការសងកម្ជីទេ។</p>
                   ) : (
                     <div className={adminTable.wrap}>
+                      <div className={adminTable.scroll}>
                       <table className={adminTable.table}>
                         <thead className={adminTable.thead}>
                           <tr className={adminTable.thRow}>
@@ -301,6 +302,7 @@ export function LoanDetailView({
                           ))}
                         </tbody>
                       </table>
+                      </div>
                     </div>
                   )
                 )}
@@ -313,7 +315,7 @@ export function LoanDetailView({
                         {item.done ? (
                           <CheckCircle2 className="mt-0.5 h-5 w-5 shrink-0 text-emerald-600" />
                         ) : (
-                          <XCircle className="mt-0.5 h-5 w-5 shrink-0 text-slate-300" />
+                          <XCircle className="mt-0.5 h-5 w-5 shrink-0 text-foreground" />
                         )}
                         <div className="min-w-0">
                           <p className={`text-sm font-medium ${item.done ? 'text-foreground' : 'text-muted'}`}>

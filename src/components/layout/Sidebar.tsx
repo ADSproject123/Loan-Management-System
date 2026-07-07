@@ -79,7 +79,7 @@ export function Sidebar({ memberName = 'សមាជិក', telegramLinked = tr
             <Building2 className="h-5 w-5" />
           </span>
           <div className="min-w-0">
-            <p className="truncate text-lg font-bold leading-tight">សន្សំ</p>
+            <p className="font-heading truncate text-lg font-bold leading-tight">សន្សំ</p>
             <p className="truncate text-xs font-medium text-brand-200/90">{memberName}</p>
           </div>
         </Link>

@@ -78,13 +78,13 @@ export function AddSavingForm({ monthlySavingInterestRate }: { monthlySavingInte
       <div className="mb-6">
         <Link
           href="/dashboard/savings"
-          className="inline-flex items-center gap-2 text-gray-500 hover:text-gray-700 text-sm mb-4 transition-colors"
+          className="inline-flex items-center gap-2 text-foreground hover:text-foreground text-sm mb-4 transition-colors"
         >
           <ArrowLeft className="w-4 h-4" />
           ត្រឡប់ក្រោយ
         </Link>
         <h1 className="text-2xl font-bold text-gray-900">ស្នើសុំការសន្សំ</h1>
-        <p className="text-gray-500 text-sm mt-1">បន្ថែមការបរិច្ចាគសន្សំប្រចាំខែរបស់អ្នក</p>
+        <p className="text-foreground text-sm mt-1">បន្ថែមការបរិច្ចាគសន្សំប្រចាំខែរបស់អ្នក</p>
       </div>
 
       <div className="mb-8">
@@ -99,14 +99,14 @@ export function AddSavingForm({ monthlySavingInterestRate }: { monthlySavingInte
             </div>
             <div>
               <h2 className="font-semibold text-gray-900">បញ្ចូលចំនួនទឹកប្រាក់សន្សំ</h2>
-              <p className="text-gray-500 text-sm">តើអ្នកចង់សន្សំប៉ុន្មានក្នុងខែនេះ?</p>
+              <p className="text-foreground text-sm">តើអ្នកចង់សន្សំប៉ុន្មានក្នុងខែនេះ?</p>
             </div>
           </div>
 
           <div className="mb-5">
-            <label className="block text-sm font-medium text-gray-700 mb-2">ចំនួនទឹកប្រាក់ (USD)</label>
+            <label className="block text-sm font-medium text-foreground mb-2">ចំនួនទឹកប្រាក់ (USD)</label>
             <div className="relative">
-              <span className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500 font-medium">{currencySymbol()}</span>
+              <span className="absolute left-4 top-1/2 -translate-y-1/2 text-foreground font-medium">{currencySymbol()}</span>
               <input
                 type="number"
                 value={amount}
@@ -121,7 +121,7 @@ export function AddSavingForm({ monthlySavingInterestRate }: { monthlySavingInte
           </div>
 
           <div className="mb-6">
-            <label className="block text-sm font-medium text-gray-700 mb-2">កំណត់ចំណាំ </label>
+            <label className="block text-sm font-medium text-foreground mb-2">កំណត់ចំណាំ </label>
             <textarea
               value={notes}
               onChange={(e) => setNotes(e.target.value)}
@@ -159,7 +159,7 @@ export function AddSavingForm({ monthlySavingInterestRate }: { monthlySavingInte
             </div>
             <div>
               <h2 className="font-semibold text-gray-900">ស្កេន KHQR ដើម្បីបង់ប្រាក់</h2>
-              <p className="text-gray-500 text-sm">ស្កេនជាមួយកម្មវិធីធនាគារដែលគាំទ្រ KHQR</p>
+              <p className="text-foreground text-sm">ស្កេនជាមួយកម្មវិធីធនាគារដែលគាំទ្រ KHQR</p>
             </div>
           </div>
 
@@ -181,18 +181,18 @@ export function AddSavingForm({ monthlySavingInterestRate }: { monthlySavingInte
           </div>
 
           <div className="mb-6">
-            <p className="text-sm font-medium text-gray-700 mb-2">ផ្ទុកភស្តុតាងបង់ប្រាក់</p>
+            <p className="text-sm font-medium text-foreground mb-2">ផ្ទុកភស្តុតាងបង់ប្រាក់</p>
             <label className="flex flex-col items-center justify-center w-full h-40 border-2 border-dashed border-gray-300 rounded-xl cursor-pointer hover:border-brand-500 hover:bg-brand-50 transition-colors">
-              <Upload className="w-10 h-10 text-gray-400 mb-3" />
+              <Upload className="w-10 h-10 text-foreground mb-3" />
               {evidence ? (
                 <div className="text-center">
                   <p className="text-sm font-medium text-brand-700">{evidence.name}</p>
-                  <p className="text-xs text-gray-400 mt-1">ចុចដើម្បីប្តូរឯកសារ</p>
+                  <p className="text-xs text-foreground mt-1">ចុចដើម្បីប្តូរឯកសារ</p>
                 </div>
               ) : (
                 <>
-                  <p className="text-sm font-medium text-gray-600">ចុចដើម្បីផ្ទុកភស្តុតាង</p>
-                  <p className="text-xs text-gray-400 mt-1">JPG, PNG ឬ PDF អតិបរមា ១០ មេកាបៃ</p>
+                  <p className="text-sm font-medium text-foreground">ចុចដើម្បីផ្ទុកភស្តុតាង</p>
+                  <p className="text-xs text-foreground mt-1">JPG, PNG ឬ PDF អតិបរមា ១០ មេកាបៃ</p>
                 </>
               )}
               <input
@@ -206,13 +206,13 @@ export function AddSavingForm({ monthlySavingInterestRate }: { monthlySavingInte
 
           <div className="bg-gray-50 rounded-lg p-4 mb-6">
             <div className="flex justify-between items-center text-sm">
-              <span className="text-gray-500">ចំនួនទឹកប្រាក់សន្សំ</span>
+              <span className="text-foreground">ចំនួនទឹកប្រាក់សន្សំ</span>
               <span className="font-semibold text-gray-900">{formatMoney(parsedAmount, currency)}</span>
             </div>
             {notes && (
               <div className="flex justify-between items-center text-sm mt-1">
-                <span className="text-gray-500">កំណត់ចំណាំ</span>
-                <span className="text-gray-700">{notes}</span>
+                <span className="text-foreground">កំណត់ចំណាំ</span>
+                <span className="text-foreground">{notes}</span>
               </div>
             )}
           </div>
@@ -238,10 +238,10 @@ export function AddSavingForm({ monthlySavingInterestRate }: { monthlySavingInte
             <h2 className="text-2xl font-bold text-gray-900 mb-2">
               ការសន្សំបានដាក់ស្នើ!
             </h2>
-            <p className="text-gray-600 mb-2">
+            <p className="text-foreground mb-2">
               ការសន្សំរបស់អ្នកចំនួន <strong>{formatMoney(parsedAmount, currency)}</strong> ត្រូវបានដាក់ស្នើដោយជោគជ័យ។
             </p>
-            <p className="text-gray-500 text-sm mb-6">
+            <p className="text-foreground text-sm mb-6">
               អ្នកគ្រប់គ្រងនឹងទទួលភស្តុតាងបង់ប្រាក់របស់អ្នកក្នុងរយៈពេល ២៤ ម៉ោង។
               សមតុល្យរបស់អ្នកនឹងត្រូវបានធ្វើបច្ចុប្បន្នភាពនៅពេលទទួល។
             </p>
@@ -273,7 +273,7 @@ export function AddSavingForm({ monthlySavingInterestRate }: { monthlySavingInte
               </Link>
               <Link
                 href="/dashboard"
-                className="flex-1 inline-flex items-center justify-center gap-2 bg-white border border-gray-300 text-gray-700 py-2.5 rounded-lg font-semibold hover:bg-gray-50 transition-colors text-sm"
+                className="flex-1 inline-flex items-center justify-center gap-2 bg-white border border-gray-300 text-foreground py-2.5 rounded-lg font-semibold hover:bg-gray-50 transition-colors text-sm"
               >
                 ផ្ទាំងគ្រប់គ្រង
               </Link>

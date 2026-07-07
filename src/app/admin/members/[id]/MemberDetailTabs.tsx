@@ -22,6 +22,7 @@ import {
 } from 'lucide-react'
 import { LoanStatusBadge, MemberStatusBadge, SavingStatusBadge, MEMBER_ROLE_LABELS } from '@/components/ui/Badge'
 import { formatDate, money } from '@/app/admin/adminUtils'
+import { dataTable, tableContainer, tableScroll } from '@/components/ui/tableStyles'
 import { memberKhmerName } from '@/lib/memberNames'
 import { AdminMemberTelegramLink } from '@/components/telegram/AdminMemberTelegramLink'
 import { normalizeCurrency } from '@/lib/currency'
@@ -238,7 +239,7 @@ export function MemberDetailTabs({
               </div>
               <div className="mt-4">
                 <form ref={formRef} onSubmit={handleProfileSubmit}>
-                  <div className="overflow-hidden rounded-xl border border-border">
+                  <div className={tableContainer}>
                     <table className="w-full text-sm">
                       <tbody className="divide-y divide-border">
                         {/* ឈ្មោះ (ខ្មែរ) */}
@@ -300,7 +301,10 @@ export function MemberDetailTabs({
                         </tr>
                         {/* លេខសៀវភៅគ្រួសារ */}
                         <tr className="bg-surface hover:bg-surface-muted/40">
-                          <td className="w-md px-5 py-3 text-sm font-semibold text-muted">លេខសៀវភៅគ្រួសារ</td>
+                          <td className="w-md px-5 py-3 text-sm font-semibold text-muted">
+                            លេខសៀវភៅគ្រួសារ
+                            <span className="ml-1 text-xs font-normal text-foreground">(ស្រេចចិត្ត)</span>
+                          </td>
                           <td className="px-5 py-2">
                             {isEditing ? <input className={inputCls} value={form.resident_book_number} onChange={e => setForm(p => ({ ...p, resident_book_number: e.target.value }))} disabled={pending} /> : <span className="text-sm text-foreground">{member.resident_book_number ?? 'គ្មាន'}</span>}
                           </td>
@@ -383,34 +387,29 @@ export function MemberDetailTabs({
                           </button>
                         )}
                       </div>
-                      <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
+                      <div className="space-y-3">
                         {emergencyContacts.map((contact, index) => (
-                          <div key={index} className="rounded-xl border border-border bg-surface-muted/40 p-4">
+                          <div key={index}>
                             {isEditing ? (
-                              <>
-                                <div className="mb-2 flex items-center justify-between">
-                                  <span className="text-xs font-semibold text-muted">ទំនាក់ទំនងលេខ {index + 1}</span>
-                                  <button type="button" onClick={() => setEmergencyContacts(p => p.filter((_, i) => i !== index))} disabled={pending}
-                                    className="grid h-7 w-7 place-items-center rounded-lg text-muted transition hover:bg-red-50 hover:text-red-600">
-                                    <Trash2 className="h-3.5 w-3.5" />
-                                  </button>
+                              <div className="grid grid-cols-1 items-center gap-3 sm:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_auto]">
+                                <div className="relative">
+                                  <User className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted" />
+                                  <input type="text" placeholder="ឈ្មោះពេញ" value={contact.full_name} onChange={e => setEmergencyContacts(p => p.map((c, i) => i === index ? { ...c, full_name: e.target.value } : c))} className={`${inputCls} pl-9`} disabled={pending} />
                                 </div>
-                                <div className="space-y-2">
-                                  <div className="relative">
-                                    <User className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted" />
-                                    <input type="text" placeholder="ឈ្មោះពេញ" value={contact.full_name} onChange={e => setEmergencyContacts(p => p.map((c, i) => i === index ? { ...c, full_name: e.target.value } : c))} className={`${inputCls} pl-9`} disabled={pending} />
-                                  </div>
-                                  <div className="relative">
-                                    <Phone className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted" />
-                                    <input type="tel" placeholder="0812345678" value={contact.phone} onChange={e => setEmergencyContacts(p => p.map((c, i) => i === index ? { ...c, phone: e.target.value } : c))} className={`${inputCls} pl-9`} disabled={pending} />
-                                  </div>
+                                <div className="relative">
+                                  <Phone className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted" />
+                                  <input type="tel" placeholder="0812345678" value={contact.phone} onChange={e => setEmergencyContacts(p => p.map((c, i) => i === index ? { ...c, phone: e.target.value } : c))} className={`${inputCls} pl-9`} disabled={pending} />
                                 </div>
-                              </>
+                                <button type="button" onClick={() => setEmergencyContacts(p => p.filter((_, i) => i !== index))} disabled={pending}
+                                  className="grid h-10 w-10 shrink-0 place-items-center self-end rounded-lg border border-border text-muted transition hover:bg-red-50 hover:text-red-600 sm:self-auto">
+                                  <Trash2 className="h-4 w-4" />
+                                </button>
+                              </div>
                             ) : (
-                              <>
+                              <div className="flex flex-wrap items-center gap-x-6 gap-y-1 rounded-xl border border-border bg-surface-muted/40 px-4 py-3">
                                 <p className="text-sm font-medium text-foreground">{contact.full_name}</p>
-                                <p className="mt-1 text-sm text-muted">{contact.phone}</p>
-                              </>
+                                <p className="text-sm text-muted">{contact.phone}</p>
+                              </div>
                             )}
                           </div>
                         ))}
@@ -448,7 +447,7 @@ export function MemberDetailTabs({
                   url={idDocumentUrl}
                 />
                 <DocumentPreview
-                  label="សៀវភៅគ្រួសារ"
+                  label="សៀវភៅគ្រួសារ (ស្រេចចិត្ត)"
                   storageKey={member.resident_book_url}
                   url={residentBookUrl}
                 />
@@ -472,15 +471,15 @@ export function MemberDetailTabs({
                 onSaved={exitEditMode}
               />
             )}
-            <div className="overflow-hidden rounded-xl border border-border bg-surface">
+            <div className={tableContainer}>
               <div className="overflow-x-auto">
                 <table className="w-full min-w-xl text-left text-sm">
-                  <thead className="border-b border-border bg-surface-muted/80">
-                    <tr className="text-xs font-semibold uppercase tracking-wide text-muted">
-                      <th className="px-5 py-3.5 md:px-6">ឈ្មោះ</th>
-                      <th className="px-5 py-3.5">ទូរស័ព្ទ</th>
-                      <th className="px-5 py-3.5">ស្ថានភាព</th>
-                      <th className="w-12 px-5 py-3.5 md:px-6" aria-label="មើលលម្អិត" />
+                  <thead className={dataTable.thead}>
+                    <tr className={dataTable.thRow}>
+                      <th className={dataTable.th}>ឈ្មោះ</th>
+                      <th className={dataTable.th}>ទូរស័ព្ទ</th>
+                      <th className={dataTable.th}>ស្ថានភាព</th>
+                      <th className={`${dataTable.thRight} w-12`} aria-label="មើលលម្អិត" />
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-border">
@@ -541,15 +540,15 @@ export function MemberDetailTabs({
                 />
               </div>
             </div>
-          <div className="overflow-hidden rounded-xl border border-border bg-surface">
+          <div className={tableContainer}>
             <div className="overflow-x-auto">
               <table className="w-full min-w-160 text-left text-sm">
-                <thead className="border-b border-border bg-surface-muted/80">
-                  <tr className="text-xs font-semibold uppercase tracking-wide text-muted">
-                    <th className="px-5 py-3.5 md:px-6">ចំនួនទឹកប្រាក់</th>
-                    <th className="px-5 py-3.5">ថ្ងៃសន្សំ</th>
-                    <th className="px-5 py-3.5">ដាក់ស្នើ</th>
-                    <th className="px-5 py-3.5 md:px-6">ស្ថានភាព</th>
+                <thead className={dataTable.thead}>
+                  <tr className={dataTable.thRow}>
+                    <th className={dataTable.th}>ចំនួនទឹកប្រាក់</th>
+                    <th className={dataTable.th}>ថ្ងៃសន្សំ</th>
+                    <th className={dataTable.th}>ដាក់ស្នើ</th>
+                    <th className={dataTable.th}>ស្ថានភាព</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-border">
@@ -583,7 +582,7 @@ export function MemberDetailTabs({
                   )}
                 </tbody>
                 {savingInterest && savings.length > 0 && (
-                  <tfoot className="border-t-2 border-border bg-surface-muted/60">
+                  <tfoot className={dataTable.tfoot}>
                     <tr>
                       <td className="px-5 py-4 md:px-6">
                         <p className="text-xs font-semibold uppercase tracking-wide text-muted">សមតុល្យសន្សំសរុប</p>
@@ -654,17 +653,17 @@ export function MemberDetailTabs({
                 onSaved={exitEditMode}
               />
             )}
-            <div className="w-full overflow-hidden rounded-xl border border-border bg-surface">
+            <div className={`w-full ${tableContainer}`}>
             <div className="overflow-x-auto">
               <table className="w-full min-w-3xl text-left text-sm">
-                <thead className="border-b border-border bg-surface-muted/80">
-                  <tr className="text-xs font-semibold uppercase tracking-wide text-muted">
-                    <th className="px-5 py-3.5 md:px-6">ចំនួនទឹកប្រាក់</th>
-                    <th className="px-5 py-3.5">គោលបំណង</th>
-                    <th className="px-5 py-3.5">រយៈពេល</th>
-                    <th className="px-5 py-3.5">ដាក់ស្នើ</th>
-                    <th className="px-5 py-3.5">ស្ថានភាព</th>
-                    <th className="w-12 px-5 py-3.5 md:px-6" aria-label="មើលលម្អិត" />
+                <thead className={dataTable.thead}>
+                  <tr className={dataTable.thRow}>
+                    <th className={dataTable.th}>ចំនួនទឹកប្រាក់</th>
+                    <th className={dataTable.th}>គោលបំណង</th>
+                    <th className={dataTable.th}>រយៈពេល</th>
+                    <th className={dataTable.th}>ដាក់ស្នើ</th>
+                    <th className={dataTable.th}>ស្ថានភាព</th>
+                    <th className={`${dataTable.thRight} w-12`} aria-label="មើលលម្អិត" />
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-border">
@@ -769,14 +768,14 @@ function FinancialSummary({
 
   return (
     <div className="w-full">
-      <div className="overflow-hidden rounded-xl border border-border">
+      <div className={tableContainer}>
         <table className="w-full text-sm">
-          <thead className="border-b border-border bg-surface-muted/50">
-            <tr>
-              <th className="px-5 py-3 text-left text-xs font-bold uppercase tracking-wide text-foreground">ប្រភេទ</th>
-              <th className="px-5 py-3 text-left text-xs font-bold uppercase tracking-wide text-foreground">ចំនួនទឹកប្រាក់</th>
-              <th className="px-5 py-3 text-left text-xs font-bold uppercase tracking-wide text-foreground">ព័ត៌មានបន្ថែម</th>
-              <th className="px-5 py-3 text-right text-xs font-bold uppercase tracking-wide text-foreground"></th>
+          <thead className={dataTable.thead}>
+            <tr className={dataTable.thRow}>
+              <th className={dataTable.th}>ប្រភេទ</th>
+              <th className={dataTable.th}>ចំនួនទឹកប្រាក់</th>
+              <th className={dataTable.th}>ព័ត៌មានបន្ថែម</th>
+              <th className={dataTable.thRight} />
             </tr>
           </thead>
           <tbody className="divide-y divide-border">
@@ -841,7 +840,7 @@ function DocumentPreview({
         <DocHeader label={label} />
         <div className="flex flex-1 flex-col items-center justify-center gap-2 px-4 py-12 text-center">
           <CircleAlert className="h-8 w-8 text-gray-300" />
-          <p className="text-sm font-medium text-gray-500">មិនបានផ្ទុក</p>
+          <p className="text-sm font-medium text-foreground">មិនបានផ្ទុក</p>
         </div>
       </div>
     )

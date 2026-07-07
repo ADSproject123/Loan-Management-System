@@ -1,12 +1,14 @@
 'use client'
 
-import { Children, useEffect, useState, type ReactNode } from 'react'
-import { MoreVertical, type LucideIcon } from 'lucide-react'
+import { Children, type ReactNode } from 'react'
+import { type LucideIcon } from 'lucide-react'
 
 export function adminMenuItemClass(destructive = false) {
   return [
-    'flex w-full items-center gap-3 rounded-md px-3 py-2 text-left text-sm transition-colors disabled:cursor-not-allowed disabled:opacity-60',
-    destructive ? 'text-red-500 hover:bg-red-50' : 'text-foreground hover:bg-slate-50',
+    'inline-flex shrink-0 items-center gap-1.5 rounded-lg border px-2.5 py-1.5 text-xs font-semibold transition-colors disabled:cursor-not-allowed disabled:opacity-60 whitespace-nowrap',
+    destructive
+      ? 'border-red-200 bg-white text-red-700 hover:bg-red-50'
+      : 'border-border bg-white text-foreground hover:bg-surface-muted',
   ].join(' ')
 }
 
@@ -19,19 +21,7 @@ type AdminActionsMenuProps = {
 }
 
 export function AdminActionsMenu({ children, align = 'right' }: AdminActionsMenuProps) {
-  const [open, setOpen] = useState(false)
   const items = Children.toArray(children).filter(Boolean)
-
-  useEffect(() => {
-    if (!open) return
-
-    function onKeyDown(event: KeyboardEvent) {
-      if (event.key === 'Escape') setOpen(false)
-    }
-
-    document.addEventListener('keydown', onKeyDown)
-    return () => document.removeEventListener('keydown', onKeyDown)
-  }, [open])
 
   if (items.length === 0) {
     return <span className="text-xs text-muted">—</span>
@@ -39,41 +29,13 @@ export function AdminActionsMenu({ children, align = 'right' }: AdminActionsMenu
 
   return (
     <div
-      className="relative inline-flex"
+      className={`flex flex-wrap items-center gap-1.5 ${
+        align === 'right' ? 'justify-end' : 'justify-start'
+      }`}
       onClick={(event) => event.stopPropagation()}
       onKeyDown={(event) => event.stopPropagation()}
     >
-      <button
-        type="button"
-        onClick={() => setOpen((current) => !current)}
-        aria-haspopup="menu"
-        aria-expanded={open}
-        aria-label="សកម្មភាព"
-        className="inline-flex h-8 w-8 items-center justify-center rounded-md text-slate-400 transition hover:bg-slate-100 hover:text-slate-600"
-      >
-        <MoreVertical className="h-[18px] w-[18px]" strokeWidth={2} />
-      </button>
-
-      {open && (
-        <button
-          type="button"
-          className="fixed inset-0 z-10 cursor-default"
-          aria-label="បិទ"
-          onClick={() => setOpen(false)}
-        />
-      )}
-      {/* The panel stays mounted (only visually hidden) so menu items that open
-          their own modal keep their state when the menu closes. */}
-      <div
-        role="menu"
-        className={`absolute top-full z-20 mt-1.5 min-w-44 overflow-hidden rounded-lg border border-slate-200/80 bg-white py-1.5 shadow-[0_8px_30px_rgb(0_0_0_/_0.12)] ${
-          align === 'right' ? 'right-0' : 'left-0'
-        } ${open ? '' : 'hidden'}`}
-      >
-        <div className="flex flex-col px-1.5" onClick={() => setOpen(false)}>
-          {items}
-        </div>
-      </div>
+      {items}
     </div>
   )
 }
@@ -101,7 +63,7 @@ export function AdminActionsMenuItem({
       className={adminMenuItemClass(destructive)}
     >
       <Icon
-        className={`h-[18px] w-[18px] shrink-0 ${destructive ? 'text-red-400' : 'text-slate-400'}`}
+        className={`h-3.5 w-3.5 shrink-0 ${destructive ? 'text-red-500' : 'text-foreground'}`}
         strokeWidth={1.75}
       />
       <span>{label}</span>
@@ -118,7 +80,7 @@ export function AdminMenuItemIcon({
 }) {
   return (
     <Icon
-      className={`h-[18px] w-[18px] shrink-0 ${destructive ? 'text-red-400' : 'text-slate-400'}`}
+      className={`h-3.5 w-3.5 shrink-0 ${destructive ? 'text-red-500' : 'text-foreground'}`}
       strokeWidth={1.75}
     />
   )

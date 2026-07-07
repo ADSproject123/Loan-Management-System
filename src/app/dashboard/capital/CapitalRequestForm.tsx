@@ -128,14 +128,14 @@ export function CapitalRequestForm({ memberSavings }: { memberSavings: MemberSav
             </div>
             <div>
               <h2 className="font-semibold text-gray-900">ចំនួនទឹកប្រាក់ដក</h2>
-              <p className="text-gray-500 text-sm">តើអ្នកចង់ដកដើមទុនប៉ុន្មាន?</p>
+              <p className="text-foreground text-sm">តើអ្នកចង់ដកដើមទុនប៉ុន្មាន?</p>
             </div>
           </div>
 
           <div className="mb-5">
-            <label className="block text-sm font-medium text-gray-700 mb-1.5">ចំនួនទឹកប្រាក់ ({memberSavings.currency})</label>
+            <label className="block text-sm font-medium text-foreground mb-1.5">ចំនួនទឹកប្រាក់ ({memberSavings.currency})</label>
             <div className="relative">
-              <span className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500 font-medium">{sym}</span>
+              <span className="absolute left-4 top-1/2 -translate-y-1/2 text-foreground font-medium">{sym}</span>
               <input
                 type="number"
                 value={amount}
@@ -147,7 +147,7 @@ export function CapitalRequestForm({ memberSavings }: { memberSavings: MemberSav
                 className="w-full pl-8 pr-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-brand-500 text-lg font-semibold text-gray-900"
               />
             </div>
-            <div className="flex justify-between text-xs text-gray-400 mt-1">
+            <div className="flex justify-between text-xs text-foreground mt-1">
               <span>អប្បបរមា៖ {sym}១០០</span>
               <span>អតិបរមា៖ {formatMoney(memberSavings.totalBalance, memberSavings.currency)}</span>
             </div>
@@ -190,12 +190,12 @@ export function CapitalRequestForm({ memberSavings }: { memberSavings: MemberSav
             </div>
             <div>
               <h2 className="font-semibold text-gray-900">ព័ត៌មានលម្អិតការដក</h2>
-              <p className="text-gray-500 text-sm">ផ្តល់ព័ត៌មានបន្ថែមសម្រាប់ការស្នើសុំរបស់អ្នក</p>
+              <p className="text-foreground text-sm">ផ្តល់ព័ត៌មានបន្ថែមសម្រាប់ការស្នើសុំរបស់អ្នក</p>
             </div>
           </div>
 
           <div className="mb-5">
-            <label className="block text-sm font-medium text-gray-700 mb-1.5">មូលហេតុដក</label>
+            <label className="block text-sm font-medium text-foreground mb-1.5">មូលហេតុដក</label>
             <textarea
               value={reason}
               onChange={(e) => setReason(e.target.value)}
@@ -206,7 +206,7 @@ export function CapitalRequestForm({ memberSavings }: { memberSavings: MemberSav
           </div>
 
           <div className="mb-5">
-            <label className="block text-sm font-medium text-gray-700 mb-3">
+            <label className="block text-sm font-medium text-foreground mb-3">
               បន្ទាប់ពីការដក ខ្ញុំចង់៖
             </label>
             <div className="space-y-3">
@@ -228,7 +228,7 @@ export function CapitalRequestForm({ memberSavings }: { memberSavings: MemberSav
                     <PiggyBank className="w-4 h-4 text-green-600" />
                     <p className="font-medium text-gray-900">បន្តសន្សំ</p>
                   </div>
-                  <p className="text-gray-500 text-sm">
+                  <p className="text-foreground text-sm">
                     ដកដើមទុន ប៉ុន្តែនៅតែជាសមាជិកសកម្មរបស់សន្សំ និង បន្តសន្សំប្រចាំខែ។
                   </p>
                 </div>
@@ -252,7 +252,7 @@ export function CapitalRequestForm({ memberSavings }: { memberSavings: MemberSav
                     <XCircle className="w-4 h-4 text-red-600" />
                     <p className="font-medium text-gray-900">ឈប់ចូលជាសមាជិក</p>
                   </div>
-                  <p className="text-gray-500 text-sm">
+                  <p className="text-foreground text-sm">
                     ដកដើមទុន និង បញ្ចប់ចូលជាសមាជិកសន្សំរបស់ខ្ញុំ។ សមតុល្យទាំងអស់នឹងត្រូវបានដោះស្រាយ។
                   </p>
                 </div>
@@ -289,7 +289,7 @@ export function CapitalRequestForm({ memberSavings }: { memberSavings: MemberSav
             </div>
             <div>
               <h2 className="font-semibold text-gray-900">ត្រួតពិនិត្យពាក្យសុំ</h2>
-              <p className="text-gray-500 text-sm">បញ្ជាក់ការស្នើសុំដកដើមទុនរបស់អ្នក</p>
+              <p className="text-foreground text-sm">បញ្ជាក់ការស្នើសុំដកដើមទុនរបស់អ្នក</p>
             </div>
           </div>
 
@@ -302,7 +302,7 @@ export function CapitalRequestForm({ memberSavings }: { memberSavings: MemberSav
               { label: 'បន្ទាប់ពីការដក', value: afterDecision === 'continue' ? 'បន្តសន្សំ' : 'ឈប់ចូលជាសមាជិក' },
             ].map((item) => (
               <div key={item.label} className="flex items-start justify-between py-2.5 border-b border-gray-100">
-                <span className="text-gray-500 text-sm">{item.label}</span>
+                <span className="text-foreground text-sm">{item.label}</span>
                 <span className={`text-sm font-medium text-right max-w-xs ${
                   item.label === 'បន្ទាប់ពីការដក' && afterDecision === 'withdraw' ? 'text-red-600' : 'text-gray-900'
                 }`}>
@@ -355,10 +355,10 @@ export function CapitalRequestForm({ memberSavings }: { memberSavings: MemberSav
               <CheckCircle className="w-10 h-10 text-green-500" />
             </div>
             <h2 className="text-2xl font-bold text-gray-900 mb-2">ពាក្យសុំត្រូវបានដាក់ស្នើ!</h2>
-            <p className="text-gray-600 mb-2">
+            <p className="text-foreground mb-2">
               ការស្នើសុំដកដើមទុនរបស់អ្នកចំនួន <strong>{formatMoney(withdrawAmount, memberSavings.currency)}</strong> ត្រូវបានដាក់ស្នើ។
             </p>
-            <p className="text-gray-500 text-sm mb-6">
+            <p className="text-foreground text-sm mb-6">
               អ្នកនឹងទទួលបានការជូនដំណឹងជាមួយការសម្រេចចិត្តក្នុងអំឡុង{' '}
               <strong>ថ្ងៃ ២០-២៥ មករា</strong>។ ចំនួនទឹកប្រាក់ដែលទទួលយកនឹងត្រូវផ្ទេរនៅពេលនោះ។
             </p>

@@ -17,7 +17,7 @@ export function LoanActions({ loanId, status, className = '' }: LoanActionsProps
   const canReject = canApprove || canActivate
 
   if (!canApprove && !canActivate && !canReject) {
-    return <span className="text-xs text-gray-400">—</span>
+    return <span className="text-xs text-foreground">—</span>
   }
 
   return (

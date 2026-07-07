@@ -108,7 +108,7 @@ export function LoanInterestPlansManager({
           </span>
           <div>
             <h2 className="text-lg font-bold text-slate-900">អត្រាកម្ជីជាក្រុម</h2>
-            <p className="mt-1 max-w-2xl text-sm text-slate-500">
+            <p className="mt-1 max-w-2xl text-sm text-foreground">
               បង្កើតអត្រាកម្ជីច្រើន ហើយចាត់ចែងទៅសមាជិកផ្សេងៗ។ សមាជិកដែលមិនត្រូវបានចាត់ចែងនឹងប្រើអត្រាទូទៅ (
               {globalMonthlyLoanInterestRate}% ប្រចាំខែ)។
             </p>
@@ -129,7 +129,7 @@ export function LoanInterestPlansManager({
           </p>
           <div className="grid gap-4 sm:grid-cols-2">
             <div>
-              <label className="block text-sm font-medium text-slate-700" htmlFor="plan-name">
+              <label className="block text-sm font-medium text-foreground" htmlFor="plan-name">
                 ឈ្មោះអត្រា
               </label>
               <input
@@ -142,11 +142,11 @@ export function LoanInterestPlansManager({
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-slate-700" htmlFor="plan-rate">
+              <label className="block text-sm font-medium text-foreground" htmlFor="plan-rate">
                 អត្រា (% ប្រចាំខែ)
               </label>
               <div className="relative mt-2">
-                <span className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-slate-400">
+                <span className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-foreground">
                   <Percent className="h-4 w-4" />
                 </span>
                 <input
@@ -164,7 +164,7 @@ export function LoanInterestPlansManager({
               </div>
             </div>
             <div>
-              <label className="block text-sm font-medium text-slate-700" htmlFor="plan-role">
+              <label className="block text-sm font-medium text-foreground" htmlFor="plan-role">
                 អនុវត្តសម្រាប់តួនាទី
               </label>
               <select
@@ -182,13 +182,13 @@ export function LoanInterestPlansManager({
                   </option>
                 ))}
               </select>
-              <p className="mt-1 text-xs text-slate-500">
+              <p className="mt-1 text-xs text-foreground">
                 ជ្រើស «ទាំងអស់» ដើម្បីអនុញ្ញាតឱ្យចាត់ចែងទៅគ្រប់តួនាទី។
               </p>
             </div>
           </div>
           <div>
-            <label className="block text-sm font-medium text-slate-700" htmlFor="plan-description">
+            <label className="block text-sm font-medium text-foreground" htmlFor="plan-description">
               ការពិពណ៌នា (ជម្រើស)
             </label>
             <textarea
@@ -199,7 +199,7 @@ export function LoanInterestPlansManager({
               className={`${adminFieldClassName} mt-2 w-full px-3 py-2.5`}
             />
           </div>
-          <label className="flex items-center gap-2 text-sm text-slate-700">
+          <label className="flex items-center gap-2 text-sm text-foreground">
             <input
               type="checkbox"
               checked={draft.isActive}
@@ -220,9 +220,10 @@ export function LoanInterestPlansManager({
       ) : null}
 
       {plans.length === 0 ? (
-        <p className="text-sm text-slate-500">មិនទាន់មានអត្រាកម្ជីជាក្រុមទេ។ ចុច «បង្កើតអត្រា» ដើម្បីបង្កើត។</p>
+        <p className="text-sm text-foreground">មិនទាន់មានអត្រាកម្ជីជាក្រុមទេ។ ចុច «បង្កើតអត្រា» ដើម្បីបង្កើត។</p>
       ) : (
-        <div className={`${adminTable.wrap} rounded-xl border border-border`}>
+        <div className={adminTable.wrap}>
+        <div className={adminTable.scroll}>
           <table className={adminTable.table}>
             <thead className={adminTable.thead}>
               <tr className={adminTable.thRow}>
@@ -268,6 +269,7 @@ export function LoanInterestPlansManager({
               ))}
             </tbody>
           </table>
+        </div>
         </div>
       )}
     </Card>

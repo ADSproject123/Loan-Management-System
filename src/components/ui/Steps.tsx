@@ -33,17 +33,17 @@ export function Steps({ steps, currentStep, className = '' }: StepsProps) {
                       ? 'bg-brand-950 text-white'
                       : isCurrent
                       ? 'bg-brand-100 text-brand-900 border-2 border-brand-900'
-                      : 'bg-gray-100 text-gray-400 border-2 border-gray-200'
+                      : 'bg-gray-100 text-foreground border-2 border-gray-200'
                     }`}
                 >
                   {isCompleted ? <Check className="w-5 h-5" /> : step.id}
                 </div>
                 <div className="mt-2 text-center">
-                  <p className={`text-xs font-medium ${isCurrent ? 'text-brand-900' : isCompleted ? 'text-gray-700' : 'text-gray-400'}`}>
+                  <p className={`text-xs font-medium ${isCurrent ? 'text-brand-900' : isCompleted ? 'text-foreground' : 'text-foreground'}`}>
                     {step.label}
                   </p>
                   {step.description && (
-                    <p className="text-xs text-gray-400 mt-0.5 hidden sm:block">{step.description}</p>
+                    <p className="text-xs text-foreground mt-0.5 hidden sm:block">{step.description}</p>
                   )}
                 </div>
               </div>

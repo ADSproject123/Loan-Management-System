@@ -12,13 +12,13 @@ export default async function LoanRepayPage() {
       <div className="mb-6">
         <Link
           href="/dashboard/loans"
-          className="mb-4 inline-flex items-center gap-2 text-sm text-gray-500 transition-colors hover:text-gray-700"
+          className="mb-4 inline-flex items-center gap-2 text-sm text-foreground transition-colors hover:text-foreground"
         >
           <ArrowLeft className="h-4 w-4" />
           ត្រឡប់ក្រោយ
         </Link>
         <h1 className="text-2xl font-bold text-gray-900">សងកម្ជី</h1>
-        <p className="mt-1 text-sm text-gray-500">ជ្រើសរើសខែដើម្បីបង់ប្រាក់សម្រាប់កម្ជីសកម្មរបស់អ្នក</p>
+        <p className="mt-1 text-sm text-foreground">ជ្រើសរើសខែដើម្បីបង់ប្រាក់សម្រាប់កម្ជីសកម្មរបស់អ្នក</p>
       </div>
 
       {context ? (

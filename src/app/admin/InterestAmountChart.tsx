@@ -26,7 +26,7 @@ function ChartTooltip({
 
   return (
     <div className="rounded-xl border border-slate-200 bg-white px-3 py-2 shadow-md ring-1 ring-slate-900/5">
-      <p className="mb-1 text-xs font-semibold text-slate-700">{label}</p>
+      <p className="mb-1 text-xs font-semibold text-foreground">{label}</p>
       <p className="text-sm tabular-nums text-slate-900">{formatMoney(value)}</p>
     </div>
   )
@@ -48,20 +48,20 @@ export function InterestAmountChart({
   const hasData = data.some((point) => point.amount > 0)
 
   if (isEmpty) {
-    return <p className="py-12 text-center text-sm text-slate-500">{emptyMessage}</p>
+    return <p className="py-12 text-center text-sm text-foreground">{emptyMessage}</p>
   }
 
   return (
     <div>
       <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-        <p className="text-sm text-slate-500">
+        <p className="text-sm text-foreground">
           សរុបក្នុងចន្លោះ៖{' '}
           <span className="font-bold tabular-nums text-brand-900">{formatMoney(total)}</span>
         </p>
       </div>
 
       {!hasData ? (
-        <p className="flex h-[65vh] min-h-80 items-center justify-center text-sm text-slate-500">
+        <p className="flex h-[65vh] min-h-80 items-center justify-center text-sm text-foreground">
           {rangeEmptyMessage}
         </p>
       ) : (

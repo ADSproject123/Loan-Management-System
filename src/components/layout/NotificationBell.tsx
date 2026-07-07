@@ -108,7 +108,7 @@ export function NotificationBell({
             : 'relative grid h-11 w-11 shrink-0 place-items-center rounded-xl border border-slate-200/80 bg-white shadow-sm transition hover:border-brand-200 hover:shadow'
         }
       >
-        <Bell className={isSidebar ? 'h-5 w-5' : 'h-5 w-5 text-slate-600'} />
+        <Bell className={isSidebar ? 'h-5 w-5' : 'h-5 w-5 text-foreground'} />
         {unreadCount > 0 && (
           <span
             className={`absolute flex items-center justify-center rounded-full bg-red-500 font-bold text-white ${
@@ -134,7 +134,7 @@ export function NotificationBell({
             <div>
               <p className="text-sm font-semibold text-slate-900">ការជូនដំណឹង</p>
               {unreadCount > 0 && (
-                <p className="text-xs text-slate-500">{unreadCount} មិនទាន់អាន</p>
+                <p className="text-xs text-foreground">{unreadCount} មិនទាន់អាន</p>
               )}
             </div>
             {notifications.some((row) => !row.read) && (
@@ -151,14 +151,14 @@ export function NotificationBell({
 
           <div className="max-h-[min(28rem,70vh)] overflow-y-auto">
             {loading && (
-              <div className="flex items-center justify-center gap-2 px-4 py-10 text-sm text-slate-500">
+              <div className="flex items-center justify-center gap-2 px-4 py-10 text-sm text-foreground">
                 <Loader2 className="h-4 w-4 animate-spin" />
                 កំពុងផ្ទុក...
               </div>
             )}
 
             {!loading && loaded && notifications.length === 0 && (
-              <p className="px-4 py-10 text-center text-sm text-slate-500">
+              <p className="px-4 py-10 text-center text-sm text-foreground">
                 មិនទាន់មានការជូនដំណឹងនៅឡើយ។
               </p>
             )}
@@ -181,7 +181,7 @@ export function NotificationBell({
                     }`}
                   >
                     {notif.read ? (
-                      <CheckCircle className="h-4 w-4 text-slate-400" />
+                      <CheckCircle className="h-4 w-4 text-foreground" />
                     ) : (
                       <Bell className="h-4 w-4 text-brand-700" />
                     )}
@@ -190,12 +190,12 @@ export function NotificationBell({
                     <span className="flex items-start justify-between gap-2">
                       <span
                         className={`text-sm font-medium ${
-                          notif.read ? 'text-slate-700' : 'text-brand-900'
+                          notif.read ? 'text-foreground' : 'text-brand-900'
                         }`}
                       >
                         {notif.title}
                       </span>
-                      <span className="flex shrink-0 items-center gap-1 text-slate-400">
+                      <span className="flex shrink-0 items-center gap-1 text-foreground">
                         <Clock className="h-3 w-3" />
                         <span className="text-xs">
                           {formatKhmerDateTime(notif.created_at) ?? '—'}
@@ -204,7 +204,7 @@ export function NotificationBell({
                     </span>
                     <span
                       className={`mt-1 block text-sm leading-relaxed ${
-                        notif.read ? 'text-slate-500' : 'text-brand-700'
+                        notif.read ? 'text-foreground' : 'text-brand-700'
                       }`}
                     >
                       {notif.message}

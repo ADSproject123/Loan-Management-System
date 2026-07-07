@@ -222,6 +222,7 @@ export function SavingsList({
       />
 
       <div className={adminTable.wrap}>
+        <div className={adminTable.scroll}>
         <table className={`${adminTable.table} min-w-208`}>
           <thead className={adminTable.thead}>
             <tr className={adminTable.thRow}>
@@ -329,6 +330,7 @@ export function SavingsList({
               ))}
           </tbody>
         </table>
+        </div>
       </div>
     </div>
 

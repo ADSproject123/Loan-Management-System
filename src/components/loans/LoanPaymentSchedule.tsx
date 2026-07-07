@@ -4,6 +4,7 @@ import Link from 'next/link'
 import { ArrowRight } from 'lucide-react'
 import { formatMoney, type CurrencyCode } from '@/lib/currency'
 import { formatKhmerDate } from '@/lib/dates'
+import { dataTable, tableContainer, tableScroll } from '@/components/ui/tableStyles'
 import type { LoanScheduleRow } from '@/lib/interestCalculations'
 import { LoanScheduleTableFooter } from '@/components/loans/LoanScheduleOverallSummary'
 import { LoanPaymentScheduleDownloads } from '@/components/loans/LoanPaymentScheduleDownloads'
@@ -18,7 +19,7 @@ const STATUS_LABELS: Record<LoanScheduleRow['status'], string> = {
 const STATUS_CLASSES: Record<LoanScheduleRow['status'], string> = {
   paid: 'text-green-700',
   partial: 'text-amber-700',
-  pending: 'text-gray-500',
+  pending: 'text-foreground',
   overdue: 'text-red-700',
 }
 
@@ -74,46 +75,47 @@ export function LoanPaymentSchedule({
         </div>
       </div>
 
-      <div className="overflow-x-auto rounded-xl border border-gray-200">
-        <table className="w-full min-w-160 text-left text-sm">
-          <thead className="border-b border-gray-100 bg-gray-50/80">
-            <tr className="text-sm font-bold uppercase tracking-wide text-gray-900">
-              <th className="px-4 py-3 md:px-5">ខែ</th>
-              <th className="px-4 py-3">កាលបរិច្ឆេទត្រូវបង់</th>
-              <th className="px-4 py-3">ប្រាក់ដើម</th>
-              <th className="px-4 py-3">ប្រាក់ដើមនៅសល់</th>
-              <th className="px-4 py-3">ការប្រាក់</th>
-              <th className="px-4 py-3">ចំនួនត្រូវបង់</th>
-              <th className="px-4 py-3 md:px-5">ស្ថានភាព</th>
-              {showRowPayButton ? <th className="px-4 py-3 md:px-5">សកម្មភាព</th> : null}
+      <div className={tableContainer}>
+        <div className={tableScroll}>
+        <table className={`${dataTable.table} min-w-160`}>
+          <thead className={dataTable.thead}>
+            <tr className={dataTable.thRow}>
+              <th className={dataTable.th}>ខែ</th>
+              <th className={dataTable.th}>កាលបរិច្ឆេទត្រូវបង់</th>
+              <th className={dataTable.th}>ប្រាក់ដើម</th>
+              <th className={dataTable.th}>ប្រាក់ដើមនៅសល់</th>
+              <th className={dataTable.th}>ការប្រាក់</th>
+              <th className={dataTable.th}>ចំនួនត្រូវបង់</th>
+              <th className={dataTable.th}>ស្ថានភាព</th>
+              {showRowPayButton ? <th className={dataTable.thRight}>សកម្មភាព</th> : null}
             </tr>
           </thead>
-          <tbody className="divide-y divide-gray-100">
+          <tbody className={dataTable.tbody}>
             {schedule.map((row) => (
-              <tr key={row.month} className="bg-white">
-                <td className="px-4 py-3 font-medium text-gray-900 md:px-5">ខែ {row.month}</td>
-                <td className="px-4 py-3 text-gray-600">{formatKhmerDate(row.dueDate, '—')}</td>
-                <td className="px-4 py-3 tabular-nums text-gray-700">
+              <tr key={row.month} className={dataTable.tr}>
+                <td className={`${dataTable.td} font-medium`}>ខែ {row.month}</td>
+                <td className={dataTable.tdMuted}>{formatKhmerDate(row.dueDate, '—')}</td>
+                <td className={`${dataTable.td} tabular-nums`}>
                   {formatMoney(row.principalPortion, currency)}
                 </td>
-                <td className="px-4 py-3 tabular-nums text-gray-700">
+                <td className={`${dataTable.td} tabular-nums`}>
                   {formatMoney(row.remainingBalance, currency)}
                 </td>
-                <td className="px-4 py-3 tabular-nums text-gray-700">
+                <td className={`${dataTable.td} tabular-nums`}>
                   {formatMoney(row.interestPortion, currency)}
                 </td>
-                <td className="px-4 py-3 font-semibold tabular-nums text-gray-900">
+                <td className={`${dataTable.td} font-semibold tabular-nums`}>
                   {formatMoney(row.amount, currency)}
                 </td>
-                <td className="px-4 py-3 md:px-5">
+                <td className={dataTable.td}>
                   <span className={`text-xs font-semibold ${STATUS_CLASSES[row.status]}`}>
                     {STATUS_LABELS[row.status]}
                   </span>
                 </td>
                 {showRowPayButton ? (
-                  <td className="px-4 py-3 md:px-5">
+                  <td className={dataTable.tdRight}>
                     {row.status === 'paid' ? (
-                      <span className="text-xs text-gray-400">—</span>
+                      <span className="text-xs text-foreground">—</span>
                     ) : row.pendingAmount > 0 ? (
                       <span className="inline-flex rounded-full bg-amber-100 px-2.5 py-1 text-xs font-semibold text-amber-800">
                         រង់ចាំទទួល
@@ -147,6 +149,7 @@ export function LoanPaymentSchedule({
             showActionColumn={showRowPayButton}
           />
         </table>
+        </div>
       </div>
     </div>
   )

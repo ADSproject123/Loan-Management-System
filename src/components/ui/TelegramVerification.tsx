@@ -105,7 +105,7 @@ export function TelegramVerification({
           <button
             type="button"
             onClick={onCancel}
-            className="absolute right-4 top-4 grid h-8 w-8 place-items-center rounded-lg text-slate-400 transition hover:bg-slate-100 hover:text-slate-600"
+            className="absolute right-4 top-4 grid h-8 w-8 place-items-center rounded-lg text-foreground transition hover:bg-slate-100 hover:text-foreground"
             aria-label="បិទ"
           >
             <X className="h-4 w-4" />
@@ -116,7 +116,7 @@ export function TelegramVerification({
           {sending ? (
             <div className="flex flex-col items-center justify-center gap-3 py-8">
               <Loader2 className="w-8 h-8 text-brand-700 animate-spin" />
-              <p className="text-sm text-slate-500">កំពុងផ្ញើលេខកូដទៅ Telegram...</p>
+              <p className="text-sm text-foreground">កំពុងផ្ញើលេខកូដទៅ Telegram...</p>
             </div>
           ) : notLinked ? (
             <div className="text-center py-2">
@@ -124,7 +124,7 @@ export function TelegramVerification({
                 <AlertTriangle className="w-7 h-7 text-amber-500" />
               </div>
               <p className="font-semibold text-slate-900 mb-1">Telegram មិនទាន់បានភ្ជាប់</p>
-              <p className="text-sm text-slate-500 mb-5">
+              <p className="text-sm text-foreground mb-5">
                 ដើម្បីបន្ត សូមភ្ជាប់គណនី Telegram របស់អ្នកជាមួយ bot របស់ប្រព័ន្ធ ឬ ទាក់ទងអ្នកគ្រប់គ្រង។
               </p>
               {BOT_USERNAME && (
@@ -147,7 +147,7 @@ export function TelegramVerification({
                   <ShieldCheck className="w-7 h-7 text-brand-700" />
                 </div>
                 <p className="text-lg font-bold text-slate-900">បញ្ចូលលេខកូដផ្ទៀងផ្ទាត់</p>
-                <p className="text-sm text-slate-500 mt-1">
+                <p className="text-sm text-foreground mt-1">
                   យើងបានផ្ញើលេខកូដ ៦ ខ្ទង់ទៅ Telegram របស់អ្នក
                 </p>
               </div>
@@ -189,7 +189,7 @@ export function TelegramVerification({
 
               <div className="text-center mt-4">
                 {resendIn > 0 ? (
-                  <p className="text-xs text-slate-400">ស្នើកូដថ្មីបានក្នុង {resendIn} វិនាទី</p>
+                  <p className="text-xs text-foreground">ស្នើកូដថ្មីបានក្នុង {resendIn} វិនាទី</p>
                 ) : (
                   <button
                     type="button"

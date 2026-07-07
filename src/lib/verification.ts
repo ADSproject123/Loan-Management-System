@@ -1,6 +1,7 @@
 import { createHash, randomInt } from 'crypto'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { sendTelegramMessage, telegramEnabled } from '@/lib/telegram'
+import { tgVerificationCode } from '@/lib/telegramMessages'
 
 export const VERIFICATION_ACTIONS = [
   'loan_repay',
@@ -87,13 +88,7 @@ export async function sendVerificationCode(
 
   const sent = await sendTelegramMessage(
     member.telegram_chat_id,
-    [
-      '🔐 <b>លេខកូដផ្ទៀងផ្ទាត់</b>',
-      '',
-      `លេខកូដសម្រាប់${ACTION_LABELS[action]}៖ <b>${code}</b>`,
-      '',
-      'កូដនេះមានសុពលភាព ៥ នាទី។ កុំចែករំលែកវាជាមួយនរណាម្នាក់ឡើយ។',
-    ].join('\n')
+    tgVerificationCode(ACTION_LABELS[action], code)
   )
 
   if (!sent) return { ok: false, reason: 'send_failed' }

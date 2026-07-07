@@ -11,7 +11,7 @@ export function TelegramConnectBanner() {
           </span>
           <div className="min-w-0">
             <p className="text-sm font-semibold text-slate-900">ភ្ជាប់ Telegram ដើម្បីទទួលការជូនដំណឹង</p>
-            <p className="text-xs leading-5 text-slate-600">
+            <p className="text-xs leading-5 text-foreground">
               ប្រើតំណភ្ជាប់ផ្ទាល់ខ្លួនរបស់អ្នក បើក bot ហើយចុច Start។
             </p>
           </div>
@@ -37,7 +37,7 @@ export function TelegramConnectSteps({ className = '' }: { className?: string })
   return (
     <ol className={`space-y-2 ${className}`}>
       {TELEGRAM_CONNECT_STEPS.map((step, index) => (
-        <li key={step} className="flex items-start gap-3 text-sm text-slate-700">
+        <li key={step} className="flex items-start gap-3 text-sm text-foreground">
           <span className="grid h-6 w-6 shrink-0 place-items-center rounded-full bg-brand-950 text-xs font-semibold text-white">
             {index + 1}
           </span>

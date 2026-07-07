@@ -184,13 +184,13 @@ export function LoanRequestForm({
       <div className="mb-6">
         <Link
           href="/dashboard/loans"
-          className="inline-flex items-center gap-2 text-gray-500 hover:text-gray-700 text-sm mb-4 transition-colors"
+          className="inline-flex items-center gap-2 text-foreground hover:text-foreground text-sm mb-4 transition-colors"
         >
           <ArrowLeft className="w-4 h-4" />
           ត្រឡប់ក្រោយ
         </Link>
         <h1 className="text-2xl font-bold text-gray-900">ស្នើសុំកម្ជី</h1>
-        <p className="text-gray-500 text-sm mt-1">បំពេញបែបបទដើម្បីដាក់ស្នើពាក្យសុំកម្ជីរបស់អ្នក</p>
+        <p className="text-foreground text-sm mt-1">បំពេញបែបបទដើម្បីដាក់ស្នើពាក្យសុំកម្ជីរបស់អ្នក</p>
       </div>
 
       {!eligibility.canRequestLoan ? (
@@ -204,7 +204,7 @@ export function LoanRequestForm({
                 ? 'មិនទាន់អាចស្នើសុំកម្ជីបានទេ'
                 : 'ឈានដល់ដែនកំណត់កម្ជីអតិបរមារួចហើយ'}
             </h2>
-            <p className="text-gray-600 text-sm max-w-md mx-auto mb-6">
+            <p className="text-foreground text-sm max-w-md mx-auto mb-6">
               {eligibility.totalSavings <= 0 ? (
                 <>
                   អ្នកត្រូវមានការសន្សំដែលបានផ្ទៀងផ្ទាត់មុនពេលអាចស្នើសុំកម្ជីបាន។
@@ -258,15 +258,15 @@ export function LoanRequestForm({
             </div>
             <div>
               <h2 className="font-semibold text-gray-900">ព័ត៌មានកម្ជី</h2>
-              <p className="text-gray-500 text-sm">ប្រាប់យើងអំពីការស្នើសុំកម្ជីរបស់អ្នក</p>
+              <p className="text-foreground text-sm">ប្រាប់យើងអំពីការស្នើសុំកម្ជីរបស់អ្នក</p>
             </div>
           </div>
 
           <div className="space-y-4 mb-5">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1.5">ចំនួនទឹកប្រាក់កម្ជី ({currency})</label>
+              <label className="block text-sm font-medium text-foreground mb-1.5">ចំនួនទឹកប្រាក់កម្ជី ({currency})</label>
               <div className="relative">
-                <span className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500 font-medium">{sym}</span>
+                <span className="absolute left-4 top-1/2 -translate-y-1/2 text-foreground font-medium">{sym}</span>
                 <input
                   type="number"
                   value={formData.amount}
@@ -279,13 +279,13 @@ export function LoanRequestForm({
                   className="w-full pl-8 pr-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-brand-500 text-lg font-semibold text-gray-900"
                 />
               </div>
-              <p className="text-gray-400 text-xs mt-1">
+              <p className="text-foreground text-xs mt-1">
                 អតិបរមា {formatMoney(eligibility.availableLoanAmount, currency)} ({LOAN_TO_SAVINGS_MULTIPLIER} ដងនៃសមតុល្យសន្សំរបស់អ្នក)
               </p>
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1.5">គោលបំណងកម្ជី</label>
+              <label className="block text-sm font-medium text-foreground mb-1.5">គោលបំណងកម្ជី</label>
               <textarea
                 value={formData.purpose}
                 onChange={(e) => update('purpose', e.target.value)}
@@ -296,10 +296,10 @@ export function LoanRequestForm({
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">រយៈពេលកម្ជី</label>
+              <label className="block text-sm font-medium text-foreground mb-2">រយៈពេលកម្ជី</label>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div>
-                  <span className="block text-xs text-gray-500 mb-1">ចាប់ផ្តើម</span>
+                  <span className="block text-xs text-foreground mb-1">ចាប់ផ្តើម</span>
                   <input
                     type="date"
                     value={formData.start_date}
@@ -309,7 +309,7 @@ export function LoanRequestForm({
                   />
                 </div>
                 <div>
-                  <span className="block text-xs text-gray-500 mb-1">បញ្ចប់</span>
+                  <span className="block text-xs text-foreground mb-1">បញ្ចប់</span>
                   <input
                     type="date"
                     value={formData.end_date}
@@ -320,7 +320,7 @@ export function LoanRequestForm({
                 </div>
               </div>
               {termMonths > 0 && formData.end_date > formData.start_date && (
-                <p className="text-gray-400 text-xs mt-1.5">រយៈពេលប្រមាណ {termMonths} ខែ</p>
+                <p className="text-foreground text-xs mt-1.5">រយៈពេលប្រមាណ {termMonths} ខែ</p>
               )}
             </div>
           </div>
@@ -367,7 +367,7 @@ export function LoanRequestForm({
             </div>
             <div>
               <h2 className="font-semibold text-gray-900">ការផ្ទៀងផ្ទាត់អ្នកធានា</h2>
-              <p className="text-gray-500 text-sm">សមាជិកសន្សំត្រូវផ្ទៀងផ្ទាត់ការស្នើសុំកម្ជីរបស់អ្នក</p>
+              <p className="text-foreground text-sm">សមាជិកសន្សំត្រូវផ្ទៀងផ្ទាត់ការស្នើសុំកម្ជីរបស់អ្នក</p>
             </div>
           </div>
 
@@ -381,11 +381,11 @@ export function LoanRequestForm({
 
           <div className="space-y-4 mb-5">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1.5">
+              <label className="block text-sm font-medium text-foreground mb-1.5">
                 ឈ្មោះអ្នកធានា (ខ្មែរ) <span className="text-red-500">*</span>
               </label>
               <div className="relative">
-                <User className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+                <User className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-foreground" />
                 <input
                   type="text"
                   value={formData.referee_name_kh}
@@ -397,11 +397,11 @@ export function LoanRequestForm({
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1.5">
+              <label className="block text-sm font-medium text-foreground mb-1.5">
                 ឈ្មោះអ្នកធានា (អង់គ្លេស) <span className="text-red-500">*</span>
               </label>
               <div className="relative">
-                <User className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+                <User className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-foreground" />
                 <input
                   type="text"
                   value={formData.referee_name_en}
@@ -413,11 +413,11 @@ export function LoanRequestForm({
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1.5">
+              <label className="block text-sm font-medium text-foreground mb-1.5">
                 លេខទូរស័ព្ទអ្នកធានា <span className="text-red-500">*</span>
               </label>
               <div className="relative">
-                <Phone className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+                <Phone className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-foreground" />
                 <input
                   type="tel"
                   value={formData.referee_phone}
@@ -429,11 +429,11 @@ export function LoanRequestForm({
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1.5">
+              <label className="block text-sm font-medium text-foreground mb-1.5">
                 អាសយដ្ឋានអ៊ីមែលអ្នកធានា
               </label>
               <div className="relative">
-                <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+                <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-foreground" />
                 <input
                   type="email"
                   value={formData.referee_email}
@@ -442,7 +442,7 @@ export function LoanRequestForm({
                   className="w-full pl-10 pr-4 py-2.5 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-brand-500 text-sm"
                 />
               </div>
-              <p className="text-gray-400 text-xs mt-2">
+              <p className="text-foreground text-xs mt-2">
                 ប្រសិនបើអ្នកផ្តល់អ៊ីមែល និង ជាសមាជិកសន្សំសកម្ម ពួកគេអាចត្រូវបានភ្ជាប់ជាអ្នកធានាក្នុងប្រព័ន្ធ។
               </p>
             </div>
@@ -464,7 +464,7 @@ export function LoanRequestForm({
             </div>
             <div>
               <h2 className="font-semibold text-gray-900">ត្រួតពិនិត្យ និង ដាក់ស្នើ</h2>
-              <p className="text-gray-500 text-sm">សូមត្រួតពិនិត្យពាក្យសុំរបស់អ្នកមុនពេលដាក់ស្នើ</p>
+              <p className="text-foreground text-sm">សូមត្រួតពិនិត្យពាក្យសុំរបស់អ្នកមុនពេលដាក់ស្នើ</p>
             </div>
           </div>
 
@@ -479,7 +479,7 @@ export function LoanRequestForm({
               { label: 'អ៊ីមែលអ្នកធានា', value: formData.referee_email || '—' },
             ].map((item) => (
               <div key={item.label} className="flex items-start justify-between py-2.5 border-b border-gray-100">
-                <span className="text-gray-500 text-sm">{item.label}</span>
+                <span className="text-foreground text-sm">{item.label}</span>
                 <span className="text-gray-900 text-sm font-medium text-right max-w-xs truncate">{item.value}</span>
               </div>
             ))}
@@ -520,10 +520,10 @@ export function LoanRequestForm({
               <CheckCircle className="w-10 h-10 text-green-500" />
             </div>
             <h2 className="text-2xl font-bold text-gray-900 mb-2">ពាក្យសុំត្រូវបានដាក់ស្នើ!</h2>
-            <p className="text-gray-600 mb-2">
+            <p className="text-foreground mb-2">
               ពាក្យសុំកម្ជីរបស់អ្នកសម្រាប់ <strong>{formatMoney(loanAmount, currency)}</strong> ត្រូវបានដាក់ស្នើ។
             </p>
-            <p className="text-gray-500 text-sm mb-6">
+            <p className="text-foreground text-sm mb-6">
               គណៈកម្មាធិការនឹងទាក់ទងអ្នកធានារបស់អ្នកដើម្បីបញ្ជាក់ និង ត្រួតពិនិត្យពាក្យសុំក្នុងរយៈពេល ១-៣ ថ្ងៃ។
             </p>
 

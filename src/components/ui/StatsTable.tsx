@@ -1,7 +1,7 @@
 import React from 'react'
 import Link from 'next/link'
 import { ChevronRight } from 'lucide-react'
-import { Card } from '@/components/ui/Card'
+import { dataTable, tableContainer, tableScroll } from '@/components/ui/tableStyles'
 import type { LucideIcon } from 'lucide-react'
 
 export type StatsRow = {
@@ -22,37 +22,31 @@ interface StatsTableProps {
 
 export function StatsTable({ rows, className = '' }: StatsTableProps) {
   return (
-    <Card padding="none" className={`overflow-hidden ${className}`}>
-      <div className="overflow-x-auto">
-        <table className="w-full text-sm">
-          <thead>
-            <tr className="border-b border-gray-100 bg-gray-50">
-              <th className="px-5 py-3 text-left text-xs font-semibold uppercase tracking-wide text-gray-500">
-                ប្រភេទ
-              </th>
-              <th className="px-5 py-3 text-left text-xs font-semibold uppercase tracking-wide text-gray-500">
-                ចំនួនទឹកប្រាក់
-              </th>
-              <th className="px-5 py-3 text-left text-xs font-semibold uppercase tracking-wide text-gray-500">
-                ព័ត៌មានបន្ថែម
-              </th>
+    <div className={`${tableContainer} ${className}`}>
+      <div className={tableScroll}>
+        <table className={dataTable.table}>
+          <thead className={dataTable.thead}>
+            <tr className={dataTable.thRow}>
+              <th className={dataTable.th}>ប្រភេទ</th>
+              <th className={dataTable.th}>ចំនួនទឹកប្រាក់</th>
+              <th className={dataTable.th}>ព័ត៌មានបន្ថែម</th>
             </tr>
           </thead>
-          <tbody className="divide-y divide-gray-100">
+          <tbody className={dataTable.tbody}>
             {rows.map((row) => {
               const Icon = row.icon
               return (
-                <tr key={row.label} className="transition-colors hover:bg-gray-50/80">
-                  <td className="px-5 py-4">
+                <tr key={row.label} className={dataTable.tr}>
+                  <td className={dataTable.td}>
                     <div className="flex items-center gap-3">
                       <span className={`grid h-9 w-9 shrink-0 place-items-center rounded-lg ${row.iconClass}`}>
                         <Icon className="h-4 w-4" />
                       </span>
-                      <span className="font-medium text-gray-900">{row.label}</span>
+                      <span className="font-medium text-foreground">{row.label}</span>
                     </div>
                   </td>
-                  <td className="px-5 py-4 font-bold tabular-nums text-gray-900">{row.value}</td>
-                  <td className="px-5 py-4 text-gray-600">
+                  <td className={`${dataTable.td} font-bold tabular-nums`}>{row.value}</td>
+                  <td className={dataTable.tdMuted}>
                     {row.meta ? (
                       <span className={row.metaClass}>{row.meta}</span>
                     ) : row.href && row.linkLabel ? (
@@ -73,6 +67,6 @@ export function StatsTable({ rows, className = '' }: StatsTableProps) {
           </tbody>
         </table>
       </div>
-    </Card>
+    </div>
   )
 }

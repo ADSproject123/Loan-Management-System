@@ -23,6 +23,8 @@ export {
   monthlySavingInterest,
   monthlySavingInterestForCombinedSavings,
   nextInterestDate,
+  loanRemainingAfterPayments,
+  loanScheduleStartDate,
   resolveLoanInterestRate,
   savingInterestStartDate,
 } from '@/lib/interestCalculations'

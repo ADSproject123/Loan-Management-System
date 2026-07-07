@@ -131,14 +131,14 @@ export function LoanRepayForm({
             </div>
             <div>
               <h2 className="font-semibold text-gray-900">បញ្ជាក់ចំនួនទឹកប្រាក់សង</h2>
-              <p className="text-gray-500 text-sm">តើអ្នកចង់បង់ប៉ុន្មាន?</p>
+              <p className="text-foreground text-sm">តើអ្នកចង់បង់ប៉ុន្មាន?</p>
             </div>
           </div>
 
           <div className="mb-5">
-            <label className="block text-sm font-medium text-gray-700 mb-1.5">ចំនួនទឹកប្រាក់បង់ (USD)</label>
+            <label className="block text-sm font-medium text-foreground mb-1.5">ចំនួនទឹកប្រាក់បង់ (USD)</label>
             <div className="relative">
-              <span className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500 font-medium">{currencySymbol()}</span>
+              <span className="absolute left-4 top-1/2 -translate-y-1/2 text-foreground font-medium">{currencySymbol()}</span>
               <input
                 type="number"
                 value={payAmount}
@@ -188,7 +188,7 @@ export function LoanRepayForm({
             </div>
             <div>
               <h2 className="font-semibold text-gray-900">ស្កេន KHQR ដើម្បីបង់ប្រាក់</h2>
-              <p className="text-gray-500 text-sm">ស្កេនជាមួយកម្មវិធីធនាគារដែលគាំទ្រ KHQR</p>
+              <p className="text-foreground text-sm">ស្កេនជាមួយកម្មវិធីធនាគារដែលគាំទ្រ KHQR</p>
             </div>
           </div>
 
@@ -207,18 +207,18 @@ export function LoanRepayForm({
           </div>
 
           <div className="mb-5">
-            <p className="text-sm font-medium text-gray-700 mb-2">ផ្ទុកភស្តុតាងបង់ប្រាក់</p>
+            <p className="text-sm font-medium text-foreground mb-2">ផ្ទុកភស្តុតាងបង់ប្រាក់</p>
             <label className="flex flex-col items-center justify-center w-full h-40 border-2 border-dashed border-gray-300 rounded-xl cursor-pointer hover:border-brand-500 hover:bg-brand-50 transition-colors">
-              <Upload className="w-10 h-10 text-gray-400 mb-3" />
+              <Upload className="w-10 h-10 text-foreground mb-3" />
               {evidence ? (
                 <div className="text-center">
                   <p className="text-sm font-medium text-brand-700">{evidence.name}</p>
-                  <p className="text-xs text-gray-400 mt-1">ចុចដើម្បីប្តូរ</p>
+                  <p className="text-xs text-foreground mt-1">ចុចដើម្បីប្តូរ</p>
                 </div>
               ) : (
                 <>
-                  <p className="text-sm font-medium text-gray-600">ចុចដើម្បីផ្ទុកភស្តុតាង</p>
-                  <p className="text-xs text-gray-400 mt-1">JPG, PNG ឬ PDF អតិបរមា ១០ មេកាបៃ</p>
+                  <p className="text-sm font-medium text-foreground">ចុចដើម្បីផ្ទុកភស្តុតាង</p>
+                  <p className="text-xs text-foreground mt-1">JPG, PNG ឬ PDF អតិបរមា ១០ មេកាបៃ</p>
                 </>
               )}
               <input
@@ -232,11 +232,11 @@ export function LoanRepayForm({
 
           <div className="bg-gray-50 rounded-lg p-4 mb-5 text-sm">
             <div className="flex justify-between text-sm mb-1">
-              <span className="text-gray-500">ចំនួនទឹកប្រាក់បង់</span>
+              <span className="text-foreground">ចំនួនទឹកប្រាក់បង់</span>
               <span className="font-semibold text-gray-900">{formatMoney(amount, currency)}</span>
             </div>
             <div className="flex justify-between text-sm">
-              <span className="text-gray-500">សមតុល្យនៅសល់ថ្មី</span>
+              <span className="text-foreground">សមតុល្យនៅសល់ថ្មី</span>
               <span className="font-semibold text-gray-900">{newRemaining <= 0 ? 'បានបង់ពេញ' : formatMoney(newRemaining, currency)}</span>
             </div>
           </div>
@@ -260,10 +260,10 @@ export function LoanRepayForm({
             <h2 className="text-2xl font-bold text-gray-900 mb-2">
               ការសងត្រូវបានដាក់ស្នើ!
             </h2>
-            <p className="text-gray-600 mb-2">
+            <p className="text-foreground mb-2">
               ការសងរបស់អ្នកចំនួន <strong>{formatMoney(amount, currency)}</strong> ត្រូវបានទទួល។
             </p>
-            <p className="text-gray-500 text-sm mb-6">
+            <p className="text-foreground text-sm mb-6">
               អ្នកគ្រប់គ្រងនឹងទទួលការបង់ប្រាក់របស់អ្នកក្នុងរយៈពេល ២៤ ម៉ោង និង ធ្វើបច្ចុប្បន្នភាពសមតុល្យកម្ជីរបស់អ្នក។
             </p>
 

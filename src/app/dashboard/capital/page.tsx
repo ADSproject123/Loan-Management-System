@@ -32,7 +32,7 @@ export default async function CapitalRequestPage() {
       <div className="mb-6">
         <Link
           href="/dashboard/savings"
-          className="inline-flex items-center gap-2 text-gray-500 hover:text-gray-700 text-sm mb-4 transition-colors"
+          className="inline-flex items-center gap-2 text-foreground hover:text-foreground text-sm mb-4 transition-colors"
         >
           <ArrowLeft className="w-4 h-4" />
           ត្រឡប់ក្រោយទៅការសន្សំ

@@ -10,6 +10,7 @@ import { type LoanChartSourceRow } from '@/lib/admin/loanChartData'
 import { DashboardCharts } from '@/app/admin/DashboardCharts'
 import { CommunityBalanceCircle } from '@/app/admin/CommunityBalanceCircle'
 import { AdminPanel } from '@/components/admin'
+import { dataTable } from '@/components/ui/tableStyles'
 import { getInterestSettings } from '@/lib/interest'
 import { computeCommunityBalance } from '@/lib/admin/communityBalance'
 
@@ -44,7 +45,7 @@ export default async function AdminPage() {
       .select(
         'id, member_id, amount, currency, term_months, monthly_interest_rate, start_date, disbursed_at, created_at, status'
       )
-      .in('status', ['active', 'approved']),
+      .in('status', ['active']),
     admin.from('loan_repayments').select('loan_id, amount, status'),
     admin.from('loan_repayments').select('amount, currency').eq('status', 'completed'),
     admin.from('loans').select('id', { count: 'exact', head: true }),
@@ -83,9 +84,7 @@ export default async function AdminPage() {
       .map((row) => row.member_id)
   ).size
 
-  const balanceLoans = (activeLoansForInterest.data ?? []).filter(
-    (loan) => loan.status === 'active' || loan.status === 'approved'
-  )
+  const balanceLoans = (activeLoansForInterest.data ?? []).filter((loan) => loan.status === 'active')
   const communityBalance = computeCommunityBalance(
     savingsRows,
     balanceLoans,
@@ -111,45 +110,45 @@ export default async function AdminPage() {
 
         <div className="flex min-h-0 flex-col border-t border-border lg:border-t-0">
           <div className="flex min-h-0 flex-1 flex-col justify-center overflow-auto">
-            <table className="w-full text-sm">
-            <thead className="border-b border-border bg-surface-muted/50">
-              <tr>
-                <th className="px-5 py-3 text-left text-xs font-bold uppercase tracking-wide text-foreground">ប្រភេទ</th>
-                <th className="px-5 py-3 text-left text-xs font-bold uppercase tracking-wide text-foreground">តម្លៃ</th>
-                <th className="px-5 py-3 text-left text-xs font-bold uppercase tracking-wide text-foreground">ព័ត៌មានបន្ថែម</th>
-                <th className="px-5 py-3" />
+            <table className={dataTable.table}>
+            <thead className={dataTable.thead}>
+              <tr className={dataTable.thRow}>
+                <th className={dataTable.th}>ប្រភេទ</th>
+                <th className={dataTable.th}>តម្លៃ</th>
+                <th className={dataTable.th}>ព័ត៌មានបន្ថែម</th>
+                <th className={dataTable.thRight} />
               </tr>
             </thead>
-            <tbody className="divide-y divide-border">
-              <tr className="bg-surface hover:bg-surface-muted/40">
-                <td className="px-5 py-4 text-sm font-semibold text-muted">សមាជិកសកម្ម</td>
-                <td className="px-5 py-4 text-sm font-bold tabular-nums text-foreground">{activeMembers}</td>
-                <td className="px-5 py-4 text-sm text-muted">រង់ចាំចូលរួម <span className="font-semibold text-foreground">{pendingMemberTotal}</span></td>
-                <td className="px-5 py-4 text-right"><Link href="/admin/members" className="text-xs font-semibold text-brand-700 hover:text-brand-900">មើល →</Link></td>
+            <tbody className={dataTable.tbody}>
+              <tr className={dataTable.tr}>
+                <td className={`${dataTable.td} font-semibold text-muted`}>សមាជិកសកម្ម</td>
+                <td className={`${dataTable.td} font-bold tabular-nums`}>{activeMembers}</td>
+                <td className={dataTable.tdMuted}>រង់ចាំចូលរួម <span className="font-semibold text-foreground">{pendingMemberTotal}</span></td>
+                <td className={dataTable.tdRight}><Link href="/admin/members" className="text-xs font-semibold text-brand-700 hover:text-brand-900">មើល →</Link></td>
               </tr>
-              <tr className="bg-surface hover:bg-surface-muted/40">
-                <td className="px-5 py-4 text-sm font-semibold text-muted">កម្ជីទាំងអស់</td>
-                <td className="px-5 py-4 text-sm font-bold tabular-nums text-foreground">{totalLoans}</td>
-                <td className="px-5 py-4 text-sm text-muted">សកម្ម <span className="font-semibold text-foreground">{activeLoansCount}</span> កម្ជី</td>
-                <td className="px-5 py-4 text-right"><Link href="/admin/loans" className="text-xs font-semibold text-brand-700 hover:text-brand-900">មើល →</Link></td>
+              <tr className={dataTable.tr}>
+                <td className={`${dataTable.td} font-semibold text-muted`}>កម្ជីទាំងអស់</td>
+                <td className={`${dataTable.td} font-bold tabular-nums`}>{totalLoans}</td>
+                <td className={dataTable.tdMuted}>សកម្ម <span className="font-semibold text-foreground">{activeLoansCount}</span> កម្ជី</td>
+                <td className={dataTable.tdRight}><Link href="/admin/loans" className="text-xs font-semibold text-brand-700 hover:text-brand-900">មើល →</Link></td>
               </tr>
-              <tr className="bg-surface hover:bg-surface-muted/40">
-                <td className="px-5 py-4 text-sm font-semibold text-muted">សន្សំសរុប</td>
-                <td className="px-5 py-4 text-sm font-bold tabular-nums text-foreground">{money(verifiedSavingsTotal)}</td>
-                <td className="px-5 py-4 text-sm text-muted">ផ្ទៀងផ្ទាត់ <span className="font-semibold text-foreground">{verifiedSavingsCount}</span> ដំណើរ</td>
-                <td className="px-5 py-4 text-right"><Link href="/admin/savings" className="text-xs font-semibold text-brand-700 hover:text-brand-900">មើល →</Link></td>
+              <tr className={dataTable.tr}>
+                <td className={`${dataTable.td} font-semibold text-muted`}>សន្សំសរុប</td>
+                <td className={`${dataTable.td} font-bold tabular-nums`}>{money(verifiedSavingsTotal)}</td>
+                <td className={dataTable.tdMuted}>ផ្ទៀងផ្ទាត់ <span className="font-semibold text-foreground">{verifiedSavingsCount}</span> ដំណើរ</td>
+                <td className={dataTable.tdRight}><Link href="/admin/savings" className="text-xs font-semibold text-brand-700 hover:text-brand-900">មើល →</Link></td>
               </tr>
-              <tr className="bg-surface hover:bg-surface-muted/40">
-                <td className="px-5 py-4 text-sm font-semibold text-muted">កម្ជីសកម្ម</td>
-                <td className="px-5 py-4 text-sm font-bold tabular-nums text-foreground">{money(activeLoanTotal)}</td>
-                <td className="px-5 py-4 text-sm text-muted">ផលប័ត្រ <span className="font-semibold text-foreground">{money(loanPortfolioTotal)}</span></td>
-                <td className="px-5 py-4 text-right"><Link href="/admin/loans/active" className="text-xs font-semibold text-brand-700 hover:text-brand-900">មើល →</Link></td>
+              <tr className={dataTable.tr}>
+                <td className={`${dataTable.td} font-semibold text-muted`}>កម្ជីសកម្ម</td>
+                <td className={`${dataTable.td} font-bold tabular-nums`}>{money(activeLoanTotal)}</td>
+                <td className={dataTable.tdMuted}>ផលប័ត្រ <span className="font-semibold text-foreground">{money(loanPortfolioTotal)}</span></td>
+                <td className={dataTable.tdRight}><Link href="/admin/loans/active" className="text-xs font-semibold text-brand-700 hover:text-brand-900">មើល →</Link></td>
               </tr>
-              <tr className="bg-surface hover:bg-surface-muted/40">
-                <td className="px-5 py-4 text-sm font-semibold text-muted">ប្រាក់សងសរុប</td>
-                <td className="px-5 py-4 text-sm font-bold tabular-nums text-foreground">{money(repaymentTotal)}</td>
-                <td className="px-5 py-4 text-sm text-muted" />
-                <td className="px-5 py-4 text-right"><Link href="/admin/loans/payments" className="text-xs font-semibold text-brand-700 hover:text-brand-900">មើល →</Link></td>
+              <tr className={dataTable.tr}>
+                <td className={`${dataTable.td} font-semibold text-muted`}>ប្រាក់សងសរុប</td>
+                <td className={`${dataTable.td} font-bold tabular-nums`}>{money(repaymentTotal)}</td>
+                <td className={dataTable.tdMuted} />
+                <td className={dataTable.tdRight}><Link href="/admin/loans/payments" className="text-xs font-semibold text-brand-700 hover:text-brand-900">មើល →</Link></td>
               </tr>
             </tbody>
           </table>

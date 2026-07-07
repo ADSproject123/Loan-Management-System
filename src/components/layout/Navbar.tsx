@@ -64,7 +64,7 @@ export function Navbar() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16">
           {/* Logo */}
-          <Link href="/" className="flex items-center gap-2 font-bold text-xl hover:text-brand-200 transition-colors">
+          <Link href="/" className="font-heading flex items-center gap-2 text-xl font-bold transition-colors hover:text-brand-200">
             <Building2 className="w-7 h-7" />
             <span>សន្សំ</span>
           </Link>

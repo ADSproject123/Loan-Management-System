@@ -67,6 +67,7 @@ export function CapitalRequestsList({ requests }: { requests: CapitalRequestList
       />
 
       <div className={adminTable.wrap}>
+        <div className={adminTable.scroll}>
         <table className={`${adminTable.table} min-w-208`}>
           <thead className={adminTable.thead}>
             <tr className={adminTable.thRow}>
@@ -115,6 +116,7 @@ export function CapitalRequestsList({ requests }: { requests: CapitalRequestList
             ))}
           </tbody>
         </table>
+      </div>
       </div>
     </div>
   )

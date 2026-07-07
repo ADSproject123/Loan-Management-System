@@ -3,7 +3,13 @@ import { AdminPanel } from '@/components/admin'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { formatDate, sumAmounts } from '@/app/admin/adminUtils'
 import { getInterestSettings, getLoanInterestPlans, monthlySavingInterestForCombinedSavings, fetchMemberLoanInterestRate } from '@/lib/interest'
-import { accruedSavingInterestTotal, annotateLoanPaymentSchedule, buildLoanPaymentSchedule, nextInterestDate } from '@/lib/interestCalculations'
+import {
+  accruedSavingInterestTotal,
+  loanRemainingAfterPayments,
+  loanScheduleStartDate,
+  nextInterestDate,
+  resolveLoanInterestRate,
+} from '@/lib/interestCalculations'
 import { isVerifiedSavingForChart } from '@/lib/admin/savingsChartData'
 import { getPrivateFileUrl } from '@/lib/uploads'
 import { predominantCurrency } from '@/lib/currency'
@@ -55,7 +61,7 @@ export default async function AdminMemberDetailPage({ params }: PageProps) {
       .order('created_at', { ascending: false }),
     admin
       .from('loans')
-      .select('id, amount, currency, purpose, status, term_months, monthly_interest_rate, start_date, created_at')
+      .select('id, amount, currency, purpose, status, term_months, monthly_interest_rate, start_date, disbursed_at, created_at')
       .eq('member_id', id)
       .order('created_at', { ascending: false }),
   ])
@@ -65,40 +71,43 @@ export default async function AdminMemberDetailPage({ params }: PageProps) {
   const recentLoans = loans.slice(0, 5)
 
   const verifiedSavings = savings.filter(isVerifiedSavingForChart)
-  const activeLoans = loans.filter((loan) => loan.status === 'active' || loan.status === 'approved')
+  const activeLoans = loans.filter((loan) => loan.status === 'active')
   const savingsTotal = sumAmounts(verifiedSavings)
   const loanTotal = sumAmounts(activeLoans)
 
-  // Remaining principal: re-run the amortization schedule for each active loan
-  // against its verified repayments so the balance declines as the member pays.
-  let loanRemainingBalance = loanTotal
+  let loanRemainingBalance = 0
   if (activeLoans.length > 0) {
     const { data: repaymentRows } = await admin
       .from('loan_repayments')
-      .select('loan_id, amount')
+      .select('loan_id, amount, status')
       .in('loan_id', activeLoans.map((l) => l.id))
-      .in('status', ['verified', 'completed'])
+      .in('status', ['verified', 'completed', 'pending'])
 
     const paidByLoan = (repaymentRows ?? []).reduce<Record<string, number>>((acc, r) => {
+      if (r.status !== 'verified' && r.status !== 'completed') return acc
+      acc[r.loan_id] = (acc[r.loan_id] ?? 0) + (r.amount ?? 0)
+      return acc
+    }, {})
+
+    const pendingByLoan = (repaymentRows ?? []).reduce<Record<string, number>>((acc, r) => {
+      if (r.status !== 'pending') return acc
       acc[r.loan_id] = (acc[r.loan_id] ?? 0) + (r.amount ?? 0)
       return acc
     }, {})
 
     loanRemainingBalance = activeLoans.reduce((total, loan) => {
-      const paidSoFar = paidByLoan[loan.id] ?? 0
-      if (paidSoFar === 0) return total + loan.amount
-
-      const rate = (loan.monthly_interest_rate as number | null) ?? interestSettings.monthlyLoanInterestRate
-      const schedule = buildLoanPaymentSchedule(loan.amount, loan.term_months ?? 12, rate, loan.start_date as string | null)
-      const annotated = annotateLoanPaymentSchedule(schedule, paidSoFar)
-
-      const remaining = annotated.reduce((sum, row) => {
-        if (row.status === 'paid') return sum
-        const principalPaid = Math.max(0, row.paidAmount - row.interestPortion)
-        return sum + Math.max(row.principalPortion - principalPaid, 0)
-      }, 0)
-
-      return total + remaining
+      const rate = resolveLoanInterestRate(loan, interestSettings.monthlyLoanInterestRate)
+      return (
+        total +
+        loanRemainingAfterPayments(
+          loan.amount,
+          loan.term_months ?? 12,
+          rate,
+          loanScheduleStartDate(loan),
+          paidByLoan[loan.id] ?? 0,
+          pendingByLoan[loan.id] ?? 0
+        )
+      )
     }, 0)
   }
   const savingsCount = verifiedSavings.length

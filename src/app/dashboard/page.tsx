@@ -154,12 +154,12 @@ export default async function DashboardPage() {
         <h1 className="mt-1 text-2xl font-bold tracking-tight text-slate-900 md:text-3xl">
           សូមស្វាគមន៍, {member.full_name.split(' ')[0]}
         </h1>
-        <div className="mt-2 flex flex-wrap items-center gap-2 text-sm text-slate-500">
+        <div className="mt-2 flex flex-wrap items-center gap-2 text-sm text-foreground">
           <span>
             សមាជិកតាំងពី{' '}
             {formatKhmerMonthYear(member.joined_at)}
           </span>
-          <span className="text-slate-300">·</span>
+          <span className="text-foreground">·</span>
           <MemberStatusBadge status={member.status} />
         </div>
       </div>     
@@ -215,9 +215,9 @@ export default async function DashboardPage() {
                   </div>
                   <div className="flex-1">
                     <p className="font-medium text-gray-900 text-sm">{action.label}</p>
-                    <p className="text-xs text-gray-500 mt-0.5">{action.description}</p>
+                    <p className="text-xs text-foreground mt-0.5">{action.description}</p>
                   </div>
-                  <ChevronRight className="w-4 h-4 text-gray-400 group-hover:text-brand-500 transition-colors" />
+                  <ChevronRight className="w-4 h-4 text-foreground group-hover:text-brand-500 transition-colors" />
                 </Link>
               )
             })}
@@ -237,7 +237,7 @@ export default async function DashboardPage() {
             <Card padding="none">
               <div className="divide-y divide-gray-100">
                 {activity.length === 0 && (
-                  <div className="p-4 text-sm text-gray-500">មិនទាន់មានសកម្មភាពនៅឡើយ។</div>
+                  <div className="p-4 text-sm text-foreground">មិនទាន់មានសកម្មភាពនៅឡើយ។</div>
                 )}
                 {activity.map((item) => (
                   <div key={item.id} className="flex items-center gap-4 p-4">
@@ -256,7 +256,7 @@ export default async function DashboardPage() {
                     </div>
                     <div className="flex-1">
                       <p className="text-sm font-medium text-gray-900">{item.description}</p>
-                      <p className="text-xs text-gray-400 mt-0.5">{formatKhmerDate(item.date)}</p>
+                      <p className="text-xs text-foreground mt-0.5">{formatKhmerDate(item.date)}</p>
                     </div>
                     <div className="text-right">
                       <p className={`text-sm font-semibold ${item.type === 'loan_repay' ? 'text-orange-600' : 'text-green-600'}`}>
@@ -264,7 +264,7 @@ export default async function DashboardPage() {
                       </p>
                       <div className="flex items-center gap-1 justify-end mt-0.5">
                         <CheckCircle className="w-3 h-3 text-green-500" />
-                        <span className="text-xs text-gray-400">{translateStatus(item.status)}</span>
+                        <span className="text-xs text-foreground">{translateStatus(item.status)}</span>
                       </div>
                     </div>
                   </div>

@@ -18,7 +18,7 @@
   --surface-muted: #f1f5f9;
   --border: #e2e8f0;
   --ring: #93c5fd;
-  --muted: #64748b;
+  --muted: #0f172a;
   --input-radius: 0.75rem;
 }
 
@@ -55,7 +55,8 @@ body {
 }
 
 .font-times,
-.font-khmer {
+.font-khmer,
+.font-heading {
   font-family: var(--font-khmer), var(--font-geist-sans), system-ui, -apple-system, sans-serif;
 }
 
@@ -135,7 +136,8 @@ body {
 }
 
 .app-input::placeholder {
-  color: var(--muted);
+  color: var(--foreground);
+  opacity: 0.55;
 }
 
 .app-input:hover {

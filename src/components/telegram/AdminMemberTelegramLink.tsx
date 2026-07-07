@@ -68,11 +68,11 @@ export function AdminMemberTelegramConnectCard({
     <div className="space-y-5">
       <div className="rounded-2xl border border-sky-100 bg-sky-50/40 p-5">
         <p className="text-base font-bold text-slate-900">ជំហានបន្ទាប់ — ភ្ជាប់ Telegram</p>
-        <p className="mt-1 text-sm leading-6 text-slate-600">
+        <p className="mt-1 text-sm leading-6 text-foreground">
           គណនី <strong>{memberName}</strong> ត្រូវបានបង្កើតរួចហើយ។ ផ្ញើតំណភ្ជាប់ផ្ទាល់ខ្លួនខាងក្រោមឱ្យសមាជិក ឬ ឱ្យគាត់ចូលគណនីហើយទៅ <strong>ភ្ជាប់ Telegram</strong>។
         </p>
         {memberPhone && (
-          <p className="mt-3 rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-700">
+          <p className="mt-3 rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm text-foreground">
             លេខចូលគណនី៖ <strong>{memberPhone}</strong>
           </p>
         )}
