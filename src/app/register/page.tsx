@@ -66,7 +66,7 @@ const STEPS: StepDefinition[] = [
   {
     id: 4,
     label: 'ឯកសារ',
-    description: 'អត្តសញ្ញាណប័ណ្ណ និង សៀវភៅគ្រួសារ',
+    description: 'អត្តសញ្ញាណប័ណ្ណ (សៀវភៅគ្រួសារ/ស្នាក់នៅ ស្រេចចិត្ត)',
     hint: 'រូបថតច្បាស់ៗជួយយើងទទួលពាក្យសុំរបស់អ្នកលឿនជាងមុន។',
   },
   {
@@ -275,12 +275,12 @@ export default function RegisterPage() {
   }
 
   return (
-    <div className="min-h-screen bg-background">
-      <div className="min-h-screen w-full">
+    <div className="h-screen overflow-hidden bg-background">
+      <div className="flex h-full w-full">
         <BrandPanel currentStep={step} />
 
-        <main className="relative flex min-h-screen flex-col bg-background lg:ml-[30%]">
-          <div className="flex items-center justify-between border-b border-border px-6 py-4 sm:px-8">
+        <main className="relative flex h-full min-h-0 flex-1 flex-col bg-background lg:ml-[30%]">
+          <div className="flex shrink-0 items-center justify-between border-b border-border px-6 py-4 sm:px-8">
             <Link href="/" className="flex items-center gap-2 lg:hidden">
               <span className="grid h-8 w-8 place-items-center rounded-lg bg-brand-950 text-white">
                 <Building2 className="h-4 w-4" />
@@ -299,43 +299,43 @@ export default function RegisterPage() {
             </div>
           </div>
 
-          <div className="flex flex-1 flex-col px-4 py-8 sm:px-8 lg:px-12 lg:py-12">
-            <div className="mx-auto w-full max-w-4xl">
-              <MobileStepBar step={step} />
+          <div className="flex min-h-0 flex-1 flex-col px-4 py-6 sm:px-8 lg:px-12 lg:py-8">
+            <MobileStepBar step={step} />
 
-              <div className="mb-7">
-                <h1 className="text-3xl font-bold tracking-tight text-slate-950 sm:text-[34px]">
-                  {step === 6 ? 'ពាក្យសុំត្រូវបានដាក់ស្នើ' : currentStep.label}
-                </h1>
-                <p className="mt-2 text-[15px] leading-6 text-slate-600">{currentStep.hint}</p>
+            <div className="shrink-0">
+              <h1 className="font-heading text-3xl font-bold tracking-tight text-slate-950 sm:text-[34px]">
+                {step === 6 ? 'ពាក្យសុំត្រូវបានដាក់ស្នើ' : currentStep.label}
+              </h1>
+              <p className="mt-2 text-[15px] leading-6 text-foreground">{currentStep.hint}</p>
+            </div>
+
+            {step < 5 && (
+              <div className="mt-5 flex shrink-0 overflow-hidden rounded-full border border-slate-200">
+                {STEPS.slice(0, 4).map((s, i) => {
+                  const isComplete = step > s.id
+                  const isCurrent = step === s.id
+                  return (
+                    <div
+                      key={s.id}
+                      className={`flex flex-1 items-center justify-center px-3 py-2 text-xs font-semibold transition-colors ${
+                        i > 0 ? 'border-l border-slate-200' : ''
+                      } ${
+                        isCurrent
+                          ? 'bg-brand-950 text-white'
+                          : isComplete
+                          ? 'bg-brand-100 text-brand-800'
+                          : 'bg-white text-foreground'
+                      }`}
+                    >
+                      {s.label}
+                    </div>
+                  )
+                })}
               </div>
+            )}
 
-              {step < 5 && (
-                <div className="mb-6 flex overflow-hidden rounded-full border border-slate-200">
-                  {STEPS.slice(0, 4).map((s, i) => {
-                    const isComplete = step > s.id
-                    const isCurrent = step === s.id
-                    return (
-                      <div
-                        key={s.id}
-                        className={`flex flex-1 items-center justify-center px-3 py-2 text-xs font-semibold transition-colors ${
-                          i > 0 ? 'border-l border-slate-200' : ''
-                        } ${
-                          isCurrent
-                            ? 'bg-brand-950 text-white'
-                            : isComplete
-                            ? 'bg-brand-100 text-brand-800'
-                            : 'bg-white text-slate-400'
-                        }`}
-                      >
-                        {s.label}
-                      </div>
-                    )
-                  })}
-                </div>
-              )}
-
-              <div className="border border-border bg-surface p-6 sm:p-8">
+            <div className="mt-6 flex min-h-0 flex-1 flex-col overflow-hidden rounded-2xl border border-border bg-surface">
+              <div className="flex min-h-0 flex-1 flex-col overflow-y-auto p-6 sm:p-8">
                 {step === 1 && (
                   <StepAccount
                     formData={formData}
@@ -355,53 +355,52 @@ export default function RegisterPage() {
                 )}
                 {step === 6 && <StepSuccess />}
               </div>
+            </div>
 
-              {step < 5 && (
-                <div className="mt-6 flex flex-col-reverse items-stretch gap-3 sm:flex-row sm:items-center sm:justify-between">
+            {step < 5 && (
+              <div className="mt-5 flex shrink-0 flex-col-reverse items-stretch gap-3 sm:flex-row sm:items-center sm:justify-between">
+                <button
+                  type="button"
+                  onClick={handleBack}
+                  disabled={loading || step === 1}
+                  className="inline-flex items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white px-5 py-3 text-sm font-semibold text-foreground transition hover:border-slate-300 hover:bg-background disabled:cursor-not-allowed disabled:opacity-50"
+                >
+                  <ArrowLeft className="h-4 w-4" />
+                  ត្រឡប់ក្រោយ
+                </button>
+
+                {step < totalSteps ? (
                   <button
                     type="button"
-                    onClick={handleBack}
-                    disabled={loading || step === 1}
-                    className="inline-flex items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white px-5 py-3 text-sm font-semibold text-slate-700 transition hover:border-slate-300 hover:bg-background disabled:cursor-not-allowed disabled:opacity-50"
+                    onClick={handleNext}
+                    disabled={loading}
+                    className="inline-flex items-center justify-center gap-2 rounded-xl bg-brand-950 px-6 py-3 text-sm font-semibold text-white shadow-sm shadow-brand-950/10 transition hover:bg-brand-950 disabled:cursor-not-allowed disabled:opacity-60"
                   >
-                    <ArrowLeft className="h-4 w-4" />
-                    ត្រឡប់ក្រោយ
+                    បន្ត
+                    <ArrowRight className="h-4 w-4" />
                   </button>
-
-                  {step < totalSteps ? (
-                    <button
-                      type="button"
-                      onClick={handleNext}
-                      disabled={loading}
-                      className="inline-flex items-center justify-center gap-2 rounded-xl bg-brand-950 px-6 py-3 text-sm font-semibold text-white shadow-sm shadow-brand-950/10 transition hover:bg-brand-950 disabled:cursor-not-allowed disabled:opacity-60"
-                    >
-                      បន្ត
-                      <ArrowRight className="h-4 w-4" />
-                    </button>
-                  ) : (
-                    <button
-                      type="button"
-                      onClick={handleSubmit}
-                      disabled={loading}
-                      className="inline-flex items-center justify-center gap-2 rounded-xl bg-brand-950 px-6 py-3 text-sm font-semibold text-white shadow-sm shadow-brand-950/10 transition hover:bg-brand-950 disabled:cursor-not-allowed disabled:opacity-60"
-                    >
-                      {loading ? (
-                        <>
-                          <LoadingSpinner size="sm" color="white" />
-                          កំពុងដាក់ស្នើ...
-                        </>
-                      ) : (
-                        <>
-                          ដាក់ស្នើពាក្យសុំ
-                          <ArrowRight className="h-4 w-4" />
-                        </>
-                      )}
-                    </button>
-                  )}
-                </div>
-              )}
-
-            </div>
+                ) : (
+                  <button
+                    type="button"
+                    onClick={handleSubmit}
+                    disabled={loading}
+                    className="inline-flex items-center justify-center gap-2 rounded-xl bg-brand-950 px-6 py-3 text-sm font-semibold text-white shadow-sm shadow-brand-950/10 transition hover:bg-brand-950 disabled:cursor-not-allowed disabled:opacity-60"
+                  >
+                    {loading ? (
+                      <>
+                        <LoadingSpinner size="sm" color="white" />
+                        កំពុងដាក់ស្នើ...
+                      </>
+                    ) : (
+                      <>
+                        ដាក់ស្នើពាក្យសុំ
+                        <ArrowRight className="h-4 w-4" />
+                      </>
+                    )}
+                  </button>
+                )}
+              </div>
+            )}
           </div>
         </main>
       </div>
@@ -483,13 +482,13 @@ function Field({ label, htmlFor, hint, optional, children }: FieldShellProps) {
   return (
     <div className="space-y-1.5">
       <div className="flex items-baseline justify-between gap-2">
-        <label htmlFor={htmlFor} className="text-sm font-semibold text-slate-800">
+        <label htmlFor={htmlFor} className="text-sm font-semibold text-foreground">
           {label}
           {optional && (
-            <span className="ml-1.5 text-xs font-normal text-slate-400"></span>
+            <span className="ml-1.5 text-xs font-normal text-foreground">(ស្រេចចិត្ត)</span>
           )}
         </label>
-        {hint && <span className="text-xs text-slate-400">{hint}</span>}
+        {hint && <span className="text-xs text-foreground">{hint}</span>}
       </div>
       {children}
     </div>
@@ -507,7 +506,7 @@ interface IconInputProps extends React.InputHTMLAttributes<HTMLInputElement> {
 function IconInput({ icon, trailing, className = '', value, ...rest }: IconInputProps) {
   return (
     <div className="relative">
-      <span className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400">
+      <span className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-foreground">
         {icon}
       </span>
       <input
@@ -585,7 +584,7 @@ function StepAccount({
                 type="button"
                 aria-label={showPassword ? 'លាក់ពាក្យសម្ងាត់' : 'បង្ហាញពាក្យសម្ងាត់'}
                 onClick={() => setShowPassword(!showPassword)}
-                className="rounded-lg p-2 text-slate-400 transition hover:bg-slate-100 hover:text-slate-600"
+                className="rounded-lg p-2 text-foreground transition hover:bg-slate-100 hover:text-foreground"
               >
                 {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
               </button>
@@ -607,7 +606,7 @@ function StepAccount({
                 type="button"
                 aria-label={showConfirmPassword ? 'លាក់ពាក្យសម្ងាត់' : 'បង្ហាញពាក្យសម្ងាត់'}
                 onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                className="rounded-lg p-2 text-slate-400 transition hover:bg-slate-100 hover:text-slate-600"
+                className="rounded-lg p-2 text-foreground transition hover:bg-slate-100 hover:text-foreground"
               >
                 {showConfirmPassword ? (
                   <EyeOff className="h-4 w-4" />
@@ -633,8 +632,8 @@ function StepAccount({
             ))}
           </div>
           <div className="flex items-center justify-between text-xs">
-            <span className="text-slate-500">កម្លាំងពាក្យសម្ងាត់</span>
-            <span className="font-semibold text-slate-700">{strength.label}</span>
+            <span className="text-foreground">កម្លាំងពាក្យសម្ងាត់</span>
+            <span className="font-semibold text-foreground">{strength.label}</span>
           </div>
         </div>
       )}      
@@ -709,7 +708,7 @@ function StepPersonal({ formData, updateField }: StepProps) {
 
       <Field label="កន្លែងធ្វើការ" htmlFor="workplace" optional>
         <div className="relative">
-          <Building2 className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 h-4.5 w-4.5 text-slate-400" />
+          <Building2 className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 h-4.5 w-4.5 text-foreground" />
           <select
             id="workplace"
             value={formData.workplace}
@@ -730,7 +729,7 @@ function StepPersonal({ formData, updateField }: StepProps) {
       />
 
       <div className="space-y-1.5">
-        <p className="text-sm font-semibold text-slate-800">អាសយដ្ឋាន <span className="text-xs font-normal text-slate-400">(ស្រេចចិត្ត)</span></p>
+        <p className="text-sm font-semibold text-foreground">អាសយដ្ឋាន <span className="text-xs font-normal text-foreground">(ស្រេចចិត្ត)</span></p>
         <CambodiaAddressSelect
           value={parseCambodiaAddress(formData.address)}
           onChange={(addr) => updateField('address', formatCambodiaAddress(addr))}
@@ -761,7 +760,7 @@ function EmergencyContacts({
   return (
     <div className="space-y-3">
       <div className="flex items-center justify-between">
-        <p className="text-sm font-semibold text-slate-800">ទំនាក់ទំនងបន្ទាន់</p>
+        <p className="text-sm font-semibold text-foreground">ទំនាក់ទំនងបន្ទាន់</p>
         <button
           type="button"
           onClick={add}
@@ -776,7 +775,7 @@ function EmergencyContacts({
         <button
           type="button"
           onClick={add}
-          className="flex w-full items-center justify-center gap-2 rounded-2xl border-2 border-dashed border-slate-200 py-5 text-sm font-medium text-slate-400 transition hover:border-brand-300 hover:text-brand-700"
+          className="flex w-full items-center justify-center gap-2 rounded-2xl border-2 border-dashed border-slate-200 py-5 text-sm font-medium text-foreground transition hover:border-brand-300 hover:text-brand-700"
         >
           <Plus className="h-4 w-4" />
           បន្ថែមទំនាក់ទំនងបន្ទាន់
@@ -785,39 +784,37 @@ function EmergencyContacts({
 
       <div className="space-y-3">
         {contacts.map((contact, i) => (
-          <div key={i} className="relative rounded-2xl border border-slate-200 bg-slate-50/60 p-4">
-            <div className="mb-3 flex items-center justify-between">
-              <span className="text-xs font-semibold text-slate-500">ទំនាក់ទំនងលេខ {i + 1}</span>
-              <button
-                type="button"
-                onClick={() => remove(i)}
-                className="grid h-7 w-7 place-items-center rounded-lg text-slate-400 transition hover:bg-rose-50 hover:text-rose-600"
-              >
-                <Trash2 className="h-3.5 w-3.5" />
-              </button>
+          <div
+            key={i}
+            className="grid grid-cols-1 items-end gap-3 sm:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_auto]"
+          >
+            <div className="space-y-1.5">
+              <label className="text-xs font-semibold text-foreground">ឈ្មោះពេញ</label>
+              <IconInput
+                icon={<User className="h-4.5 w-4.5" />}
+                type="text"
+                value={contact.full_name}
+                onChange={(e) => update(i, 'full_name', e.target.value)}
+                placeholder="ឈ្មោះអ្នកទំនាក់ទំនង"
+              />
             </div>
-            <div className="grid gap-3 sm:grid-cols-2">
-              <div className="space-y-1.5">
-                <label className="text-xs font-semibold text-slate-700">ឈ្មោះពេញ</label>
-                <IconInput
-                  icon={<User className="h-4.5 w-4.5" />}
-                  type="text"
-                  value={contact.full_name}
-                  onChange={(e) => update(i, 'full_name', e.target.value)}
-                  placeholder="ឈ្មោះអ្នកទំនាក់ទំនង"
-                />
-              </div>
-              <div className="space-y-1.5">
-                <label className="text-xs font-semibold text-slate-700">លេខទូរស័ព្ទ</label>
-                <IconInput
-                  icon={<Phone className="h-4.5 w-4.5" />}
-                  type="tel"
-                  value={contact.phone}
-                  onChange={(e) => update(i, 'phone', e.target.value)}
-                  placeholder="0812345678"
-                />
-              </div>
+            <div className="space-y-1.5">
+              <label className="text-xs font-semibold text-foreground">លេខទូរស័ព្ទ</label>
+              <IconInput
+                icon={<Phone className="h-4.5 w-4.5" />}
+                type="tel"
+                value={contact.phone}
+                onChange={(e) => update(i, 'phone', e.target.value)}
+                placeholder="0812345678"
+              />
             </div>
+            <button
+              type="button"
+              onClick={() => remove(i)}
+              className="grid h-11 w-11 shrink-0 place-items-center rounded-lg border border-slate-200 text-foreground transition hover:bg-rose-50 hover:text-rose-600"
+            >
+              <Trash2 className="h-4 w-4" />
+            </button>
           </div>
         ))}
       </div>
@@ -896,7 +893,7 @@ function StepReferee({ formData, updateField }: StepProps) {
           <button
             type="button"
             onClick={clearSelection}
-            className="grid h-8 w-8 shrink-0 place-items-center rounded-lg text-slate-400 transition hover:bg-white hover:text-rose-600"
+            className="grid h-8 w-8 shrink-0 place-items-center rounded-lg text-foreground transition hover:bg-white hover:text-rose-600"
           >
             <X className="h-4 w-4" />
           </button>
@@ -904,7 +901,7 @@ function StepReferee({ formData, updateField }: StepProps) {
       ) : (
         <div className="space-y-2">
           <div className="relative">
-            <Search className="pointer-events-none absolute left-3.5 top-1/2 h-4.5 w-4.5 -translate-y-1/2 text-slate-400" />
+            <Search className="pointer-events-none absolute left-3.5 top-1/2 h-4.5 w-4.5 -translate-y-1/2 text-foreground" />
             <input
               type="text"
               value={query}
@@ -922,7 +919,7 @@ function StepReferee({ formData, updateField }: StepProps) {
           {showResults && (
             <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-md">
               {results.length === 0 ? (
-                <p className="px-4 py-3 text-sm text-slate-500">រកមិនឃើញសមាជិក</p>
+                <p className="px-4 py-3 text-sm text-foreground">រកមិនឃើញសមាជិក</p>
               ) : (
                 <ul>
                   {results.map((member, i) => (
@@ -932,7 +929,7 @@ function StepReferee({ formData, updateField }: StepProps) {
                         onClick={() => selectMember(member)}
                         className={`flex w-full items-center gap-3 px-4 py-3 text-left transition hover:bg-brand-50 ${i > 0 ? 'border-t border-slate-100' : ''}`}
                       >
-                        <span className="grid h-8 w-8 shrink-0 place-items-center rounded-lg bg-slate-100 text-slate-500">
+                        <span className="grid h-8 w-8 shrink-0 place-items-center rounded-lg bg-slate-100 text-foreground">
                           <User className="h-4 w-4" />
                         </span>
                         <div className="min-w-0 flex-1">
@@ -940,7 +937,7 @@ function StepReferee({ formData, updateField }: StepProps) {
                             {memberKhmerName(member)}
                           </p>
                           {(member.phone || member.email) && (
-                            <p className="truncate text-xs text-slate-500">
+                            <p className="truncate text-xs text-foreground">
                               {[member.phone, member.email].filter(Boolean).join(' · ')}
                             </p>
                           )}
@@ -955,7 +952,7 @@ function StepReferee({ formData, updateField }: StepProps) {
         </div>
       )}
 
-      <p className="text-xs leading-5 text-slate-500">
+      <p className="text-xs leading-5 text-foreground">
         ស្វែងរកមេគ្រុមតាមឈ្មោះ ទូរស័ព្ទ ឬអ៊ីមែល។ ប្រសិនបើ
         អ្នកមិនមានមេគ្រុម សូមទាក់ទងអ្នកគ្រប់គ្រងសន្សំបន្ទាប់ពីការចុះឈ្មោះ។
       </p>
@@ -1017,11 +1014,11 @@ function FileUpload({ label, subtitle, file, onChange, accept, optional }: FileU
   return (
     <div className="space-y-2">
       <div>
-        <p className="text-sm font-semibold text-slate-800">
+        <p className="text-sm font-semibold text-foreground">
           {label}
-          {optional && <span className="ml-1.5 text-xs font-normal text-slate-400">(ស្រេចចិត្ត)</span>}
+          {optional && <span className="ml-1.5 text-xs font-normal text-foreground">(ស្រេចចិត្ត)</span>}
         </p>
-        <p className="text-xs text-slate-500">{subtitle}</p>
+        <p className="text-xs text-foreground">{subtitle}</p>
       </div>
 
       {file ? (
@@ -1037,18 +1034,18 @@ function FileUpload({ label, subtitle, file, onChange, accept, optional }: FileU
             type="button"
             aria-label="លុបឯកសារ"
             onClick={() => onChange(null)}
-            className="grid h-8 w-8 shrink-0 place-items-center rounded-lg text-slate-500 transition hover:bg-white hover:text-rose-600"
+            className="grid h-8 w-8 shrink-0 place-items-center rounded-lg text-foreground transition hover:bg-white hover:text-rose-600"
           >
             <X className="h-4 w-4" />
           </button>
         </div>
       ) : (
         <label className="group flex h-32 cursor-pointer flex-col items-center justify-center gap-1.5 rounded-2xl border-2 border-dashed border-slate-200 bg-background/60 px-4 transition hover:border-brand-300 hover:bg-brand-50/40">
-          <span className="grid h-10 w-10 place-items-center rounded-xl bg-white text-slate-500 ring-1 ring-slate-200 transition group-hover:text-brand-700 group-hover:ring-brand-200">
+          <span className="grid h-10 w-10 place-items-center rounded-xl bg-white text-foreground ring-1 ring-slate-200 transition group-hover:text-brand-700 group-hover:ring-brand-200">
             <Upload className="h-5 w-5" />
           </span>
-          <span className="text-sm font-semibold text-slate-700">ចុចដើម្បីផ្ទុក</span>
-          <span className="text-xs text-slate-500">JPG, PNG ឬ PDF · រហូតដល់ ១០ មេកាបៃ</span>
+          <span className="text-sm font-semibold text-foreground">ចុចដើម្បីផ្ទុក</span>
+          <span className="text-xs text-foreground">JPG, PNG ឬ PDF · រហូតដល់ ១០ មេកាបៃ</span>
           <input
             type="file"
             accept={accept}
@@ -1087,7 +1084,7 @@ function StepSuccess() {
         <CheckCircle2 className="h-10 w-10 text-emerald-600" />
       </div>
       <h2 className="mt-6 text-2xl font-bold text-slate-950">អរគុណ — យើងបានទទួលពាក្យសុំរបស់អ្នក</h2>
-      <p className="mx-auto mt-3 max-w-md text-[15px] leading-7 text-slate-600">
+      <p className="mx-auto mt-3 max-w-md text-[15px] leading-7 text-foreground">
         ក្រុមការងាររបស់យើងនឹងពិនិត្យឯកសាររបស់អ្នកក្នុងរយៈពេល{' '}
         <strong className="text-slate-900">១-៣ ថ្ងៃ</strong>។ អ្នកនឹងទទួលបាន
         ការជូនដំណឹងភ្លាមៗនៅពេលគណនីរបស់អ្នកត្រូវបានទទួល។
@@ -1106,7 +1103,7 @@ function StepSuccess() {
               <span className="grid h-6 w-6 shrink-0 place-items-center rounded-full bg-brand-950 text-xs font-semibold text-white">
                 {i + 1}
               </span>
-              <p className="text-sm leading-6 text-slate-700">{item}</p>
+              <p className="text-sm leading-6 text-foreground">{item}</p>
             </li>
           ))}
         </ol>
@@ -1121,7 +1118,7 @@ function StepSuccess() {
         </Link>
         <Link
           href="/"
-          className="inline-flex items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white px-6 py-3 text-sm font-semibold text-slate-700 transition hover:border-slate-300 hover:bg-background"
+          className="inline-flex items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white px-6 py-3 text-sm font-semibold text-foreground transition hover:border-slate-300 hover:bg-background"
         >
           ត្រឡប់ក្រោយទៅទំព័រដើម
         </Link>

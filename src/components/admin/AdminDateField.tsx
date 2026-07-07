@@ -11,7 +11,7 @@ type AdminDateFieldProps = {
 export function AdminDateField({ id, label, value, onChange, min }: AdminDateFieldProps) {
   return (
     <div className="min-w-38">
-      <label htmlFor={id} className="mb-1 block text-xs font-semibold text-gray-500">
+      <label htmlFor={id} className="mb-1 block text-xs font-semibold text-foreground">
         {label}
       </label>
       <input

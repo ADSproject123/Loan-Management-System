@@ -71,7 +71,7 @@ function PageLink({
       className={`inline-flex h-9 min-w-9 cursor-pointer items-center justify-center rounded-full px-2 text-sm font-semibold transition ${
         isActive
           ? 'border border-brand-200 bg-brand-50 text-brand-700 shadow-xs ring-1 ring-brand-100'
-          : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900'
+          : 'text-foreground hover:bg-slate-100 hover:text-slate-900'
       }`}
     >
       {page}
@@ -168,7 +168,7 @@ export function AdminPagination({
               onChange={onPageSizeChange}
               aria-label="ចំនួនក្នុងមួយទំព័រ"
               className="min-w-[7.5rem]"
-              triggerClassName="flex h-9 cursor-pointer items-center justify-between gap-1 rounded-full border-0 bg-surface-muted/80 px-3 text-sm font-medium text-slate-700 shadow-none outline-none transition hover:bg-surface-muted focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-200"
+              triggerClassName="flex h-9 cursor-pointer items-center justify-between gap-1 rounded-full border-0 bg-surface-muted/80 px-3 text-sm font-medium text-foreground shadow-none outline-none transition hover:bg-surface-muted focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-200"
               menuClassName="min-w-[7.5rem]"
               options={ADMIN_PAGE_SIZE_OPTIONS.map((size) => ({
                 value: String(size),

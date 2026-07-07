@@ -1,4 +1,4 @@
-import { Card } from '@/components/ui/Card'
+import { dataTable, tableContainer, tableScroll } from '@/components/ui/tableStyles'
 import { SavingStatusBadge } from '@/components/ui/Badge'
 import { PageHeader } from '@/components/ui/PageHeader'
 import { StatsTable, type StatsRow } from '@/components/ui/StatsTable'
@@ -78,42 +78,42 @@ export default async function SavingsPage() {
       <StatsTable rows={statsRows} className="mb-8" />
 
       {/* Savings History */}
-      <Card padding="none">
-        <div className="px-6 py-4 border-b border-gray-100">
-          <h2 className="font-semibold text-gray-900">ប្រវត្តិការសន្សំ</h2>
+      <div className={tableContainer}>
+        <div className={dataTable.sectionHeader}>
+          <h2 className={dataTable.sectionTitle}>ប្រវត្តិការសន្សំ</h2>
         </div>
-        <div className="overflow-x-auto">
-          <table className="w-full">
-            <thead>
-              <tr className="bg-gray-50 border-b border-gray-100">
-                <th className="text-left px-6 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wider">កាលបរិច្ឆេទ</th>
-                <th className="text-left px-6 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wider">ចំនួនទឹកប្រាក់</th>
-                <th className="text-left px-6 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wider">កំណត់ចំណាំ</th>
-                <th className="text-left px-6 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wider">ស្ថានភាព</th>
+        <div className={tableScroll}>
+          <table className={dataTable.table}>
+            <thead className={dataTable.thead}>
+              <tr className={dataTable.thRow}>
+                <th className={dataTable.th}>កាលបរិច្ឆេទ</th>
+                <th className={dataTable.th}>ចំនួនទឹកប្រាក់</th>
+                <th className={dataTable.th}>កំណត់ចំណាំ</th>
+                <th className={dataTable.th}>ស្ថានភាព</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-gray-100">
+            <tbody className={dataTable.tbody}>
               {savings.length === 0 && (
                 <tr>
-                  <td colSpan={4} className="px-6 py-8 text-center text-sm text-gray-500">
+                  <td colSpan={4} className={dataTable.emptyCell}>
                     មិនទាន់មានការសន្សំដែលបានដាក់ស្នើនៅឡើយ។
                   </td>
                 </tr>
               )}
               {savings.map((saving) => (
-                <tr key={saving.id} className="hover:bg-gray-50 transition-colors">
-                  <td className="px-6 py-4 text-sm text-gray-900">
+                <tr key={saving.id} className={dataTable.tr}>
+                  <td className={dataTable.td}>
                     {formatKhmerDate(saving.saving_date)}
                   </td>
-                  <td className="px-6 py-4">
-                    <span className="text-sm font-semibold text-green-700">+{formatMoney(saving.amount, saving.currency ?? 'USD')}</span>
+                  <td className={dataTable.td}>
+                    <span className="font-semibold text-green-700">+{formatMoney(saving.amount, saving.currency ?? 'USD')}</span>
                   </td>
-                  <td className="px-6 py-4 text-sm text-gray-500">
+                  <td className={dataTable.tdMuted}>
                     {saving.status === 'refunded' && saving.refund_reason
                       ? saving.refund_reason
                       : saving.notes || '—'}
                   </td>
-                  <td className="px-6 py-4">
+                  <td className={dataTable.td}>
                     <SavingStatusBadge status={effectiveStatus(saving)} />
                   </td>
                 </tr>
@@ -121,7 +121,7 @@ export default async function SavingsPage() {
             </tbody>
           </table>
         </div>
-      </Card>
+      </div>
     </div>
   )
 }

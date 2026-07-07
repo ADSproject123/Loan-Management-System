@@ -80,7 +80,7 @@ export default async function PendingApprovalPage() {
                         ? 'ការចុះឈ្មោះរបស់អ្នកមិនត្រូវបានទទួលយកទេ'
                         : `គណនីរបស់អ្នកស្ថិតក្នុងស្ថានភាព ${statusLabel}`}
                 </h1>
-                <p className="mx-auto mt-3 max-w-xl text-gray-600 leading-7">
+                <p className="mx-auto mt-3 max-w-xl text-foreground leading-7">
                   {isPending
                     ? 'ពាក្យសុំចូលជាសមាជិករបស់អ្នកត្រូវបានទទួលហើយ។ អ្នកមិនអាចចូលប្រើផ្ទាំងគ្រប់គ្រងសមាជិកបានទេ រហូតដល់អ្នកគ្រប់គ្រងទទួលយកគណនីរបស់អ្នក។'
                     : isSuspended
@@ -167,7 +167,7 @@ export default async function PendingApprovalPage() {
                             <Icon className="h-5 w-5 text-brand-800" />
                           </div>
                           <p className="font-semibold text-gray-950">{item.title}</p>
-                          <p className="mt-2 text-sm text-gray-500">{item.text}</p>
+                          <p className="mt-2 text-sm text-foreground">{item.text}</p>
                         </div>
                       )
                     })}
@@ -195,7 +195,7 @@ export default async function PendingApprovalPage() {
               <div className="mt-8 flex flex-wrap justify-center gap-3">
                 <Link
                   href="/"
-                  className="rounded-xl border border-gray-300 bg-white px-5 py-2.5 text-sm font-semibold text-gray-700 hover:bg-gray-50"
+                  className="rounded-xl border border-gray-300 bg-white px-5 py-2.5 text-sm font-semibold text-foreground hover:bg-gray-50"
                 >
                   ត្រឡប់ក្រោយ
                 </Link>

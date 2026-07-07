@@ -10,7 +10,7 @@ export const metadata: Metadata = {
 
 export default function NotFound() {
   return (
-    <main className="font-khmer flex min-h-screen flex-col items-center justify-center bg-background px-4 py-16">
+    <main className="flex min-h-screen flex-col items-center justify-center bg-background px-4 py-16">
       <div className="w-full max-w-lg text-center">
         <div className="mx-auto mb-8 flex h-20 w-20 items-center justify-center rounded-2xl bg-brand-950 text-white shadow-sm ring-1 ring-brand-950/10">
           <SearchX className="h-10 w-10" strokeWidth={1.75} aria-hidden />
@@ -20,7 +20,7 @@ export default function NotFound() {
         <h1 className="mt-3 text-3xl font-extrabold tracking-tight text-slate-900 md:text-4xl">
           រកមិនឃើញទំព័រ
         </h1>
-        <p className="mt-4 text-base leading-7 text-slate-600">
+        <p className="mt-4 text-base leading-7 text-foreground">
           ទំព័រដែលអ្នកបើកមិនមាន ឬ ត្រូវបានផ្លាស់ទី។ សូមពិនិត្យតំណភ្ជាប់ ឬ ត្រឡប់ក្រោយទៅទំព័រដើម។
         </p>
 

@@ -4,7 +4,7 @@ import { Search } from 'lucide-react'
 import { Select, type SelectOption } from '@/components/ui/Select'
 
 export const adminFieldClassName =
-  'app-field w-full rounded-xl border border-border bg-surface text-sm text-foreground shadow-xs outline-none ring-0 transition placeholder:text-muted focus:border-border focus:shadow-xs focus:outline-none focus:ring-0 focus-visible:border-border focus-visible:shadow-xs focus-visible:outline-none focus-visible:ring-0'
+  'app-field w-full rounded-xl border border-border bg-surface text-sm text-foreground shadow-xs outline-none ring-0 transition placeholder:text-foreground/55 focus:border-border focus:shadow-xs focus:outline-none focus:ring-0 focus-visible:border-border focus-visible:shadow-xs focus-visible:outline-none focus-visible:ring-0'
 
 export type { SelectOption }
 

@@ -105,7 +105,7 @@ export function AcceptMemberButton({
               type="button"
               onClick={close}
               disabled={pending}
-              className="absolute right-4 top-4 rounded-lg p-1 text-gray-400 transition hover:bg-gray-100 hover:text-gray-700"
+              className="absolute right-4 top-4 rounded-lg p-1 text-foreground transition hover:bg-gray-100 hover:text-foreground"
               aria-label="បិទ"
             >
               <X className="h-5 w-5" />
@@ -119,7 +119,7 @@ export function AcceptMemberButton({
               {mode === 'role' ? 'ប្តូរតួនាទីសមាជិក' : 'ទទួលយកសមាជិក'}
               {memberName ? ` — ${memberName}` : ''}
             </h2>
-            <p className="mt-2 text-sm leading-6 text-gray-600">
+            <p className="mt-2 text-sm leading-6 text-foreground">
               {mode === 'role'
                 ? 'ជ្រើសរើសតួនាទីថ្មីសម្រាប់សមាជិកនេះ។'
                 : 'ជ្រើសរើសតួនាទីសម្រាប់សមាជិក មុនពេលធ្វើឱ្យគណនីដំណើរការ។'}
@@ -127,7 +127,7 @@ export function AcceptMemberButton({
 
             <form onSubmit={handleSubmit} className="mt-5 space-y-4">
               <fieldset className="space-y-2">
-                <legend className="mb-1.5 text-sm font-semibold text-gray-800">តួនាទី</legend>
+                <legend className="mb-1.5 text-sm font-semibold text-foreground">តួនាទី</legend>
                 {ROLE_OPTIONS.map((option) => {
                   const isActive = role === option.value
                   return (
@@ -152,7 +152,7 @@ export function AcceptMemberButton({
                         <span className="block text-sm font-semibold text-gray-900">
                           {MEMBER_ROLE_LABELS[option.value]}
                         </span>
-                        <span className="block text-xs text-gray-500">{option.description}</span>
+                        <span className="block text-xs text-foreground">{option.description}</span>
                       </span>
                     </label>
                   )
@@ -164,7 +164,7 @@ export function AcceptMemberButton({
                   type="button"
                   onClick={close}
                   disabled={pending}
-                  className="rounded-xl border border-gray-300 bg-white px-4 py-2 text-sm font-semibold text-gray-700 transition hover:bg-gray-50 disabled:opacity-60"
+                  className="rounded-xl border border-gray-300 bg-white px-4 py-2 text-sm font-semibold text-foreground transition hover:bg-gray-50 disabled:opacity-60"
                 >
                   បោះបង់
                 </button>

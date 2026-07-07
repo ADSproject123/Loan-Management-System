@@ -1,5 +1,6 @@
 'use client'
 
+import { createPortal } from 'react-dom'
 import { X, type LucideIcon } from 'lucide-react'
 
 type AdminModalProps = {
@@ -8,7 +9,7 @@ type AdminModalProps = {
   title: string
   description?: string
   icon?: LucideIcon
-  iconTone?: 'brand' | 'emerald' | 'default'
+  iconTone?: 'brand' | 'emerald' | 'default' | 'rose' | 'amber'
   size?: 'md' | 'lg' | 'xl'
   children: React.ReactNode
   pending?: boolean
@@ -24,7 +25,14 @@ const iconToneClass = {
   brand: 'bg-brand-50 text-brand-700',
   emerald: 'bg-emerald-50 text-emerald-700',
   default: 'bg-surface-muted text-muted',
+  rose: 'bg-red-50 text-red-600',
+  amber: 'bg-amber-50 text-amber-600',
 } as const
+
+export const adminDialogFooterClass =
+  'flex flex-wrap justify-end gap-2 border-t border-border pt-4'
+
+export const adminDialogLabelClass = 'mb-1.5 block text-xs font-semibold text-muted'
 
 export function AdminModal({
   open,
@@ -44,7 +52,7 @@ export function AdminModal({
     onClose()
   }
 
-  return (
+  return createPortal(
     <div
       className="fixed inset-0 z-50 flex items-center justify-center p-4"
       role="dialog"
@@ -92,6 +100,7 @@ export function AdminModal({
 
         <div className="min-h-0 flex-1 overflow-y-auto px-6 py-5">{children}</div>
       </div>
-    </div>
+    </div>,
+    document.body
   )
 }

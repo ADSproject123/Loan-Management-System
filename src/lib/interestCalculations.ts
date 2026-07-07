@@ -80,19 +80,24 @@ function groupSavingsByMember(savings: SavingInterestSource[]) {
   return byMember
 }
 
+function referenceDateIso(referenceDate: Date | string = new Date()) {
+  return typeof referenceDate === 'string'
+    ? referenceDate.slice(0, 10)
+    : referenceDate.toISOString().slice(0, 10)
+}
+
 function monthInterestShouldAccrue(
   year: number,
   month: number,
   firstStart: string,
-  today = new Date()
+  referenceDate: Date | string = new Date()
 ) {
   const monthEnd = lastDayOfMonth(year, month)
   if (monthEnd < firstStart) return false
 
-  const payDay = new Date(firstStart).getDate()
+  const payDay = Number(firstStart.slice(8, 10))
   const payDate = interestPayDateInMonth(payDay, year, month)
-  const todayIso = today.toISOString().slice(0, 10)
-  return payDate <= todayIso
+  return payDate <= referenceDateIso(referenceDate)
 }
 
 export function accruedCombinedSavingInterest(
@@ -104,16 +109,19 @@ export function accruedCombinedSavingInterest(
   if (deposits.length === 0) return 0
 
   const firstStart = deposits[0].start
+  const payDay = Number(firstStart.slice(8, 10))
   const [startYear, startMonth] = firstStart.split('-').map(Number)
   let year = startYear
   let month = startMonth
-  const endYear = today.getFullYear()
-  const endMonth = today.getMonth() + 1
+  const asOf = referenceDateIso(today)
+  const endYear = Number(asOf.slice(0, 4))
+  const endMonth = Number(asOf.slice(5, 7))
   let accrued = 0
 
   while (year < endYear || (year === endYear && month <= endMonth)) {
     if (monthInterestShouldAccrue(year, month, firstStart, today)) {
-      const balance = combinedBalanceThroughDate(deposits, lastDayOfMonth(year, month))
+      const payDate = interestPayDateInMonth(payDay, year, month)
+      const balance = combinedBalanceThroughDate(deposits, payDate)
       if (balance > 0) {
         accrued += monthlySavingInterest(balance, ratePercent)
       }
@@ -148,12 +156,16 @@ export function monthsAccrued(fromDateStr: string, today = new Date()): number {
  * Interest ticks on the same day-of-month as the original saving_date.
  */
 function nextInterestDateForSaving(savingDateStr: string, today = new Date()): Date {
-  const payDay = new Date(savingDateStr).getDate()
-  const next = new Date(today.getFullYear(), today.getMonth(), payDay)
-  if (today.getDate() >= payDay) {
-    next.setMonth(next.getMonth() + 1)
-  }
-  return next
+  const payDay = Number(savingDateStr.slice(8, 10))
+  const asOf = referenceDateIso(today)
+  const year = Number(asOf.slice(0, 4))
+  const month = Number(asOf.slice(5, 7))
+  const day = Number(asOf.slice(8, 10))
+  const nextMonth = day >= payDay ? month + 1 : month
+  const nextYear = nextMonth > 12 ? year + 1 : year
+  const normalizedMonth = nextMonth > 12 ? 1 : nextMonth
+  const nextPayDate = interestPayDateInMonth(payDay, nextYear, normalizedMonth)
+  return new Date(`${nextPayDate}T12:00:00.000Z`)
 }
 
 /**
@@ -306,5 +318,49 @@ export function resolveLoanInterestRate(
   const stored = Number(loan.monthly_interest_rate)
   if (Number.isFinite(stored) && stored >= 0) return stored
   return fallbackRate
+}
+
+export function loanScheduleStartDate(loan: {
+  disbursed_at?: string | null
+  start_date?: string | null
+  created_at?: string | null
+}): string | null {
+  return (
+    loan.disbursed_at?.slice(0, 10) ??
+    loan.start_date?.slice(0, 10) ??
+    loan.created_at?.slice(0, 10) ??
+    null
+  )
+}
+
+/** Remaining scheduled repayment (principal + interest) after verified/pending payments. */
+export function loanRemainingAfterPayments(
+  principal: number,
+  termMonths: number,
+  ratePercent: number,
+  scheduleStart: string | null | undefined,
+  paidSoFar: number,
+  pendingSoFar = 0,
+  referenceDate: Date | string = new Date()
+): number {
+  const amount = safePrincipal(principal)
+  const term = safeTermMonths(termMonths)
+  if (amount <= 0) return 0
+
+  const rate = safeRatePercent(ratePercent)
+  const totalOwed = loanRepaymentSummary(amount, term, rate).totalRepayment
+  const verifiedPaid = Math.max(paidSoFar, 0)
+  const pending = Math.max(pendingSoFar, 0)
+
+  if (verifiedPaid <= 0 && pending <= 0) return totalOwed
+
+  const ref =
+    typeof referenceDate === 'string'
+      ? new Date(`${referenceDate.slice(0, 10)}T12:00:00.000Z`)
+      : referenceDate
+  const schedule = buildLoanPaymentSchedule(amount, term, rate, scheduleStart ?? null)
+  const annotated = annotateLoanPaymentSchedule(schedule, verifiedPaid, ref, pending)
+  const scheduleTotal = annotated.reduce((sum, row) => sum + row.amount, 0)
+  return Math.max(scheduleTotal - verifiedPaid, 0)
 }
 

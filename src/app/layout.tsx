@@ -1,20 +1,17 @@
 import type { Metadata } from 'next'
-import { Geist, Noto_Sans_Khmer } from 'next/font/google'
+import { GeistSans } from 'geist/font/sans'
+import localFont from 'next/font/local'
 import Script from 'next/script'
 import { ToastProvider } from '@/components/providers/ToastProvider'
 import './globals.css'
 
-const geistSans = Geist({
-  variable: '--font-geist-sans',
-  subsets: ['latin'],
-  display: 'swap',
-})
-
-const notoKhmer = Noto_Sans_Khmer({
+const notoKhmer = localFont({
+  src: [
+    { path: '../../public/fonts/NotoSansKhmer-Regular.ttf', weight: '400', style: 'normal' },
+    { path: '../../public/fonts/NotoSansKhmer-Bold.ttf', weight: '700', style: 'normal' },
+  ],
   variable: '--font-khmer',
-  subsets: ['khmer'],
   display: 'swap',
-  weight: ['400', '500', '600', '700'],
 })
 
 export const metadata: Metadata = {
@@ -28,7 +25,7 @@ export default function RootLayout({
   children: React.ReactNode
 }>) {
   return (
-    <html lang="km" className={`${geistSans.variable} ${notoKhmer.variable} h-full antialiased`} suppressHydrationWarning>
+    <html lang="km" className={`${GeistSans.variable} ${notoKhmer.variable} h-full antialiased`} suppressHydrationWarning>
       <body className="min-h-full bg-background text-foreground">
         {/* Telegram Mini App SDK — initialises window.Telegram.WebApp before React hydration */}
         <Script src="https://telegram.org/js/telegram-web-app.js" strategy="beforeInteractive" />

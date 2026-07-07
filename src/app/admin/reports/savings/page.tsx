@@ -49,6 +49,7 @@ export default async function AdminSavingReportsPage({
         }
       >
         <div className={adminTable.wrap}>
+          <div className={adminTable.scroll}>
           <table className={adminTable.table}>
             <thead className={adminTable.thead}>
               <tr className={adminTable.thRow}>
@@ -89,6 +90,7 @@ export default async function AdminSavingReportsPage({
               ))}
             </tbody>
           </table>
+          </div>
         </div>
       </AdminPanel>
     </main>

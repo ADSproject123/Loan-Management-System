@@ -42,10 +42,12 @@ const inputClass = `${adminFieldClassName} px-3 py-2.5`
 function Field({
   label,
   required,
+  optional,
   children,
 }: {
   label: string
   required?: boolean
+  optional?: boolean
   children: React.ReactNode
 }) {
   return (
@@ -53,6 +55,7 @@ function Field({
       <label className="mb-1 block text-xs font-semibold text-muted">
         {label}
         {required ? <span className="text-red-500"> *</span> : null}
+        {optional ? <span className="ml-1 font-normal text-foreground">(ស្រេចចិត្ត)</span> : null}
       </label>
       {children}
     </div>
@@ -197,7 +200,7 @@ export function MemberProfileEditForm({ member, onSaved }: MemberProfileEditForm
             disabled={pending}
           />
         </Field>
-        <Field label="លេខសៀវភៅគ្រួសារ">
+        <Field label="លេខសៀវភៅគ្រួសារ" optional>
           <input
             type="text"
             value={form.resident_book_number}
@@ -256,49 +259,42 @@ export function MemberProfileEditForm({ member, onSaved }: MemberProfileEditForm
         {emergencyContacts.length === 0 ? (
           <p className="text-sm text-muted">មិនមានទំនាក់ទំនងបន្ទាន់ទេ។</p>
         ) : (
-          <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
+          <div className="space-y-3">
             {emergencyContacts.map((contact, index) => (
               <div
                 key={index}
-                className="rounded-xl border border-border bg-surface-muted/40 p-4"
+                className="grid grid-cols-1 items-center gap-3 sm:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_auto]"
               >
-                <div className="mb-3 flex items-center justify-between">
-                  <span className="text-xs font-semibold text-muted">
-                    ទំនាក់ទំនងលេខ {index + 1}
-                  </span>
-                  <button
-                    type="button"
-                    onClick={() => removeContact(index)}
+                <div className="relative">
+                  <User className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted" />
+                  <input
+                    type="text"
+                    value={contact.full_name}
+                    onChange={(e) => updateContact(index, 'full_name', e.target.value)}
+                    className={`${inputClass} pl-9`}
+                    placeholder="ឈ្មោះពេញ"
                     disabled={pending}
-                    className="grid h-7 w-7 place-items-center rounded-lg text-muted transition hover:bg-red-50 hover:text-red-600"
-                  >
-                    <Trash2 className="h-3.5 w-3.5" />
-                  </button>
+                  />
                 </div>
-                <div className="space-y-2">
-                  <div className="relative">
-                    <User className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted" />
-                    <input
-                      type="text"
-                      value={contact.full_name}
-                      onChange={(e) => updateContact(index, 'full_name', e.target.value)}
-                      className={`${inputClass} pl-9`}
-                      placeholder="ឈ្មោះពេញ"
-                      disabled={pending}
-                    />
-                  </div>
-                  <div className="relative">
-                    <Phone className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted" />
-                    <input
-                      type="tel"
-                      value={contact.phone}
-                      onChange={(e) => updateContact(index, 'phone', e.target.value)}
-                      className={`${inputClass} pl-9`}
-                      placeholder="0812345678"
-                      disabled={pending}
-                    />
-                  </div>
+                <div className="relative">
+                  <Phone className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted" />
+                  <input
+                    type="tel"
+                    value={contact.phone}
+                    onChange={(e) => updateContact(index, 'phone', e.target.value)}
+                    className={`${inputClass} pl-9`}
+                    placeholder="0812345678"
+                    disabled={pending}
+                  />
                 </div>
+                <button
+                  type="button"
+                  onClick={() => removeContact(index)}
+                  disabled={pending}
+                  className="grid h-10 w-10 shrink-0 place-items-center self-end rounded-lg border border-border text-muted transition hover:bg-red-50 hover:text-red-600 sm:self-auto"
+                >
+                  <Trash2 className="h-4 w-4" />
+                </button>
               </div>
             ))}
           </div>

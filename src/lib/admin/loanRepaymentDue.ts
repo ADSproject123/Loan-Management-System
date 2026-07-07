@@ -1,6 +1,7 @@
 import {
   annotateLoanPaymentSchedule,
   buildLoanPaymentSchedule,
+  loanScheduleStartDate,
   resolveLoanInterestRate,
 } from '@/lib/interestCalculations'
 import { memberKhmerName, memberSearchText } from '@/lib/memberNames'
@@ -152,11 +153,7 @@ export function buildLoanDueRowsForMonth(
       .filter((row) => row.status === 'pending')
       .reduce((sum, row) => sum + Number(row.amount ?? 0), 0)
 
-    const scheduleStart =
-      loan.disbursed_at?.slice(0, 10) ??
-      loan.start_date ??
-      loan.created_at?.slice(0, 10) ??
-      null
+    const scheduleStart = loanScheduleStartDate(loan)
     const rate = resolveLoanInterestRate(loan, fallbackLoanRate)
     const schedule = annotateLoanPaymentSchedule(
       buildLoanPaymentSchedule(principal, termMonths, rate, scheduleStart),

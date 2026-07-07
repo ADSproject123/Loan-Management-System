@@ -3,6 +3,7 @@ import 'server-only'
 import { revalidatePath } from 'next/cache'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { sendTelegramMessage } from '@/lib/telegram'
+import { formatTelegramNotification } from '@/lib/telegramMessages'
 
 export async function notifyAdmins(title: string, message: string, type = 'info') {
   const admin = createAdminClient()
@@ -39,6 +40,6 @@ export async function notifyAdmins(title: string, message: string, type = 'info'
   await Promise.all(
     admins
       .filter((row) => row.telegram_chat_id)
-      .map((row) => sendTelegramMessage(row.telegram_chat_id!, `<b>${title}</b>\n${message}`))
+      .map((row) => sendTelegramMessage(row.telegram_chat_id!, formatTelegramNotification(title, message)))
   )
 }

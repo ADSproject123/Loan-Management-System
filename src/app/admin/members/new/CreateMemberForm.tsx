@@ -38,13 +38,15 @@ const STEPS = [
 ]
 
 const inputClass = `${adminFieldClassName} px-3 py-2.5`
-const labelClass = 'mb-1.5 block text-sm font-semibold text-slate-700'
+const labelClass = 'mb-1.5 block text-sm font-semibold text-foreground'
 
-function Field({ label, required, children }: { label: string; required?: boolean; children: React.ReactNode }) {
+function Field({ label, required, optional, children }: { label: string; required?: boolean; optional?: boolean; children: React.ReactNode }) {
   return (
     <div className="space-y-1">
       <label className={labelClass}>
-        {label} {required && <span className="text-rose-500">*</span>}
+        {label}
+        {required && <span className="text-rose-500"> *</span>}
+        {optional && <span className="ml-1 text-xs font-normal text-foreground">(ស្រេចចិត្ត)</span>}
       </label>
       {children}
     </div>
@@ -67,7 +69,7 @@ function StepIndicator({ step }: { step: number }) {
                 ? 'bg-brand-950 text-white'
                 : isComplete
                 ? 'bg-brand-100 text-brand-800'
-                : 'bg-white text-slate-400'
+                : 'bg-white text-foreground'
             }`}
           >
             {s.label}
@@ -85,9 +87,9 @@ function FileUploadField({
 }) {
   return (
     <div className="space-y-2">
-      <p className="text-sm font-semibold text-slate-800">
+      <p className="text-sm font-semibold text-foreground">
         {label}
-        {optional && <span className="ml-1.5 text-xs font-normal text-slate-400">(មិនដាក់ក៏បាន)</span>}
+        {optional && <span className="ml-1.5 text-xs font-normal text-foreground">(មិនដាក់ក៏បាន)</span>}
       </p>
       {file ? (
         <div className="flex items-center gap-3 rounded-xl border border-brand-200 bg-brand-50/60 px-4 py-3">
@@ -99,17 +101,17 @@ function FileUploadField({
             <p className="text-xs text-brand-800/70">{(file.size / 1024).toFixed(0)} KB</p>
           </div>
           <button type="button" onClick={() => onChange(null)} disabled={disabled}
-            className="grid h-7 w-7 shrink-0 place-items-center rounded-lg text-slate-400 transition hover:bg-white hover:text-rose-600">
+            className="grid h-7 w-7 shrink-0 place-items-center rounded-lg text-foreground transition hover:bg-white hover:text-rose-600">
             <X className="h-4 w-4" />
           </button>
         </div>
       ) : (
         <label className={`group flex h-28 cursor-pointer flex-col items-center justify-center gap-1.5 rounded-xl border-2 border-dashed border-slate-200 bg-slate-50/40 px-4 transition hover:border-brand-300 hover:bg-brand-50/40 ${disabled ? 'pointer-events-none opacity-50' : ''}`}>
-          <span className="grid h-9 w-9 place-items-center rounded-lg bg-white text-slate-400 ring-1 ring-slate-200 transition group-hover:text-brand-700 group-hover:ring-brand-200">
+          <span className="grid h-9 w-9 place-items-center rounded-lg bg-white text-foreground ring-1 ring-slate-200 transition group-hover:text-brand-700 group-hover:ring-brand-200">
             <Upload className="h-4 w-4" />
           </span>
-          <span className="text-sm font-semibold text-slate-600">ចុចដើម្បីផ្ទុក</span>
-          <span className="text-xs text-slate-400">JPG, PNG ឬ PDF · រហូតដល់ ១០ មេកាបៃ</span>
+          <span className="text-sm font-semibold text-foreground">ចុចដើម្បីផ្ទុក</span>
+          <span className="text-xs text-foreground">JPG, PNG ឬ PDF · រហូតដល់ ១០ មេកាបៃ</span>
           <input type="file" accept="image/*,.pdf" className="hidden" onChange={(e) => onChange(e.target.files?.[0] ?? null)} />
         </label>
       )}
@@ -148,7 +150,7 @@ function RefereeSearch({
           <p className="text-xs text-emerald-700/70">សមាជិកដែលបានជ្រើស</p>
         </div>
         <button type="button" onClick={onClear} disabled={disabled}
-          className="grid h-7 w-7 shrink-0 place-items-center rounded-lg text-slate-400 transition hover:bg-white hover:text-rose-600">
+          className="grid h-7 w-7 shrink-0 place-items-center rounded-lg text-foreground transition hover:bg-white hover:text-rose-600">
           <X className="h-4 w-4" />
         </button>
       </div>
@@ -157,24 +159,24 @@ function RefereeSearch({
 
   return (
     <div className="relative max-w-md">
-      <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+      <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-foreground" />
       <input type="text" value={query} onChange={(e) => setQuery(e.target.value)}
         onBlur={() => setTimeout(() => setShowResults(false), 150)}
         className={`${inputClass} pl-9`} placeholder="ស្វែងរកតាមឈ្មោះ ទូរស័ព្ទ ឬអ៊ីមែល..." disabled={disabled} />
-      {isSearching && <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-slate-400">កំពុងស្វែងរក...</span>}
+      {isSearching && <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-foreground">កំពុងស្វែងរក...</span>}
       {showResults && results.length > 0 && (
         <ul className="absolute z-10 mt-1 w-full overflow-hidden rounded-xl border border-slate-200 bg-white shadow-lg">
           {results.map((m) => (
             <li key={m.id}>
               <button type="button" onMouseDown={() => onSelect(m)}
                 className="flex w-full items-center gap-3 px-4 py-2.5 text-left transition hover:bg-slate-50">
-                <User className="h-4 w-4 shrink-0 text-slate-400" />
+                <User className="h-4 w-4 shrink-0 text-foreground" />
                 <div className="min-w-0 flex-1">
-                  <p className="truncate text-sm font-medium text-slate-800">
+                  <p className="truncate text-sm font-medium text-foreground">
                     {memberKhmerName(m)}
                   </p>
                   {[m.phone, m.email].filter(Boolean).join(' · ') && (
-                    <p className="truncate text-xs text-slate-500">{[m.phone, m.email].filter(Boolean).join(' · ')}</p>
+                    <p className="truncate text-xs text-foreground">{[m.phone, m.email].filter(Boolean).join(' · ')}</p>
                   )}
                 </div>
               </button>
@@ -183,7 +185,7 @@ function RefereeSearch({
         </ul>
       )}
       {showResults && results.length === 0 && !isSearching && (
-        <div className="absolute z-10 mt-1 w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-400 shadow-lg">រកមិនឃើញ</div>
+        <div className="absolute z-10 mt-1 w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm text-foreground shadow-lg">រកមិនឃើញ</div>
       )}
     </div>
   )
@@ -252,35 +254,52 @@ export function CreateMemberForm() {
 
   if (createdMember) {
     return (
-      <div className="space-y-6">
-        <div className="rounded-2xl border border-emerald-200 bg-emerald-50/60 p-5">
-          <p className="text-lg font-bold text-emerald-950">បានបង្កើតសមាជិកដោយជោគជ័យ</p>
-          <p className="mt-1 text-sm text-emerald-800">
-            ឥឡូវនេះផ្ញើតំណ Telegram ផ្ទាល់ខ្លួនឱ្យសមាជិក ដើម្បីភ្ជាប់ការជូនដំណឹង។
-          </p>
+      <div className="flex h-full min-h-0 flex-1 flex-col">
+        <div className="flex min-h-0 flex-1 flex-col overflow-y-auto px-6 py-8 md:px-10 lg:px-12">
+          <div className="mx-auto flex w-full max-w-3xl flex-1 flex-col justify-center space-y-6">
+            <div className="rounded-2xl border border-emerald-200 bg-emerald-50/60 p-5">
+              <p className="text-lg font-bold text-emerald-950">បានបង្កើតសមាជិកដោយជោគជ័យ</p>
+              <p className="mt-1 text-sm text-emerald-800">
+                ឥឡូវនេះផ្ញើតំណ Telegram ផ្ទាល់ខ្លួនឱ្យសមាជិក ដើម្បីភ្ជាប់ការជូនដំណឹង។
+              </p>
+            </div>
+            <AdminMemberTelegramConnectCard
+              connectToken={createdMember.connectToken}
+              memberName={createdMember.name}
+              memberPhone={createdMember.phone}
+            />
+          </div>
         </div>
-        <AdminMemberTelegramConnectCard
-          connectToken={createdMember.connectToken}
-          memberName={createdMember.name}
-          memberPhone={createdMember.phone}
-        />
-        <div className="flex justify-end">
-          <button
-            type="button"
-            onClick={() => router.push('/admin/members')}
-            className="inline-flex items-center gap-2 rounded-xl bg-brand-950 px-6 py-2.5 text-sm font-semibold text-white transition hover:bg-brand-900"
-          >
-            ទៅបញ្ជីសមាជិក
-          </button>
+        <div className="shrink-0 border-t border-border bg-surface px-6 py-4 md:px-10 lg:px-12">
+          <div className="flex justify-end">
+            <button
+              type="button"
+              onClick={() => router.push('/admin/members')}
+              className="inline-flex items-center gap-2 rounded-xl bg-brand-950 px-6 py-2.5 text-sm font-semibold text-white transition hover:bg-brand-900"
+            >
+              ទៅបញ្ជីសមាជិក
+            </button>
+          </div>
         </div>
       </div>
     )
   }
 
-  return (
-    <div>
-      <StepIndicator step={step} />
+  const currentStep = STEPS.find((s) => s.id === step)
 
+  return (
+    <div className="flex h-full min-h-0 flex-1 flex-col">
+      <div className="shrink-0 border-b border-border bg-surface px-6 py-5 md:px-10 lg:px-12">
+        <p className="text-sm font-semibold uppercase tracking-wide text-brand-700">បន្ថែមសមាជិកថ្មី</p>
+        <h1 className="font-heading mt-1 text-2xl font-bold text-foreground md:text-3xl">{currentStep?.label}</h1>
+        <p className="mt-1 text-sm text-muted">គណនីនឹងសកម្មភ្លាមៗ · ជំហាន {step} នៃ {STEPS.length}</p>
+        <div className="mt-5">
+          <StepIndicator step={step} />
+        </div>
+      </div>
+
+      <div className="flex min-h-0 flex-1 flex-col overflow-y-auto px-6 py-8 md:px-10 lg:px-12">
+        <div className="flex w-full flex-1 flex-col">
       {/* Step 1 — គណនី */}
       {step === 1 && (
         <div className="space-y-4">
@@ -329,7 +348,7 @@ export function CreateMemberForm() {
                 onChange={(e) => set('id_number', e.target.value.replace(/\D/g, '').slice(0, 9))}
                 className={inputClass} placeholder="៩ ខ្ទង់" disabled={pending} />
             </Field>
-            <Field label="លេខសៀវភៅគ្រួសារ/ស្នាក់នៅ">
+            <Field label="លេខសៀវភៅគ្រួសារ/ស្នាក់នៅ" optional>
               <input type="text" value={form.resident_book_number}
                 onChange={(e) => set('resident_book_number', e.target.value)}
                 className={inputClass} placeholder="លេខសៀវភៅ" disabled={pending} />
@@ -342,7 +361,7 @@ export function CreateMemberForm() {
             </Field>
           </div>
           <div>
-            <p className="mb-1.5 text-sm font-semibold text-slate-700">អាសយដ្ឋាន</p>
+            <p className="mb-1.5 text-sm font-semibold text-foreground">អាសយដ្ឋាន</p>
             <CambodiaAddressSelect
               value={parseCambodiaAddress(form.address)}
               onChange={(addr) => set('address', formatCambodiaAddress(addr))}
@@ -355,7 +374,7 @@ export function CreateMemberForm() {
           {/* Emergency contacts */}
           <div className="space-y-3 border-t border-border pt-4">
             <div className="flex items-center justify-between">
-              <p className="text-sm font-semibold text-slate-700">ទំនាក់ទំនងបន្ទាន់</p>
+              <p className="text-sm font-semibold text-foreground">ទំនាក់ទំនងបន្ទាន់</p>
               <button type="button" onClick={() => setEmergencyContacts((p) => [...p, { full_name: '', phone: '' }])} disabled={pending}
                 className="inline-flex items-center gap-1.5 rounded-lg border border-brand-200 bg-brand-50 px-3 py-1.5 text-xs font-semibold text-brand-800 transition hover:bg-brand-100 disabled:opacity-50">
                 <Plus className="h-3.5 w-3.5" /> បន្ថែម
@@ -363,34 +382,29 @@ export function CreateMemberForm() {
             </div>
             {emergencyContacts.length === 0 ? (
               <button type="button" onClick={() => setEmergencyContacts((p) => [...p, { full_name: '', phone: '' }])} disabled={pending}
-                className="flex w-full items-center justify-center gap-2 rounded-xl border-2 border-dashed border-slate-200 py-5 text-sm font-medium text-slate-400 transition hover:border-brand-300 hover:text-brand-700 disabled:opacity-50">
+                className="flex w-full items-center justify-center gap-2 rounded-xl border-2 border-dashed border-slate-200 py-5 text-sm font-medium text-foreground transition hover:border-brand-300 hover:text-brand-700 disabled:opacity-50">
                 <Plus className="h-4 w-4" /> បន្ថែមទំនាក់ទំនងបន្ទាន់
               </button>
             ) : (
-              <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+              <div className="space-y-3">
                 {emergencyContacts.map((contact, i) => (
-                  <div key={i} className="rounded-xl border border-slate-200 bg-slate-50/60 p-4">
-                    <div className="mb-3 flex items-center justify-between">
-                      <span className="text-xs font-semibold text-slate-500">ទំនាក់ទំនងលេខ {i + 1}</span>
-                      <button type="button" onClick={() => setEmergencyContacts((p) => p.filter((_, idx) => idx !== i))} disabled={pending}
-                        className="grid h-7 w-7 place-items-center rounded-lg text-slate-400 transition hover:bg-rose-50 hover:text-rose-600">
-                        <Trash2 className="h-3.5 w-3.5" />
-                      </button>
+                  <div key={i} className="grid grid-cols-1 items-center gap-3 sm:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_auto]">
+                    <div className="relative">
+                      <User className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-foreground" />
+                      <input type="text" value={contact.full_name}
+                        onChange={(e) => setEmergencyContacts((p) => p.map((c, idx) => idx === i ? { ...c, full_name: e.target.value } : c))}
+                        className={`${inputClass} pl-9`} placeholder="ឈ្មោះពេញ" disabled={pending} />
                     </div>
-                    <div className="space-y-2">
-                      <div className="relative">
-                        <User className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
-                        <input type="text" value={contact.full_name}
-                          onChange={(e) => setEmergencyContacts((p) => p.map((c, idx) => idx === i ? { ...c, full_name: e.target.value } : c))}
-                          className={`${inputClass} pl-9`} placeholder="ឈ្មោះពេញ" disabled={pending} />
-                      </div>
-                      <div className="relative">
-                        <Phone className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
-                        <input type="tel" value={contact.phone}
-                          onChange={(e) => setEmergencyContacts((p) => p.map((c, idx) => idx === i ? { ...c, phone: e.target.value } : c))}
-                          className={`${inputClass} pl-9`} placeholder="0812345678" disabled={pending} />
-                      </div>
+                    <div className="relative">
+                      <Phone className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-foreground" />
+                      <input type="tel" value={contact.phone}
+                        onChange={(e) => setEmergencyContacts((p) => p.map((c, idx) => idx === i ? { ...c, phone: e.target.value } : c))}
+                        className={`${inputClass} pl-9`} placeholder="0812345678" disabled={pending} />
                     </div>
+                    <button type="button" onClick={() => setEmergencyContacts((p) => p.filter((_, idx) => idx !== i))} disabled={pending}
+                      className="grid h-10 w-10 shrink-0 place-items-center self-end rounded-lg border border-slate-200 text-foreground transition hover:bg-rose-50 hover:text-rose-600 sm:self-auto">
+                      <Trash2 className="h-4 w-4" />
+                    </button>
                   </div>
                 ))}
               </div>
@@ -402,7 +416,7 @@ export function CreateMemberForm() {
       {/* Step 3 — មេគ្រុម */}
       {step === 3 && (
         <div className="space-y-4">
-          <p className="text-sm text-slate-500">ជ្រើសរើសសមាជិកដែលជាមេគ្រុមរបស់សមាជិកថ្មី។ អ្នកអាចរំលងបាន។</p>
+          <p className="text-sm text-foreground">ជ្រើសរើសសមាជិកដែលជាមេគ្រុមរបស់សមាជិកថ្មី។ អ្នកអាចរំលងបាន។</p>
           <RefereeSearch
             selectedId={form.referee_id}
             selectedName={form.referee_display_name}
@@ -423,10 +437,13 @@ export function CreateMemberForm() {
         </div>
       )}
 
-      {/* Navigation */}
-      <div className="mt-8 flex items-center justify-between border-t border-border pt-6">
+        </div>
+      </div>
+
+      <div className="shrink-0 border-t border-border bg-surface px-6 py-4 md:px-10 lg:px-12">
+        <div className="flex items-center justify-between gap-4">
         <button type="button" onClick={() => step === 1 ? router.push('/admin/members') : setStep((s) => s - 1)} disabled={pending}
-          className="inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-5 py-2.5 text-sm font-semibold text-slate-700 transition hover:bg-slate-50 disabled:opacity-60">
+          className="inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-5 py-2.5 text-sm font-semibold text-foreground transition hover:bg-slate-50 disabled:opacity-60">
           <ArrowLeft className="h-4 w-4" />
           {step === 1 ? 'បោះបង់' : 'ត្រឡប់ក្រោយ'}
         </button>
@@ -442,6 +459,7 @@ export function CreateMemberForm() {
             {pending ? 'កំពុងបង្កើត...' : 'បង្កើតសមាជិក'}
           </button>
         )}
+        </div>
       </div>
     </div>
   )

@@ -1,5 +1,4 @@
 import Link from 'next/link'
-import { Card } from '@/components/ui/Card'
 import { LoanStatusBadge } from '@/components/ui/Badge'
 import { PageHeader } from '@/components/ui/PageHeader'
 import { StatsTable, type StatsRow } from '@/components/ui/StatsTable'
@@ -12,6 +11,7 @@ import { formatKhmerDate } from '@/lib/dates'
 import { getInterestSettings } from '@/lib/interest'
 import { getLoanEligibility, sumCommittedLoanPrincipal, sumVerifiedSavings } from '@/lib/loanEligibility'
 import { buildMemberCombinedLoansContext } from '@/lib/loan/memberCombinedLoans'
+import { dataTable, tableContainer, tableScroll } from '@/components/ui/tableStyles'
 import { toNumber } from '@/lib/utils'
 import { CreditCard, Plus, FileText, AlertTriangle, ArrowRight } from 'lucide-react'
 
@@ -125,42 +125,42 @@ export default async function LoansPage() {
       <StatsTable rows={statsRows} className="mb-8" />
 
       {/* Loans History */}
-      <Card padding="none">
-        <div className="px-6 py-4 border-b border-gray-100">
-          <h2 className="font-semibold text-gray-900">ប្រវត្តិកម្ជី</h2>
+      <div className={tableContainer}>
+        <div className={dataTable.sectionHeader}>
+          <h2 className={dataTable.sectionTitle}>ប្រវត្តិកម្ជី</h2>
         </div>
-        <div className="overflow-x-auto">
-          <table className="w-full">
-            <thead>
-              <tr className="bg-gray-50 border-b border-gray-100">
-                <th className="text-left px-6 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wider">គោលបំណង</th>
-                <th className="text-left px-6 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wider">ចំនួនទឹកប្រាក់</th>
-                <th className="text-left px-6 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wider">រយៈពេល</th>
-                <th className="text-left px-6 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wider">បានបើក</th>
-                <th className="text-left px-6 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wider">ស្ថានភាព</th>
-                <th className="text-left px-6 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wider">សកម្មភាព</th>
+        <div className={tableScroll}>
+          <table className={dataTable.table}>
+            <thead className={dataTable.thead}>
+              <tr className={dataTable.thRow}>
+                <th className={dataTable.th}>គោលបំណង</th>
+                <th className={dataTable.th}>ចំនួនទឹកប្រាក់</th>
+                <th className={dataTable.th}>រយៈពេល</th>
+                <th className={dataTable.th}>បានបើក</th>
+                <th className={dataTable.th}>ស្ថានភាព</th>
+                <th className={dataTable.th}>សកម្មភាព</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-gray-100">
+            <tbody className={dataTable.tbody}>
               {loans.length === 0 && (
                 <tr>
-                  <td colSpan={6} className="px-6 py-8 text-center text-sm text-gray-500">
+                  <td colSpan={6} className={dataTable.emptyCell}>
                     មិនទាន់មានកម្ជីដែលបានដាក់ស្នើនៅឡើយ។
                   </td>
                 </tr>
               )}
               {loans.map((loan) => (
-                <tr key={loan.id} className="hover:bg-gray-50 transition-colors">
-                  <td className="px-6 py-4 text-sm text-gray-900 font-medium">{loan.purpose}</td>
-                  <td className="px-6 py-4 text-sm font-semibold text-gray-900">{formatMoney(toNumber(loan.amount), normalizeCurrency(loan.currency))}</td>
-                  <td className="px-6 py-4 text-sm text-gray-500">{loan.term_months} ខែ</td>
-                  <td className="px-6 py-4 text-sm text-gray-500">
+                <tr key={loan.id} className={dataTable.tr}>
+                  <td className={`${dataTable.td} font-medium`}>{loan.purpose}</td>
+                  <td className={`${dataTable.td} font-semibold tabular-nums`}>{formatMoney(toNumber(loan.amount), normalizeCurrency(loan.currency))}</td>
+                  <td className={dataTable.tdMuted}>{loan.term_months} ខែ</td>
+                  <td className={dataTable.tdMuted}>
                     {loan.disbursed_at ? formatKhmerDate(loan.disbursed_at) : 'រង់ចាំ'}
                   </td>
-                  <td className="px-6 py-4">
+                  <td className={dataTable.td}>
                     <LoanStatusBadge status={loan.status} plain />
                   </td>
-                  <td className="px-6 py-4">
+                  <td className={dataTable.td}>
                     {loan.status === 'active' && (
                       <Link
                         href="/dashboard/loans/repay"
@@ -170,7 +170,7 @@ export default async function LoansPage() {
                       </Link>
                     )}
                     {loan.status === 'completed' && (
-                      <span className="text-gray-400 text-sm">បានទទួល</span>
+                      <span className="text-foreground text-sm">បានទទួល</span>
                     )}
                   </td>
                 </tr>
@@ -178,7 +178,7 @@ export default async function LoansPage() {
             </tbody>
           </table>
         </div>
-      </Card>
+      </div>
     </div>
   )
 }

@@ -2,6 +2,7 @@ import {
   annotateLoanPaymentSchedule,
   buildLoanPaymentSchedule,
   loanRepaymentSummary,
+  loanScheduleStartDate,
   resolveLoanInterestRate,
   type LoanScheduleRow,
 } from '@/lib/interestCalculations'
@@ -94,12 +95,7 @@ function toNumber(value: unknown) {
 }
 
 function scheduleStartForLoan(loan: MemberLoanSourceRow) {
-  return (
-    loan.disbursed_at?.slice(0, 10) ??
-    loan.start_date?.slice(0, 10) ??
-    loan.created_at?.slice(0, 10) ??
-    null
-  )
+  return loanScheduleStartDate(loan)
 }
 
 function repaymentsForLoan(loanId: string, repayments: LoanRepaymentSourceRow[]) {

@@ -31,11 +31,11 @@ export function EvidencePreviewModal({
         aria-label={title}
       >
         <div className="flex items-center justify-between border-b border-slate-200 px-5 py-3.5">
-          <p className="text-sm font-semibold text-slate-800">{title}</p>
+          <p className="text-sm font-semibold text-foreground">{title}</p>
           <button
             type="button"
             onClick={onClose}
-            className="grid h-8 w-8 place-items-center rounded-lg text-slate-400 transition hover:bg-slate-100 hover:text-slate-700"
+            className="grid h-8 w-8 place-items-center rounded-lg text-foreground transition hover:bg-slate-100 hover:text-foreground"
             aria-label="បិទ"
           >
             <X className="h-4 w-4" />
@@ -43,7 +43,7 @@ export function EvidencePreviewModal({
         </div>
         {isPdf ? (
           <div className="flex flex-col items-center gap-4 p-8 text-center">
-            <p className="text-sm text-slate-600">មិនអាចបង្ហាញ PDF នៅក្នុងផ្ទាំងនេះ</p>
+            <p className="text-sm text-foreground">មិនអាចបង្ហាញ PDF នៅក្នុងផ្ទាំងនេះ</p>
             <a
               href={url}
               target="_blank"

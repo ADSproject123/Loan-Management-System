@@ -71,6 +71,7 @@ export function MembersList({
       />
 
       <div className={adminTable.wrap}>
+        <div className={adminTable.scroll}>
         <table className={adminTable.table}>
           <thead className={adminTable.thead}>
             <tr className={adminTable.thRow}>
@@ -155,6 +156,7 @@ export function MembersList({
             )})}
           </tbody>
         </table>
+      </div>
       </div>
     </div>
   )

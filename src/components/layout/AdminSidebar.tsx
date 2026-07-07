@@ -38,7 +38,7 @@ export function AdminSidebar({
             href="/admin"
             className="min-w-0 flex-1 rounded-xl transition-opacity hover:opacity-90"
           >
-            <p className="truncate text-lg font-bold leading-tight">អ្នកគ្រប់គ្រង</p>
+            <p className="font-heading truncate text-lg font-bold leading-tight">អ្នកគ្រប់គ្រង</p>
           </Link>
           <NotificationBell initialUnreadCount={initialUnreadCount} variant="sidebar" />
         </div>

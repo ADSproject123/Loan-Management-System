@@ -51,17 +51,17 @@ export function InterestSettingsForm({
           </span>
           <div>
             <h2 className="text-lg font-bold text-slate-900">ការប្រាក់សន្សំ</h2>
-            <p className="mt-1 text-sm text-slate-500">
+            <p className="mt-1 text-sm text-foreground">
               អត្រាការប្រាក់ប្រចាំខែលើសមតុល្យសន្សំដែលបានផ្ទៀងផ្ទាត់។
             </p>
           </div>
         </div>
 
-        <label className="block text-sm font-medium text-slate-700" htmlFor="saving-rate">
+        <label className="block text-sm font-medium text-foreground" htmlFor="saving-rate">
           អត្រាការប្រាក់សន្សំ (% ប្រចាំខែ)
         </label>
         <div className="relative mt-2 max-w-xs">
-          <span className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-slate-400">
+          <span className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-foreground">
             <Percent className="h-4 w-4" />
           </span>
           <input
@@ -86,17 +86,17 @@ export function InterestSettingsForm({
           </span>
           <div>
             <h2 className="text-lg font-bold text-slate-900">ការប្រាក់កម្ជី</h2>
-            <p className="mt-1 text-sm text-slate-500">
+            <p className="mt-1 text-sm text-foreground">
               អត្រាការប្រាក់ប្រចាំខែលំនាំដើមសម្រាប់សមាជិកដែលមិនត្រូវបានចាត់ចែងអត្រាជាក្រុម។
             </p>
           </div>
         </div>
 
-        <label className="block text-sm font-medium text-slate-700" htmlFor="loan-rate">
+        <label className="block text-sm font-medium text-foreground" htmlFor="loan-rate">
           អត្រាការប្រាក់កម្ជី (% ប្រចាំខែ)
         </label>
         <div className="relative mt-2 max-w-xs">
-          <span className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-slate-400">
+          <span className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-foreground">
             <Percent className="h-4 w-4" />
           </span>
           <input

@@ -1,4 +1,5 @@
 import Link from 'next/link'
+import { dataTable, tableContainer, tableScroll } from '@/components/ui/tableStyles'
 import { Navbar } from '@/components/layout/Navbar'
 import { ScrollReveal } from '@/components/ui/ScrollReveal'
 import {
@@ -33,7 +34,7 @@ export default async function HomePage() {
   const { monthlySavingInterestRate, monthlyLoanInterestRate } = interestSettings
 
   return (
-    <div className="font-khmer min-h-screen flex flex-col bg-background">
+    <div className="min-h-screen flex flex-col bg-background">
       <Navbar />
 
       <section className="relative min-h-screen overflow-hidden bg-brand-950 text-white flex items-center">
@@ -115,7 +116,7 @@ export default async function HomePage() {
             <h2 className="text-3xl md:text-4xl font-extrabold tracking-tight text-gray-950 mb-4">
               អំពី SanSam
             </h2>
-            <p className="text-gray-600 text-lg leading-7">
+            <p className="text-foreground text-lg leading-7">
               ស្វែងយល់អំពីចក្ខុវិស័យ សមាជិកភាព អត្ថប្រយោជន៍សន្សំ និង អត្រាកម្ជី
               មុនពេលអ្នកចូលរួមជាសមាជិក។
             </p>
@@ -130,7 +131,7 @@ export default async function HomePage() {
                 <a
                   key={item.href}
                   href={item.href}
-                  className="rounded-full border border-gray-200 bg-white px-4 py-2 text-sm font-semibold text-gray-700 shadow-sm transition-colors hover:border-brand-300 hover:bg-brand-50 hover:text-brand-900"
+                  className="rounded-full border border-gray-200 bg-white px-4 py-2 text-sm font-semibold text-foreground shadow-sm transition-colors hover:border-brand-300 hover:bg-brand-50 hover:text-brand-900"
                 >
                   {item.label}
                 </a>
@@ -151,14 +152,14 @@ export default async function HomePage() {
                     <div className="grid gap-6 md:grid-cols-2">
                       <div className="rounded-2xl border border-brand-100 bg-white p-6">
                         <p className="text-sm font-bold uppercase tracking-wide text-brand-700 mb-2">ចក្ខុវិស័យ</p>
-                        <p className="text-gray-600 leading-7">
+                        <p className="text-foreground leading-7">
                           កសាងសហករណ៍ដែលជឿទុកចិត្តបាន គ្រប់គ្រងដោយសមាជិក
                           ដើម្បីជួយគ្រួសារសន្សំ ខ្ចីដោយយុត្តិធម៌ និង រីកចម្រើនទៅជាមួយគ្នា។
                         </p>
                       </div>
                       <div className="rounded-2xl border border-brand-100 bg-white p-6">
                         <p className="text-sm font-bold uppercase tracking-wide text-brand-700 mb-2">បេសកកម្ម</p>
-                        <p className="text-gray-600 leading-7">
+                        <p className="text-foreground leading-7">
                           ផ្តល់វិបផតថលសន្សំដែលមានតម្លាភាព ការផ្ទៀងផ្ទាត់ឯកសារ ភស្តុតាងបង់ប្រាក់
                           និង ការទទួលយកពីគណៈកម្មាធិការ ដើម្បីជួយសមាជិកគ្រប់គ្រងហិរញ្ញវត្ថុរបស់ខ្លួន។
                         </p>
@@ -179,7 +180,7 @@ export default async function HomePage() {
                   </div>
                   <div>
                     <h3 className="text-2xl font-extrabold text-gray-950">សមាជិកភាព</h3>
-                    <p className="mt-1 text-gray-600">ចូលជាសមាជិក ឬ ដកដើមទុនតាមលក្ខខណ្ឌរបស់សហករណ៍។</p>
+                    <p className="mt-1 text-foreground">ចូលជាសមាជិក ឬ ដកដើមទុនតាមលក្ខខណ្ឌរបស់សហករណ៍។</p>
                   </div>
                 </div>
 
@@ -189,7 +190,7 @@ export default async function HomePage() {
                       <UserPlus className="h-6 w-6" />
                     </div>
                     <h4 className="text-lg font-bold text-gray-950 mb-2">ក្លាយជាសមាជិក</h4>
-                    <p className="text-gray-600 text-sm leading-6 mb-5">
+                    <p className="text-foreground text-sm leading-6 mb-5">
                       ចុះឈ្មោះតាមអនឡាញ ដាក់ព័ត៌មានផ្ទាល់ខ្លួន បន្ថែមអ្នកធានា ផ្ទុកឯកសារអត្តសញ្ញាណប័ណ្ណ
                       និង រង់ចាំការទទួលយកគណនីពីអ្នកគ្រប់គ្រង។
                     </p>
@@ -206,7 +207,7 @@ export default async function HomePage() {
                       <LogOut className="h-6 w-6" />
                     </div>
                     <h4 className="text-lg font-bold text-gray-950 mb-2">ដកដើមទុនសមាជិកភាព</h4>
-                    <p className="text-gray-600 text-sm leading-6 mb-5">
+                    <p className="text-foreground text-sm leading-6 mb-5">
                       សមាជិកអាចស្នើសុំដកដើមទុនក្នុងអំឡុងពេលប្រចាំឆ្នាំ
                       ត្រូវបានទទួលយកតែចន្លោះថ្ងៃទី ២០-២៥ មករា។
                       អាចជ្រើសរើសដកដើមទុនរក្សាសមាជិកភាព ឬ បញ្ចប់ការចូលជាសមាជិក។
@@ -282,39 +283,41 @@ export default async function HomePage() {
                   </div>
                   <div>
                     <h3 className="text-2xl font-extrabold text-gray-950">អត្រាកម្ជី</h3>
-                    <p className="mt-1 text-gray-600">លក្ខខណ្ឌ និង អត្រាកម្ជីសម្រាប់សមាជិកដែលមានសមតុល្យសន្សំ។</p>
+                    <p className="mt-1 text-foreground">លក្ខខណ្ឌ និង អត្រាកម្ជីសម្រាប់សមាជិកដែលមានសមតុល្យសន្សំ។</p>
                   </div>
                 </div>
 
-                <div className="overflow-hidden rounded-2xl border border-gray-200">
-                  <table className="w-full text-sm">
-                    <thead className="border-b border-gray-200 bg-gray-50">
-                      <tr>
-                        <th className="px-5 py-3 text-left text-xs font-bold uppercase tracking-wide text-gray-700">ប្រភេទ</th>
-                        <th className="px-5 py-3 text-left text-xs font-bold uppercase tracking-wide text-gray-700">ព័ត៌មាន</th>
+                <div className={tableContainer}>
+                  <div className={tableScroll}>
+                  <table className={dataTable.table}>
+                    <thead className={dataTable.thead}>
+                      <tr className={dataTable.thRow}>
+                        <th className={dataTable.th}>ប្រភេទ</th>
+                        <th className={dataTable.th}>ព័ត៌មាន</th>
                       </tr>
                     </thead>
-                    <tbody className="divide-y divide-gray-100">
-                      <tr>
-                        <td className="px-5 py-4 font-semibold text-gray-700">អត្រាការប្រាក់កម្ជី</td>
-                        <td className="px-5 py-4 font-bold tabular-nums text-gray-950">{monthlyLoanInterestRate}% ក្នុងមួយខែ</td>
+                    <tbody className={dataTable.tbody}>
+                      <tr className={dataTable.tr}>
+                        <td className={`${dataTable.td} font-semibold text-muted`}>អត្រាការប្រាក់កម្ជី</td>
+                        <td className={`${dataTable.td} font-bold tabular-nums`}>{monthlyLoanInterestRate}% ក្នុងមួយខែ</td>
                       </tr>
-                      <tr>
-                        <td className="px-5 py-4 font-semibold text-gray-700">អតិបរមាកម្ជី</td>
-                        <td className="px-5 py-4 text-gray-800">
+                      <tr className={dataTable.tr}>
+                        <td className={`${dataTable.td} font-semibold text-muted`}>អតិបរមាកម្ជី</td>
+                        <td className={dataTable.td}>
                           រហូតដល់ <span className="font-bold">{LOAN_TO_SAVINGS_MULTIPLIER} ដង</span> នៃសមតុល្យសន្សំផ្ទៀងផ្ទាត់
                         </td>
                       </tr>
-                      <tr>
-                        <td className="px-5 py-4 font-semibold text-gray-700">អ្នកធានា</td>
-                        <td className="px-5 py-4 text-gray-800">ត្រូវការអ្នកធានាដែលជាសមាជិកសកម្ម និង ការផ្ទៀងផ្ទាត់ពីគណៈកម្មាធិការ</td>
+                      <tr className={dataTable.tr}>
+                        <td className={`${dataTable.td} font-semibold text-muted`}>អ្នកធានា</td>
+                        <td className={dataTable.td}>ត្រូវការអ្នកធានាដែលជាសមាជិកសកម្ម និង ការផ្ទៀងផ្ទាត់ពីគណៈកម្មាធិការ</td>
                       </tr>
-                      <tr>
-                        <td className="px-5 py-4 font-semibold text-gray-700">រយៈពេលទទួលយក</td>
-                        <td className="px-5 py-4 text-gray-800">ប្រហែល ១-៣ ថ្ងៃបន្ទាប់ពីពាក្យសុំត្រូវបានទទួលយក</td>
+                      <tr className={dataTable.tr}>
+                        <td className={`${dataTable.td} font-semibold text-muted`}>រយៈពេលទទួលយក</td>
+                        <td className={dataTable.td}>ប្រហែល ១-៣ ថ្ងៃបន្ទាប់ពីពាក្យសុំត្រូវបានទទួលយក</td>
                       </tr>
                     </tbody>
                   </table>
+                  </div>
                 </div>
 
                 <div className="mt-6 flex flex-wrap gap-3">
@@ -326,7 +329,7 @@ export default async function HomePage() {
                   </Link>
                   <Link
                     href="/login"
-                    className="inline-flex items-center gap-2 rounded-xl border border-gray-300 px-5 py-2.5 text-sm font-semibold text-gray-800 hover:border-brand-300 hover:text-brand-900 transition-colors"
+                    className="inline-flex items-center gap-2 rounded-xl border border-gray-300 px-5 py-2.5 text-sm font-semibold text-foreground hover:border-brand-300 hover:text-brand-900 transition-colors"
                   >
                     ចូលគណនីសមាជិក
                   </Link>
@@ -357,7 +360,7 @@ export default async function HomePage() {
               <Link href="/register" className="inline-flex items-center gap-2 bg-brand-950 text-white px-7 py-3 rounded-xl font-semibold hover:bg-brand-800 transition-colors">
                 ក្លាយជាសមាជិក <ArrowRight className="w-4 h-4" />
               </Link>
-              <Link href="/login" className="inline-flex items-center gap-2 bg-white border border-gray-300 text-gray-800 px-7 py-3 rounded-xl font-semibold hover:border-brand-300 hover:text-brand-900 transition-colors">
+              <Link href="/login" className="inline-flex items-center gap-2 bg-white border border-gray-300 text-foreground px-7 py-3 rounded-xl font-semibold hover:border-brand-300 hover:text-brand-900 transition-colors">
                 ចូលគណនីសមាជិក
               </Link>
             </div>

@@ -143,10 +143,12 @@ export function buildSavingInterestDueRowsForMonth(
     if (!firstParts) continue
     if (firstStart > monthEnd) continue
 
-    const balance = combinedBalanceThroughDate(dated, monthEnd)
+    const payDate = interestPayDateInMonth(firstParts.day, year, month)
+    if (payDate > asOf) continue
+
+    const balance = combinedBalanceThroughDate(dated, payDate)
     if (balance <= 0) continue
 
-    const payDate = interestPayDateInMonth(firstParts.day, year, month)
     const interestDue = monthlySavingInterest(balance, ratePercent)
     const { name, searchText, phone } = memberDisplayName(dated[0].row.members)
     const payment = paymentsByMember[memberId]

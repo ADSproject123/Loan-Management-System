@@ -1,7 +1,7 @@
 import {
   accruedSavingInterestTotal,
-  annotateLoanPaymentSchedule,
-  buildLoanPaymentSchedule,
+  loanRemainingAfterPayments,
+  loanScheduleStartDate,
   resolveLoanInterestRate,
 } from '@/lib/interestCalculations'
 import { isVerifiedSavingForChart, type SavingChartSourceRow } from '@/lib/admin/savingsChartData'
@@ -13,6 +13,7 @@ export type CommunityLoanBalanceRow = {
   monthly_interest_rate: number | null
   start_date: string | null
   disbursed_at: string | null
+  created_at?: string | null
 }
 
 export type CommunityRepaymentRow = {
@@ -34,31 +35,31 @@ export function computeLoanRemainingBalance(
     return acc
   }, {})
 
+  const pendingByLoan = repayments.reduce<Record<string, number>>((acc, row) => {
+    if (row.status !== 'pending') return acc
+    acc[row.loan_id] = (acc[row.loan_id] ?? 0) + Number(row.amount ?? 0)
+    return acc
+  }, {})
+
   return loans.reduce((total, loan) => {
     const principal = Number(loan.amount ?? 0)
     if (principal <= 0) return total
 
     const paidSoFar = paidByLoan[loan.id] ?? 0
-    if (paidSoFar <= 0) return total + principal
-
-    const scheduleStart =
-      loan.disbursed_at?.slice(0, 10) ?? loan.start_date?.slice(0, 10) ?? null
+    const pendingSoFar = pendingByLoan[loan.id] ?? 0
     const rate = resolveLoanInterestRate(loan, fallbackLoanRate)
-    const schedule = buildLoanPaymentSchedule(
-      principal,
-      loan.term_months ?? 12,
-      rate,
-      scheduleStart
+
+    return (
+      total +
+      loanRemainingAfterPayments(
+        principal,
+        loan.term_months ?? 12,
+        rate,
+        loanScheduleStartDate(loan),
+        paidSoFar,
+        pendingSoFar
+      )
     )
-    const annotated = annotateLoanPaymentSchedule(schedule, paidSoFar)
-
-    const remaining = annotated.reduce((sum, row) => {
-      if (row.status === 'paid') return sum
-      const principalPaid = Math.max(0, row.paidAmount - row.interestPortion)
-      return sum + Math.max(row.principalPortion - principalPaid, 0)
-    }, 0)
-
-    return total + remaining
   }, 0)
 }
 

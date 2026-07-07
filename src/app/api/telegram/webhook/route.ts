@@ -13,8 +13,9 @@ import {
   answerTelegramCallbackQuery,
 } from '@/lib/telegram'
 import {
-  buildLoanPaymentSchedule,
   annotateLoanPaymentSchedule,
+  buildLoanPaymentSchedule,
+  loanScheduleStartDate,
   resolveLoanInterestRate,
   DEFAULT_LOAN_INTEREST_RATE,
 } from '@/lib/interestCalculations'
@@ -23,6 +24,45 @@ import { addMonths, todayIso } from '@/lib/dates'
 import { fetchMemberLoanEligibility, validateLoanRequestAmount } from '@/lib/loanEligibility'
 import { memberKhmerName } from '@/lib/memberNames'
 import { notifyAdmins } from '@/lib/notifyAdmins'
+import {
+  LOAN_STATUS_LABEL,
+  SAVING_STATUS_LABEL,
+  SCHEDULE_STATUS_LABEL,
+  TG_ACCOUNT_NOT_ACTIVE,
+  TG_ACCOUNT_NOT_LINKED,
+  TG_LOAN_NONE_ACTIVE,
+  TG_SAVINGS_EMPTY,
+  TG_WELCOME_UNLINKED,
+  tgErrorGeneric,
+  tgErrorPhotoDownload,
+  tgErrorPhotoUpload,
+  tgErrorSession,
+  tgErrorStorage,
+  tgLinkDuplicateAccount,
+  tgLinkFailed,
+  tgLinkInvalidToken,
+  tgLinkSuccess,
+  tgLoanNoneActiveWithStatus,
+  tgLoanReport,
+  tgLoanRequestBlocked,
+  tgLoanRequestNoSavings,
+  tgLoanRequestStart,
+  tgLoanRequestSubmitted,
+  tgLoanScheduleLine,
+  tgMinSavingAmount,
+  tgPayLoanCaption,
+  tgPaySavingCaption,
+  tgPromptAmountSaved,
+  tgPromptPhotoSaved,
+  tgPromptUsePaymentCommand,
+  tgPromptValidAmount,
+  tgSavingTransactionLine,
+  tgSavingsReport,
+  tgSubmissionReceived,
+  formatTelegramNotification,
+  formatTelegramField,
+  tgAdminRequestBody,
+} from '@/lib/telegramMessages'
 import {
   getPendingPayment,
   setPendingPayment,
@@ -58,15 +98,9 @@ interface TelegramUpdate {
   }
 }
 
-const WELCOME_NO_TOKEN =
-  '👋 សួស្តី!\n\n' +
-  'ដើម្បីភ្ជាប់គណនី សូមប្រើ <b>តំណភ្ជាប់ផ្ទាល់ខ្លួន</b> ពីអ្នកគ្រប់គ្រង ឬ ចូលគណនីក្នុងកម្មវិធីហើយទៅ <b>ភ្ជាប់ Telegram</b>។'
-
-const NOT_LINKED =
-  '🔗 គណនី Telegram របស់អ្នកមិនទាន់ភ្ជាប់ទេ។ សូមប្រើតំណភ្ជាប់ផ្ទាល់ខ្លួនពីអ្នកគ្រប់គ្រង ឬ ចូលគណនីក្នុងកម្មវិធី។'
-
-const NOT_ACTIVE_MEMBER =
-  '⏳ គណនីរបស់អ្នកមិនទាន់សកម្មទេ។ អ្នកមិនអាចប្រើការសន្សំ ឬ កម្ជីបានទេ រហូតដល់អ្នកគ្រប់គ្រងទទួលយកគណនីរបស់អ្នក។'
+const WELCOME_NO_TOKEN = TG_WELCOME_UNLINKED
+const NOT_LINKED = TG_ACCOUNT_NOT_LINKED
+const NOT_ACTIVE_MEMBER = TG_ACCOUNT_NOT_ACTIVE
 
 type LinkedMember = {
   id: string
@@ -98,35 +132,7 @@ async function requireLinkedActiveMember(chatId: string): Promise<LinkedMember |
   return linked
 }
 
-const STATUS_EMOJI: Record<SavingStatus, string> = {
-  pending:   '⏳',
-  verified:  '✅',
-  completed: '🏁',
-  refunded:  '↩️',
-}
-
-const STATUS_LABEL: Record<SavingStatus, string> = {
-  pending:   'រង់ចាំ',
-  verified:  'បានផ្ទៀងផ្ទាត់',
-  completed: 'បានបញ្ចប់',
-  refunded:  'បានសងត្រឡប់',
-}
-
-const LOAN_STATUS_LABEL: Record<string, string> = {
-  pending:      'រង់ចាំ',
-  under_review: 'កំពុងពិនិត្យ',
-  approved:     'បានអនុម័ត',
-  active:       'សកម្ម',
-  completed:    'បានបញ្ចប់',
-  rejected:     'បានបដិសេធ',
-}
-
-const SCHEDULE_STATUS_EMOJI: Record<string, string> = {
-  paid:    '✅',
-  partial: '🔶',
-  overdue: '❗',
-  pending: '⏳',
-}
+const STATUS_LABEL: Record<SavingStatus, string> = SAVING_STATUS_LABEL
 
 function fmtMoney(amount: number | null) {
   if (amount === null) return formatMoney(0)
@@ -175,10 +181,7 @@ async function handleStartWithToken(chatId: string, token: string) {
     .maybeSingle()
 
   if (!member) {
-    await sendTelegramMessage(
-      chatId,
-      '⚠️ តំណភ្ជាប់នេះមិនត្រឹមត្រូវ ឬផុតកំណត់។ សូមស្នើតំណថ្មីពីអ្នកគ្រប់គ្រង ឬ ចូលគណនីក្នុងកម្មវិធី។'
-    )
+    await sendTelegramMessage(chatId, tgLinkInvalidToken())
     return
   }
 
@@ -187,18 +190,13 @@ async function handleStartWithToken(chatId: string, token: string) {
   if (!result.ok) {
     await sendTelegramMessage(
       chatId,
-      result.duplicate
-        ? '⛔ គណនី Telegram នេះត្រូវបានភ្ជាប់ជាមួយសមាជិកដទៃរួចហើយ។'
-        : '❌ មានបញ្ហាក្នុងការភ្ជាប់។ សូមព្យាយាមម្តងទៀតពេលក្រោយ។'
+      result.duplicate ? tgLinkDuplicateAccount() : tgLinkFailed()
     )
     return
   }
 
   const name = member.full_name_kh ?? member.full_name_en ?? ''
-  await sendTelegramMessageWithCommandButtons(
-    chatId,
-    `✅ <b>បានភ្ជាប់ដោយជោគជ័យ!</b>\nគណនី <b>${name}</b> ត្រូវបានភ្ជាប់ហើយ។ អ្នកនឹងទទួលការជូនដំណឹងនៅទីនេះ។`
-  )
+  await sendTelegramMessageWithCommandButtons(chatId, tgLinkSuccess(name))
 }
 
 async function handleSavingCommand(chatId: string): Promise<void> {
@@ -217,10 +215,7 @@ async function handleSavingCommand(chatId: string): Promise<void> {
   const rows = savings ?? []
 
   if (rows.length === 0) {
-    await sendTelegramMessageWithCommandButtons(
-      chatId,
-      '💰 <b>ការសន្សំ</b>\n\nអ្នកមិនទាន់មានការសន្សំណាមួយទេ។'
-    )
+    await sendTelegramMessageWithCommandButtons(chatId, TG_SAVINGS_EMPTY)
     return
   }
 
@@ -236,24 +231,19 @@ async function handleSavingCommand(chatId: string): Promise<void> {
   const name = member.full_name_kh ?? member.full_name_en ?? ''
 
   const recent = rows.slice(0, 8)
-  const recentLines = recent
-    .map((r) => {
-      const st = r.status as SavingStatus
-      return `  ${STATUS_EMOJI[st]} ${fmtDate(r.saving_date)}  ${fmtMoney(r.amount)}  <i>${STATUS_LABEL[st]}</i>`
-    })
-    .join('\n')
+  const recentLines = recent.map((r) => {
+    const st = r.status as SavingStatus
+    return tgSavingTransactionLine(fmtDate(r.saving_date), fmtMoney(r.amount), STATUS_LABEL[st])
+  })
 
-  const moreNote = rows.length > 8 ? `\n<i>… និង ${rows.length - 8} ទៀត។ បើកកម្មវិធីដើម្បីមើលទាំងអស់។</i>` : ''
-
-  const msg =
-    `💰 <b>ការសន្សំ</b>\n` +
-    `👤 ${name}\n\n` +
-    `<b>សរុប:</b> ${fmtMoney(grandTotal)}\n` +
-    `✅ <b>បានត្រួតពិនិត្យ:</b> ${fmtMoney(totalVerified)}\n` +
-    `⏳ <b>កំពុងរង់ចាំការត្រួតពិនិត្យ:</b> ${fmtMoney(totalPending)}\n\n` +
-    `<b>ប្រវត្តិចុងក្រោយ:</b>\n` +
-    recentLines +
-    moreNote
+  const msg = tgSavingsReport({
+    memberName: name,
+    grandTotal: fmtMoney(grandTotal),
+    verifiedTotal: fmtMoney(totalVerified),
+    pendingTotal: fmtMoney(totalPending),
+    recentLines,
+    moreCount: rows.length > 8 ? rows.length - 8 : undefined,
+  })
 
   await sendTelegramMessageWithCommandButtons(chatId, msg)
 }
@@ -265,7 +255,7 @@ async function handleLoanCommand(chatId: string): Promise<void> {
   const admin = createAdminClient()
   const { data: loan } = await admin
     .from('loans')
-    .select('id, amount, currency, status, term_months, monthly_interest_rate, start_date, due_date')
+    .select('id, amount, currency, status, term_months, monthly_interest_rate, start_date, disbursed_at, created_at, due_date')
     .eq('member_id', member.id)
     .eq('status', 'active')
     .order('created_at', { ascending: false })
@@ -283,12 +273,12 @@ async function handleLoanCommand(chatId: string): Promise<void> {
       .maybeSingle()
 
     const statusMsg = anyLoan
-      ? `\n\nស្ថានភាព: <b>${LOAN_STATUS_LABEL[anyLoan.status] ?? anyLoan.status}</b>`
-      : ''
+      ? LOAN_STATUS_LABEL[anyLoan.status] ?? anyLoan.status
+      : null
 
     await sendTelegramMessageWithCommandButtons(
       chatId,
-      `🏦 <b>កម្ជី</b>\n\nអ្នកមិនមានកម្ជីសកម្មទេ។${statusMsg}`
+      statusMsg ? tgLoanNoneActiveWithStatus(statusMsg) : TG_LOAN_NONE_ACTIVE
     )
     return
   }
@@ -318,7 +308,7 @@ async function handleLoanCommand(chatId: string): Promise<void> {
     else if (r.status === 'pending') totalPending += amt
   }
 
-  const schedule = buildLoanPaymentSchedule(principal, termMonths, rate, loan.start_date)
+  const schedule = buildLoanPaymentSchedule(principal, termMonths, rate, loanScheduleStartDate(loan))
   const annotated = annotateLoanPaymentSchedule(schedule, totalPaid, new Date(), totalPending)
 
   const totalOwed = annotated.reduce((s, r) => s + r.amount, 0)
@@ -327,42 +317,35 @@ async function handleLoanCommand(chatId: string): Promise<void> {
   const name = member.full_name_kh ?? member.full_name_en ?? ''
   const unpaidCount = annotated.filter(r => r.status !== 'paid').length
 
-  const parts: string[] = [
-    `🏦 <b>របាយការណ៍កម្ជី</b>`,
-    `👤 ${name}`,
-    ``,
-    `💵 <b>ចំនួន:</b> ${fmtMoney(principal)}  |  📅 <b>រយៈពេល:</b> ${termMonths} ខែ`,
-    `📈 <b>ការប្រាក់:</b> ${rate}%/ខែ`,
-    ...(loan.due_date ? [`⏰ <b>ផុតកំណត់:</b> ${fmtDate(loan.due_date)}`] : []),
-    ``,
-    `💳 <b>បានបង់:</b> ${fmtMoney(totalPaid)}`,
-    ...(totalPending > 0 ? [`⏳ <b>កំពុងផ្ទៀងផ្ទាត់:</b> ${fmtMoney(totalPending)}`] : []),
-    `💸 <b>នៅសល់:</b> ${fmtMoney(remaining)}  <i>(${unpaidCount} ខែទៀត)</i>`,
-  ]
+  const unpaid = annotated.filter((r) => r.status !== 'paid')
+  const scheduleLines = unpaid.slice(0, 12).map((row) => {
+    const dateStr = row.dueDate ? fmtDate(row.dueDate) : `ខែ ${row.month}`
+    const paidNote =
+      row.paidAmount > 0 ? `បានបង់ ${fmtMoney(row.paidAmount)}` : undefined
+    return tgLoanScheduleLine(
+      dateStr,
+      fmtMoney(row.amount),
+      SCHEDULE_STATUS_LABEL[row.status] ?? row.status,
+      paidNote
+    )
+  })
 
-  const unpaid = annotated.filter(r => r.status !== 'paid')
+  const msg = tgLoanReport({
+    memberName: name,
+    principal: fmtMoney(principal),
+    termMonths,
+    rate,
+    dueDate: loan.due_date ? fmtDate(loan.due_date) : undefined,
+    totalPaid: fmtMoney(totalPaid),
+    pendingPaid: totalPending > 0 ? fmtMoney(totalPending) : undefined,
+    remaining: fmtMoney(remaining),
+    unpaidMonths: unpaidCount,
+    scheduleLines,
+    scheduleMoreCount: unpaid.length > 12 ? unpaid.length - 12 : undefined,
+    fullyPaid: unpaid.length === 0,
+  })
 
-  if (unpaid.length === 0) {
-    parts.push(``, `🎉 <b>អ្នកបានសងកម្ចីទាំងស្រុងហើយ!</b>`)
-  } else {
-    parts.push(``, `<b>📋 តារាបង់ប្រចាំខែ:</b>`)
-
-    const shown = unpaid.slice(0, 12)
-    for (const row of shown) {
-      const emoji = SCHEDULE_STATUS_EMOJI[row.status] ?? '⏳'
-      const dateStr = row.dueDate ? fmtDate(row.dueDate) : `ខែ ${row.month}`
-      const paidNote = row.paidAmount > 0
-        ? `  <i>(បានបង់ ${fmtMoney(row.paidAmount)})</i>`
-        : ''
-      parts.push(`  ${emoji} ${dateStr}  —  ${fmtMoney(row.amount)}${paidNote}`)
-    }
-
-    if (unpaid.length > 12) {
-      parts.push(`  <i>… និង ${unpaid.length - 12} ខែទៀត។ បើកកម្មវិធីដើម្បីមើលទាំងអស់។</i>`)
-    }
-  }
-
-  await sendTelegramMessageWithCommandButtons(chatId, parts.join('\n'))
+  await sendTelegramMessageWithCommandButtons(chatId, msg)
 }
 
 // ---------------------------------------------------------------------------
@@ -394,10 +377,7 @@ async function submitSavingRequest(
   evidenceUrl: string
 ): Promise<boolean> {
   if (amount < MIN_SAVING_AMOUNT) {
-    await sendTelegramMessage(
-      chatId,
-      `⚠️ ចំនួនទឹកប្រាក់សន្សំអប្បបរមាគឺ ${fmtMoney(MIN_SAVING_AMOUNT)}។`
-    )
+    await sendTelegramMessage(chatId, tgMinSavingAmount(fmtMoney(MIN_SAVING_AMOUNT)))
     return false
   }
 
@@ -414,14 +394,21 @@ async function submitSavingRequest(
 
   if (error) {
     console.error('[Telegram] savings insert failed:', error.message)
-    await sendTelegramMessage(chatId, '❌ មានបញ្ហាក្នុងការរក្សាទុក។ សូមព្យាយាមម្តងទៀត។')
+    await sendTelegramMessage(chatId, tgErrorStorage())
     return false
   }
 
   await clearPendingPayment(chatId)
   await notifyAdmins(
-    'ការសន្សំថ្មី',
-    `${memberKhmerName(member)} បានដាក់ស្នើការសន្សំ ${fmtMoney(amount)} តាម Telegram។ សូមពិនិត្យនៅផ្នែកសំណើសន្សំ។`,
+    'សំណើសន្សំថ្មី',
+    tgAdminRequestBody({
+      memberName: memberKhmerName(member),
+      fields: [
+        { label: 'ចំនួន', value: fmtMoney(amount) },
+        { label: 'ប្រភព', value: 'Telegram' },
+      ],
+      note: 'សូមពិនិត្យនៅផ្នែកសំណើសន្សំ។',
+    }),
     'saving_request'
   )
   revalidatePath('/admin')
@@ -430,10 +417,7 @@ async function submitSavingRequest(
 
   await sendTelegramMessageWithCommandButtons(
     chatId,
-    `✅ <b>ទទួលបានដោយជោគជ័យ!</b>\n` +
-      `💰 ចំនួន: <b>${fmtMoney(amount)}</b>\n` +
-      `⏳ ស្ថានភាព: <b>កំពុងរង់ចាំការផ្ទៀងផ្ទាត់</b>\n\n` +
-      `បានដាក់ស្នើការសន្សំ <b>${fmtMoney(amount)}</b> — រង់ចាំអ្នកគ្រប់គ្រងផ្ទៀងផ្ទាត់។`
+    tgSubmissionReceived('saving', fmtMoney(amount))
   )
 
   return true
@@ -445,10 +429,7 @@ async function handlePendingSavingAmount(chatId: string, text: string): Promise<
 
   const amount = parseTelegramAmount(text)
   if (!amount) {
-    await sendTelegramMessage(
-      chatId,
-      '⚠️ សូមផ្ញើចំនួនទឹកប្រាក់ត្រឹមត្រូវ (ឧ. <code>50</code>)។'
-    )
+    await sendTelegramMessage(chatId, tgPromptValidAmount())
     return true
   }
 
@@ -465,14 +446,11 @@ async function handlePendingSavingAmount(chatId: string, text: string): Promise<
 
   const saved = await setPendingPayment(chatId, { type: 'saving', amount })
   if (!saved) {
-    await sendTelegramMessage(chatId, '❌ មិនអាចរក្សាទុកចំនួនបានទេ។ សូមប្រើ /paysaving ម្តងទៀត។')
+    await sendTelegramMessage(chatId, tgErrorSession('/paysaving'))
     return true
   }
 
-  await sendTelegramMessage(
-    chatId,
-    `✅ បានរក្សាទុកចំនួន <b>${fmtMoney(amount)}</b>។\n📸 ឥឡូវនេះ សូមផ្ញើរូបភាពបញ្ជាក់ការបង់ប្រាក់។`
-  )
+  await sendTelegramMessage(chatId, tgPromptAmountSaved(fmtMoney(amount)))
   return true
 }
 
@@ -488,21 +466,14 @@ async function handlePaySavingCommand(chatId: string): Promise<void> {
   const ok = await sendTelegramPhoto(
     chatId,
     qrUrl,
-    '💰 <b>ដាក់ស្នើការសន្សំ</b>\n\n' +
-    'ស្កេន KHQR ខាងលើដើម្បីបង់ប្រាក់។\n\n' +
-    '📸 <b>បន្ទាប់មកផ្ញើរូបភាពបញ្ជាក់</b>\n' +
-    'អាចសរសេរចំនួន (ដុល្លារ) ក្នុង caption ឬ ផ្ញើចំនួនជាសារបន្ទាប់\n' +
-    '<i>ឧ. caption: <code>50</code> ឬសារបន្ទាប់: <code>50</code></i>',
-    true, // force reply
+    tgPaySavingCaption(),
+    true,
   )
 
   if (ok) {
     const saved = await setPendingPayment(chatId, { type: 'saving' })
     if (!saved) {
-      await sendTelegramMessage(
-        chatId,
-        '❌ មិនអាចចាប់ផ្ទុកស្ថានភាពបានទេ។ សូមព្យាយាម /paysaving ម្តងទៀត។'
-      )
+      await sendTelegramMessage(chatId, tgErrorSession('/paysaving'))
     }
   }
 }
@@ -517,7 +488,7 @@ async function handlePayLoanCommand(chatId: string): Promise<void> {
   const admin = createAdminClient()
   const { data: loan } = await admin
     .from('loans')
-    .select('id, amount, term_months, monthly_interest_rate, start_date')
+    .select('id, amount, term_months, monthly_interest_rate, start_date, disbursed_at, created_at')
     .eq('member_id', member.id)
     .eq('status', 'active')
     .order('created_at', { ascending: false })
@@ -525,7 +496,7 @@ async function handlePayLoanCommand(chatId: string): Promise<void> {
     .maybeSingle()
 
   if (!loan) {
-    await sendTelegramMessageWithCommandButtons(chatId, '🏦 អ្នកមិនមានកម្ជីសកម្មទេ។')
+    await sendTelegramMessageWithCommandButtons(chatId, TG_LOAN_NONE_ACTIVE)
     return
   }
 
@@ -547,7 +518,12 @@ async function handlePayLoanCommand(chatId: string): Promise<void> {
     if (r.status === 'verified' || r.status === 'completed') totalPaid += Number(r.amount ?? 0)
   }
 
-  const schedule = buildLoanPaymentSchedule(Number(loan.amount), Number(loan.term_months ?? 12), rate, loan.start_date)
+  const schedule = buildLoanPaymentSchedule(
+    Number(loan.amount),
+    Number(loan.term_months ?? 12),
+    rate,
+    loanScheduleStartDate(loan)
+  )
   const annotated = annotateLoanPaymentSchedule(schedule, totalPaid)
   const nextDue = annotated.find(r => r.status !== 'paid')
   const dueAmount = nextDue?.amount ?? Number(loan.amount) / Number(loan.term_months ?? 12)
@@ -557,20 +533,14 @@ async function handlePayLoanCommand(chatId: string): Promise<void> {
   const ok = await sendTelegramPhoto(
     chatId,
     qrUrl,
-    `🏦 <b>ដាក់ស្នើការសងកម្ជី</b>\n\n` +
-    `💵 <b>ចំនួនត្រូវបង់ប្រចាំខែ:</b> ${fmtMoney(dueAmount)}\n\n` +
-    'ស្កេន KHQR ខាងលើដើម្បីបង់ប្រាក់។\n\n' +
-    '📸 <b>បន្ទាប់មកផ្ញើរូបភាពបញ្ជាក់</b> ជាការឆ្លើយតបទៅសារនេះ។',
-    true, // force reply
+    tgPayLoanCaption(fmtMoney(dueAmount)),
+    true,
   )
 
   if (ok) {
     const saved = await setPendingPayment(chatId, { type: 'loan', loanId: loan.id, amount: dueAmount })
     if (!saved) {
-      await sendTelegramMessage(
-        chatId,
-        '❌ មិនអាចចាប់ផ្ទុកស្ថានភាពបានទេ។ សូមព្យាយាម /payloan ម្តងទៀត។'
-      )
+      await sendTelegramMessage(chatId, tgErrorSession('/payloan'))
     }
   }
 }
@@ -581,10 +551,7 @@ async function handlePayLoanCommand(chatId: string): Promise<void> {
 async function handlePhotoMessage(chatId: string, fileId: string, caption?: string): Promise<void> {
   const pending = await getPendingPayment(chatId)
   if (!pending) {
-    await sendTelegramMessage(
-      chatId,
-      '📸 ដើម្បីដាក់ស្នើការបង់ប្រាក់ សូមប្រើ /paysaving ឬ /payloan ជាមុនសិន។'
-    )
+    await sendTelegramMessage(chatId, tgPromptUsePaymentCommand())
     return
   }
 
@@ -598,7 +565,7 @@ async function handlePhotoMessage(chatId: string, fileId: string, caption?: stri
   // Download the photo from Telegram
   const downloadUrl = await getTelegramFileDownloadUrl(fileId)
   if (!downloadUrl) {
-    await sendTelegramMessage(chatId, '❌ មិនអាចទាញយករូបភាពបានទេ។ សូមព្យាយាមម្តងទៀត។')
+    await sendTelegramMessage(chatId, tgErrorPhotoDownload())
     return
   }
 
@@ -608,7 +575,7 @@ async function handlePhotoMessage(chatId: string, fileId: string, caption?: stri
     if (!res.ok) throw new Error(`HTTP ${res.status}`)
     photoBuffer = Buffer.from(await res.arrayBuffer())
   } catch {
-    await sendTelegramMessage(chatId, '❌ មិនអាចទាញយករូបភាពបានទេ។')
+    await sendTelegramMessage(chatId, tgErrorPhotoDownload())
     return
   }
 
@@ -619,7 +586,7 @@ async function handlePhotoMessage(chatId: string, fileId: string, caption?: stri
     const folder = pending.type === 'saving' ? 'savings' : 'repayments'
     evidenceUrl = await uploadBufferToR2(member.id, folder, photoBuffer, ext)
   } catch {
-    await sendTelegramMessage(chatId, '❌ មិនអាចរក្សាទុករូបភាពបានទេ។')
+    await sendTelegramMessage(chatId, tgErrorPhotoUpload())
     return
   }
 
@@ -629,13 +596,10 @@ async function handlePhotoMessage(chatId: string, fileId: string, caption?: stri
     if (!amount) {
       const saved = await setPendingPayment(chatId, { type: 'saving', evidenceUrl })
       if (!saved) {
-        await sendTelegramMessage(chatId, '❌ មិនអាចរក្សាទុករូបភាពបានទេ។ សូមប្រើ /paysaving ម្តងទៀត។')
+        await sendTelegramMessage(chatId, tgErrorSession('/paysaving'))
         return
       }
-      await sendTelegramMessage(
-        chatId,
-        '✅ រូបភាពបានរក្សាទុក។\nសូមផ្ញើ <b>ចំនួនទឹកប្រាក់</b> ជាសារបន្ទាប់ (ឧ. <code>50</code>)។'
-      )
+      await sendTelegramMessage(chatId, tgPromptPhotoSaved())
       return
     }
 
@@ -655,7 +619,7 @@ async function handlePhotoMessage(chatId: string, fileId: string, caption?: stri
 
   if (error) {
     console.error('[Telegram] loan repayment insert failed:', error.message)
-    await sendTelegramMessage(chatId, '❌ មានបញ្ហាក្នុងការរក្សាទុក។')
+    await sendTelegramMessage(chatId, tgErrorStorage())
     return
   }
 
@@ -664,10 +628,7 @@ async function handlePhotoMessage(chatId: string, fileId: string, caption?: stri
 
   await sendTelegramMessageWithCommandButtons(
     chatId,
-    `✅ <b>ទទួលបានដោយជោគជ័យ!</b>\n` +
-      `💳 ចំនួន: <b>${fmtMoney(pending.amount)}</b>\n` +
-      `⏳ ស្ថានភាព: <b>កំពុងរង់ចាំការផ្ទៀងផ្ទាត់</b>\n\n` +
-      `បានដាក់ស្នើការសងកម្ជី <b>${fmtMoney(pending.amount)}</b> — រង់ចាំអ្នកគ្រប់គ្រងផ្ទៀងផ្ទាត់។`
+    tgSubmissionReceived('loan', fmtMoney(pending.amount))
   )
 }
 
@@ -692,8 +653,7 @@ async function handleRequestLoanCommand(chatId: string): Promise<void> {
   if (existingLoan) {
     await sendTelegramMessageWithCommandButtons(
       chatId,
-      `🏦 អ្នកមានកម្ជី <b>${LOAN_STATUS_LABEL[existingLoan.status] ?? existingLoan.status}</b> រួចហើយ។\n\n` +
-      'ប្រើ /loan ដើម្បីមើលស្ថានភាព។'
+      tgLoanRequestBlocked(LOAN_STATUS_LABEL[existingLoan.status] ?? existingLoan.status)
     )
     return
   }
@@ -701,11 +661,7 @@ async function handleRequestLoanCommand(chatId: string): Promise<void> {
   // Check eligibility (must have verified savings)
   const eligibility = await fetchMemberLoanEligibility(admin, member.id)
   if (eligibility.totalSavings <= 0) {
-    await sendTelegramMessageWithCommandButtons(
-      chatId,
-      '⚠️ អ្នកត្រូវមានការសន្សំដែលបានផ្ទៀងផ្ទាត់មុនពេលអាចស្នើសុំកម្ជីបាន។\n\n' +
-      'ប្រើ /saving ដើម្បីមើលសមតុល្យសន្សំរបស់អ្នក។'
-    )
+    await sendTelegramMessageWithCommandButtons(chatId, tgLoanRequestNoSavings())
     return
   }
 
@@ -713,10 +669,7 @@ async function handleRequestLoanCommand(chatId: string): Promise<void> {
 
   await sendTelegramMessage(
     chatId,
-    `🏦 <b>ស្នើសុំកម្ជី</b>\n\n` +
-    `💰 ចំនួនអតិបរមាដែលអ្នកអាចស្នើសុំ: <b>${fmtMoney(eligibility.availableLoanAmount)}</b>\n\n` +
-    `<b>សូមវាយចំនួនដែលអ្នកចង់កម្ចី (ដុល្លារ):</b>\n` +
-    `<i>ឧ. <code>500</code> សម្រាប់ $500</i>`
+    tgLoanRequestStart(fmtMoney(eligibility.availableLoanAmount))
   )
 }
 
@@ -734,23 +687,29 @@ async function handleLoanRequestStep(chatId: string, input: string): Promise<voi
   if (state.step === 'amount') {
     const amount = parseFloat(input.replace(/[^0-9.]/g, ''))
     if (!amount || amount <= 0) {
-      await sendTelegramMessage(chatId, '⚠️ ចំនួនមិនត្រឹមត្រូវ។ សូមវាយចំនួនជាលេខ (ឧ. <code>500</code>)។')
+      await sendTelegramMessage(chatId, tgPromptValidAmount())
       return
     }
 
     const eligibility = await fetchMemberLoanEligibility(admin, member.id)
     const check = validateLoanRequestAmount(amount, eligibility)
     if (!check.valid) {
-      await sendTelegramMessage(chatId, `⚠️ ${check.error}`)
+      await sendTelegramMessage(chatId, formatTelegramNotification('មិនអាចស្នើសុំបាន', check.error))
       return
     }
 
     await setPendingLoanRequest(chatId, { step: 'term', amount })
     await sendTelegramMessage(
       chatId,
-      `✅ ចំនួន: <b>${fmtMoney(amount)}</b>\n\n` +
-      `<b>រយៈពេលកម្ជី (ខែ):</b>\n` +
-      `<i>ឧ. <code>12</code> សម្រាប់ ១ ឆ្នាំ — អប្បបរមា ១ ខែ ដល់ អតិបរមា ៦០ ខែ</i>`
+      formatTelegramNotification(
+        'ចំនួនត្រូវបានរក្សាទុក',
+        [
+          formatTelegramField('ចំនួន', fmtMoney(amount)),
+          '',
+          'សូមវាយរយៈពេលកម្ជី (ខែ)។',
+          '<i>ឧទាហរណ៍: <code>12</code> សម្រាប់ ១ ឆ្នាំ (អប្បបរមា ១ ខែ ដល់ ៦០ ខែ)</i>',
+        ].join('\n')
+      )
     )
     return
   }
@@ -758,16 +717,28 @@ async function handleLoanRequestStep(chatId: string, input: string): Promise<voi
   if (state.step === 'term') {
     const termMonths = parseInt(input.replace(/[^0-9]/g, ''), 10)
     if (!termMonths || termMonths < 1 || termMonths > 60) {
-      await sendTelegramMessage(chatId, '⚠️ រយៈពេលមិនត្រឹមត្រូវ។ សូមវាយចំនួនខែពី ១ ដល់ ៦០។')
+      await sendTelegramMessage(
+        chatId,
+        formatTelegramNotification(
+          'រយៈពេលមិនត្រឹមត្រូវ',
+          'សូមវាយចំនួនខែពី ១ ដល់ ៦០។'
+        )
+      )
       return
     }
 
     await setPendingLoanRequest(chatId, { step: 'purpose', amount: state.amount, termMonths })
     await sendTelegramMessage(
       chatId,
-      `✅ រយៈពេល: <b>${termMonths} ខែ</b>\n\n` +
-      `<b>គោលបំណងនៃកម្ជី:</b>\n` +
-      `<i>ឧ. ជួសជុលផ្ទះ, ការអប់រំ, អាជីវកម្ម...</i>`
+      formatTelegramNotification(
+        'រយៈពេលត្រូវបានរក្សាទុក',
+        [
+          formatTelegramField('រយៈពេល', `${termMonths} ខែ`),
+          '',
+          'សូមបញ្ជាក់គោលបំណងនៃកម្ជី។',
+          '<i>ឧទាហរណ៍: ជួសជុលផ្ទះ, ការអប់រំ, អាជីវកម្ម</i>',
+        ].join('\n')
+      )
     )
     return
   }
@@ -775,7 +746,13 @@ async function handleLoanRequestStep(chatId: string, input: string): Promise<voi
   if (state.step === 'purpose') {
     const purpose = input.trim()
     if (purpose.length < 3) {
-      await sendTelegramMessage(chatId, '⚠️ គោលបំណងខ្លីពេក។ សូមពិពណ៌នាបន្ថែម។')
+      await sendTelegramMessage(
+        chatId,
+        formatTelegramNotification(
+          'គោលបំណងមិនគ្រប់គ្រាន់',
+          'សូមពិពណ៌នាគោលបំណងកម្ជីឱ្យច្បាស់លាស់ជាងនេះ។'
+        )
+      )
       return
     }
 
@@ -802,19 +779,18 @@ async function handleLoanRequestStep(chatId: string, input: string): Promise<voi
     })
 
     if (error) {
-      await sendTelegramMessage(chatId, '❌ មានបញ្ហាក្នុងការដាក់ស្នើ។ សូមព្យាយាមម្តងទៀត។')
+      await sendTelegramMessage(chatId, tgErrorGeneric('មិនអាចដាក់ស្នើសុំកម្ជីបានទេ។ សូមព្យាយាមម្តងទៀត។'))
       return
     }
 
     await sendTelegramMessageWithCommandButtons(
       chatId,
-      `✅ <b>ស្នើសុំកម្ជីបានដោយជោគជ័យ!</b>\n\n` +
-      `💵 ចំនួន: <b>${fmtMoney(state.amount)}</b>\n` +
-      `📅 រយៈពេល: <b>${state.termMonths} ខែ</b>\n` +
-      `📈 ការប្រាក់: <b>${rate}%/ខែ</b>\n` +
-      `📝 គោលបំណង: <i>${purpose}</i>\n\n` +
-      `⏳ ស្ថានភាព: <b>កំពុងពិនិត្យ</b>\n\n` +
-      `អ្នកគ្រប់គ្រងនឹងពិនិត្យពាក្យសុំរបស់អ្នកឆាប់ៗនេះ។ ប្រើ /loan ដើម្បីមើលស្ថានភាព។`
+      tgLoanRequestSubmitted({
+        amount: fmtMoney(state.amount),
+        termMonths: state.termMonths,
+        rate,
+        purpose,
+      })
     )
   }
 }
@@ -891,11 +867,11 @@ export async function POST(request: NextRequest) {
 
   // Reply-keyboard menu buttons — map label text to command handlers
   const menuButtonHandlers: Record<string, (id: string) => Promise<void>> = {
-    '💰 ការសន្សំ':       handleSavingCommand,
-    '🏦 ប្រាក់កម្ចី':      handleLoanCommand,
-    '📤 ដាក់ស្នើសន្សំ':   handlePaySavingCommand,
-    '💳 សងកម្ចី':        handlePayLoanCommand,
-    '📝 ស្នើសុំកម្ចី':    handleRequestLoanCommand,
+    'ការសន្សំ': handleSavingCommand,
+    'ប្រាក់កម្ជី': handleLoanCommand,
+    'ដាក់ស្នើសន្សំ': handlePaySavingCommand,
+    'សងកម្ជី': handlePayLoanCommand,
+    'ស្នើសុំកម្ជី': handleRequestLoanCommand,
   }
   if (text && menuButtonHandlers[text]) {
     await menuButtonHandlers[text](chatIdStr)

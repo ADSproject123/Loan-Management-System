@@ -17,7 +17,7 @@ export const REPAYMENT_PAID_LABELS: Record<RepaymentPaidStatus, string> = {
 }
 
 export const REPAYMENT_PAID_STYLES: Record<RepaymentPaidStatus, string> = {
-  pending: 'text-muted',
+  pending: 'text-foreground',
   completed: 'font-bold text-green-700',
 }
 

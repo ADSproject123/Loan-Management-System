@@ -12,14 +12,14 @@ export default async function DashboardTelegramPage() {
     <div className="p-6 md:p-8">
       <Link
         href="/dashboard"
-        className="mb-6 inline-flex items-center gap-2 text-sm text-slate-500 transition hover:text-slate-700"
+        className="mb-6 inline-flex items-center gap-2 text-sm text-foreground transition hover:text-foreground"
       >
         <ArrowLeft className="h-4 w-4" />
         ត្រឡប់ក្រោយ
       </Link>
 
       <h1 className="text-2xl font-bold text-slate-900">ភ្ជាប់ Telegram</h1>
-      <p className="mt-1 max-w-2xl text-sm leading-6 text-slate-500">
+      <p className="mt-1 max-w-2xl text-sm leading-6 text-foreground">
         ប្រើតំណភ្ជាប់ផ្ទាល់ខ្លួនរបស់អ្នក បើក bot ហើយចុច Start។ ប្រព័ន្ធនឹងភ្ជាប់គណនីរបស់អ្នកដោយស្វ័យប្រវត្តិ។
       </p>
 
@@ -27,7 +27,7 @@ export default async function DashboardTelegramPage() {
         {linked ? (
           <div className="py-4 text-center">
             <p className="text-lg font-bold text-slate-900">តេលេក្រាមត្រូវបានភ្ជាប់រួចហើយ</p>
-            <p className="mt-2 text-sm text-slate-600">អ្នកនឹងទទួលការជូនដំណឹងតាម Telegram នៅពេលមានអ្វីថ្មី។</p>
+            <p className="mt-2 text-sm text-foreground">អ្នកនឹងទទួលការជូនដំណឹងតាម Telegram នៅពេលមានអ្វីថ្មី។</p>
           </div>
         ) : (
           <div className="space-y-5">

@@ -96,7 +96,7 @@ export function TelegramConnectPanel({
           <CheckCircle2 className="h-8 w-8 text-emerald-600" />
         </div>
         <h3 className="mt-4 text-lg font-bold text-slate-950">តេលេក្រាមត្រូវបានភ្ជាប់</h3>
-        <p className="mx-auto mt-2 max-w-md text-sm leading-6 text-slate-600">
+        <p className="mx-auto mt-2 max-w-md text-sm leading-6 text-foreground">
           អ្នកនឹងទទួលការជូនដំណឹងតាម Telegram នៅពេលមានអ្វីថ្មីលើគណនីរបស់អ្នក។
         </p>
         {onContinue && (
@@ -121,7 +121,7 @@ export function TelegramConnectPanel({
         </span>
         <div>
           <p className="text-sm font-semibold text-slate-900">{title}</p>
-          <p className="mt-1 text-[13px] leading-6 text-slate-600">{description}</p>
+          <p className="mt-1 text-[13px] leading-6 text-foreground">{description}</p>
         </div>
       </div>
 
@@ -142,20 +142,20 @@ export function TelegramConnectPanel({
             <button
               type="button"
               onClick={handleCopy}
-              className="inline-flex w-full items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white px-5 py-2.5 text-sm font-semibold text-slate-700 transition hover:bg-slate-50"
+              className="inline-flex w-full items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white px-5 py-2.5 text-sm font-semibold text-foreground transition hover:bg-slate-50"
             >
               <Copy className="h-4 w-4" />
               {copied ? 'បានចម្លងតំណភ្ជាប់' : 'ចម្លងតំណភ្ជាប់ឱ្យសមាជិក'}
             </button>
           )}
 
-          <div className="flex items-center justify-center gap-2 text-xs text-slate-500">
+          <div className="flex items-center justify-center gap-2 text-xs text-foreground">
             <LoadingDots size="sm" color="brand" />
             កំពុងរង់ចាំការភ្ជាប់...
           </div>
 
           {required && (
-            <p className="text-center text-xs text-slate-400">
+            <p className="text-center text-xs text-foreground">
               ការភ្ជាប់តេលេក្រាមត្រូវបានទាមទារដើម្បីបញ្ចប់ការចុះឈ្មោះ។
             </p>
           )}

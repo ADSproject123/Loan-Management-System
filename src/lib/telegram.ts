@@ -89,7 +89,7 @@ export async function sendTelegramMessageRemoveKeyboard(chatId: string, text: st
 export async function sendTelegramMessageWithAppButton(
   chatId: string,
   text: string,
-  buttonLabel = '📱 បើកកម្មវិធី'
+  buttonLabel = 'បើកកម្មវិធី'
 ): Promise<boolean> {
   const url = appUrl()
 
@@ -138,9 +138,9 @@ export async function sendTelegramMessageWithAppButton(
  */
 export const MENU_KEYBOARD = {
   keyboard: [
-    [{ text: '💰 ការសន្សំ' },     { text: '🏦 ប្រាក់កម្ចី' }],
-    [{ text: '📤 ដាក់ស្នើសន្សំ' }, { text: '💳 សងកម្ចី' }],
-    [{ text: '📝 ស្នើសុំកម្ចី' }],
+    [{ text: 'ការសន្សំ' }, { text: 'ប្រាក់កម្ជី' }],
+    [{ text: 'ដាក់ស្នើសន្សំ' }, { text: 'សងកម្ជី' }],
+    [{ text: 'ស្នើសុំកម្ជី' }],
   ],
   resize_keyboard: true,
   is_persistent: true,
@@ -181,7 +181,7 @@ export async function configureBotMenuButton(): Promise<boolean> {
   const result = await callTelegram('setChatMenuButton', {
     menu_button: {
       type: 'web_app',
-      text: '📱 បើកកម្មវិធី',
+      text: 'បើកកម្មវិធី',
       web_app: { url: appUrl() },
     },
   })
@@ -194,12 +194,12 @@ export async function configureBotMenuButton(): Promise<boolean> {
 export async function setBotCommands(): Promise<boolean> {
   const result = await callTelegram('setMyCommands', {
     commands: [
-      { command: 'start',      description: 'ភ្ជាប់គណនី' },
-      { command: 'saving',     description: 'មើលការសន្សំ' },
-      { command: 'loan',       description: 'មើលរបាយការណ៍កម្ជី' },
-      { command: 'paysaving',    description: 'ដាក់ស្នើការសន្សំ' },
-      { command: 'payloan',      description: 'ដាក់ស្នើការសងកម្ជី' },
-      { command: 'requestloan',  description: 'ស្នើសុំកម្ជី' },
+      { command: 'start', description: 'ភ្ជាប់គណនី' },
+      { command: 'saving', description: 'មើលរបាយការណ៍សន្សំ' },
+      { command: 'loan', description: 'មើលរបាយការណ៍កម្ជី' },
+      { command: 'paysaving', description: 'ដាក់ស្នើការសន្សំ' },
+      { command: 'payloan', description: 'ដាក់ស្នើការសងកម្ជី' },
+      { command: 'requestloan', description: 'ស្នើសុំកម្ជី' },
     ],
   })
   return result.ok

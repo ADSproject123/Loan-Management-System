@@ -55,14 +55,14 @@ export function LoanRepayModal({
             <h2 id="loan-repay-modal-title" className="text-lg font-bold text-gray-900">
               បង់ប្រាក់ខែ {scheduleMonth}
             </h2>
-            <p className="mt-0.5 text-sm text-gray-500">
+            <p className="mt-0.5 text-sm text-foreground">
               កាលបរិច្ឆេទត្រូវបង់ {dueDate ? formatKhmerDate(dueDate) : 'មិនកំណត់'}
             </p>
           </div>
           <button
             type="button"
             onClick={onClose}
-            className="shrink-0 rounded-lg p-1 text-gray-400 transition hover:bg-gray-100 hover:text-gray-700"
+            className="shrink-0 rounded-lg p-1 text-foreground transition hover:bg-gray-100 hover:text-foreground"
             aria-label="បិទ"
           >
             <X className="h-5 w-5" />

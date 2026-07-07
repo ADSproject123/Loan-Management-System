@@ -9,6 +9,7 @@ import { fetchMemberLoanEligibility, validateLoanRequestAmount } from '@/lib/loa
 import { allocateRepaymentAcrossLoans } from '@/lib/loan/memberCombinedLoans'
 import { notifyAdmins } from '@/lib/notifyAdmins'
 import { memberKhmerName } from '@/lib/memberNames'
+import { tgAdminRequestBody } from '@/lib/telegramMessages'
 import { uploadPrivateFile } from '@/lib/uploads'
 
 export type ActionResult = {
@@ -200,7 +201,7 @@ export async function registerMember(formData: FormData): Promise<RegisterResult
       date_of_birth: dateOfBirth,
       address,
       id_number: idNumber,
-      resident_book_number: residentBookNumber,
+      resident_book_number: residentBookNumber || null,
       workplace,
       referee_id: refereeId,
       referee_verified: Boolean(refereeId),
@@ -215,7 +216,10 @@ export async function registerMember(formData: FormData): Promise<RegisterResult
 
     await notifyAdmins(
       'សមាជិកថ្មីចុះឈ្មោះ',
-      `${fullNameKh} បានដាក់ពាក្យសុំចូលរួម។ សូមពិនិត្យនៅផ្នែកស្នើសុំចូលរួម។`,
+      tgAdminRequestBody({
+        memberName: fullNameKh,
+        note: 'មានពាក្យសុំចូលរួមថ្មី។ សូមពិនិត្យនៅផ្នែកស្នើសុំចូលរួម។',
+      }),
       'member_request'
     )
 
@@ -305,8 +309,12 @@ export async function addSaving(formData: FormData): Promise<ActionResult> {
     if (error) throw error
 
     await notifyAdmins(
-      'ការសន្សំថ្មី',
-      `${memberKhmerName(member)} បានដាក់ស្នើការសន្សំ ${formatMoney(amount, currency)}។ សូមពិនិត្យនៅផ្នែកសំណើសន្សំ។`,
+      'សំណើសន្សំថ្មី',
+      tgAdminRequestBody({
+        memberName: memberKhmerName(member),
+        fields: [{ label: 'ចំនួន', value: formatMoney(amount, currency) }],
+        note: 'សូមពិនិត្យនៅផ្នែកសំណើសន្សំ។',
+      }),
       'saving_request'
     )
 
@@ -406,8 +414,12 @@ export async function requestLoan(formData: FormData): Promise<ActionResult> {
     }
 
     await notifyAdmins(
-      'ពាក្យសុំកម្ជីថ្មី',
-      `${memberKhmerName(member)} បានដាក់ស្នើកម្ជី ${formatMoney(amount, currency)}។ សូមពិនិត្យនៅផ្នែកពិនិត្យពាក្យសុំ។`,
+      'សំណើកម្ជីថ្មី',
+      tgAdminRequestBody({
+        memberName: memberKhmerName(member),
+        fields: [{ label: 'ចំនួន', value: formatMoney(amount, currency) }],
+        note: 'សូមពិនិត្យនៅផ្នែកពិនិត្យពាក្យសុំ។',
+      }),
       'loan_request'
     )
 
@@ -495,8 +507,12 @@ export async function repayLoan(formData: FormData): Promise<ActionResult> {
     }
 
     await notifyAdmins(
-      'ការសងកម្ជីថ្មី',
-      `${memberKhmerName(member)} បានដាក់ស្នើការសង ${formatMoney(amount, currency)}។ សូមពិនិត្យនៅផ្នែកបញ្ជីការសងកម្ជី។`,
+      'សំណើសងកម្ជីថ្មី',
+      tgAdminRequestBody({
+        memberName: memberKhmerName(member),
+        fields: [{ label: 'ចំនួន', value: formatMoney(amount, currency) }],
+        note: 'សូមពិនិត្យនៅផ្នែកបញ្ជីការសងកម្ជី។',
+      }),
       'loan_repayment'
     )
 
@@ -535,7 +551,10 @@ export async function requestReport(formData: FormData): Promise<ActionResult> {
 
     await notifyAdmins(
       'ស្នើសុំរបាយការណ៍ថ្មី',
-      `${memberKhmerName(member)} បានស្នើសុំរបាយការណ៍${reportType === 'saving' ? 'សន្សំ' : 'កម្ជី'}។`,
+      tgAdminRequestBody({
+        memberName: memberKhmerName(member),
+        fields: [{ label: 'ប្រភេទ', value: `របាយការណ៍${reportType === 'saving' ? 'សន្សំ' : 'កម្ជី'}` }],
+      }),
       'report_request'
     )
 
@@ -574,8 +593,12 @@ export async function requestCapitalWithdrawal(formData: FormData): Promise<Acti
     if (error) throw error
 
     await notifyAdmins(
-      'ស្នើសុំដើមទុនថ្មី',
-      `${memberKhmerName(member)} បានដាក់ស្នើដកដើមទុន ${formatMoney(amount, currency)}។ សូមពិនិត្យនៅផ្នែកស្នើសុំដកដើមទុន។`,
+      'សំណើដកដើមទុនថ្មី',
+      tgAdminRequestBody({
+        memberName: memberKhmerName(member),
+        fields: [{ label: 'ចំនួន', value: formatMoney(amount, currency) }],
+        note: 'សូមពិនិត្យនៅផ្នែកស្នើសុំដកដើមទុន។',
+      }),
       'capital_request'
     )
 

@@ -367,6 +367,7 @@ export function LoansList({
       />
 
       <div className={adminTable.wrap}>
+        <div className={adminTable.scroll}>
         <table className={adminTable.table}>
           <thead className={adminTable.thead}>
             <tr className={adminTable.thRow}>
@@ -534,7 +535,7 @@ export function LoansList({
             })}
           </tbody>
           {isLedgerView && isActiveView && ledgerTotals && ledgerFiltered.length > 0 && (
-            <tfoot className="border-t-2 border-border bg-surface-muted/60">
+            <tfoot className={adminTable.tfoot}>
               <tr>
                 <td className={`${adminTable.tdFirst} font-semibold text-foreground`}>
                   សរុប ({ledgerTotals.memberCount} សមាជិក)
@@ -552,6 +553,7 @@ export function LoansList({
             </tfoot>
           )}
         </table>
+      </div>
       </div>
     </div>
   )

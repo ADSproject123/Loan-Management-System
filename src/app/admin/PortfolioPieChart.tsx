@@ -25,7 +25,7 @@ function ChartTooltip({
 
   return (
     <div className="rounded-xl border border-slate-200 bg-white px-3 py-2 shadow-md ring-1 ring-slate-900/5">
-      <p className="mb-1 flex items-center gap-2 text-xs font-semibold text-slate-700">
+      <p className="mb-1 flex items-center gap-2 text-xs font-semibold text-foreground">
         <span
           className="inline-block h-2.5 w-2.5 rounded-full"
           style={{ backgroundColor: slice?.payload?.color }}
@@ -45,7 +45,7 @@ export function PortfolioPieChart({ data }: { data: PortfolioSlice[] }) {
 
   if (total === 0) {
     return (
-      <p className="py-12 text-center text-sm text-slate-500">
+      <p className="py-12 text-center text-sm text-foreground">
         មិនទាន់មានទិន្នន័យសម្រាប់បង្ហាញក្រាប់រង្វង់។
       </p>
     )
@@ -79,7 +79,7 @@ export function PortfolioPieChart({ data }: { data: PortfolioSlice[] }) {
           const percent = total > 0 ? Math.round((slice.value / total) * 100) : 0
           return (
             <li key={slice.label} className="flex items-center justify-between gap-4">
-              <span className="flex items-center gap-2 text-sm text-slate-600">
+              <span className="flex items-center gap-2 text-sm text-foreground">
                 <span
                   className="inline-block h-2.5 w-2.5 rounded-full"
                   style={{ backgroundColor: slice.color }}
@@ -88,7 +88,7 @@ export function PortfolioPieChart({ data }: { data: PortfolioSlice[] }) {
               </span>
               <span className="text-sm font-semibold tabular-nums text-brand-900">
                 {formatMoney(slice.value)}{' '}
-                <span className="text-xs font-normal text-slate-400">{percent}%</span>
+                <span className="text-xs font-normal text-foreground">{percent}%</span>
               </span>
             </li>
           )

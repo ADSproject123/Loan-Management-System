@@ -17,15 +17,20 @@ function FileField({
   file,
   onChange,
   disabled,
+  optional,
 }: {
   label: string
   file: File | null
   onChange: (file: File | null) => void
   disabled?: boolean
+  optional?: boolean
 }) {
   return (
     <div className="space-y-2">
-      <p className="text-xs font-semibold text-muted">{label}</p>
+      <p className="text-xs font-semibold text-muted">
+        {label}
+        {optional && <span className="ml-1 font-normal text-foreground">(ស្រេចចិត្ត)</span>}
+      </p>
       {file ? (
         <div className="flex items-center gap-3 rounded-xl border border-brand-200 bg-brand-50/60 px-4 py-3">
           <span className="grid h-9 w-9 shrink-0 place-items-center rounded-xl bg-surface text-brand-700 ring-1 ring-brand-100">
@@ -121,6 +126,7 @@ export function MemberDocumentsEditForm({ memberId, onSaved }: MemberDocumentsEd
           file={residentBook}
           onChange={setResidentBook}
           disabled={pending}
+          optional
         />
       </div>
     </form>

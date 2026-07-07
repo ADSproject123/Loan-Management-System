@@ -70,6 +70,7 @@ export function SavingInterestDueList({
   return (
     <div className="flex min-h-0 flex-1 flex-col">
       <div className={adminTable.wrap}>
+        <div className={adminTable.scroll}>
         <table className={`${adminTable.table} min-w-208`}>
           <thead className={adminTable.thead}>
             <tr className={adminTable.thRow}>
@@ -138,7 +139,7 @@ export function SavingInterestDueList({
             )})}
           </tbody>
           {rows.length > 0 && (
-            <tfoot className="border-t-2 border-border bg-surface-muted/60">
+            <tfoot className={adminTable.tfoot}>
               <tr>
                 <td className={`${adminTable.tdFirst} font-semibold text-foreground`} colSpan={3}>
                   សរុប ({rows.length} សមាជិក)
@@ -153,6 +154,7 @@ export function SavingInterestDueList({
             </tfoot>
           )}
         </table>
+      </div>
       </div>
     </div>
   )
