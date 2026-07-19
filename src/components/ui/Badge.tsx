@@ -77,6 +77,7 @@ export function LoanStatusBadge({ status, plain = false }: { status: LoanStatus;
   const config: Record<LoanStatus, { label: string; variant: BadgeVariant }> = {
     pending: { label: 'រង់ចាំ', variant: 'warning' },
     under_review: { label: 'កំពុងពិនិត្យ', variant: 'info' },
+    awaiting_referee: { label: 'រង់ចាំមេធានា', variant: 'warning' },
     approved: { label: 'បានទទួលយក', variant: 'success' },
     active: { label: 'សកម្ម', variant: 'success' },
     completed: { label: 'បានទទួល', variant: 'default' },

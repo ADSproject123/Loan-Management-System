@@ -138,9 +138,9 @@ export async function sendTelegramMessageWithAppButton(
  */
 export const MENU_KEYBOARD = {
   keyboard: [
-    [{ text: 'ការសន្សំ' }, { text: 'ប្រាក់កម្ជី' }],
-    [{ text: 'ដាក់ស្នើសន្សំ' }, { text: 'សងកម្ជី' }],
-    [{ text: 'ស្នើសុំកម្ជី' }],
+    [{ text: 'របាយការកម្ចី' }, { text: 'របាយការសន្សំ' }],
+    [{ text: 'ដាក់ប្រាក់សន្សំ' }, { text: 'សងកម្ជី' }],
+    [{ text: 'ស្នើសុំកម្ជី' }, { text: 'ស្នើសំដកសន្សំ' }],
   ],
   resize_keyboard: true,
   is_persistent: true,
@@ -167,9 +167,59 @@ export async function sendTelegramMessageWithCommandButtons(
 /**
  * Answer a callback query (removes the loading spinner on the button).
  * Must be called within 10 s of receiving the callback_query update.
+ * Pass `text` to show the user a toast (e.g. "you already responded"); set
+ * `showAlert` to render it as a blocking dialog instead of a brief toast.
  */
-export async function answerTelegramCallbackQuery(callbackQueryId: string): Promise<boolean> {
-  const result = await callTelegram('answerCallbackQuery', { callback_query_id: callbackQueryId })
+export async function answerTelegramCallbackQuery(
+  callbackQueryId: string,
+  text?: string,
+  showAlert = false
+): Promise<boolean> {
+  const payload: Record<string, unknown> = { callback_query_id: callbackQueryId }
+  if (text) {
+    payload.text = text
+    payload.show_alert = showAlert
+  }
+  const result = await callTelegram('answerCallbackQuery', payload)
+  return result.ok
+}
+
+/**
+ * Send a message with an inline keyboard whose buttons carry callback_data
+ * (as opposed to MENU_KEYBOARD's persistent reply keyboard). `buttons` is a
+ * grid of rows, each row a list of {text, callback_data} buttons.
+ */
+export async function sendTelegramMessageWithInlineKeyboard(
+  chatId: string,
+  text: string,
+  buttons: Array<Array<{ text: string; callback_data: string }>>
+): Promise<boolean> {
+  const result = await callTelegram('sendMessage', {
+    chat_id: chatId,
+    text,
+    parse_mode: 'HTML',
+    disable_web_page_preview: true,
+    reply_markup: { inline_keyboard: buttons },
+  })
+  return result.ok
+}
+
+/**
+ * Send a document (e.g. a loan contract) by URL. Caption supports HTML.
+ * Mirrors sendTelegramPhoto — Telegram's sendDocument API also accepts a
+ * plain reachable URL in the `document` field, no multipart upload needed.
+ */
+export async function sendTelegramDocument(
+  chatId: string,
+  documentUrl: string,
+  caption: string
+): Promise<boolean> {
+  const result = await callTelegram('sendDocument', {
+    chat_id: chatId,
+    document: documentUrl,
+    caption,
+    parse_mode: 'HTML',
+  })
   return result.ok
 }
 
@@ -200,6 +250,8 @@ export async function setBotCommands(): Promise<boolean> {
       { command: 'paysaving', description: 'ដាក់ស្នើការសន្សំ' },
       { command: 'payloan', description: 'ដាក់ស្នើការសងកម្ជី' },
       { command: 'requestloan', description: 'ស្នើសុំកម្ជី' },
+      { command: 'requestwithdrawal', description: 'ស្នើសំដកសន្សំ' },
+      { command: 'cancelloan', description: 'លុបចោលការស្នើសុំកម្ជី' },
     ],
   })
   return result.ok

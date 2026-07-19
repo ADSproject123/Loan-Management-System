@@ -1,0 +1,19 @@
+name: Loan payment reminders
+
+on:
+  schedule:
+    # 01:00 UTC = 08:00 Phnom Penh (UTC+7), on the 10th and 15th of every month.
+    - cron: '0 1 10,15 * *'
+  workflow_dispatch: {}
+
+jobs:
+  notify:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Call loan reminder endpoint
+        run: |
+          curl --fail-with-body -sS -X GET "${APP_URL}/api/cron/loan-reminders" \
+            -H "Authorization: Bearer ${CRON_SECRET}"
+        env:
+          APP_URL: ${{ secrets.APP_URL }}
+          CRON_SECRET: ${{ secrets.CRON_SECRET }}

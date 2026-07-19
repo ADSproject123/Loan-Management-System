@@ -1,8 +1,9 @@
 export type MemberStatus = 'pending' | 'active' | 'suspended' | 'withdrawn' | 'rejected'
 export type MemberRole = 'founder' | 'comember' | 'member'
 export type WorkplaceType = 'private_company' | 'government' | 'ngo' | 'self_employed' | 'other'
-export type LoanStatus = 'pending' | 'under_review' | 'approved' | 'active' | 'completed' | 'rejected'
+export type LoanStatus = 'pending' | 'under_review' | 'awaiting_referee' | 'approved' | 'active' | 'completed' | 'rejected'
 export type CapitalRequestStatus = 'pending' | 'approved' | 'rejected'
+export type LoanRefereeStatus = 'pending' | 'accepted_online' | 'accepted_physical' | 'declined'
 export type SavingStatus = 'pending' | 'verified' | 'completed' | 'refunded'
 export type SavingInterestPaymentStatus = 'pending' | 'completed' | 'rejected'
 export type LoanDuePaymentStatus = 'pending' | 'completed'
@@ -106,6 +107,15 @@ export interface Loan {
   rejected_at?: string | null
   created_at: string
   updated_at: string
+}
+
+export interface LoanReferee {
+  id: string
+  loan_id: string
+  referee_member_id: string
+  status: LoanRefereeStatus
+  responded_at?: string | null
+  created_at: string
 }
 
 export interface LoanRepayment {

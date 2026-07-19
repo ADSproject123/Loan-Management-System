@@ -9,6 +9,7 @@ import {
   resolveLoanInterestRate,
 } from '@/lib/interest'
 import { fetchAdminLoanDetail } from '@/lib/admin/loanDetail'
+import { fetchLoanReferees } from '@/lib/loanReferee'
 import { LoanDetailView } from '@/app/admin/loans/[id]/LoanDetailView'
 
 interface PageProps {
@@ -23,7 +24,7 @@ export default async function AdminLoanDetailPage({ params }: PageProps) {
 
   if (!loan) notFound()
 
-  const [{ data: repayments }, { data: allRepayments }, interestSettings, supportDocumentUrl] =
+  const [{ data: repayments }, { data: allRepayments }, interestSettings, supportDocumentUrl, loanReferees] =
     await Promise.all([
       admin
         .from('loan_repayments')
@@ -34,7 +35,11 @@ export default async function AdminLoanDetailPage({ params }: PageProps) {
       admin.from('loan_repayments').select('amount, status').eq('loan_id', id),
       getInterestSettings(),
       getPrivateFileUrl(loan.support_document_url),
+      fetchLoanReferees(admin, id),
     ])
+
+  const allRefereesOnline =
+    loanReferees.length > 0 && loanReferees.every((r) => r.status === 'accepted_online')
 
   const currency = normalizeCurrency(loan.currency) as CurrencyCode
   const member = Array.isArray(loan.members) ? loan.members[0] : loan.members
@@ -75,13 +80,21 @@ export default async function AdminLoanDetailPage({ params }: PageProps) {
     ...(loan.support_document_url
       ? [
           {
-            label: 'ឯកសារគាំទ្រ',
+            label: 'ឯកសារគាំទ្រ (កិច្ចសន្យា)',
             done: true,
             detail: 'បានផ្ទុក',
             href: supportDocumentUrl,
           },
         ]
-      : []),
+      : allRefereesOnline
+        ? [
+            {
+              label: 'ឯកសារគាំទ្រ (កិច្ចសន្យា)',
+              done: false,
+              detail: 'រង់ចាំសមាជិកផ្ញើឯកសារដែលបានចុះហត្ថលេខាត្រឡប់មកវិញ',
+            },
+          ]
+        : []),
   ]
 
   const docsComplete = docChecklist.every((item) => item.done)
@@ -118,6 +131,8 @@ export default async function AdminLoanDetailPage({ params }: PageProps) {
       loanRate={loanRate}
       paymentSchedule={paymentSchedule}
       repayments={repayments ?? []}
+      loanReferees={loanReferees}
+      awaitingSignedContract={allRefereesOnline && !loan.support_document_url}
     />
   )
 }

@@ -33,19 +33,24 @@ function escapeIlikePattern(value: string) {
 
 export async function searchActiveMembers(query: string): Promise<MemberSearchResult[]> {
   const trimmed = query.trim()
-  if (!trimmed) return []
 
-  const pattern = `%${escapeIlikePattern(trimmed)}%`
   const admin = createAdminClient()
-  const { data } = await admin
+  let request = admin
     .from('members')
     .select('id, full_name, full_name_kh, full_name_en, phone, email')
     .eq('status', 'active')
     .eq('is_admin', false)
-    .or(
-      `full_name_kh.ilike.${pattern},full_name_en.ilike.${pattern},full_name.ilike.${pattern},phone.ilike.${pattern},email.ilike.${pattern}`
-    )
-    .limit(8)
+
+  if (trimmed) {
+    const pattern = `%${escapeIlikePattern(trimmed)}%`
+    request = request
+      .or(
+        `full_name_kh.ilike.${pattern},full_name_en.ilike.${pattern},full_name.ilike.${pattern},phone.ilike.${pattern},email.ilike.${pattern}`
+      )
+      .limit(8)
+  }
+
+  const { data } = await request.order('full_name_kh', { ascending: true })
 
   return (data ?? []).map((member) => ({
     id: member.id,

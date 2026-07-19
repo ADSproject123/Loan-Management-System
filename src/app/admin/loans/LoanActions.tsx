@@ -14,7 +14,8 @@ type LoanActionsProps = {
 export function LoanActions({ loanId, status, className = '' }: LoanActionsProps) {
   const canApprove = status === 'under_review' || status === 'pending'
   const canActivate = status === 'approved'
-  const canReject = canApprove || canActivate
+  // Manual escape hatch for a loan stuck waiting on referees (e.g. one never responds).
+  const canReject = canApprove || canActivate || status === 'awaiting_referee'
 
   if (!canApprove && !canActivate && !canReject) {
     return <span className="text-xs text-foreground">—</span>
