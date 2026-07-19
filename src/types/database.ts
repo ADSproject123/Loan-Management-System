@@ -8,6 +8,7 @@ export type SavingStatus = 'pending' | 'verified' | 'completed' | 'refunded'
 export type SavingInterestPaymentStatus = 'pending' | 'completed' | 'rejected'
 export type LoanDuePaymentStatus = 'pending' | 'completed'
 export type CurrencyCode = 'USD'
+export type MessageSenderType = 'admin' | 'member'
 
 export interface LoanInterestPlan {
   id: string
@@ -192,6 +193,16 @@ export interface Notification {
   message: string
   type: string
   read: boolean
+  created_at: string
+}
+
+export interface AdminMemberMessage {
+  id: string
+  member_id: string
+  sender_type: MessageSenderType
+  sender_admin_id: string | null
+  body: string
+  read_by_admin: boolean
   created_at: string
 }
 

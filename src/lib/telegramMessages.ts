@@ -714,3 +714,18 @@ export function tgVerificationCode(actionLabel: string, code: string) {
 export function tgAdminAlert(title: string, body: string) {
   return formatTelegramNotification(title, body)
 }
+
+// ---------------------------------------------------------------------------
+// Admin <-> member chat
+// ---------------------------------------------------------------------------
+
+export function tgAdminChatMessage(body: string) {
+  return formatTelegramNotification('សារពីអ្នកគ្រប់គ្រង', escapeTelegramHtml(body))
+}
+
+export function tgChatMessageForwarded() {
+  return formatTelegramNotification(
+    'សារត្រូវបានផ្ញើ',
+    'សារបស់អ្នកត្រូវបានផ្ញើទៅអ្នកគ្រប់គ្រង។ អ្នកគ្រប់គ្រងនឹងឆ្លើយតបឆាប់ៗនេះ។'
+  )
+}
