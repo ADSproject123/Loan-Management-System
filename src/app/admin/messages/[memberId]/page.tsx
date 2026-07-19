@@ -3,7 +3,7 @@ import { createAdminClient } from '@/lib/supabase/admin'
 import { AdminPanel } from '@/components/admin'
 import { memberKhmerName } from '@/lib/memberNames'
 import { ConversationThread } from '@/app/admin/messages/[memberId]/ConversationThread'
-import type { ChatMessage } from '@/app/actions/adminMessages'
+import { withSignedMediaUrls, type ChatMessageRow } from '@/app/actions/adminMessages'
 
 interface PageProps {
   params: Promise<{ memberId: string }>
@@ -21,12 +21,14 @@ export default async function AdminMessageThreadPage({ params }: PageProps) {
       .maybeSingle(),
     admin
       .from('admin_member_messages')
-      .select('id, member_id, sender_type, sender_admin_id, body, created_at')
+      .select('id, member_id, sender_type, sender_admin_id, body, message_type, media_url, media_duration_seconds, media_filename, media_mime_type, created_at')
       .eq('member_id', memberId)
       .order('created_at', { ascending: true }),
   ])
 
   if (!member) notFound()
+
+  const initialMessages = await withSignedMediaUrls((messages ?? []) as ChatMessageRow[])
 
   return (
     <AdminPanel backHref="/admin/messages" headerActions={<span className="text-sm font-semibold text-foreground">{memberKhmerName(member)}</span>} fill>
@@ -34,7 +36,7 @@ export default async function AdminMessageThreadPage({ params }: PageProps) {
         memberId={member.id}
         memberName={memberKhmerName(member)}
         hasTelegram={Boolean(member.telegram_chat_id)}
-        initialMessages={(messages ?? []) as ChatMessage[]}
+        initialMessages={initialMessages}
       />
     </AdminPanel>
   )

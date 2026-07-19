@@ -9,6 +9,7 @@ export type SavingInterestPaymentStatus = 'pending' | 'completed' | 'rejected'
 export type LoanDuePaymentStatus = 'pending' | 'completed'
 export type CurrencyCode = 'USD'
 export type MessageSenderType = 'admin' | 'member'
+export type ChatMessageType = 'text' | 'voice' | 'file'
 
 export interface LoanInterestPlan {
   id: string
@@ -201,7 +202,12 @@ export interface AdminMemberMessage {
   member_id: string
   sender_type: MessageSenderType
   sender_admin_id: string | null
-  body: string
+  body: string | null
+  message_type: ChatMessageType
+  media_url: string | null
+  media_duration_seconds: number | null
+  media_filename: string | null
+  media_mime_type: string | null
   read_by_admin: boolean
   created_at: string
 }

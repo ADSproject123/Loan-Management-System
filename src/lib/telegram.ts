@@ -269,6 +269,70 @@ export async function sendTelegramDocument(
 }
 
 /**
+ * Send a playable audio clip given its raw bytes (used for admin-recorded
+ * voice messages — the browser's MediaRecorder output, whatever container it
+ * produced, e.g. webm/ogg, sent as-is). Uses sendAudio rather than sendVoice:
+ * sendVoice requires .ogg/Opus for Telegram's round waveform "voice message"
+ * bubble; sendAudio is far more lenient about format and still gives the
+ * member a normal tap-to-play attachment, which is the deliberate tradeoff
+ * here (no server-side transcoding).
+ */
+export async function sendTelegramAudio(
+  chatId: string,
+  fileData: ArrayBuffer,
+  filename: string,
+  caption?: string
+): Promise<boolean> {
+  const form = new FormData()
+  form.append('chat_id', chatId)
+  if (caption) form.append('caption', caption)
+  form.append('parse_mode', 'HTML')
+  form.append('audio', new Blob([fileData]), filename)
+
+  const result = await callTelegramMultipart('sendAudio', form)
+  return result.ok
+}
+
+/** Send an image given its raw bytes — renders as an inline photo preview in Telegram. */
+export async function sendTelegramPhotoBuffer(
+  chatId: string,
+  fileData: ArrayBuffer,
+  filename: string,
+  caption?: string
+): Promise<boolean> {
+  const form = new FormData()
+  form.append('chat_id', chatId)
+  if (caption) form.append('caption', caption)
+  form.append('parse_mode', 'HTML')
+  form.append('photo', new Blob([fileData]), filename)
+
+  const result = await callTelegramMultipart('sendPhoto', form)
+  return result.ok
+}
+
+/**
+ * Send a non-image file given its raw bytes. Sibling to sendTelegramDocument
+ * (which fetches a URL first) — this one is for content that only exists
+ * in-memory (e.g. an admin's uploaded attachment), skipping the redundant
+ * upload-then-fetch round trip.
+ */
+export async function sendTelegramDocumentBuffer(
+  chatId: string,
+  fileData: ArrayBuffer,
+  filename: string,
+  caption?: string
+): Promise<boolean> {
+  const form = new FormData()
+  form.append('chat_id', chatId)
+  if (caption) form.append('caption', caption)
+  form.append('parse_mode', 'HTML')
+  form.append('document', new Blob([fileData]), filename)
+
+  const result = await callTelegramMultipart('sendDocument', form)
+  return result.ok
+}
+
+/**
  * Set the bot's persistent menu button to open the site as a Mini App.
  * Call once during bot setup via /api/telegram/setup.
  */
