@@ -295,3 +295,36 @@ export async function getTelegramFileDownloadUrl(fileId: string): Promise<string
     return null
   }
 }
+
+/**
+ * Current webhook registration as Telegram sees it — url, allowed_updates,
+ * pending_update_count, last_error_message. Read-only, safe to call anytime.
+ */
+export async function getWebhookInfo(): Promise<Record<string, unknown> | null> {
+  if (!API_BASE) return null
+  try {
+    const res = await fetch(`${API_BASE}/getWebhookInfo`)
+    const data = (await res.json()) as { ok: boolean; result?: Record<string, unknown> }
+    return data.ok ? (data.result ?? null) : null
+  } catch {
+    return null
+  }
+}
+
+/**
+ * (Re)registers the webhook, explicitly including callback_query in
+ * allowed_updates. If a webhook was ever registered with a narrower
+ * allowed_updates list (e.g. just ['message']), Telegram silently stops
+ * delivering button taps — inline buttons still render and can be tapped,
+ * but no callback_query update ever reaches the server, so nothing happens
+ * and the tapped button just spins forever.
+ */
+export async function setWebhook(url: string, secretToken?: string): Promise<boolean> {
+  const payload: Record<string, unknown> = {
+    url,
+    allowed_updates: ['message', 'callback_query'],
+  }
+  if (secretToken) payload.secret_token = secretToken
+  const result = await callTelegram('setWebhook', payload)
+  return result.ok
+}
