@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from 'react'
 import { Mic, Paperclip, Send, Square, FileText } from 'lucide-react'
 import { formatKhmerDateTime } from '@/lib/dates'
 import { showError } from '@/lib/toast'
+import { LoadingSpinner } from '@/components/ui/Loading'
 import {
   sendAdminMessageToMember,
   sendAdminVoiceMessageToMember,
@@ -300,7 +301,7 @@ export function ConversationThread({
               className="grid h-11 w-11 shrink-0 place-items-center rounded-xl border border-border bg-surface text-foreground transition hover:bg-surface-muted disabled:opacity-50"
               title="ភ្ជាប់ឯកសារ"
             >
-              <Paperclip className="h-4.5 w-4.5" />
+              {sending ? <LoadingSpinner size="sm" color="current" /> : <Paperclip className="h-4.5 w-4.5" />}
             </button>
           </>
         )}
@@ -316,7 +317,13 @@ export function ConversationThread({
           }`}
           title={isRecording ? 'បញ្ឈប់ និង ផ្ញើ' : 'ថតសំឡេង'}
         >
-          {isRecording ? <Square className="h-4 w-4" /> : <Mic className="h-4.5 w-4.5" />}
+          {sending && !isRecording ? (
+            <LoadingSpinner size="sm" color="current" />
+          ) : isRecording ? (
+            <Square className="h-4 w-4" />
+          ) : (
+            <Mic className="h-4.5 w-4.5" />
+          )}
         </button>
 
         {!isRecording && (
@@ -326,7 +333,7 @@ export function ConversationThread({
             disabled={sending || !draft.trim()}
             className="grid h-11 w-11 shrink-0 place-items-center rounded-xl bg-brand-900 text-white transition hover:bg-brand-950 disabled:opacity-50"
           >
-            <Send className="h-4.5 w-4.5" />
+            {sending ? <LoadingSpinner size="sm" color="white" /> : <Send className="h-4.5 w-4.5" />}
           </button>
         )}
       </div>
