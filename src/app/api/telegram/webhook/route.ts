@@ -971,21 +971,35 @@ async function handleLoanRequestStep(chatId: string, input: string): Promise<voi
 // Exactly one referee per loan request.
 // ---------------------------------------------------------------------------
 
+const REFEREE_CATEGORY_LETTER: Record<MemberRole, string> = {
+  founder: 'ក',
+  comember: 'ខ',
+  member: 'គ',
+}
+const REFEREE_CANCEL_LETTER = 'ឃ'
+
 async function sendRefereeCategoryMenu(
   chatId: string,
   admin: ReturnType<typeof createAdminClient>,
   requesterId: string
 ): Promise<void> {
   const counts = await countRefereeCandidatesByRole(admin, requesterId)
+  const explanation = [
+    'សូមជ្រើសរើសប្រភេទសមាជិកសម្រាប់មេធានា៖',
+    '',
+    ...ROLES.map((role) => `${REFEREE_CATEGORY_LETTER[role]} = ${MEMBER_ROLE_LABEL[role]} (${counts[role]})`),
+    `${REFEREE_CANCEL_LETTER} = បោះបង់`,
+  ].join('\n')
+
   await sendTelegramMessageWithInlineKeyboard(
     chatId,
-    'សូមជ្រើសរើសប្រភេទសមាជិកសម្រាប់មេធានា៖',
+    explanation,
     [
       ROLES.map((role) => ({
-        text: `${MEMBER_ROLE_LABEL[role]} (${counts[role]})`,
+        text: REFEREE_CATEGORY_LETTER[role],
         callback_data: `${REFEREE_CATEGORY_PREFIX}${role}`,
       })),
-      [{ text: '❌ បោះបង់', callback_data: REFEREE_CANCEL }],
+      [{ text: REFEREE_CANCEL_LETTER, callback_data: REFEREE_CANCEL }],
     ]
   )
 }
