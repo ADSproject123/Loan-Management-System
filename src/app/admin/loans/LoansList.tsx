@@ -53,7 +53,7 @@ function isActiveLoanStatus(status: string) {
 }
 
 function isPendingLoanStatus(status: string) {
-  return status === 'pending' || status === 'under_review'
+  return status === 'pending' || status === 'awaiting_referee' || status === 'under_review'
 }
 
 function pickNearestDueDate(existing: string | null, candidate: string | null) {
@@ -466,8 +466,7 @@ export function LoansList({
               filtered.map((loan) => {
               const memberName = relatedMemberName(loan)
               const dueMeta = isActiveView ? getLoanScheduleDisplay(loan) : null
-              const isPending =
-                loan.status === 'pending' || loan.status === 'under_review'
+              const isPending = isPendingLoanStatus(loan.status)
 
               return (
                 <tr

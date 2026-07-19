@@ -1,6 +1,15 @@
 /** Shared HTML formatting for Telegram bot and notification messages. */
 
+import type { MemberRole } from '@/types/database'
+
 const TG_DIVIDER = '────────────────────'
+
+/** Bot-facing Khmer labels for member role categories, reused from admin UI wording. */
+export const MEMBER_ROLE_LABEL: Record<MemberRole, string> = {
+  founder: 'ស្ថាបនិក',
+  comember: 'សមាជិកស្នូល',
+  member: 'សមាជិកទូទៅ',
+}
 
 export function escapeTelegramHtml(text: string) {
   return text
@@ -141,6 +150,7 @@ export function tgSavingsReport(options: {
   grandTotal: string
   verifiedTotal: string
   pendingTotal: string
+  totalWithInterest?: string
   recentLines: string[]
   moreCount?: number
 }) {
@@ -151,6 +161,9 @@ export function tgSavingsReport(options: {
       formatTelegramBulletLabeled('សរុប', options.grandTotal),
       formatTelegramBulletLabeled('បានផ្ទៀងផ្ទាត់', options.verifiedTotal),
       formatTelegramBulletLabeled('កំពុងរង់ចាំ', options.pendingTotal),
+      ...(options.totalWithInterest
+        ? [formatTelegramBulletLabeled('សរុប + ការប្រាក់', options.totalWithInterest)]
+        : []),
     ]),
     '',
     formatTelegramSection('ប្រវត្តិថ្មីៗ', options.recentLines),
@@ -165,6 +178,93 @@ export function tgSavingsReport(options: {
 
 export function tgSavingTransactionLine(date: string, amount: string, status: string) {
   return formatTelegramBullet(`${date}  ·  ${amount}  ·  ${status}`)
+}
+
+export function tgWithdrawalNoSavings() {
+  return formatTelegramNotification(
+    'មិនអាចស្នើសុំបាន',
+    'អ្នកមិនទាន់មានសមតុល្យសន្សំបានផ្ទៀងផ្ទាត់ដើម្បីស្នើសុំដកទេ។'
+  )
+}
+
+export function tgWithdrawalRequestBlocked() {
+  return formatTelegramNotification(
+    'មិនអាចស្នើសុំបាន',
+    [
+      'អ្នកមានសំណើដកសន្សំមួយកំពុងរង់ចាំការត្រួតពិនិត្យរួចហើយ។',
+      '',
+      'សូមរង់ចាំអ្នកគ្រប់គ្រងដំណើរការសំណើនោះសិន។',
+    ].join('\n')
+  )
+}
+
+export function tgWithdrawalRequestStart(balance: string) {
+  return formatTelegramNotification(
+    'ស្នើសំដកសន្សំ',
+    [
+      formatTelegramField('សមតុល្យបច្ចុប្បន្ន', balance),
+      '',
+      'សូមវាយចំនួនទឹកប្រាក់ដែលអ្នកចង់ដក។',
+      '<i>ឬវាយ <code>ទាំងអស់</code> ដើម្បីដកសមតុល្យទាំងអស់</i>',
+    ].join('\n')
+  )
+}
+
+const WITHDRAWAL_LEAVE_WARNING =
+  'ការឈប់ចូលជាសមាជិកគឺអចិន្ត្រៃយ៍។ អ្នកនឹងបាត់បង់ការចូលប្រើសេវាសន្សំទាំងអស់រួមទាំងកម្មវិធីកម្ជី និង សន្សំ។ ដើម្បីចូលរួមឡើងវិញ អ្នកត្រូវឆ្លងកាត់ដំណើរការចុះឈ្មោះពេញលេញម្តងទៀត។'
+
+const WITHDRAWAL_PROCESSING_NOTE =
+  'ពាក្យសុំត្រូវបានត្រួតពិនិត្យ និង ការសម្រេចចិត្ត/ការផ្ទេរប្រាក់ដំណើរការក្នុងអំឡុង <b>ថ្ងៃ ២០-២៥ មករា</b>។'
+
+export function tgWithdrawalRequestReview(options: {
+  amount: string
+  balance: string
+  remaining: string
+  reason: string
+  continuing: boolean
+}) {
+  const lines = [
+    formatTelegramSection('ត្រួតពិនិត្យពាក្យសុំ', [
+      formatTelegramBulletLabeled('ចំនួនទឹកប្រាក់ដក', options.amount),
+      formatTelegramBulletLabeled('សមតុល្យបច្ចុប្បន្ន', options.balance),
+      formatTelegramBulletLabeled('នៅសល់បន្ទាប់ពីដក', options.remaining),
+      formatTelegramBulletLabeled('មូលហេតុ', escapeTelegramHtml(options.reason)),
+      formatTelegramBulletLabeled(
+        'បន្ទាប់ពីការដក',
+        options.continuing ? 'បន្តសន្សំ' : 'ឈប់ចូលជាសមាជិក'
+      ),
+    ]),
+  ]
+
+  if (!options.continuing) {
+    lines.push('', `⚠️ ${WITHDRAWAL_LEAVE_WARNING}`)
+  }
+
+  lines.push('', WITHDRAWAL_PROCESSING_NOTE)
+  lines.push(
+    '',
+    'សូមឆ្លើយ <code>បញ្ជាក់</code> ដើម្បីដាក់ស្នើ ឬ <code>បោះបង់</code> ដើម្បីលុបចោល។'
+  )
+
+  return formatTelegramNotification('ស្នើសំដកសន្សំ', lines.join('\n'))
+}
+
+export function tgWithdrawalRequestCancelled() {
+  return formatTelegramNotification('បានលុបចោលពាក្យសុំ', 'ការស្នើសុំដកសន្សំរបស់អ្នកត្រូវបានលុបចោល។')
+}
+
+export function tgWithdrawalRequestSubmitted(options: { amount: string; continuing: boolean }) {
+  return formatTelegramNotification(
+    'បានដាក់ស្នើសុំដកសន្សំ',
+    [
+      formatTelegramField('ចំនួន', options.amount),
+      formatTelegramField('បន្ទាប់ពីដក', options.continuing ? 'បន្តសន្សំ' : 'ឈប់ចូលជាសមាជិក'),
+      '',
+      formatTelegramField('ស្ថានភាព', 'កំពុងរង់ចាំការត្រួតពិនិត្យ'),
+      '',
+      WITHDRAWAL_PROCESSING_NOTE,
+    ].join('\n')
+  )
 }
 
 // ---------------------------------------------------------------------------
@@ -241,6 +341,7 @@ export function tgLoanScheduleLine(date: string, amount: string, status: string,
 export const LOAN_STATUS_LABEL: Record<string, string> = {
   pending: 'រង់ចាំ',
   under_review: 'កំពុងពិនិត្យ',
+  awaiting_referee: 'រង់ចាំមេធានា',
   approved: 'បានអនុម័ត',
   active: 'សកម្ម',
   completed: 'បានបញ្ចប់',
@@ -278,15 +379,20 @@ export function tgPaySavingCaption() {
   )
 }
 
-export function tgPayLoanCaption(dueAmount: string) {
+export function tgPayLoanCaption(dueAmount: string, remaining: string) {
   return formatTelegramNotification(
     'ដាក់ស្នើការសងកម្ជី',
     [
       formatTelegramField('ចំនួនត្រូវបង់ខែនេះ', dueAmount),
+      formatTelegramField('សមតុល្យកម្ជីនៅសល់', remaining),
       '',
       'សូមស្កេន KHQR ខាងលើដើម្បីធ្វើការបង់ប្រាក់។',
       '',
-      'បន្ទាប់មក សូមផ្ញើរូបភាពបញ្ជាក់ជាការឆ្លើយតបទៅសារនេះ។',
+      formatTelegramTitle('ជំហានបន្ទាប់'),
+      formatTelegramBullet('ផ្ញើរូបភាពបញ្ជាក់ការបង់ប្រាក់'),
+      formatTelegramBullet(
+        'ចង់បង់ច្រើនជាងចំនួនត្រូវបង់ខែនេះ ដើម្បីបញ្ចប់កម្ជីលឿន? សូមបញ្ជាក់ចំនួនក្នុង caption នៃរូបភាព (ឧ. <code>200</code>)'
+      ),
     ].join('\n')
   )
 }
@@ -316,6 +422,7 @@ export function tgLoanRequestStart(maxAmount: string) {
   )
 }
 
+/** Sent once the requester picks their referee and the invite goes out. */
 export function tgLoanRequestSubmitted(options: {
   amount: string
   termMonths: number
@@ -323,18 +430,185 @@ export function tgLoanRequestSubmitted(options: {
   purpose: string
 }) {
   return formatTelegramNotification(
-    'បានដាក់ស្នើសុំកម្ជី',
+    'បានផ្ញើសំណើទៅមេធានា',
     [
       formatTelegramField('ចំនួន', options.amount),
       formatTelegramField('រយៈពេល', `${options.termMonths} ខែ`),
       formatTelegramField('អត្រាការប្រាក់', `${options.rate}% ក្នុងមួយខែ`),
       formatTelegramField('គោលបំណង', escapeTelegramHtml(options.purpose)),
       '',
-      formatTelegramField('ស្ថានភាព', 'កំពុងពិនិត្យ'),
+      formatTelegramField('ស្ថានភាព', 'កំពុងរង់ចាំមេធានា'),
       '',
-      'អ្នកគ្រប់គ្រងនឹងពិនិត្យពាក្យសុំរបស់អ្នកឆាប់ៗនេះ។ ប្រើ /loan ដើម្បីតាមដានស្ថានភាព។',
+      'កម្ជីរបស់អ្នកនឹងចូលការត្រួតពិនិត្យរបស់អ្នកគ្រប់គ្រង នៅពេលមេធានាទទួលយក។ ប្រើ /cancelloan ដើម្បីលុបចោលខណៈកំពុងរង់ចាំ ឬ /loan ដើម្បីតាមដានស្ថានភាព។',
     ].join('\n')
   )
+}
+
+// ---------------------------------------------------------------------------
+// Loan referee (guarantor) — exactly one per loan request
+// ---------------------------------------------------------------------------
+
+export function tgRefereeCategoryPrompt(purpose: string) {
+  return formatTelegramNotification(
+    'គោលបំណងត្រូវបានរក្សាទុក',
+    [
+      formatTelegramField('គោលបំណង', escapeTelegramHtml(purpose)),
+      '',
+      'កម្ជីរបស់អ្នកត្រូវការមេធានាម្នាក់។ សូមជ្រើសរើសប្រភេទសមាជិកខាងក្រោម។',
+    ].join('\n')
+  )
+}
+
+export function tgRefereeCandidateListPrompt(roleLabel: string) {
+  return formatTelegramNotification(
+    `ជ្រើសរើសមេធានា — ${roleLabel}`,
+    'ចុចលើឈ្មោះម្នាក់ខាងក្រោម ដើម្បីជ្រើសរើសជាមេធានារបស់អ្នក។'
+  )
+}
+
+export function tgRefereeSearchPrompt(roleLabel: string) {
+  return formatTelegramNotification(
+    `ស្វែងរកមេធានា — ${roleLabel}`,
+    'ចំនួនសមាជិកច្រើនពេក។ សូមវាយឈ្មោះ ឬលេខទូរស័ព្ទ ដើម្បីស្វែងរក។'
+  )
+}
+
+export function tgRefereeSearchNoResults() {
+  return formatTelegramNotification('រកមិនឃើញ', 'សូមព្យាយាមវាយឈ្មោះ ឬលេខទូរស័ព្ទផ្សេងទៀត។')
+}
+
+export function tgRefereeInvite(options: {
+  requesterName: string
+  amount: string
+  termMonths: number
+  purpose: string
+}) {
+  const name = escapeTelegramHtml(options.requesterName)
+  return formatTelegramNotification(
+    'សំណើសុំធានាកម្ជី',
+    [
+      formatTelegramField('សមាជិក', name),
+      formatTelegramField('ចំនួន', options.amount),
+      formatTelegramField('រយៈពេល', `${options.termMonths} ខែ`),
+      formatTelegramField('គោលបំណង', escapeTelegramHtml(options.purpose)),
+      '',
+      `${name} បានស្នើសុំឱ្យអ្នកធានាកម្ជីនេះ។ សូមជ្រើសរើសខាងក្រោម៖`,
+    ].join('\n')
+  )
+}
+
+export function tgLoanRejectedByReferee(refereeName: string) {
+  return formatTelegramNotification(
+    'កម្ជីត្រូវបានបដិសេធ',
+    [
+      `សំណើកម្ជីរបស់អ្នកត្រូវបានបដិសេធ ព្រោះមេធានា ${escapeTelegramHtml(refereeName)} មិនទទួលយកការធានា។`,
+      '',
+      'អ្នកអាចដាក់ស្នើសុំម្តងទៀត ជាមួយមេធានាផ្សេង។',
+    ].join('\n')
+  )
+}
+
+export function tgRefereeInviteCancelled() {
+  return formatTelegramNotification(
+    'សំណើត្រូវបានលុបចោល',
+    'សំណើកម្ជីនេះលែងសកម្មទៀតហើយ (មេធានាម្នាក់ទៀតបានបដិសេធ)។ អរគុណសម្រាប់ការឆ្លើយតប។'
+  )
+}
+
+export function tgLoanReadyForSignature(amount: string) {
+  return formatTelegramNotification(
+    'មេធានាទាំងអស់បានទទួលយក!',
+    [
+      `មេធានារបស់អ្នកទាំងអស់បានទទួលយកការធានាកម្ជីចំនួន ${amount} តាមអនឡាញ។`,
+      '',
+      'សូមទាញយកឯកសារខាងក្រោម បោះពុម្ព ចុះហត្ថលេខា រួចផ្ញើរូបភាព ឬឯកសារត្រឡប់មកវិញនៅទីនេះ។',
+    ].join('\n')
+  )
+}
+
+export function tgLoanSignatureReminder() {
+  return formatTelegramNotification(
+    'រង់ចាំឯកសារ',
+    'សូមផ្ញើរូបភាព ឬឯកសារកិច្ចសន្យាដែលបានចុះហត្ថលេខារបស់អ្នកនៅទីនេះ។'
+  )
+}
+
+export function tgLoanSignedDocumentReceived() {
+  return formatTelegramNotification(
+    'បានទទួលឯកសារ',
+    'អរគុណ! ឯកសារកិច្ចសន្យាដែលបានចុះហត្ថលេខារបស់អ្នកត្រូវបានទទួល ហើយកំពុងរង់ចាំការត្រួតពិនិត្យពីអ្នកគ្រប់គ្រង។'
+  )
+}
+
+export function tgLoanReadyForPhysicalReview() {
+  return formatTelegramNotification(
+    'មេធានាទាំងអស់បានទទួលយក!',
+    [
+      'មេធានារបស់អ្នកទាំងអស់បានទទួលយកការធានាកម្ជីនេះ។',
+      '',
+      'មេធានាមួយចំនួនបានជ្រើសរើសដំណើរការឯកសារជួបផ្ទាល់។ អ្នកគ្រប់គ្រងនឹងទាក់ទងអ្នកដើម្បីរៀបចំដំណើរការនេះ។',
+    ].join('\n')
+  )
+}
+
+export function tgAdminRefereePhysicalPath(options: {
+  memberName: string
+  amount: string
+  physicalRefereeNames: string[]
+}) {
+  return tgAdminRequestBody({
+    memberName: options.memberName,
+    fields: [
+      { label: 'ចំនួន', value: options.amount },
+      { label: 'មេធានាជ្រើសរើសជួបផ្ទាល់', value: options.physicalRefereeNames.join(', ') },
+    ],
+    note: 'សូមទាក់ទងមេធានាទាំងនេះដើម្បីរៀបចំដំណើរការឯកសារជួបផ្ទាល់។',
+  })
+}
+
+export function tgAdminSignedDocumentReceived(memberName: string, amount: string) {
+  return tgAdminRequestBody({
+    memberName,
+    fields: [{ label: 'ចំនួន', value: amount }],
+    note: 'ឯកសារកិច្ចសន្យាដែលបានចុះហត្ថលេខាត្រូវបានផ្ទុករួចហើយ។ សូមពិនិត្យនៅផ្នែកកម្ជីមុនពេលអនុម័ត។',
+  })
+}
+
+export function tgAdminRefereeAwaiting(options: { memberName: string; amount: string; refereeNames: string[] }) {
+  return tgAdminRequestBody({
+    memberName: options.memberName,
+    fields: [
+      { label: 'ចំនួន', value: options.amount },
+      { label: 'មេធានា', value: options.refereeNames.join(', ') },
+    ],
+    note: 'កម្ជីនេះនឹងលេចឡើងសម្រាប់ការត្រួតពិនិត្យ បន្ទាប់ពីមេធានាទាំងអស់ឆ្លើយតប។',
+  })
+}
+
+export function tgLoanExpiredNoResponse() {
+  return formatTelegramNotification(
+    'សំណើកម្ជីត្រូវបានលុបចោល',
+    [
+      'សំណើកម្ជីរបស់អ្នកត្រូវបានលុបចោល ព្រោះមេធានាមិនបានឆ្លើយតបក្នុងរយៈពេលកំណត់ទេ។',
+      '',
+      'អ្នកអាចដាក់ស្នើសុំម្តងទៀត។',
+    ].join('\n')
+  )
+}
+
+export function tgRefereeInviteExpired() {
+  return formatTelegramNotification(
+    'សំណើផុតកំណត់',
+    'សំណើសុំធានាកម្ជីនេះផុតកំណត់ពេលហើយ។ អរគុណសម្រាប់ការចាប់អារម្មណ៍។'
+  )
+}
+
+export function tgLoanRequestCancelled() {
+  return formatTelegramNotification('បានលុបចោលសំណើ', 'សំណើសុំកម្ជីរបស់អ្នកត្រូវបានលុបចោល។')
+}
+
+export function tgNoActiveLoanRequestToCancel() {
+  return formatTelegramNotification('គ្មានសំណើ', 'អ្នកមិនមានសំណើសុំកម្ជីកំពុងរង់ចាំទេ។')
 }
 
 // ---------------------------------------------------------------------------

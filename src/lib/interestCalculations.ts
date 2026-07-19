@@ -237,8 +237,9 @@ export type LoanScheduleRow = LoanScheduleEntry & {
   status: LoanScheduleStatus
 }
 
+/** Every installment is due on the 10th, `monthsAhead` months after the loan start. */
 function addMonthsToDate(isoDate: string, monthsAhead: number) {
-  return addMonths(isoDate, monthsAhead)
+  return `${addMonths(isoDate, monthsAhead).slice(0, 7)}-10`
 }
 
 export function buildLoanPaymentSchedule(

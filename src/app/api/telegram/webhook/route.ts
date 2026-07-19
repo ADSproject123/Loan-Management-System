@@ -5,22 +5,25 @@ import { PutObjectCommand } from '@aws-sdk/client-s3'
 import { formatMoney, MIN_SAVING_AMOUNT } from '@/lib/currency'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { getR2Client, getR2BucketName } from '@/lib/r2'
+import type { UploadBucket } from '@/lib/uploads'
 import {
   sendTelegramMessage,
   sendTelegramMessageWithCommandButtons,
+  sendTelegramMessageWithInlineKeyboard,
   sendTelegramPhoto,
   getTelegramFileDownloadUrl,
   answerTelegramCallbackQuery,
 } from '@/lib/telegram'
 import {
+  accruedSavingInterestTotal,
   annotateLoanPaymentSchedule,
   buildLoanPaymentSchedule,
   loanScheduleStartDate,
   resolveLoanInterestRate,
   DEFAULT_LOAN_INTEREST_RATE,
 } from '@/lib/interestCalculations'
-import { getInterestSettings, fetchMemberLoanInterestRate } from '@/lib/interest'
-import { addMonths, todayIso } from '@/lib/dates'
+import { getInterestSettings } from '@/lib/interest'
+import { todayIso } from '@/lib/dates'
 import { fetchMemberLoanEligibility, validateLoanRequestAmount } from '@/lib/loanEligibility'
 import { memberKhmerName } from '@/lib/memberNames'
 import { notifyAdmins } from '@/lib/notifyAdmins'
@@ -59,6 +62,23 @@ import {
   tgSavingTransactionLine,
   tgSavingsReport,
   tgSubmissionReceived,
+  tgWithdrawalNoSavings,
+  tgWithdrawalRequestBlocked,
+  tgWithdrawalRequestStart,
+  tgWithdrawalRequestReview,
+  tgWithdrawalRequestCancelled,
+  tgWithdrawalRequestSubmitted,
+  tgRefereeCategoryPrompt,
+  tgRefereeCandidateListPrompt,
+  tgRefereeSearchPrompt,
+  tgRefereeSearchNoResults,
+  tgLoanRequestCancelled,
+  tgNoActiveLoanRequestToCancel,
+  tgRefereeInviteCancelled,
+  tgLoanSignatureReminder,
+  tgLoanSignedDocumentReceived,
+  tgAdminSignedDocumentReceived,
+  MEMBER_ROLE_LABEL,
   formatTelegramNotification,
   formatTelegramField,
   tgAdminRequestBody,
@@ -70,8 +90,28 @@ import {
   getPendingLoanRequest,
   setPendingLoanRequest,
   clearPendingLoanRequest,
+  getPendingWithdrawalRequest,
+  setPendingWithdrawalRequest,
+  clearPendingWithdrawalRequest,
+  getPendingLoanSignature,
+  clearPendingLoanSignature,
 } from '@/lib/telegramConversationState'
-import type { SavingStatus } from '@/types/database'
+import {
+  ROLES,
+  REFEREE_CATEGORY_PREFIX,
+  REFEREE_PICK_PREFIX,
+  REFEREE_BACK,
+  REFEREE_CANCEL,
+  REFEREE_RESPONSE_PREFIX,
+  countRefereeCandidatesByRole,
+  fetchRefereeCandidates,
+  searchRefereeCandidates,
+  refereeDisplayName,
+  finalizeLoanRequest,
+  processRefereeResponse,
+  rejectAwaitingRefereeLoan,
+} from '@/lib/loanReferee'
+import type { SavingStatus, MemberRole } from '@/types/database'
 
 export const dynamic = 'force-dynamic'
 
@@ -221,12 +261,20 @@ async function handleSavingCommand(chatId: string): Promise<void> {
 
   let totalVerified = 0
   let totalPending = 0
+  const verifiedRows: typeof rows = []
   for (const r of rows) {
     const amt = Number(r.amount ?? 0)
-    if (r.status === 'verified' || r.status === 'completed') totalVerified += amt
-    else if (r.status === 'pending') totalPending += amt
+    if (r.status === 'verified' || r.status === 'completed') {
+      totalVerified += amt
+      verifiedRows.push(r)
+    } else if (r.status === 'pending') {
+      totalPending += amt
+    }
   }
   const grandTotal = totalVerified + totalPending
+
+  const interestSettings = await getInterestSettings()
+  const accruedInterest = accruedSavingInterestTotal(verifiedRows, interestSettings.monthlySavingInterestRate)
 
   const name = member.full_name_kh ?? member.full_name_en ?? ''
 
@@ -241,6 +289,7 @@ async function handleSavingCommand(chatId: string): Promise<void> {
     grandTotal: fmtMoney(grandTotal),
     verifiedTotal: fmtMoney(totalVerified),
     pendingTotal: fmtMoney(totalPending),
+    totalWithInterest: fmtMoney(grandTotal + accruedInterest),
     recentLines,
     moreCount: rows.length > 8 ? rows.length - 8 : undefined,
   })
@@ -351,14 +400,21 @@ async function handleLoanCommand(chatId: string): Promise<void> {
 // ---------------------------------------------------------------------------
 // R2 upload helper for raw buffers (bot photo uploads bypass File API)
 // ---------------------------------------------------------------------------
-async function uploadBufferToR2(memberId: string, folder: string, buf: Buffer, ext: string): Promise<string> {
-  const key = `payment-evidence/${memberId}/${folder}/${randomUUID()}.${ext}`
+async function uploadBufferToR2(
+  bucketPrefix: UploadBucket,
+  memberId: string,
+  folder: string,
+  buf: Buffer,
+  ext: string,
+  contentType?: string
+): Promise<string> {
+  const key = `${bucketPrefix}/${memberId}/${folder}/${randomUUID()}.${ext}`
   await getR2Client().send(
     new PutObjectCommand({
       Bucket: getR2BucketName(),
       Key: key,
       Body: buf,
-      ContentType: ext === 'png' ? 'image/png' : 'image/jpeg',
+      ContentType: contentType ?? (ext === 'png' ? 'image/png' : 'image/jpeg'),
     })
   )
   return key
@@ -481,6 +537,45 @@ async function handlePaySavingCommand(chatId: string): Promise<void> {
 // ---------------------------------------------------------------------------
 // /payloan — send QR with the next due amount, prompt for proof photo
 // ---------------------------------------------------------------------------
+/** Fresh due-this-month amount and total remaining balance for a loan, straight from the DB. */
+async function fetchLoanRepaymentSnapshot(
+  loanId: string,
+  fallbackRate: number
+): Promise<{ dueAmount: number; remaining: number; totalPaid: number } | null> {
+  const admin = createAdminClient()
+  const { data: loan } = await admin
+    .from('loans')
+    .select('id, amount, term_months, monthly_interest_rate, start_date, disbursed_at, created_at')
+    .eq('id', loanId)
+    .maybeSingle()
+
+  if (!loan) return null
+
+  const rate = resolveLoanInterestRate(loan, fallbackRate)
+  const principal = Number(loan.amount ?? 0)
+  const termMonths = Number(loan.term_months ?? 12)
+
+  const { data: repayments } = await admin
+    .from('loan_repayments')
+    .select('amount, status')
+    .eq('loan_id', loanId)
+    .neq('status', 'refunded')
+
+  let totalPaid = 0
+  for (const r of repayments ?? []) {
+    if (r.status === 'verified' || r.status === 'completed') totalPaid += Number(r.amount ?? 0)
+  }
+
+  const schedule = buildLoanPaymentSchedule(principal, termMonths, rate, loanScheduleStartDate(loan))
+  const annotated = annotateLoanPaymentSchedule(schedule, totalPaid)
+  const nextDue = annotated.find((r) => r.status !== 'paid')
+  const dueAmount = nextDue?.amount ?? principal / termMonths
+  const totalOwed = annotated.reduce((sum, row) => sum + row.amount, 0)
+  const remaining = Math.max(0, totalOwed - totalPaid)
+
+  return { dueAmount, remaining, totalPaid }
+}
+
 async function handlePayLoanCommand(chatId: string): Promise<void> {
   const member = await requireLinkedActiveMember(chatId)
   if (!member) return
@@ -488,7 +583,7 @@ async function handlePayLoanCommand(chatId: string): Promise<void> {
   const admin = createAdminClient()
   const { data: loan } = await admin
     .from('loans')
-    .select('id, amount, term_months, monthly_interest_rate, start_date, disbursed_at, created_at')
+    .select('id')
     .eq('member_id', member.id)
     .eq('status', 'active')
     .order('created_at', { ascending: false })
@@ -506,34 +601,17 @@ async function handlePayLoanCommand(chatId: string): Promise<void> {
     .eq('id', 1)
     .maybeSingle()
 
-  const rate = resolveLoanInterestRate(loan, Number(settings?.monthly_loan_interest_rate ?? DEFAULT_LOAN_INTEREST_RATE))
-  const { data: repayments } = await admin
-    .from('loan_repayments')
-    .select('amount, status')
-    .eq('loan_id', loan.id)
-    .neq('status', 'refunded')
-
-  let totalPaid = 0
-  for (const r of repayments ?? []) {
-    if (r.status === 'verified' || r.status === 'completed') totalPaid += Number(r.amount ?? 0)
-  }
-
-  const schedule = buildLoanPaymentSchedule(
-    Number(loan.amount),
-    Number(loan.term_months ?? 12),
-    rate,
-    loanScheduleStartDate(loan)
-  )
-  const annotated = annotateLoanPaymentSchedule(schedule, totalPaid)
-  const nextDue = annotated.find(r => r.status !== 'paid')
-  const dueAmount = nextDue?.amount ?? Number(loan.amount) / Number(loan.term_months ?? 12)
+  const fallbackRate = Number(settings?.monthly_loan_interest_rate ?? DEFAULT_LOAN_INTEREST_RATE)
+  const snapshot = await fetchLoanRepaymentSnapshot(loan.id, fallbackRate)
+  const dueAmount = snapshot?.dueAmount ?? 0
+  const remaining = snapshot?.remaining ?? dueAmount
 
   const qrUrl = `${process.env.NEXT_PUBLIC_APP_URL ?? 'http://localhost:3000'}/khqr-payment.png`
 
   const ok = await sendTelegramPhoto(
     chatId,
     qrUrl,
-    tgPayLoanCaption(fmtMoney(dueAmount)),
+    tgPayLoanCaption(fmtMoney(dueAmount), fmtMoney(remaining)),
     true,
   )
 
@@ -584,7 +662,7 @@ async function handlePhotoMessage(chatId: string, fileId: string, caption?: stri
   try {
     const ext = downloadUrl.includes('.png') ? 'png' : 'jpg'
     const folder = pending.type === 'saving' ? 'savings' : 'repayments'
-    evidenceUrl = await uploadBufferToR2(member.id, folder, photoBuffer, ext)
+    evidenceUrl = await uploadBufferToR2('payment-evidence', member.id, folder, photoBuffer, ext)
   } catch {
     await sendTelegramMessage(chatId, tgErrorPhotoUpload())
     return
@@ -607,10 +685,31 @@ async function handlePhotoMessage(chatId: string, fileId: string, caption?: stri
     return
   }
 
+  const amount = parseTelegramAmount(caption) ?? pending.amount
+
+  const { data: settings } = await admin
+    .from('interest_settings')
+    .select('monthly_loan_interest_rate')
+    .eq('id', 1)
+    .maybeSingle()
+  const fallbackRate = Number(settings?.monthly_loan_interest_rate ?? DEFAULT_LOAN_INTEREST_RATE)
+  const snapshot = await fetchLoanRepaymentSnapshot(pending.loanId, fallbackRate)
+
+  if (snapshot && amount > snapshot.remaining + 0.01) {
+    await sendTelegramMessage(
+      chatId,
+      formatTelegramNotification(
+        'ចំនួនលើសសមតុល្យ',
+        `ចំនួនមិនអាចលើសសមតុល្យកម្ជីនៅសល់ ${fmtMoney(snapshot.remaining)} ។ សូមផ្ញើរូបភាពម្តងទៀត ជាមួយចំនួនត្រឹមត្រូវក្នុង caption ។`
+      )
+    )
+    return
+  }
+
   const { error } = await admin.from('loan_repayments').insert({
     loan_id: pending.loanId,
     member_id: member.id,
-    amount: pending.amount,
+    amount,
     currency: 'USD',
     evidence_url: evidenceUrl,
     qr_code_ref: `REP-BOT-${Date.now()}`,
@@ -628,7 +727,91 @@ async function handlePhotoMessage(chatId: string, fileId: string, caption?: stri
 
   await sendTelegramMessageWithCommandButtons(
     chatId,
-    tgSubmissionReceived('loan', fmtMoney(pending.amount))
+    tgSubmissionReceived('loan', fmtMoney(amount))
+  )
+}
+
+// ---------------------------------------------------------------------------
+// Signed loan contract returned after full referee (online) acceptance
+// ---------------------------------------------------------------------------
+
+function extensionAndContentTypeForDocument(doc: { mime_type?: string; file_name?: string }): {
+  ext: string
+  contentType: string
+} {
+  const nameExt = doc.file_name?.split('.').pop()?.toLowerCase()
+  if (nameExt && /^[a-z0-9]+$/.test(nameExt)) {
+    return { ext: nameExt, contentType: doc.mime_type ?? 'application/octet-stream' }
+  }
+  if (doc.mime_type === 'application/pdf') return { ext: 'pdf', contentType: 'application/pdf' }
+  if (doc.mime_type?.startsWith('image/')) {
+    return { ext: doc.mime_type.split('/')[1] || 'jpg', contentType: doc.mime_type }
+  }
+  return { ext: 'bin', contentType: doc.mime_type ?? 'application/octet-stream' }
+}
+
+async function handleSignedLoanDocument(
+  chatId: string,
+  fileId: string,
+  fileMeta: { mime_type?: string; file_name?: string } | null
+): Promise<void> {
+  const pending = await getPendingLoanSignature(chatId)
+  if (!pending) return
+
+  const member = await requireLinkedActiveMember(chatId)
+  if (!member) {
+    await clearPendingLoanSignature(chatId)
+    return
+  }
+
+  const downloadUrl = await getTelegramFileDownloadUrl(fileId)
+  if (!downloadUrl) {
+    await sendTelegramMessage(chatId, tgErrorPhotoDownload())
+    return
+  }
+
+  let buf: Buffer
+  try {
+    const res = await fetch(downloadUrl)
+    if (!res.ok) throw new Error(`HTTP ${res.status}`)
+    buf = Buffer.from(await res.arrayBuffer())
+  } catch {
+    await sendTelegramMessage(chatId, tgErrorPhotoDownload())
+    return
+  }
+
+  const { ext, contentType } = fileMeta
+    ? extensionAndContentTypeForDocument(fileMeta)
+    : { ext: 'jpg', contentType: 'image/jpeg' }
+
+  let key: string
+  try {
+    key = await uploadBufferToR2('loan-documents', member.id, 'contract', buf, ext, contentType)
+  } catch {
+    await sendTelegramMessage(chatId, tgErrorPhotoUpload())
+    return
+  }
+
+  const admin = createAdminClient()
+  const { data: loan, error } = await admin
+    .from('loans')
+    .update({ support_document_url: key })
+    .eq('id', pending.loanId)
+    .eq('member_id', member.id)
+    .select('amount')
+    .maybeSingle()
+
+  if (error || !loan) {
+    await sendTelegramMessage(chatId, tgErrorStorage())
+    return
+  }
+
+  await clearPendingLoanSignature(chatId)
+  await sendTelegramMessageWithCommandButtons(chatId, tgLoanSignedDocumentReceived())
+  await notifyAdmins(
+    'ឯកសារកិច្ចសន្យាបានទទួល',
+    tgAdminSignedDocumentReceived(memberKhmerName(member), fmtMoney(Number(loan.amount ?? 0))),
+    'loan_referee'
   )
 }
 
@@ -646,7 +829,7 @@ async function handleRequestLoanCommand(chatId: string): Promise<void> {
     .from('loans')
     .select('status')
     .eq('member_id', member.id)
-    .in('status', ['pending', 'under_review', 'approved', 'active'])
+    .in('status', ['pending', 'awaiting_referee', 'under_review', 'approved', 'active'])
     .limit(1)
     .maybeSingle()
 
@@ -756,40 +939,434 @@ async function handleLoanRequestStep(chatId: string, input: string): Promise<voi
       return
     }
 
-    await clearPendingLoanRequest(chatId)
-
-    // Fetch interest rate
-    const interestSettings = await getInterestSettings()
-    const rate = await fetchMemberLoanInterestRate(member.id, interestSettings.monthlyLoanInterestRate)
-
-    // Compute start/end dates
-    const startDate = todayIso()
-    const endDate = addMonths(startDate, state.termMonths)
-
-    const { error } = await admin.from('loans').insert({
-      member_id: member.id,
+    await setPendingLoanRequest(chatId, {
+      step: 'referees',
       amount: state.amount,
-      currency: 'USD',
+      termMonths: state.termMonths,
       purpose,
-      term_months: state.termMonths,
-      monthly_interest_rate: rate,
-      start_date: startDate,
-      end_date: endDate,
-      status: 'under_review',
     })
+    await sendTelegramMessage(chatId, tgRefereeCategoryPrompt(purpose))
+    await sendRefereeCategoryMenu(chatId, admin, member.id)
+    return
+  }
 
-    if (error) {
-      await sendTelegramMessage(chatId, tgErrorGeneric('មិនអាចដាក់ស្នើសុំកម្ជីបានទេ។ សូមព្យាយាមម្តងទៀត។'))
+  if (state.step === 'referees' && state.searchRole) {
+    const results = await searchRefereeCandidates(admin, state.searchRole, member.id, input)
+
+    if (results.length === 0) {
+      await sendTelegramMessage(chatId, tgRefereeSearchNoResults())
       return
     }
 
+    await sendTelegramMessageWithInlineKeyboard(
+      chatId,
+      tgRefereeCandidateListPrompt(MEMBER_ROLE_LABEL[state.searchRole]),
+      results.map((c) => [{ text: refereeDisplayName(c), callback_data: `${REFEREE_PICK_PREFIX}${c.id}` }])
+    )
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Loan referee (guarantor) selection — inline-keyboard sub-flow of /requestloan.
+// Exactly one referee per loan request.
+// ---------------------------------------------------------------------------
+
+async function sendRefereeCategoryMenu(
+  chatId: string,
+  admin: ReturnType<typeof createAdminClient>,
+  requesterId: string
+): Promise<void> {
+  const counts = await countRefereeCandidatesByRole(admin, requesterId)
+  await sendTelegramMessageWithInlineKeyboard(
+    chatId,
+    'សូមជ្រើសរើសប្រភេទសមាជិកសម្រាប់មេធានា៖',
+    [
+      ROLES.map((role) => ({
+        text: `${MEMBER_ROLE_LABEL[role]} (${counts[role]})`,
+        callback_data: `${REFEREE_CATEGORY_PREFIX}${role}`,
+      })),
+      [{ text: '❌ បោះបង់', callback_data: REFEREE_CANCEL }],
+    ]
+  )
+}
+
+async function handleRefereeCategoryCallback(chatId: string, role: MemberRole): Promise<void> {
+  const state = await getPendingLoanRequest(chatId)
+  const member = await requireLinkedActiveMember(chatId)
+  if (!state || state.step !== 'referees' || !member) return
+
+  const admin = createAdminClient()
+  const result = await fetchRefereeCandidates(admin, role, member.id)
+
+  if (result.mode === 'search') {
+    await setPendingLoanRequest(chatId, { ...state, searchRole: role })
+    await sendTelegramMessage(chatId, tgRefereeSearchPrompt(MEMBER_ROLE_LABEL[role]))
+    return
+  }
+
+  if (result.candidates.length === 0) {
+    await sendTelegramMessage(
+      chatId,
+      formatTelegramNotification('គ្មានសមាជិក', 'មិនមានសមាជិកក្នុងប្រភេទនេះទេ។ សូមជ្រើសរើសប្រភេទផ្សេង។')
+    )
+    return
+  }
+
+  await sendTelegramMessageWithInlineKeyboard(
+    chatId,
+    tgRefereeCandidateListPrompt(MEMBER_ROLE_LABEL[role]),
+    [
+      ...result.candidates.map((c) => [
+        { text: refereeDisplayName(c), callback_data: `${REFEREE_PICK_PREFIX}${c.id}` },
+      ]),
+      [{ text: '⬅ ត្រឡប់ក្រោយ', callback_data: REFEREE_BACK }],
+    ]
+  )
+}
+
+async function handleRefereePickCallback(
+  chatId: string,
+  callbackQueryId: string,
+  candidateId: string
+): Promise<void> {
+  const state = await getPendingLoanRequest(chatId)
+  const member = await requireLinkedActiveMember(chatId)
+  if (!state || state.step !== 'referees' || !member) return
+
+  await clearPendingLoanRequest(chatId)
+  await answerTelegramCallbackQuery(callbackQueryId, 'កំពុងផ្ញើទៅមេធានា...')
+
+  const admin = createAdminClient()
+  const result = await finalizeLoanRequest(admin, {
+    memberId: member.id,
+    requesterName: memberKhmerName(member),
+    amount: state.amount,
+    termMonths: state.termMonths,
+    purpose: state.purpose,
+    refereeIds: [candidateId],
+  })
+
+  if (!result.ok) {
+    await sendTelegramMessage(chatId, tgErrorGeneric(result.error))
+    return
+  }
+
+  await sendTelegramMessageWithCommandButtons(
+    chatId,
+    tgLoanRequestSubmitted({
+      amount: fmtMoney(state.amount),
+      termMonths: state.termMonths,
+      rate: result.rate,
+      purpose: state.purpose,
+    })
+  )
+}
+
+async function handleRefereeBackCallback(chatId: string): Promise<void> {
+  const state = await getPendingLoanRequest(chatId)
+  const member = await requireLinkedActiveMember(chatId)
+  if (!state || state.step !== 'referees' || !member) return
+
+  await setPendingLoanRequest(chatId, { ...state, searchRole: undefined })
+  await sendRefereeCategoryMenu(chatId, createAdminClient(), member.id)
+}
+
+async function handleRefereeCancelCallback(chatId: string): Promise<void> {
+  await clearPendingLoanRequest(chatId)
+  await sendTelegramMessageWithCommandButtons(chatId, tgLoanRequestCancelled())
+}
+
+async function handleRefereeResponseCallback(
+  chatId: string,
+  callbackQueryId: string,
+  decisionCode: 'o' | 'p' | 'd',
+  loanRefereeId: string
+): Promise<void> {
+  const member = await requireLinkedActiveMember(chatId)
+  if (!member) return
+
+  const decision =
+    decisionCode === 'o' ? 'accepted_online' : decisionCode === 'p' ? 'accepted_physical' : 'declined'
+
+  const admin = createAdminClient()
+  const outcome = await processRefereeResponse(admin, {
+    loanRefereeId,
+    respondingMemberId: member.id,
+    decision,
+  })
+
+  if (outcome.outcome === 'not_your_invite') {
+    await answerTelegramCallbackQuery(callbackQueryId, 'សំណើនេះមិនមែនសម្រាប់អ្នកទេ។', true)
+    return
+  }
+  if (outcome.outcome === 'already_responded') {
+    await answerTelegramCallbackQuery(callbackQueryId, 'អ្នកបានឆ្លើយតបរួចហើយ។', true)
+    return
+  }
+
+  const thanksText =
+    decision === 'declined'
+      ? 'បានកត់ត្រាការបដិសេធរបស់អ្នក។'
+      : decision === 'accepted_online'
+        ? 'អរគុណ! បានកត់ត្រាការទទួលយក (អនឡាញ)។'
+        : 'អរគុណ! បានកត់ត្រាការទទួលយក (ជួបផ្ទាល់)។'
+  await answerTelegramCallbackQuery(callbackQueryId, thanksText)
+}
+
+async function handleCancelLoanCommand(chatId: string): Promise<void> {
+  const pending = await getPendingLoanRequest(chatId)
+  if (pending) {
+    await clearPendingLoanRequest(chatId)
+    await sendTelegramMessageWithCommandButtons(chatId, tgLoanRequestCancelled())
+    return
+  }
+
+  const member = await requireLinkedActiveMember(chatId)
+  if (!member) return
+
+  const admin = createAdminClient()
+  const { data: loan } = await admin
+    .from('loans')
+    .select('id')
+    .eq('member_id', member.id)
+    .eq('status', 'awaiting_referee')
+    .order('created_at', { ascending: false })
+    .limit(1)
+    .maybeSingle()
+
+  if (!loan) {
+    await sendTelegramMessageWithCommandButtons(chatId, tgNoActiveLoanRequestToCancel())
+    return
+  }
+
+  const cancelled = await rejectAwaitingRefereeLoan(admin, loan.id, {
+    rejectionReason: 'បានលុបចោលដោយសមាជិកខ្លួនឯង',
+    requesterMessage: tgLoanRequestCancelled(),
+    pendingRefereeMessage: tgRefereeInviteCancelled(),
+  })
+
+  await sendTelegramMessageWithCommandButtons(
+    chatId,
+    cancelled ? tgLoanRequestCancelled() : tgNoActiveLoanRequestToCancel()
+  )
+}
+
+async function fetchVerifiedSavingsBalance(memberId: string): Promise<number> {
+  const admin = createAdminClient()
+  const { data: savings } = await admin
+    .from('savings')
+    .select('amount, status')
+    .eq('member_id', memberId)
+    .in('status', ['verified', 'completed'])
+
+  return (savings ?? []).reduce((sum, r) => sum + Number(r.amount ?? 0), 0)
+}
+
+async function handleRequestWithdrawalCommand(chatId: string): Promise<void> {
+  const member = await requireLinkedActiveMember(chatId)
+  if (!member) return
+
+  const admin = createAdminClient()
+
+  // Block if they already have a pending withdrawal request
+  const { data: existingRequest } = await admin
+    .from('capital_requests')
+    .select('id')
+    .eq('member_id', member.id)
+    .eq('status', 'pending')
+    .limit(1)
+    .maybeSingle()
+
+  if (existingRequest) {
+    await sendTelegramMessageWithCommandButtons(chatId, tgWithdrawalRequestBlocked())
+    return
+  }
+
+  const balance = await fetchVerifiedSavingsBalance(member.id)
+  if (balance <= 0) {
+    await sendTelegramMessageWithCommandButtons(chatId, tgWithdrawalNoSavings())
+    return
+  }
+
+  await setPendingWithdrawalRequest(chatId, { step: 'amount' })
+  await sendTelegramMessage(chatId, tgWithdrawalRequestStart(fmtMoney(balance)))
+}
+
+async function handleWithdrawalRequestStep(chatId: string, input: string): Promise<void> {
+  const state = await getPendingWithdrawalRequest(chatId)
+  if (!state) return
+
+  const member = await requireLinkedActiveMember(chatId)
+  if (!member) {
+    await clearPendingWithdrawalRequest(chatId)
+    return
+  }
+
+  if (state.step === 'amount') {
+    const balance = await fetchVerifiedSavingsBalance(member.id)
+    const normalized = input.trim().toLowerCase()
+    const amount = ['ទាំងអស់', 'all'].includes(normalized)
+      ? balance
+      : parseFloat(input.replace(/[^0-9.]/g, ''))
+
+    if (!amount || amount <= 0) {
+      await sendTelegramMessage(chatId, tgPromptValidAmount())
+      return
+    }
+    if (amount > balance) {
+      await sendTelegramMessage(
+        chatId,
+        formatTelegramNotification(
+          'ចំនួនលើសសមតុល្យ',
+          `ចំនួនមិនអាចលើសសមតុល្យសន្សំរបស់អ្នក ${fmtMoney(balance)} ។`
+        )
+      )
+      return
+    }
+
+    await setPendingWithdrawalRequest(chatId, { step: 'reason', amount })
+    await sendTelegramMessage(
+      chatId,
+      formatTelegramNotification(
+        'ចំនួនត្រូវបានរក្សាទុក',
+        [
+          formatTelegramField('ចំនួន', fmtMoney(amount)),
+          '',
+          'សូមប្រាប់មូលហេតុនៃការស្នើសុំដកប្រាក់របស់អ្នក។',
+        ].join('\n')
+      )
+    )
+    return
+  }
+
+  if (state.step === 'reason') {
+    const reason = input.trim()
+    if (reason.length < 3) {
+      await sendTelegramMessage(
+        chatId,
+        formatTelegramNotification(
+          'មូលហេតុមិនគ្រប់គ្រាន់',
+          'សូមពិពណ៌នាមូលហេតុនៃការដកប្រាក់ឱ្យច្បាស់លាស់ជាងនេះ។'
+        )
+      )
+      return
+    }
+
+    await setPendingWithdrawalRequest(chatId, { step: 'membership', amount: state.amount, reason })
+    await sendTelegramMessage(
+      chatId,
+      formatTelegramNotification(
+        'សំណួរចុងក្រោយ',
+        [
+          'តើអ្នកចង់បន្តជាសមាជិកសហករណ៍ បន្ទាប់ពីការដកនេះដែរឬទេ?',
+          '',
+          'សូមឆ្លើយ <code>បន្ត</code> ដើម្បីបន្តជាសមាជិក',
+          'ឬ <code>ឈប់</code> ដើម្បីឈប់ធ្វើជាសមាជិក',
+        ].join('\n')
+      )
+    )
+    return
+  }
+
+  if (state.step === 'membership') {
+    const normalized = input.trim().toLowerCase()
+    const continueLabels = ['បន្ត', 'continue']
+    const stopLabels = ['ឈប់', 'stop', 'withdraw', 'leave']
+
+    let continueSaving: boolean
+    if (continueLabels.includes(normalized)) {
+      continueSaving = true
+    } else if (stopLabels.includes(normalized)) {
+      continueSaving = false
+    } else {
+      await sendTelegramMessage(
+        chatId,
+        formatTelegramNotification('សូមឆ្លើយឱ្យច្បាស់', 'សូមឆ្លើយ <code>បន្ត</code> ឬ <code>ឈប់</code>។')
+      )
+      return
+    }
+
+    const balance = await fetchVerifiedSavingsBalance(member.id)
+    await setPendingWithdrawalRequest(chatId, {
+      step: 'confirm',
+      amount: state.amount,
+      reason: state.reason,
+      continueSaving,
+    })
+    await sendTelegramMessage(
+      chatId,
+      tgWithdrawalRequestReview({
+        amount: fmtMoney(state.amount),
+        balance: fmtMoney(balance),
+        remaining: fmtMoney(Math.max(balance - state.amount, 0)),
+        reason: state.reason,
+        continuing: continueSaving,
+      })
+    )
+    return
+  }
+
+  if (state.step === 'confirm') {
+    const normalized = input.trim().toLowerCase()
+    const confirmLabels = ['បញ្ជាក់', 'confirm', 'yes']
+    const cancelLabels = ['បោះបង់', 'cancel', 'no']
+
+    if (cancelLabels.includes(normalized)) {
+      await clearPendingWithdrawalRequest(chatId)
+      await sendTelegramMessageWithCommandButtons(chatId, tgWithdrawalRequestCancelled())
+      return
+    }
+
+    if (!confirmLabels.includes(normalized)) {
+      await sendTelegramMessage(
+        chatId,
+        formatTelegramNotification(
+          'សូមឆ្លើយឱ្យច្បាស់',
+          'សូមឆ្លើយ <code>បញ្ជាក់</code> ដើម្បីដាក់ស្នើ ឬ <code>បោះបង់</code> ដើម្បីលុបចោល។'
+        )
+      )
+      return
+    }
+
+    await clearPendingWithdrawalRequest(chatId)
+
+    const admin = createAdminClient()
+    const { error } = await admin.from('capital_requests').insert({
+      member_id: member.id,
+      amount: state.amount,
+      currency: 'USD',
+      reason: state.reason,
+      continue_saving: state.continueSaving,
+      remove_membership: !state.continueSaving,
+      status: 'pending',
+    })
+
+    if (error) {
+      await sendTelegramMessage(chatId, tgErrorGeneric('មិនអាចដាក់ស្នើសុំដកប្រាក់បានទេ។ សូមព្យាយាមម្តងទៀត។'))
+      return
+    }
+
+    await notifyAdmins(
+      'សំណើដកសន្សំថ្មី',
+      tgAdminRequestBody({
+        memberName: memberKhmerName(member),
+        fields: [
+          { label: 'ចំនួន', value: fmtMoney(state.amount) },
+          { label: 'បន្ទាប់ពីដក', value: state.continueSaving ? 'បន្តសន្សំ' : 'ឈប់ចូលជាសមាជិក' },
+        ],
+        note: 'សូមពិនិត្យនៅផ្នែកស្នើសុំដកដើមទុន។',
+      }),
+      'capital_request'
+    )
+    revalidatePath('/admin')
+    revalidatePath('/admin/savings/capital')
+    revalidatePath('/admin/capital')
+
     await sendTelegramMessageWithCommandButtons(
       chatId,
-      tgLoanRequestSubmitted({
+      tgWithdrawalRequestSubmitted({
         amount: fmtMoney(state.amount),
-        termMonths: state.termMonths,
-        rate,
-        purpose,
+        continuing: state.continueSaving,
       })
     )
   }
@@ -819,6 +1396,37 @@ export async function POST(request: NextRequest) {
   if (cbq) {
     const cbChatId = String(cbq.message?.chat?.id ?? cbq.from?.id ?? '')
     const data = cbq.data ?? ''
+
+    // Referee callbacks answer the query themselves (with a toast where useful),
+    // so they must NOT be pre-answered blank below.
+    if (cbChatId && data.startsWith(REFEREE_CATEGORY_PREFIX)) {
+      await answerTelegramCallbackQuery(cbq.id)
+      await handleRefereeCategoryCallback(cbChatId, data.slice(REFEREE_CATEGORY_PREFIX.length) as MemberRole)
+      return NextResponse.json({ ok: true })
+    }
+    if (cbChatId && data.startsWith(REFEREE_PICK_PREFIX)) {
+      await handleRefereePickCallback(cbChatId, cbq.id, data.slice(REFEREE_PICK_PREFIX.length))
+      return NextResponse.json({ ok: true })
+    }
+    if (cbChatId && data === REFEREE_BACK) {
+      await answerTelegramCallbackQuery(cbq.id)
+      await handleRefereeBackCallback(cbChatId)
+      return NextResponse.json({ ok: true })
+    }
+    if (cbChatId && data === REFEREE_CANCEL) {
+      await answerTelegramCallbackQuery(cbq.id)
+      await handleRefereeCancelCallback(cbChatId)
+      return NextResponse.json({ ok: true })
+    }
+    if (cbChatId && data.startsWith(REFEREE_RESPONSE_PREFIX)) {
+      // Shape: rfa:o:<loanRefereeId> | rfa:p:<loanRefereeId> | rfa:d:<loanRefereeId>
+      const rest = data.slice(REFEREE_RESPONSE_PREFIX.length)
+      const decisionCode = rest.slice(0, 1) as 'o' | 'p' | 'd'
+      const loanRefereeId = rest.slice(2)
+      await handleRefereeResponseCallback(cbChatId, cbq.id, decisionCode, loanRefereeId)
+      return NextResponse.json({ ok: true })
+    }
+
     await answerTelegramCallbackQuery(cbq.id)
     if (cbChatId) {
       if (data === '/saving')      await handleSavingCommand(cbChatId)
@@ -826,6 +1434,7 @@ export async function POST(request: NextRequest) {
       else if (data === '/paysaving')   await handlePaySavingCommand(cbChatId)
       else if (data === '/payloan')     await handlePayLoanCommand(cbChatId)
       else if (data === '/requestloan') await handleRequestLoanCommand(cbChatId)
+      else if (data === '/requestwithdrawal') await handleRequestWithdrawalCommand(cbChatId)
     }
     return NextResponse.json({ ok: true })
   }
@@ -865,13 +1474,30 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ ok: true })
   }
 
+  if (text === '/requestwithdrawal' || text.startsWith('/requestwithdrawal@')) {
+    await handleRequestWithdrawalCommand(chatIdStr)
+    return NextResponse.json({ ok: true })
+  }
+
+  if (text === '/cancelloan' || text.startsWith('/cancelloan@')) {
+    await handleCancelLoanCommand(chatIdStr)
+    return NextResponse.json({ ok: true })
+  }
+
   // Reply-keyboard menu buttons — map label text to command handlers
   const menuButtonHandlers: Record<string, (id: string) => Promise<void>> = {
+    'របាយការសន្សំ': handleSavingCommand,
+    'របាយការកម្ចី': handleLoanCommand,
+    'ដាក់ប្រាក់សន្សំ': handlePaySavingCommand,
+    'សងកម្ជី': handlePayLoanCommand,
+    'ស្នើសុំកម្ជី': handleRequestLoanCommand,
+    'ស្នើសំដកសន្សំ': handleRequestWithdrawalCommand,
+    // Aliases for the pre-rename labels — members whose Telegram client still
+    // shows the old persistent keyboard (sent before this rename) would otherwise
+    // fall through to the "please connect" fallback on tap.
     'ការសន្សំ': handleSavingCommand,
     'ប្រាក់កម្ជី': handleLoanCommand,
     'ដាក់ស្នើសន្សំ': handlePaySavingCommand,
-    'សងកម្ជី': handlePayLoanCommand,
-    'ស្នើសុំកម្ជី': handleRequestLoanCommand,
   }
   if (text && menuButtonHandlers[text]) {
     await menuButtonHandlers[text](chatIdStr)
@@ -890,6 +1516,19 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ ok: true })
   }
 
+  // Mid-conversation withdrawal request — intercept plain text replies
+  if (text && !text.startsWith('/') && (await getPendingWithdrawalRequest(chatIdStr))) {
+    await handleWithdrawalRequestStep(chatIdStr, text)
+    return NextResponse.json({ ok: true })
+  }
+
+  // Awaiting a signed loan contract — plain text means they haven't sent the
+  // file yet, remind them instead of falling through to the generic fallback.
+  if (text && !text.startsWith('/') && (await getPendingLoanSignature(chatIdStr))) {
+    await sendTelegramMessage(chatIdStr, tgLoanSignatureReminder())
+    return NextResponse.json({ ok: true })
+  }
+
   if (text.startsWith('/start')) {
     const token = text.slice('/start'.length).trim()
 
@@ -903,9 +1542,21 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ ok: true })
   }
 
-  // Photo / document message — check pending payment state
+  // Photo / document message — check pending payment / loan-signature state
   const photo = message?.photo
   const doc = message?.document
+  const awaitingSignature = await getPendingLoanSignature(chatIdStr)
+
+  if (awaitingSignature && photo && photo.length > 0) {
+    const largest = photo.reduce((a, b) => (a.file_size ?? 0) > (b.file_size ?? 0) ? a : b)
+    await handleSignedLoanDocument(chatIdStr, largest.file_id, null)
+    return NextResponse.json({ ok: true })
+  }
+  if (awaitingSignature && doc) {
+    await handleSignedLoanDocument(chatIdStr, doc.file_id, doc)
+    return NextResponse.json({ ok: true })
+  }
+
   if (photo && photo.length > 0) {
     const largest = photo.reduce((a, b) => (a.file_size ?? 0) > (b.file_size ?? 0) ? a : b)
     await handlePhotoMessage(chatIdStr, largest.file_id, message?.caption ?? undefined)

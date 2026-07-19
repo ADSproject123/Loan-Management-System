@@ -1,0 +1,19 @@
+name: Loan referee invite expiry
+
+on:
+  schedule:
+    # 01:00 UTC = 08:00 Phnom Penh (UTC+7), daily.
+    - cron: '0 1 * * *'
+  workflow_dispatch: {}
+
+jobs:
+  expire:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Call referee invite expiry endpoint
+        run: |
+          curl --fail-with-body -sS -X GET "${APP_URL}/api/cron/expire-referee-invites" \
+            -H "Authorization: Bearer ${CRON_SECRET}"
+        env:
+          APP_URL: ${{ secrets.APP_URL }}
+          CRON_SECRET: ${{ secrets.CRON_SECRET }}

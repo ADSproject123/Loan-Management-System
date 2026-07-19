@@ -831,11 +831,6 @@ function StepReferee({ formData, updateField }: StepProps) {
   const isSelected = Boolean(formData.referee_id)
 
   useEffect(() => {
-    if (!query.trim()) {
-      setResults([])
-      setShowResults(false)
-      return
-    }
     const timer = setTimeout(async () => {
       setIsSearching(true)
       try {
@@ -921,7 +916,7 @@ function StepReferee({ formData, updateField }: StepProps) {
               {results.length === 0 ? (
                 <p className="px-4 py-3 text-sm text-foreground">រកមិនឃើញសមាជិក</p>
               ) : (
-                <ul>
+                <ul className="max-h-72 overflow-y-auto">
                   {results.map((member, i) => (
                     <li key={member.id}>
                       <button

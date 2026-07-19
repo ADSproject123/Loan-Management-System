@@ -17,8 +17,9 @@ import { LoanActions } from '@/app/admin/loans/LoanActions'
 import { LoanPaymentSchedule } from '@/components/loans/LoanPaymentSchedule'
 import type { CurrencyCode } from '@/lib/currency'
 import type { LoanScheduleRow } from '@/lib/interestCalculations'
-import type { LoanStatus, SavingStatus } from '@/types/database'
+import type { LoanStatus, LoanRefereeStatus, SavingStatus } from '@/types/database'
 import type { AdminLoanDetailRecord } from '@/lib/admin/loanDetail'
+import type { LoanReferee } from '@/lib/loanReferee'
 import {
   AdminPanel,
   adminTable,
@@ -78,6 +79,22 @@ type LoanDetailViewProps = {
   loanRate: number
   paymentSchedule: LoanScheduleRow[]
   repayments: RepaymentRow[]
+  loanReferees: LoanReferee[]
+  awaitingSignedContract: boolean
+}
+
+const REFEREE_STATUS_LABEL: Record<LoanRefereeStatus, string> = {
+  pending: 'រង់ចាំឆ្លើយតប',
+  accepted_online: 'ទទួលយក (អនឡាញ)',
+  accepted_physical: 'ទទួលយក (ជួបផ្ទាល់)',
+  declined: 'បដិសេធ',
+}
+
+const REFEREE_STATUS_TONE: Record<LoanRefereeStatus, string> = {
+  pending: 'bg-amber-100 text-amber-700',
+  accepted_online: 'bg-emerald-100 text-emerald-700',
+  accepted_physical: 'bg-emerald-100 text-emerald-700',
+  declined: 'bg-rose-100 text-rose-700',
 }
 
 type TabId = 'info' | 'schedule' | 'history' | 'documents'
@@ -112,6 +129,8 @@ export function LoanDetailView({
   loanRate,
   paymentSchedule,
   repayments,
+  loanReferees,
+  awaitingSignedContract,
 }: LoanDetailViewProps) {
   const [activeTab, setActiveTab] = useState<TabId>('info')
 
@@ -139,6 +158,13 @@ export function LoanDetailView({
         {needsAction && (
           <div className="mx-6 mt-4 rounded-xl border border-brand-200 bg-brand-50/70 px-4 py-3 md:mx-8">
             <p className="text-sm text-brand-900">{ACTION_HINT[status]}</p>
+          </div>
+        )}
+        {awaitingSignedContract && (
+          <div className="mx-6 mt-4 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 md:mx-8">
+            <p className="text-sm text-amber-900">
+              មេធានាទាំងអស់បានទទួលយកតាមអនឡាញ — កំពុងរង់ចាំសមាជិកផ្ញើឯកសារកិច្ចសន្យាដែលបានចុះហត្ថលេខាត្រឡប់មកវិញ។
+            </p>
           </div>
         )}
         {status === 'rejected' && loan.rejection_reason && (
@@ -250,6 +276,36 @@ export function LoanDetailView({
                               </Link>
                             )}
                           </div>
+                        </div>
+                      </InfoRow>
+                    )}
+
+                    {/* Loan referees (guarantor approval workflow) */}
+                    {loanReferees.length > 0 && (
+                      <InfoRow label="មេធានា">
+                        <div className="space-y-2">
+                          {loanReferees.map((row) => (
+                            <div key={row.id} className="flex items-center gap-3">
+                              {row.referee ? (
+                                <Link
+                                  href={`/admin/members/${row.referee.id}`}
+                                  className="font-medium text-brand-700 hover:underline"
+                                >
+                                  {memberKhmerName(row.referee)}
+                                </Link>
+                              ) : (
+                                <span className="text-foreground">សមាជិកមិនស្គាល់</span>
+                              )}
+                              <span
+                                className={`rounded-full px-2 py-0.5 text-xs font-semibold ${REFEREE_STATUS_TONE[row.status]}`}
+                              >
+                                {REFEREE_STATUS_LABEL[row.status]}
+                              </span>
+                              {row.responded_at && (
+                                <span className="text-xs text-muted">{formatDate(row.responded_at)}</span>
+                              )}
+                            </div>
+                          ))}
                         </div>
                       </InfoRow>
                     )}
