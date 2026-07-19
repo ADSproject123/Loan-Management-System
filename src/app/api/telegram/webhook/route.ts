@@ -1005,37 +1005,53 @@ async function sendRefereeCategoryMenu(
 }
 
 async function handleRefereeCategoryCallback(chatId: string, role: MemberRole): Promise<void> {
-  const state = await getPendingLoanRequest(chatId)
-  const member = await requireLinkedActiveMember(chatId)
-  if (!state || state.step !== 'referees' || !member) return
+  console.log('[RefereeDebug] handleRefereeCategoryCallback start', { chatId, role })
+  try {
+    const state = await getPendingLoanRequest(chatId)
+    console.log('[RefereeDebug] state', JSON.stringify(state))
+    const member = await requireLinkedActiveMember(chatId)
+    console.log('[RefereeDebug] member', member ? member.id : null)
+    if (!state || state.step !== 'referees' || !member) {
+      console.log('[RefereeDebug] early return', {
+        hasState: Boolean(state),
+        step: state?.step,
+        hasMember: Boolean(member),
+      })
+      return
+    }
 
-  const admin = createAdminClient()
-  const result = await fetchRefereeCandidates(admin, role, member.id)
+    const admin = createAdminClient()
+    const result = await fetchRefereeCandidates(admin, role, member.id)
+    console.log('[RefereeDebug] fetchRefereeCandidates result', JSON.stringify(result))
 
-  if (result.mode === 'search') {
-    await setPendingLoanRequest(chatId, { ...state, searchRole: role })
-    await sendTelegramMessage(chatId, tgRefereeSearchPrompt(MEMBER_ROLE_LABEL[role]))
-    return
-  }
+    if (result.mode === 'search') {
+      await setPendingLoanRequest(chatId, { ...state, searchRole: role })
+      await sendTelegramMessage(chatId, tgRefereeSearchPrompt(MEMBER_ROLE_LABEL[role]))
+      return
+    }
 
-  if (result.candidates.length === 0) {
-    await sendTelegramMessage(
+    if (result.candidates.length === 0) {
+      await sendTelegramMessage(
+        chatId,
+        formatTelegramNotification('គ្មានសមាជិក', 'មិនមានសមាជិកក្នុងប្រភេទនេះទេ។ សូមជ្រើសរើសប្រភេទផ្សេង។')
+      )
+      return
+    }
+
+    const ok = await sendTelegramMessageWithInlineKeyboard(
       chatId,
-      formatTelegramNotification('គ្មានសមាជិក', 'មិនមានសមាជិកក្នុងប្រភេទនេះទេ។ សូមជ្រើសរើសប្រភេទផ្សេង។')
+      tgRefereeCandidateListPrompt(MEMBER_ROLE_LABEL[role]),
+      [
+        ...result.candidates.map((c) => [
+          { text: refereeDisplayName(c), callback_data: `${REFEREE_PICK_PREFIX}${c.id}` },
+        ]),
+        [{ text: '⬅ ត្រឡប់ក្រោយ', callback_data: REFEREE_BACK }],
+      ]
     )
-    return
+    console.log('[RefereeDebug] sendTelegramMessageWithInlineKeyboard ok?', ok)
+  } catch (err) {
+    console.error('[RefereeDebug] EXCEPTION in handleRefereeCategoryCallback', err)
   }
-
-  await sendTelegramMessageWithInlineKeyboard(
-    chatId,
-    tgRefereeCandidateListPrompt(MEMBER_ROLE_LABEL[role]),
-    [
-      ...result.candidates.map((c) => [
-        { text: refereeDisplayName(c), callback_data: `${REFEREE_PICK_PREFIX}${c.id}` },
-      ]),
-      [{ text: '⬅ ត្រឡប់ក្រោយ', callback_data: REFEREE_BACK }],
-    ]
-  )
 }
 
 async function handleRefereePickCallback(
