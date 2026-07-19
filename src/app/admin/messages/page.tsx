@@ -14,7 +14,7 @@ export default async function AdminMessagesPage() {
       .order('full_name_kh', { ascending: true }),
     admin
       .from('admin_member_messages')
-      .select('member_id, sender_type, body, read_by_admin, created_at')
+      .select('member_id, sender_type, body, message_type, read_by_admin, created_at')
       .order('created_at', { ascending: false }),
   ])
 
@@ -23,7 +23,13 @@ export default async function AdminMessagesPage() {
 
   for (const row of messages ?? []) {
     if (!lastMessageByMember.has(row.member_id)) {
-      lastMessageByMember.set(row.member_id, { body: row.body, created_at: row.created_at })
+      const preview =
+        row.message_type === 'voice'
+          ? '🎤 សារជាសំឡេង'
+          : row.message_type === 'file'
+            ? '📎 ឯកសារភ្ជាប់'
+            : (row.body ?? '')
+      lastMessageByMember.set(row.member_id, { body: preview, created_at: row.created_at })
     }
     if (row.sender_type === 'member' && !row.read_by_admin) {
       unreadCountByMember.set(row.member_id, (unreadCountByMember.get(row.member_id) ?? 0) + 1)

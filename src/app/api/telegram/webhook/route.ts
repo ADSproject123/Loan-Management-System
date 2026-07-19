@@ -130,6 +130,7 @@ interface TelegramUpdate {
     from?: { first_name?: string }
     photo?: Array<{ file_id: string; width: number; height: number; file_size?: number }>
     document?: { file_id: string; mime_type?: string; file_name?: string }
+    voice?: { file_id: string; duration: number; mime_type?: string; file_size?: number }
   }
   callback_query?: {
     id: string
@@ -1589,14 +1590,75 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ ok: true })
   }
 
-  if (photo && photo.length > 0) {
+  // Only route to the payment-evidence handler while a /paysaving or
+  // /payloan flow is actually waiting on a photo — otherwise a photo/document
+  // isn't payment evidence, it's a chat attachment (below).
+  const pendingPayment = await getPendingPayment(chatIdStr)
+
+  if (pendingPayment && photo && photo.length > 0) {
     const largest = photo.reduce((a, b) => (a.file_size ?? 0) > (b.file_size ?? 0) ? a : b)
     await handlePhotoMessage(chatIdStr, largest.file_id, message?.caption ?? undefined)
     return NextResponse.json({ ok: true })
   }
-  if (doc && doc.mime_type?.startsWith('image/')) {
+  if (pendingPayment && doc && doc.mime_type?.startsWith('image/')) {
     await handlePhotoMessage(chatIdStr, doc.file_id, message?.caption ?? undefined)
     return NextResponse.json({ ok: true })
+  }
+
+  // Photo/document not claimed by any flow above — forward it as a chat
+  // attachment, same linked+active gate as text/voice capture below.
+  if (photo && photo.length > 0) {
+    const admin = createAdminClient()
+    const { data: linkedMember } = await admin
+      .from('members')
+      .select('id, status')
+      .eq('telegram_chat_id', chatIdStr)
+      .maybeSingle()
+
+    if (linkedMember && linkedMember.status === 'active') {
+      const largest = photo.reduce((a, b) => (a.file_size ?? 0) > (b.file_size ?? 0) ? a : b)
+      await recordMemberFileMessage(linkedMember.id, largest.file_id, 'photo.jpg', 'image/jpeg')
+      await sendTelegramMessage(chatIdStr, tgChatMessageForwarded())
+      return NextResponse.json({ ok: true })
+    }
+  }
+  if (doc) {
+    const admin = createAdminClient()
+    const { data: linkedMember } = await admin
+      .from('members')
+      .select('id, status')
+      .eq('telegram_chat_id', chatIdStr)
+      .maybeSingle()
+
+    if (linkedMember && linkedMember.status === 'active') {
+      await recordMemberFileMessage(
+        linkedMember.id,
+        doc.file_id,
+        doc.file_name ?? 'file',
+        doc.mime_type ?? 'application/octet-stream'
+      )
+      await sendTelegramMessage(chatIdStr, tgChatMessageForwarded())
+      return NextResponse.json({ ok: true })
+    }
+  }
+
+  // Voice note — same linked+active gate and forwarding as free-text chat.
+  // Telegram's own recorder always produces .ogg/Opus, so no format concerns
+  // on this (member -> admin) direction, unlike admin-sent recordings.
+  const voice = message?.voice
+  if (voice) {
+    const admin = createAdminClient()
+    const { data: linkedMember } = await admin
+      .from('members')
+      .select('id, status')
+      .eq('telegram_chat_id', chatIdStr)
+      .maybeSingle()
+
+    if (linkedMember && linkedMember.status === 'active') {
+      await recordMemberVoiceMessage(linkedMember.id, voice.file_id, voice.duration)
+      await sendTelegramMessage(chatIdStr, tgChatMessageForwarded())
+      return NextResponse.json({ ok: true })
+    }
   }
 
   // Free text that no command/menu-button/pending-flow check above claimed.
@@ -1635,5 +1697,92 @@ async function recordMemberChatMessage(memberId: string, body: string): Promise<
   })
   if (error) {
     console.error('[Webhook] recordMemberChatMessage failed:', error.message)
+  }
+}
+
+async function recordMemberVoiceMessage(
+  memberId: string,
+  fileId: string,
+  durationSeconds: number
+): Promise<void> {
+  const downloadUrl = await getTelegramFileDownloadUrl(fileId)
+  if (!downloadUrl) {
+    console.error('[Webhook] recordMemberVoiceMessage: could not resolve file url')
+    return
+  }
+
+  let buf: Buffer
+  try {
+    const res = await fetch(downloadUrl)
+    if (!res.ok) throw new Error(`HTTP ${res.status}`)
+    buf = Buffer.from(await res.arrayBuffer())
+  } catch (error) {
+    console.error('[Webhook] recordMemberVoiceMessage: download failed:', error)
+    return
+  }
+
+  let key: string
+  try {
+    key = await uploadBufferToR2('chat-media', memberId, 'voice', buf, 'ogg', 'audio/ogg')
+  } catch (error) {
+    console.error('[Webhook] recordMemberVoiceMessage: upload failed:', error)
+    return
+  }
+
+  const admin = createAdminClient()
+  const { error } = await admin.from('admin_member_messages').insert({
+    member_id: memberId,
+    sender_type: 'member',
+    message_type: 'voice',
+    media_url: key,
+    media_duration_seconds: durationSeconds,
+  })
+  if (error) {
+    console.error('[Webhook] recordMemberVoiceMessage: insert failed:', error.message)
+  }
+}
+
+async function recordMemberFileMessage(
+  memberId: string,
+  fileId: string,
+  filename: string,
+  mimeType: string
+): Promise<void> {
+  const downloadUrl = await getTelegramFileDownloadUrl(fileId)
+  if (!downloadUrl) {
+    console.error('[Webhook] recordMemberFileMessage: could not resolve file url')
+    return
+  }
+
+  let buf: Buffer
+  try {
+    const res = await fetch(downloadUrl)
+    if (!res.ok) throw new Error(`HTTP ${res.status}`)
+    buf = Buffer.from(await res.arrayBuffer())
+  } catch (error) {
+    console.error('[Webhook] recordMemberFileMessage: download failed:', error)
+    return
+  }
+
+  const ext = filename.split('.').pop() || 'bin'
+  let key: string
+  try {
+    key = await uploadBufferToR2('chat-media', memberId, 'file', buf, ext, mimeType)
+  } catch (error) {
+    console.error('[Webhook] recordMemberFileMessage: upload failed:', error)
+    return
+  }
+
+  const admin = createAdminClient()
+  const { error } = await admin.from('admin_member_messages').insert({
+    member_id: memberId,
+    sender_type: 'member',
+    message_type: 'file',
+    media_url: key,
+    media_filename: filename,
+    media_mime_type: mimeType,
+  })
+  if (error) {
+    console.error('[Webhook] recordMemberFileMessage: insert failed:', error.message)
   }
 }

@@ -4,7 +4,7 @@ import { randomUUID } from 'crypto'
 import { PutObjectCommand } from '@aws-sdk/client-s3'
 import { getR2BucketName, getR2Client, getR2SignedDownloadUrl } from '@/lib/r2'
 
-export type UploadBucket = 'member-documents' | 'payment-evidence' | 'loan-documents'
+export type UploadBucket = 'member-documents' | 'payment-evidence' | 'loan-documents' | 'chat-media'
 
 function extensionFor(file: File) {
   const fromName = file.name.split('.').pop()?.toLowerCase()
