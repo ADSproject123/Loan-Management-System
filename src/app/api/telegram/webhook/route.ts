@@ -1426,6 +1426,7 @@ export async function POST(request: NextRequest) {
   if (cbq) {
     const cbChatId = String(cbq.message?.chat?.id ?? cbq.from?.id ?? '')
     const data = cbq.data ?? ''
+    console.log('[RefereeDebug] callback_query received', { cbChatId, data, cbqId: cbq.id })
 
     // Referee callbacks answer the query themselves (with a toast where useful),
     // so they must NOT be pre-answered blank below.
