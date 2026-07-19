@@ -3,6 +3,7 @@ import {
   CreditCard,
 
   LayoutDashboard,
+  MessageCircle,
   PiggyBank,
   Settings,
   Users,
@@ -38,6 +39,11 @@ export const adminNav: AdminNavItem[] = [
     label: 'កម្ជី',
     href: '/admin/loans',
     icon: CreditCard,
+  },
+  {
+    label: 'សារ',
+    href: '/admin/messages',
+    icon: MessageCircle,
   },
 
   { label: 'ការកំណត់', href: '/admin/settings', icon: Settings },
@@ -77,6 +83,7 @@ export function isAdminParentActive(pathname: string, item: AdminNavItem) {
     if (item.href === '/admin/savings' && pathname.startsWith('/admin/savings/')) return true
     if (item.href === '/admin/loans' && pathname.startsWith('/admin/loans')) return true
     if (item.href === '/admin/members' && pathname.startsWith('/admin/members')) return true
+    if (item.href === '/admin/messages' && pathname.startsWith('/admin/messages')) return true
     return false
   }
   if (item.basePath && pathname.startsWith(item.basePath)) return true

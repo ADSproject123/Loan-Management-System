@@ -15,9 +15,11 @@ import {
 export function AdminSidebar({
   adminName,
   initialUnreadCount = 0,
+  unreadMessageCount = 0,
 }: {
   adminName: string
   initialUnreadCount?: number
+  unreadMessageCount?: number
 }) {
   const pathname = usePathname()
   const [expandedItems, setExpandedItems] = useState<string[]>(() =>
@@ -102,7 +104,12 @@ export function AdminSidebar({
               }`}
             >
               <Icon className="h-5 w-5 shrink-0 opacity-90" />
-              <span className="truncate">{item.label}</span>
+              <span className="min-w-0 flex-1 truncate">{item.label}</span>
+              {item.href === '/admin/messages' && unreadMessageCount > 0 && (
+                <span className="grid min-h-5 min-w-5 shrink-0 place-items-center rounded-full bg-red-500 px-1 text-[10px] font-bold text-white">
+                  {unreadMessageCount > 9 ? '9+' : unreadMessageCount}
+                </span>
+              )}
             </Link>
           )
         })}

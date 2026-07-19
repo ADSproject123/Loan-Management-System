@@ -10,15 +10,26 @@ export default async function AdminLayout({
   const admin = await requireAdmin()
   const supabase = createAdminClient()
 
-  const { count: unreadCount } = await supabase
-    .from('notifications')
-    .select('id', { count: 'exact', head: true })
-    .eq('member_id', admin.id)
-    .eq('read', false)
+  const [{ count: unreadCount }, { count: unreadMessageCount }] = await Promise.all([
+    supabase
+      .from('notifications')
+      .select('id', { count: 'exact', head: true })
+      .eq('member_id', admin.id)
+      .eq('read', false),
+    supabase
+      .from('admin_member_messages')
+      .select('id', { count: 'exact', head: true })
+      .eq('sender_type', 'member')
+      .eq('read_by_admin', false),
+  ])
 
   return (
     <div className="min-h-screen">
-      <AdminSidebar adminName={admin.full_name} initialUnreadCount={unreadCount ?? 0} />
+      <AdminSidebar
+        adminName={admin.full_name}
+        initialUnreadCount={unreadCount ?? 0}
+        unreadMessageCount={unreadMessageCount ?? 0}
+      />
       <main className="app-canvas min-h-screen min-w-0 overflow-auto pl-68">{children}</main>
     </div>
   )

@@ -78,6 +78,7 @@ import {
   tgLoanSignatureReminder,
   tgLoanSignedDocumentReceived,
   tgAdminSignedDocumentReceived,
+  tgChatMessageForwarded,
   MEMBER_ROLE_LABEL,
   formatTelegramNotification,
   formatTelegramField,
@@ -1598,6 +1599,41 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ ok: true })
   }
 
+  // Free text that no command/menu-button/pending-flow check above claimed.
+  // For an already-linked, active member this is a message meant for admin,
+  // not gibberish — forward it into the admin chat inbox instead of the
+  // generic "please connect your account" fallback below (which would be
+  // wrong for someone who's already linked). Deliberately not reusing
+  // requireLinkedActiveMember here: it has its own side-effecting messages
+  // for the not-linked/not-active cases, and this must leave that fallback
+  // path completely unchanged for anyone not already linked+active.
+  if (text && !text.startsWith('/')) {
+    const admin = createAdminClient()
+    const { data: linkedMember } = await admin
+      .from('members')
+      .select('id, status')
+      .eq('telegram_chat_id', chatIdStr)
+      .maybeSingle()
+
+    if (linkedMember && linkedMember.status === 'active') {
+      await recordMemberChatMessage(linkedMember.id, text)
+      await sendTelegramMessage(chatIdStr, tgChatMessageForwarded())
+      return NextResponse.json({ ok: true })
+    }
+  }
+
   await sendTelegramMessageWithCommandButtons(chatIdStr, WELCOME_NO_TOKEN)
   return NextResponse.json({ ok: true })
+}
+
+async function recordMemberChatMessage(memberId: string, body: string): Promise<void> {
+  const admin = createAdminClient()
+  const { error } = await admin.from('admin_member_messages').insert({
+    member_id: memberId,
+    sender_type: 'member',
+    body,
+  })
+  if (error) {
+    console.error('[Webhook] recordMemberChatMessage failed:', error.message)
+  }
 }
