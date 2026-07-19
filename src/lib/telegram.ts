@@ -57,6 +57,34 @@ async function callTelegram(method: string, payload: Record<string, unknown>): P
   }
 }
 
+/** Same as callTelegram but posts multipart/form-data (for uploading file bytes directly). */
+async function callTelegramMultipart(method: string, form: FormData): Promise<TelegramResult> {
+  if (!API_BASE) {
+    console.warn('[Telegram] TELEGRAM_BOT_TOKEN not set — skipping', method)
+    return { ok: false }
+  }
+  try {
+    const res = await fetch(`${API_BASE}/${method}`, { method: 'POST', body: form })
+    if (!res.ok) {
+      const body = await res.text().catch(() => '')
+      let errorCode: number | undefined
+      let description: string | undefined
+      try {
+        const json = JSON.parse(body) as { error_code?: number; description?: string }
+        errorCode = json.error_code
+        description = json.description
+      } catch { /* ignore */ }
+      console.error(`[Telegram] ${method} failed (${res.status}): ${body}`)
+      return { ok: false, errorCode, description }
+    }
+    console.log(`[Telegram] ${method} ✓`)
+    return { ok: true }
+  } catch (error) {
+    console.error(`[Telegram] ${method} error:`, error)
+    return { ok: false }
+  }
+}
+
 /**
  * Send a plain HTML message. Best-effort — never throws.
  */
@@ -205,21 +233,38 @@ export async function sendTelegramMessageWithInlineKeyboard(
 }
 
 /**
- * Send a document (e.g. a loan contract) by URL. Caption supports HTML.
- * Mirrors sendTelegramPhoto — Telegram's sendDocument API also accepts a
- * plain reachable URL in the `document` field, no multipart upload needed.
+ * Send a document (e.g. a loan contract) given its public URL. We fetch the
+ * bytes ourselves and upload them to Telegram as multipart/form-data rather
+ * than passing the URL straight through — Telegram's own server-side URL
+ * fetch is unreliable for files of a few MB+ and fails with "Bad Request:
+ * failed to get HTTP URL content" even when the URL is perfectly reachable.
  */
 export async function sendTelegramDocument(
   chatId: string,
   documentUrl: string,
   caption: string
 ): Promise<boolean> {
-  const result = await callTelegram('sendDocument', {
-    chat_id: chatId,
-    document: documentUrl,
-    caption,
-    parse_mode: 'HTML',
-  })
+  let fileData: ArrayBuffer
+  try {
+    const fileRes = await fetch(documentUrl)
+    if (!fileRes.ok) {
+      console.error(`[Telegram] sendDocument: failed to fetch ${documentUrl} (${fileRes.status})`)
+      return false
+    }
+    fileData = await fileRes.arrayBuffer()
+  } catch (error) {
+    console.error(`[Telegram] sendDocument: error fetching ${documentUrl}:`, error)
+    return false
+  }
+
+  const filename = documentUrl.split('/').pop() || 'document'
+  const form = new FormData()
+  form.append('chat_id', chatId)
+  form.append('caption', caption)
+  form.append('parse_mode', 'HTML')
+  form.append('document', new Blob([fileData]), filename)
+
+  const result = await callTelegramMultipart('sendDocument', form)
   return result.ok
 }
 
