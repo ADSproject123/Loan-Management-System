@@ -517,9 +517,9 @@ export function tgRefereeInviteCancelled() {
 
 export function tgLoanReadyForSignature(amount: string) {
   return formatTelegramNotification(
-    'មេធានាទាំងអស់បានទទួលយក!',
+    'មេធានាបានចុះហត្ថលេខារួចរាល់!',
     [
-      `មេធានារបស់អ្នកទាំងអស់បានទទួលយកការធានាកម្ជីចំនួន ${amount} តាមអនឡាញ។`,
+      `មេធានារបស់អ្នកបានចុះហត្ថលេខាលើកិច្ចសន្យាកម្ជីចំនួន ${amount} រួចរាល់ហើយ។`,
       '',
       'សូមទាញយកឯកសារខាងក្រោម បោះពុម្ព ចុះហត្ថលេខា រួចផ្ញើរូបភាព ឬឯកសារត្រឡប់មកវិញនៅទីនេះ។',
     ].join('\n')
@@ -537,6 +537,32 @@ export function tgLoanSignedDocumentReceived() {
   return formatTelegramNotification(
     'បានទទួលឯកសារ',
     'អរគុណ! ឯកសារកិច្ចសន្យាដែលបានចុះហត្ថលេខារបស់អ្នកត្រូវបានទទួល ហើយកំពុងរង់ចាំការត្រួតពិនិត្យពីអ្នកគ្រប់គ្រង។'
+  )
+}
+
+/** Sent to a referee right after they accept a loan online — they sign first. */
+export function tgRefereeReadyForSignature(amount: string) {
+  return formatTelegramNotification(
+    'សូមចុះហត្ថលេខាលើកិច្ចសន្យា',
+    [
+      `អ្នកបានទទួលយកការធានាកម្ជីចំនួន ${amount} តាមអនឡាញ។`,
+      '',
+      'សូមទាញយកឯកសារខាងក្រោម បោះពុម្ព ចុះហត្ថលេខា រួចផ្ញើរូបភាព ឬឯកសារត្រឡប់មកវិញនៅទីនេះ សិន មុននឹងបញ្ជូនទៅអ្នកខ្ចីប្រាក់។',
+    ].join('\n')
+  )
+}
+
+export function tgRefereeSignatureReminder() {
+  return formatTelegramNotification(
+    'រង់ចាំឯកសារ',
+    'សូមផ្ញើរូបភាព ឬឯកសារកិច្ចសន្យាដែលបានចុះហត្ថលេខារបស់អ្នកនៅទីនេះ សិន មុននឹងបញ្ជូនទៅអ្នកខ្ចីប្រាក់។'
+  )
+}
+
+export function tgRefereeSignedDocumentReceived() {
+  return formatTelegramNotification(
+    'បានទទួលឯកសារ',
+    'អរគុណ! ឯកសារកិច្ចសន្យាដែលបានចុះហត្ថលេខារបស់អ្នកត្រូវបានទទួល។ កិច្ចសន្យានេះនឹងបញ្ជូនទៅអ្នកខ្ចីប្រាក់ដើម្បីចុះហត្ថលេខាបន្ត។'
   )
 }
 
@@ -581,7 +607,22 @@ export function tgAdminRefereeAwaiting(options: { memberName: string; amount: st
       { label: 'ចំនួន', value: options.amount },
       { label: 'មេធានា', value: options.refereeNames.join(', ') },
     ],
-    note: 'កម្ជីនេះនឹងលេចឡើងសម្រាប់ការត្រួតពិនិត្យ បន្ទាប់ពីមេធានាទាំងអស់ឆ្លើយតប។',
+    note: 'មេធានាទាំងអស់បានទទួលយកតាមអនឡាញ ហើយកំពុងចុះហត្ថលេខាលើកិច្ចសន្យាដោយខ្លួនឯង។ កម្ជីនេះនឹងបញ្ជូនទៅអ្នកខ្ចីប្រាក់ដើម្បីចុះហត្ថលេខាបន្ទាប់ពីមេធានាទាំងអស់ចុះហត្ថលេខារួច។',
+  })
+}
+
+export function tgAdminRefereeSignedDocumentReceived(options: {
+  refereeName: string
+  memberName: string
+  amount: string
+}) {
+  return tgAdminRequestBody({
+    memberName: options.memberName,
+    fields: [
+      { label: 'ចំនួន', value: options.amount },
+      { label: 'មេធានាបានចុះហត្ថលេខា', value: options.refereeName },
+    ],
+    note: 'កំពុងរង់ចាំមេធានាផ្សេងទៀត (បើមាន) ឬអ្នកខ្ចីប្រាក់ ចុះហត្ថលេខាបន្ត។',
   })
 }
 

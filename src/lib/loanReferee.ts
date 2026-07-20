@@ -20,9 +20,12 @@ import {
   tgRefereeInvite,
   tgRefereeInviteCancelled,
   tgRefereeInviteExpired,
+  tgRefereeReadyForSignature,
 } from '@/lib/telegramMessages'
 import {
+  getPendingLoanSignature,
   setPendingLoanSignature,
+  setPendingRefereeSignature,
 } from '@/lib/telegramConversationState'
 import type { MemberRole, LoanRefereeStatus } from '@/types/database'
 
@@ -349,14 +352,18 @@ export async function processRefereeResponse(
     return { outcome: 'already_responded' }
   }
 
-  await resolveLoanAfterResponse(admin, row.loan_id, params.decision)
+  await resolveLoanAfterResponse(admin, row.loan_id, params.decision, {
+    loanRefereeId: params.loanRefereeId,
+    respondingMemberId: params.respondingMemberId,
+  })
   return { outcome: 'recorded' }
 }
 
 async function resolveLoanAfterResponse(
   admin: SupabaseClient,
   loanId: string,
-  triggeringDecision: 'accepted_online' | 'accepted_physical' | 'declined'
+  triggeringDecision: 'accepted_online' | 'accepted_physical' | 'declined',
+  responder: { loanRefereeId: string; respondingMemberId: string }
 ): Promise<void> {
   const { data: loan } = await admin
     .from('loans')
@@ -373,6 +380,27 @@ async function resolveLoanAfterResponse(
 
   const amountText = formatMoney(Number(loan.amount ?? 0))
   const requesterName = requester?.full_name_kh ?? requester?.full_name_en ?? requester?.full_name ?? ''
+
+  // A referee who just accepted online must sign the contract themselves
+  // before it goes to the requester - send it to them immediately, regardless
+  // of whether sibling referees have responded yet.
+  if (triggeringDecision === 'accepted_online') {
+    const { data: refereeMember } = await admin
+      .from('members')
+      .select('telegram_chat_id')
+      .eq('id', responder.respondingMemberId)
+      .maybeSingle()
+
+    if (refereeMember?.telegram_chat_id) {
+      await sendTelegramMessage(refereeMember.telegram_chat_id, tgRefereeReadyForSignature(amountText))
+      await setPendingRefereeSignature(refereeMember.telegram_chat_id, {
+        loanId,
+        loanRefereeId: responder.loanRefereeId,
+      })
+      const contractUrl = `${process.env.NEXT_PUBLIC_APP_URL ?? 'http://localhost:3000'}/loan-application-contract.docx`
+      await sendTelegramDocument(refereeMember.telegram_chat_id, contractUrl, 'កិច្ចសន្យាកម្ជី')
+    }
+  }
 
   if (triggeringDecision === 'declined') {
     const siblings = await fetchSiblingReferees(admin, loanId)
@@ -410,14 +438,11 @@ async function resolveLoanAfterResponse(
   const refereeNames = siblings.map((r) => refereeDisplayName(normalizeOne(r.referee) as never))
 
   if (allOnline) {
-    if (requester?.telegram_chat_id) {
-      await sendTelegramMessage(requester.telegram_chat_id, tgLoanReadyForSignature(amountText))
-      await setPendingLoanSignature(requester.telegram_chat_id, { loanId })
-      const contractUrl = `${process.env.NEXT_PUBLIC_APP_URL ?? 'http://localhost:3000'}/loan-application-contract.docx`
-      await sendTelegramDocument(requester.telegram_chat_id, contractUrl, 'កិច្ចសន្យាកម្ចី')
-    }
+    // The requester is not messaged yet - every online referee must sign and
+    // return the contract first. See tryAdvanceToRequesterSignature, which
+    // sends it to the requester once the last referee's signature comes in.
     await notifyAdmins(
-      'កម្ជីកំពុងរង់ចាំហត្ថលេខា',
+      'កម្ជីកំពុងរង់ចាំហត្ថលេខាមេធានា',
       tgAdminRefereeAwaiting({ memberName: requesterName, amount: amountText, refereeNames }),
       'loan_referee'
     )
@@ -437,11 +462,101 @@ async function resolveLoanAfterResponse(
   )
 }
 
+export type RecordRefereeSignedDocumentOutcome =
+  | { ok: false }
+  | { ok: true; amountText: string; requesterName: string }
+
+/**
+ * Stores a referee's own signed contract (uploaded by the caller - this just
+ * records the resulting key) and, once every online-accepting referee on the
+ * loan has done the same, forwards the contract to the requester to sign.
+ * Mirrors the concurrency approach in resolveLoanAfterResponse: re-fetches
+ * siblings fresh rather than trusting caller-provided state.
+ */
+export async function recordRefereeSignedDocument(
+  admin: SupabaseClient,
+  params: { loanRefereeId: string; respondingMemberId: string; documentKey: string }
+): Promise<RecordRefereeSignedDocumentOutcome> {
+  const { data: updated } = await admin
+    .from('loan_referees')
+    .update({ signed_document_url: params.documentKey })
+    .eq('id', params.loanRefereeId)
+    .eq('referee_member_id', params.respondingMemberId)
+    .eq('status', 'accepted_online')
+    .select('loan_id')
+    .maybeSingle()
+
+  if (!updated) return { ok: false }
+
+  const { data: loan } = await admin
+    .from('loans')
+    .select('member_id, amount')
+    .eq('id', updated.loan_id)
+    .maybeSingle()
+  const amountText = formatMoney(Number(loan?.amount ?? 0))
+
+  const { data: requester } = await admin
+    .from('members')
+    .select('full_name, full_name_kh, full_name_en')
+    .eq('id', loan?.member_id ?? '')
+    .maybeSingle()
+  const requesterName = requester?.full_name_kh ?? requester?.full_name_en ?? requester?.full_name ?? ''
+
+  await tryAdvanceToRequesterSignature(admin, updated.loan_id)
+
+  return { ok: true, amountText, requesterName }
+}
+
+/**
+ * Checks whether every accepted-online referee on the loan has now signed and
+ * returned their own contract; if so, sends it on to the requester. No-op
+ * (including for mixed/physical/pending loans) otherwise. Safe to call after
+ * every individual referee signature - only the one that completes the set
+ * actually messages the requester, guarded by requester not already having a
+ * pending signature.
+ */
+async function tryAdvanceToRequesterSignature(admin: SupabaseClient, loanId: string): Promise<void> {
+  const { data: loan } = await admin
+    .from('loans')
+    .select('member_id, amount, status')
+    .eq('id', loanId)
+    .maybeSingle()
+  if (!loan || loan.status !== 'under_review') return
+
+  const siblings = await fetchSiblingReferees(admin, loanId)
+  const allOnline = siblings.length > 0 && siblings.every((r) => r.status === 'accepted_online')
+  if (!allOnline) return
+
+  const { data: signedRows } = await admin
+    .from('loan_referees')
+    .select('signed_document_url')
+    .eq('loan_id', loanId)
+  if (!signedRows?.length || signedRows.some((r) => !r.signed_document_url)) return
+
+  const { data: requester } = await admin
+    .from('members')
+    .select('telegram_chat_id')
+    .eq('id', loan.member_id)
+    .maybeSingle()
+  if (!requester?.telegram_chat_id) return
+
+  // Guard against double-send if two referees' signatures race in.
+  const alreadyPending = await getPendingLoanSignature(requester.telegram_chat_id)
+  if (alreadyPending) return
+
+  const amountText = formatMoney(Number(loan.amount ?? 0))
+  await sendTelegramMessage(requester.telegram_chat_id, tgLoanReadyForSignature(amountText))
+  await setPendingLoanSignature(requester.telegram_chat_id, { loanId })
+  const contractUrl = `${process.env.NEXT_PUBLIC_APP_URL ?? 'http://localhost:3000'}/loan-application-contract.docx`
+  await sendTelegramDocument(requester.telegram_chat_id, contractUrl, 'កិច្ចសន្យាកម្ជី')
+}
+
 export type LoanReferee = {
   id: string
   status: LoanRefereeStatus
   responded_at: string | null
   referee_member_id: string
+  signed_document_url: string | null
   referee: { id: string; full_name: string; full_name_kh: string | null; full_name_en: string | null } | null
 }
 
@@ -450,7 +565,7 @@ export async function fetchLoanReferees(admin: SupabaseClient, loanId: string): 
   const { data } = await admin
     .from('loan_referees')
     .select(
-      'id, status, responded_at, referee_member_id, referee:referee_member_id(id, full_name, full_name_kh, full_name_en)'
+      'id, status, responded_at, referee_member_id, signed_document_url, referee:referee_member_id(id, full_name, full_name_kh, full_name_en)'
     )
     .eq('loan_id', loanId)
     .order('created_at', { ascending: true })

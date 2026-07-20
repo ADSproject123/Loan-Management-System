@@ -301,6 +301,17 @@ export function LoanDetailView({
                               >
                                 {REFEREE_STATUS_LABEL[row.status]}
                               </span>
+                              {row.status === 'accepted_online' && (
+                                <span
+                                  className={`rounded-full px-2 py-0.5 text-xs font-semibold ${
+                                    row.signed_document_url
+                                      ? 'bg-green-100 text-green-700'
+                                      : 'bg-amber-100 text-amber-700'
+                                  }`}
+                                >
+                                  {row.signed_document_url ? '✓ បានចុះហត្ថលេខា' : 'រង់ចាំហត្ថលេខា'}
+                                </span>
+                              )}
                               {row.responded_at && (
                                 <span className="text-xs text-muted">{formatDate(row.responded_at)}</span>
                               )}
