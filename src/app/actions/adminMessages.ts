@@ -2,11 +2,11 @@
 
 import { revalidatePath } from 'next/cache'
 import { createAdminClient } from '@/lib/supabase/admin'
-import { requireAdmin } from '@/lib/auth/member'
+import { requireAdmin, requireFullAdmin } from '@/lib/auth/member'
 import { sendTelegramMessage, sendTelegramAudio, sendTelegramPhotoBuffer, sendTelegramDocumentBuffer } from '@/lib/telegram'
 import { tgAdminChatMessage } from '@/lib/telegramMessages'
 import { uploadPrivateFile, getPrivateFileUrl } from '@/lib/uploads'
-import type { MessageSenderType, ChatMessageType } from '@/types/database'
+import type { Member, MessageSenderType, ChatMessageType } from '@/types/database'
 
 // NOTE: unrelated to the `notifications` table (one-way, templated, no
 // sender attribution) — this is the two-way admin<->member chat log.
@@ -44,11 +44,24 @@ export type SendAdminMessageResult =
   | { success: true; message: ChatMessage }
   | { success: false; error: string }
 
+/** Read-only admins can view conversations (requireAdmin) but not send anything here. */
+async function requireFullAdminOrResult(): Promise<{ admin: Member } | { result: SendAdminMessageResult }> {
+  try {
+    return { admin: await requireFullAdmin() }
+  } catch (error) {
+    return {
+      result: { success: false, error: error instanceof Error ? error.message : 'មិនអនុញ្ញាត។' },
+    }
+  }
+}
+
 export async function sendAdminMessageToMember(
   memberId: string,
   body: string
 ): Promise<SendAdminMessageResult> {
-  const admin = await requireAdmin()
+  const guard = await requireFullAdminOrResult()
+  if ('result' in guard) return guard.result
+  const admin = guard.admin
   const trimmed = body.trim()
   if (!trimmed) {
     return { success: false, error: 'សូមវាយសារមុននឹងផ្ញើ។' }
@@ -98,7 +111,9 @@ export async function sendAdminVoiceMessageToMember(
   memberId: string,
   formData: FormData
 ): Promise<SendAdminMessageResult> {
-  const admin = await requireAdmin()
+  const guard = await requireFullAdminOrResult()
+  if ('result' in guard) return guard.result
+  const admin = guard.admin
   const file = formData.get('audio')
   if (!(file instanceof File) || file.size === 0) {
     return { success: false, error: 'មិនមានសំឡេងដើម្បីផ្ញើទេ។' }
@@ -157,7 +172,9 @@ export async function sendAdminFileToMember(
   memberId: string,
   formData: FormData
 ): Promise<SendAdminMessageResult> {
-  const admin = await requireAdmin()
+  const guard = await requireFullAdminOrResult()
+  if ('result' in guard) return guard.result
+  const admin = guard.admin
   const file = formData.get('file')
   if (!(file instanceof File) || file.size === 0) {
     return { success: false, error: 'សូមជ្រើសរើសឯកសារដើម្បីផ្ញើ។' }

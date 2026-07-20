@@ -78,3 +78,20 @@ export async function requireAdmin(): Promise<Member> {
 
   return member
 }
+
+/**
+ * Use for every admin action that creates/updates/deletes anything. Read-only
+ * admins pass requireAdmin() (they can log in and view the dashboard) but must
+ * be rejected here. This is the actual enforcement boundary for read-only
+ * access - admin pages read via the service-role client, which bypasses RLS,
+ * so a database policy alone would not be enough.
+ */
+export async function requireFullAdmin(): Promise<Member> {
+  const member = await requireAdmin()
+
+  if (member.admin_access_level === 'read_only') {
+    throw new Error('គណនីរបស់អ្នកអាចមើលបានតែប៉ុណ្ណោះ។ មិនអាចធ្វើប្រតិបត្តិការនេះបានទេ។')
+  }
+
+  return member
+}

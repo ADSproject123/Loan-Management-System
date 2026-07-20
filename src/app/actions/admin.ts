@@ -2,7 +2,7 @@
 
 import { revalidatePath } from 'next/cache'
 import { createAdminClient } from '@/lib/supabase/admin'
-import { requireAdmin } from '@/lib/auth/member'
+import { requireAdmin, requireFullAdmin } from '@/lib/auth/member'
 import type { ActionResult } from '@/app/actions/member'
 import { formatMoney, MIN_SAVING_AMOUNT, normalizeCurrency } from '@/lib/currency'
 import { fetchMemberLoanInterestRate, getInterestSettings } from '@/lib/interest'
@@ -64,7 +64,7 @@ function roleFrom(formData: FormData): MemberRoleValue {
 
 export async function approveMember(formData: FormData): Promise<ActionResult> {
   try {
-    await requireAdmin()
+    await requireFullAdmin()
     const id = idFrom(formData)
     const role = roleFrom(formData)
     const admin = createAdminClient()
@@ -97,7 +97,7 @@ export async function approveMember(formData: FormData): Promise<ActionResult> {
 
 export async function updateMemberRole(formData: FormData): Promise<ActionResult> {
   try {
-    await requireAdmin()
+    await requireFullAdmin()
     const id = idFrom(formData)
     const role = roleFrom(formData)
     const admin = createAdminClient()
@@ -152,7 +152,7 @@ function revalidateMemberPaths(id: string) {
 
 export async function updateMemberProfile(formData: FormData): Promise<ActionResult> {
   try {
-    await requireAdmin()
+    await requireFullAdmin()
     const id = idFrom(formData)
     const admin = createAdminClient()
 
@@ -266,7 +266,7 @@ export async function updateMemberProfile(formData: FormData): Promise<ActionRes
 
 export async function updateMemberDocuments(formData: FormData): Promise<ActionResult> {
   try {
-    await requireAdmin()
+    await requireFullAdmin()
     const id = idFrom(formData)
     const admin = createAdminClient()
 
@@ -340,7 +340,7 @@ export async function updateMemberDocuments(formData: FormData): Promise<ActionR
 
 export async function updateMemberReferee(formData: FormData): Promise<ActionResult> {
   try {
-    await requireAdmin()
+    await requireFullAdmin()
     const id = idFrom(formData)
     const admin = createAdminClient()
 
@@ -389,7 +389,7 @@ export async function updateMemberReferee(formData: FormData): Promise<ActionRes
 
 export async function suspendMember(formData: FormData): Promise<ActionResult> {
   try {
-    await requireAdmin()
+    await requireFullAdmin()
     const id = idFrom(formData)
     const reason = formData.get('reason')
     if (typeof reason !== 'string' || reason.trim().length < 5) {
@@ -432,7 +432,7 @@ export async function suspendMember(formData: FormData): Promise<ActionResult> {
 
 export async function denyMember(formData: FormData): Promise<ActionResult> {
   try {
-    await requireAdmin()
+    await requireFullAdmin()
     const id = idFrom(formData)
     const reason = formData.get('reason')
     if (typeof reason !== 'string' || reason.trim().length < 5) {
@@ -475,7 +475,7 @@ export async function denyMember(formData: FormData): Promise<ActionResult> {
 
 export async function deleteMember(formData: FormData): Promise<ActionResult> {
   try {
-    const currentAdmin = await requireAdmin()
+    const currentAdmin = await requireFullAdmin()
     const id = idFrom(formData)
 
     if (id === currentAdmin.id) {
@@ -580,7 +580,7 @@ export async function deleteMember(formData: FormData): Promise<ActionResult> {
 
 export async function approveSaving(formData: FormData): Promise<ActionResult> {
   try {
-    const approver = await requireAdmin()
+    const approver = await requireFullAdmin()
     const id = idFrom(formData)
     const admin = createAdminClient()
     const { data, error } = await admin
@@ -630,7 +630,7 @@ export async function acceptSaving(formData: FormData): Promise<ActionResult> {
 
 export async function refundSaving(formData: FormData): Promise<ActionResult> {
   try {
-    const approver = await requireAdmin()
+    const approver = await requireFullAdmin()
     const id = idFrom(formData)
     const reason = formData.get('reason')
     if (typeof reason !== 'string' || reason.trim().length < 5) {
@@ -680,7 +680,7 @@ export async function refundSaving(formData: FormData): Promise<ActionResult> {
 
 export async function updateRepaymentStatus(formData: FormData): Promise<ActionResult> {
   try {
-    const approver = await requireAdmin()
+    const approver = await requireFullAdmin()
     const id = idFrom(formData)
     const status = (formData.get('status') as string | null)?.trim() ?? ''
 
@@ -743,7 +743,7 @@ export async function updateRepaymentStatus(formData: FormData): Promise<ActionR
 
 export async function updateLoanDueStatus(formData: FormData): Promise<ActionResult> {
   try {
-    const approver = await requireAdmin()
+    const approver = await requireFullAdmin()
     const loanId = (formData.get('loan_id') as string | null)?.trim() ?? ''
     const loanIdsRaw = (formData.get('loan_ids') as string | null)?.trim() ?? ''
     const breakdownRaw = (formData.get('loan_breakdown') as string | null)?.trim() ?? ''
@@ -883,7 +883,7 @@ export async function updateLoanDueStatus(formData: FormData): Promise<ActionRes
 
 export async function updateSavingInterestStatus(formData: FormData): Promise<ActionResult> {
   try {
-    const approver = await requireAdmin()
+    const approver = await requireFullAdmin()
     const memberId = (formData.get('member_id') as string | null)?.trim() ?? ''
     const year = Number(formData.get('year'))
     const month = Number(formData.get('month'))
@@ -971,7 +971,7 @@ export async function updateSavingInterestStatus(formData: FormData): Promise<Ac
 
 export async function verifyRepayment(formData: FormData): Promise<ActionResult> {
   try {
-    const approver = await requireAdmin()
+    const approver = await requireFullAdmin()
     const id = idFrom(formData)
     const admin = createAdminClient()
     const { data, error } = await admin
@@ -1005,7 +1005,7 @@ export async function verifyRepayment(formData: FormData): Promise<ActionResult>
 
 export async function approveLoan(formData: FormData): Promise<ActionResult> {
   try {
-    const approver = await requireAdmin()
+    const approver = await requireFullAdmin()
     const id = idFrom(formData)
     const admin = createAdminClient()
     const { data, error } = await admin
@@ -1038,7 +1038,7 @@ export async function approveLoan(formData: FormData): Promise<ActionResult> {
 
 export async function activateLoan(formData: FormData): Promise<ActionResult> {
   try {
-    await requireAdmin()
+    await requireFullAdmin()
     const id = idFrom(formData)
     const admin = createAdminClient()
 
@@ -1093,7 +1093,7 @@ export async function activateLoan(formData: FormData): Promise<ActionResult> {
 
 export async function rejectLoan(formData: FormData): Promise<ActionResult> {
   try {
-    await requireAdmin()
+    await requireFullAdmin()
     const id = idFrom(formData)
     const reason = formData.get('reason')
     if (typeof reason !== 'string' || reason.trim().length < 5) {
@@ -1135,7 +1135,7 @@ export async function rejectLoan(formData: FormData): Promise<ActionResult> {
 
 export async function decideCapitalRequest(formData: FormData): Promise<ActionResult> {
   try {
-    const approver = await requireAdmin()
+    const approver = await requireFullAdmin()
     const id = idFrom(formData)
     const decision = formData.get('decision') === 'approved' ? 'approved' : 'rejected'
     let trimmedReason: string | null = null
@@ -1179,7 +1179,7 @@ export async function decideCapitalRequest(formData: FormData): Promise<ActionRe
 
 export async function adminCreateCapitalRequest(formData: FormData): Promise<ActionResult> {
   try {
-    const approver = await requireAdmin()
+    const approver = await requireFullAdmin()
     const memberId = idFrom(formData)
     const amount = Number((formData.get('amount') as string ?? '').trim())
     const reason = (formData.get('reason') as string ?? '').trim()
@@ -1238,7 +1238,7 @@ function parseInterestRate(formData: FormData, field: string) {
 
 export async function updateInterestSettings(formData: FormData): Promise<ActionResult> {
   try {
-    const adminMember = await requireAdmin()
+    const adminMember = await requireFullAdmin()
     const monthlySavingInterestRate = parseInterestRate(formData, 'monthly_saving_interest_rate')
     const monthlyLoanInterestRate = parseInterestRate(formData, 'monthly_loan_interest_rate')
 
@@ -1282,7 +1282,7 @@ function optionalText(formData: FormData, field: string) {
 
 export async function saveLoanInterestPlan(formData: FormData): Promise<ActionResult> {
   try {
-    await requireAdmin()
+    await requireFullAdmin()
     const admin = createAdminClient()
     const planId = optionalText(formData, 'plan_id')
     const name = optionalText(formData, 'name')
@@ -1327,7 +1327,7 @@ export async function saveLoanInterestPlan(formData: FormData): Promise<ActionRe
 
 export async function deleteLoanInterestPlan(formData: FormData): Promise<ActionResult> {
   try {
-    await requireAdmin()
+    await requireFullAdmin()
     const planId = idFrom(formData)
     const admin = createAdminClient()
     const { error } = await admin.from('loan_interest_plans').delete().eq('id', planId)
@@ -1348,7 +1348,7 @@ export async function deleteLoanInterestPlan(formData: FormData): Promise<Action
 
 export async function assignMemberLoanInterestPlan(formData: FormData): Promise<ActionResult> {
   try {
-    await requireAdmin()
+    await requireFullAdmin()
     const memberId = idFrom(formData)
     const rawPlanId = formData.get('loan_interest_plan_id')
     const planId =
@@ -1382,7 +1382,7 @@ export async function assignMemberLoanInterestPlan(formData: FormData): Promise<
 
 export async function createMemberByAdmin(formData: FormData): Promise<ActionResult> {
   try {
-    await requireAdmin()
+    await requireFullAdmin()
     const admin = createAdminClient()
 
     const email = (formData.get('email') as string ?? '').trim().toLowerCase()
@@ -1509,7 +1509,7 @@ export async function ensureMemberTelegramConnectToken(
 
 export async function markReportSent(formData: FormData): Promise<ActionResult> {
   try {
-    await requireAdmin()
+    await requireFullAdmin()
     const id = idFrom(formData)
     const admin = createAdminClient()
     const { error } = await admin
@@ -1599,7 +1599,7 @@ function revalidateMemberFinancialPaths(memberId: string) {
 
 export async function addSavingByAdmin(formData: FormData): Promise<ActionResult> {
   try {
-    const approver = await requireAdmin()
+    const approver = await requireFullAdmin()
     const memberId = memberIdFrom(formData)
     const amount = adminAsNumber(formData, 'amount')
     const notes = adminAsString(formData, 'notes')
@@ -1665,7 +1665,7 @@ export async function addSavingByAdmin(formData: FormData): Promise<ActionResult
 
 export async function addLoanByAdmin(formData: FormData): Promise<ActionResult> {
   try {
-    const approver = await requireAdmin()
+    const approver = await requireFullAdmin()
     const memberId = memberIdFrom(formData)
     const amount = adminAsNumber(formData, 'amount')
     const purpose = adminAsString(formData, 'purpose')

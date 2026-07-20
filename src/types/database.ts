@@ -49,6 +49,7 @@ export interface Member {
   resident_book_url?: string
   thumbprint_url?: string | null
   is_admin: boolean
+  admin_access_level?: 'full' | 'read_only' | null
   telegram_chat_id?: string
   telegram_connect_token?: string | null
   loan_interest_plan_id?: string | null
