@@ -1,5 +1,5 @@
 import { requireAdmin } from '@/lib/auth/member'
-import { AdminSidebar } from '@/components/layout/AdminSidebar'
+import { AdminShell } from '@/components/layout/AdminShell'
 import { createAdminClient } from '@/lib/supabase/admin'
 
 export default async function AdminLayout({
@@ -24,13 +24,12 @@ export default async function AdminLayout({
   ])
 
   return (
-    <div className="min-h-screen">
-      <AdminSidebar
-        adminName={admin.full_name}
-        initialUnreadCount={unreadCount ?? 0}
-        unreadMessageCount={unreadMessageCount ?? 0}
-      />
-      <main className="app-canvas min-h-screen min-w-0 overflow-auto pl-68">{children}</main>
-    </div>
+    <AdminShell
+      adminName={admin.full_name}
+      initialUnreadCount={unreadCount ?? 0}
+      unreadMessageCount={unreadMessageCount ?? 0}
+    >
+      {children}
+    </AdminShell>
   )
 }
