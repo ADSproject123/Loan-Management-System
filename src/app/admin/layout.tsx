@@ -28,6 +28,7 @@ export default async function AdminLayout({
       adminName={admin.full_name}
       initialUnreadCount={unreadCount ?? 0}
       unreadMessageCount={unreadMessageCount ?? 0}
+      isReadOnly={admin.admin_access_level === 'read_only'}
     >
       {children}
     </AdminShell>
