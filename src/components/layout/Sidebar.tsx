@@ -13,6 +13,7 @@ import {
   Building2,
   LogOut,
   Send,
+  User,
 } from 'lucide-react'
 
 interface NavItem {
@@ -45,6 +46,11 @@ const navItems: NavItem[] = [
       { label: 'ស្នើសុំកម្ជី', href: '/dashboard/loans/request' },
       { label: 'សងកម្ជី', href: '/dashboard/loans/repay' },
     ],
+  },
+  {
+    label: 'ព័ត៌មានផ្ទាល់ខ្លួន',
+    href: '/dashboard/profile',
+    icon: User,
   },
 ]
 
