@@ -45,14 +45,6 @@ export function MemberEditModeProvider({ children }: { children: ReactNode }) {
     setHasSaveForm(false)
   }, [])
 
-  useEffect(() => {
-    if (!isEditing) {
-      setIsSaving(false)
-      saveFormRef.current = null
-      setHasSaveForm(false)
-    }
-  }, [isEditing])
-
   return (
     <MemberEditModeContext.Provider
       value={{

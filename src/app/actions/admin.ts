@@ -272,16 +272,18 @@ export async function updateMemberDocuments(formData: FormData): Promise<ActionR
 
     const idDocumentFile = formData.get('id_document')
     const residentBookFile = formData.get('resident_book')
+    const thumbprintFile = formData.get('thumbprint')
     const hasIdDoc = idDocumentFile instanceof File && idDocumentFile.size > 0
     const hasResidentBook = residentBookFile instanceof File && residentBookFile.size > 0
+    const hasThumbprint = thumbprintFile instanceof File && thumbprintFile.size > 0
 
-    if (!hasIdDoc && !hasResidentBook) {
+    if (!hasIdDoc && !hasResidentBook && !hasThumbprint) {
       return { success: false, error: 'សូមជ្រើសរើសឯកសារយ៉ាងហោចណាស់មួយដើម្បីផ្ទុក។' }
     }
 
     const { data: member, error: memberError } = await admin
       .from('members')
-      .select('id, auth_user_id, id_document_url, resident_book_url')
+      .select('id, auth_user_id, id_document_url, resident_book_url, thumbprint_url')
       .eq('id', id)
       .maybeSingle()
 
@@ -290,7 +292,7 @@ export async function updateMemberDocuments(formData: FormData): Promise<ActionR
       return { success: false, error: 'សមាជិកនេះមិនមានគណនីចូលភ្ជាប់ទេ។' }
     }
 
-    const updates: { id_document_url?: string; resident_book_url?: string } = {}
+    const updates: { id_document_url?: string; resident_book_url?: string; thumbprint_url?: string } = {}
 
     if (hasIdDoc) {
       const idDocumentUrl = await uploadPrivateFile(
@@ -310,6 +312,16 @@ export async function updateMemberDocuments(formData: FormData): Promise<ActionR
         residentBookFile
       )
       if (residentBookUrl) updates.resident_book_url = residentBookUrl
+    }
+
+    if (hasThumbprint) {
+      const thumbprintUrl = await uploadPrivateFile(
+        'member-documents',
+        member.auth_user_id,
+        'thumbprints',
+        thumbprintFile
+      )
+      if (thumbprintUrl) updates.thumbprint_url = thumbprintUrl
     }
 
     const { error } = await admin.from('members').update(updates).eq('id', id)
@@ -1388,12 +1400,18 @@ export async function createMemberByAdmin(formData: FormData): Promise<ActionRes
     const emergencyContacts = emergencyContactsRaw ? JSON.parse(emergencyContactsRaw) : []
     const idDocumentFile = formData.get('id_document')
     const residentBookFile = formData.get('resident_book')
+    const thumbprintFile = formData.get('thumbprint')
+    const normalizedRole = ['founder', 'comember', 'member'].includes(role) ? role : 'member'
+    const requiresThumbprint = normalizedRole === 'founder' || normalizedRole === 'comember'
 
     if (!phone || !password || !fullNameKh || !fullNameEn) {
       return { success: false, error: 'លេខទូរស័ព្ទ ពាក្យសម្ងាត់ និងឈ្មោះពេញ (ខ្មែរ + អង់គ្លេស) ត្រូវការ។' }
     }
     if (password.length < 8) {
       return { success: false, error: 'ពាក្យសម្ងាត់ត្រូវមានយ៉ាងតិច ៨ តួអក្សរ។' }
+    }
+    if (requiresThumbprint && !(thumbprintFile instanceof File && thumbprintFile.size > 0)) {
+      return { success: false, error: 'សូមផ្ទុករូបភាពស្នាមម្រាមដៃ សម្រាប់សមាជិកស្នូល ឬ ស្ថាបនិក។' }
     }
 
     const fullName = `${fullNameKh} | ${fullNameEn}`
@@ -1421,6 +1439,10 @@ export async function createMemberByAdmin(formData: FormData): Promise<ActionRes
       'member-documents', authUserId, 'resident-books',
       residentBookFile instanceof File ? residentBookFile : null
     )
+    const thumbprintUrl = await uploadPrivateFile(
+      'member-documents', authUserId, 'thumbprints',
+      thumbprintFile instanceof File ? thumbprintFile : null
+    )
 
     const connectToken = crypto.randomUUID()
 
@@ -1441,7 +1463,8 @@ export async function createMemberByAdmin(formData: FormData): Promise<ActionRes
       referee_verified: Boolean(refereeId),
       id_document_url: idDocumentUrl,
       resident_book_url: residentBookUrl,
-      role: ['founder', 'comember', 'member'].includes(role) ? role : 'member',
+      thumbprint_url: thumbprintUrl,
+      role: normalizedRole,
       status: 'active',
       telegram_connect_token: connectToken,
     })

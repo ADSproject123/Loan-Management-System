@@ -47,6 +47,7 @@ export interface Member {
   referee_verified: boolean
   id_document_url?: string
   resident_book_url?: string
+  thumbprint_url?: string | null
   is_admin: boolean
   telegram_chat_id?: string
   telegram_connect_token?: string | null

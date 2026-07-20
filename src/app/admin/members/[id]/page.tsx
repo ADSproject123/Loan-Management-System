@@ -39,7 +39,7 @@ export default async function AdminMemberDetailPage({ params }: PageProps) {
   const { data: member } = await admin
     .from('members')
     .select(
-      'id, full_name, full_name_kh, full_name_en, email, phone, date_of_birth, address, status, role, id_number, resident_book_number, workplace, id_document_url, resident_book_url, referee_id, referee_verified, is_admin, telegram_chat_id, loan_interest_plan_id, emergency_contacts, suspension_reason, suspended_at, rejection_reason, rejected_at, joined_at, created_at, updated_at, referee:referee_id(id, full_name, full_name_kh, full_name_en, email, phone, status)'
+      'id, full_name, full_name_kh, full_name_en, email, phone, date_of_birth, address, status, role, id_number, resident_book_number, workplace, id_document_url, resident_book_url, thumbprint_url, referee_id, referee_verified, is_admin, telegram_chat_id, loan_interest_plan_id, emergency_contacts, suspension_reason, suspended_at, rejection_reason, rejected_at, joined_at, created_at, updated_at, referee:referee_id(id, full_name, full_name_kh, full_name_en, email, phone, status)'
     )
     .eq('id', id)
     .maybeSingle()
@@ -128,9 +128,11 @@ export default async function AdminMemberDetailPage({ params }: PageProps) {
     interestSettings.monthlyLoanInterestRate
   )
 
-  const [idDocumentUrl, residentBookUrl] = await Promise.all([
+  const [idDocumentUrl, residentBookUrl, thumbprintUrl, { count: refereeCount }] = await Promise.all([
     getPrivateFileUrl(member.id_document_url),
     getPrivateFileUrl(member.resident_book_url),
+    getPrivateFileUrl(member.thumbprint_url),
+    admin.from('members').select('id', { count: 'exact', head: true }).eq('referee_id', id),
   ])
 
   const referee = normalizeReferee(member.referee)
@@ -180,6 +182,7 @@ export default async function AdminMemberDetailPage({ params }: PageProps) {
           workplace: member.workplace ?? null,
           id_document_url: member.id_document_url,
           resident_book_url: member.resident_book_url,
+          thumbprint_url: member.thumbprint_url,
           telegram_chat_id: member.telegram_chat_id,
           referee_id: member.referee_id,
           emergency_contacts: parseEmergencyContacts(member.emergency_contacts),
@@ -196,6 +199,8 @@ export default async function AdminMemberDetailPage({ params }: PageProps) {
         loansCount={loansCount}
         idDocumentUrl={idDocumentUrl}
         residentBookUrl={residentBookUrl}
+        thumbprintUrl={thumbprintUrl}
+        refereeCount={refereeCount ?? 0}
         loanInterest={{
           assignedPlanId: member.loan_interest_plan_id ?? null,
           plans: loanInterestPlans,

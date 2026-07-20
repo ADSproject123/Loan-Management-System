@@ -7,6 +7,7 @@ import { requireMember } from '@/lib/auth/member'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { formatMoney, normalizeCurrency, predominantCurrency } from '@/lib/currency'
 import { getInterestSettings, monthlySavingInterestForCombinedSavings } from '@/lib/interest'
+import { accruedSavingInterestTotal } from '@/lib/interestCalculations'
 import { getLoanEligibility, sumCommittedLoanPrincipal } from '@/lib/loanEligibility'
 import { toNumber } from '@/lib/utils'
 import { formatKhmerDate, formatKhmerMonthYear } from '@/lib/dates'
@@ -78,6 +79,11 @@ export default async function DashboardPage() {
     verifiedSavings,
     interestSettings.monthlySavingInterestRate
   )
+  const accruedInterest = accruedSavingInterestTotal(
+    verifiedSavings,
+    interestSettings.monthlySavingInterestRate
+  )
+  const totalSavingsWithInterest = totalSavings + accruedInterest
   const activeLoans = loans.filter((loan) => loan.status === 'active')
   const activeLoanAmount = activeLoans.reduce((sum, loan) => sum + toNumber(loan.amount), 0)
   const loanEligibility = getLoanEligibility(totalSavings, sumCommittedLoanPrincipal(loans))
@@ -125,6 +131,16 @@ export default async function DashboardPage() {
       metaClass: 'text-brand-600 font-medium',
       href: null,
       linkLabel: null,
+    },
+    {
+      icon: TrendingUp,
+      iconClass: 'bg-emerald-100 text-emerald-700',
+      label: 'ការសន្សំសរុប + ការប្រាក់',
+      value: formatMoney(totalSavingsWithInterest, savingsCurrency),
+      meta: `+${formatMoney(accruedInterest, savingsCurrency)} ការប្រាក់សរុប`,
+      metaClass: 'text-emerald-600 font-medium',
+      href: '/dashboard/savings',
+      linkLabel: 'មើលលម្អិត',
     },
     {
       icon: CreditCard,
