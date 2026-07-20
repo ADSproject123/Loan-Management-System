@@ -21,7 +21,7 @@ import { showError } from '@/lib/toast'
 
 export default function LoginPage() {
   const router = useRouter()
-  const [email, setEmail] = useState('')
+  const [identifier, setIdentifier] = useState('')
   const [password, setPassword] = useState('')
   const [showPassword, setShowPassword] = useState(false)
   const [loading, setLoading] = useState(false)
@@ -30,7 +30,7 @@ export default function LoginPage() {
     e.preventDefault()
     setLoading(true)
     try {
-      const result = await signInMember(email, password)
+      const result = await signInMember(identifier, password)
       if (!result.success) {
         showError(result.error ?? 'មិនអាចចូលគណនីបានទេ។ សូមព្យាយាមម្តងទៀត។')
         return
@@ -84,15 +84,15 @@ export default function LoginPage() {
 
               <div className="border border-border bg-surface p-8 sm:p-10">
                 <form onSubmit={handleLogin} className="space-y-5">
-                  <Field label="អ៊ីមែល ឬ លេខទូរស័ព្ទ" htmlFor="email">
+                  <Field label="អ៊ីមែល ឬ លេខទូរស័ព្ទ" htmlFor="identifier">
                     <div className="relative">
                       <Phone className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted" />
                       <input
-                        id="email"
+                        id="identifier"
                         type="text"
-                        autoComplete="email"
-                        value={email}
-                        onChange={(e) => setEmail(e.target.value)}
+                        autoComplete="username"
+                        value={identifier}
+                        onChange={(e) => setIdentifier(e.target.value)}
                         placeholder="you@example.com ឬ 0812345678"
                         required
                         className="app-input app-input--with-icon shadow-xs"
