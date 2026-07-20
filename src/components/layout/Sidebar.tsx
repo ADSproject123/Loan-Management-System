@@ -9,6 +9,7 @@ import {
   CreditCard,
   ChevronDown,
   ChevronRight,
+  ChevronLeft,
   Building2,
   LogOut,
   Send,
@@ -50,9 +51,16 @@ const navItems: NavItem[] = [
 interface SidebarProps {
   memberName?: string
   telegramLinked?: boolean
+  collapsed?: boolean
+  onCollapsedChange?: (collapsed: boolean) => void
 }
 
-export function Sidebar({ memberName = 'សមាជិក', telegramLinked = true }: SidebarProps) {
+export function Sidebar({
+  memberName = 'សមាជិក',
+  telegramLinked = true,
+  collapsed = false,
+  onCollapsedChange,
+}: SidebarProps) {
   const pathname = usePathname()
   const [expandedItems, setExpandedItems] = useState<string[]>(['ការសន្សំ', 'កម្ជី'])
   const items = navItems
@@ -68,24 +76,54 @@ export function Sidebar({ memberName = 'សមាជិក', telegramLinked = tr
     return item.children?.some((child) => pathname === child.href) ?? false
   }
 
+  const handleCollapsedGroupClick = (label: string) => {
+    // A collapsed sidebar hides sub-items entirely, so clicking a group's
+    // icon expands the sidebar back and opens that group at the same time,
+    // rather than toggling a submenu nobody can see.
+    onCollapsedChange?.(false)
+    if (!expandedItems.includes(label)) {
+      setExpandedItems((prev) => [...prev, label])
+    }
+  }
+
   return (
-    <aside className="app-sidebar fixed inset-y-0 left-0 z-40 flex h-screen w-68 flex-col text-white">
+    <aside
+      className={`app-sidebar fixed inset-y-0 left-0 z-40 flex h-screen flex-col text-white transition-[width] duration-200 ${
+        collapsed ? 'w-20' : 'w-68'
+      }`}
+    >
+      {onCollapsedChange && (
+        <button
+          type="button"
+          onClick={() => onCollapsedChange(!collapsed)}
+          title={collapsed ? 'បើកម៉ឺនុយ' : 'បិទម៉ឺនុយ'}
+          aria-label={collapsed ? 'បើកម៉ឺនុយ' : 'បិទម៉ឺនុយ'}
+          className="absolute -right-3 top-6 z-50 grid h-6 w-6 place-items-center rounded-full bg-white text-brand-950 shadow-md ring-1 ring-black/10 transition hover:bg-brand-50"
+        >
+          {collapsed ? <ChevronRight className="h-3.5 w-3.5" /> : <ChevronLeft className="h-3.5 w-3.5" />}
+        </button>
+      )}
+
       <div className="border-b border-white/10 p-5">
         <Link
           href="/"
-          className="flex items-center gap-3 rounded-xl transition-opacity hover:opacity-90"
+          className={`flex items-center gap-3 rounded-xl transition-opacity hover:opacity-90 ${
+            collapsed ? 'justify-center' : ''
+          }`}
         >
-          <span className="grid h-10 w-10 place-items-center rounded-xl bg-white/15 ring-1 ring-white/20">
+          <span className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-white/15 ring-1 ring-white/20">
             <Building2 className="h-5 w-5" />
           </span>
-          <div className="min-w-0">
-            <p className="font-heading truncate text-lg font-bold leading-tight">សន្សំ</p>
-            <p className="truncate text-xs font-medium text-brand-200/90">{memberName}</p>
-          </div>
+          {!collapsed && (
+            <div className="min-w-0">
+              <p className="font-heading truncate text-lg font-bold leading-tight">សន្សំ</p>
+              <p className="truncate text-xs font-medium text-brand-200/90">{memberName}</p>
+            </div>
+          )}
         </Link>
       </div>
 
-      <nav className="flex-1 space-y-1 overflow-y-auto p-3">
+      <nav className="flex-1 space-y-1 overflow-y-auto overflow-x-hidden p-3">
         {items.map((item) => {
           const Icon = item.icon
           const isActive = isActiveParent(item)
@@ -96,22 +134,25 @@ export function Sidebar({ memberName = 'សមាជិក', telegramLinked = tr
               <div key={item.label}>
                 <button
                   type="button"
-                  onClick={() => toggleExpand(item.label)}
-                  className={`flex w-full cursor-pointer items-center justify-between rounded-xl px-3 py-2.5 text-sm font-medium transition-colors duration-200 ${
-                    isActive ? 'app-sidebar-nav-active' : 'app-sidebar-nav-idle'
-                  }`}
+                  onClick={() => (collapsed ? handleCollapsedGroupClick(item.label) : toggleExpand(item.label))}
+                  title={item.label}
+                  className={`flex w-full cursor-pointer items-center rounded-xl px-3 py-2.5 text-sm font-medium transition-colors duration-200 ${
+                    collapsed ? 'justify-center' : 'justify-between'
+                  } ${isActive ? 'app-sidebar-nav-active' : 'app-sidebar-nav-idle'}`}
                 >
-                  <div className="flex items-center gap-3">
+                  <div className={`flex items-center gap-3 ${collapsed ? '' : 'min-w-0'}`}>
                     <Icon className="h-5 w-5 shrink-0 opacity-90" />
-                    <span className="truncate">{item.label}</span>
+                    {!collapsed && <span className="truncate">{item.label}</span>}
                   </div>
-                  {isExpanded ? (
-                    <ChevronDown className="h-4 w-4 shrink-0 opacity-70" />
-                  ) : (
-                    <ChevronRight className="h-4 w-4 shrink-0 opacity-70" />
+                  {!collapsed && (
+                    isExpanded ? (
+                      <ChevronDown className="h-4 w-4 shrink-0 opacity-70" />
+                    ) : (
+                      <ChevronRight className="h-4 w-4 shrink-0 opacity-70" />
+                    )
                   )}
                 </button>
-                {isExpanded && (
+                {!collapsed && isExpanded && (
                   <div className="mt-1 space-y-0.5 border-l border-white/15 py-1 pl-3 ml-5">
                     {item.children.map((child) => (
                       <Link
@@ -138,12 +179,13 @@ export function Sidebar({ memberName = 'សមាជិក', telegramLinked = tr
               key={item.href}
               href={item.href!}
               prefetch
+              title={item.label}
               className={`flex cursor-pointer items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition-colors duration-200 ${
-                isActive ? 'app-sidebar-nav-active' : 'app-sidebar-nav-idle'
-              }`}
+                collapsed ? 'justify-center' : ''
+              } ${isActive ? 'app-sidebar-nav-active' : 'app-sidebar-nav-idle'}`}
             >
               <Icon className="h-5 w-5 shrink-0 opacity-90" />
-              <span className="truncate">{item.label}</span>
+              {!collapsed && <span className="truncate">{item.label}</span>}
             </Link>
           )
         })}
@@ -154,20 +196,31 @@ export function Sidebar({ memberName = 'សមាជិក', telegramLinked = tr
           <Link
             href="/dashboard/telegram"
             prefetch
-            className="app-sidebar-nav-idle flex cursor-pointer items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition-colors duration-200"
+            title="ភ្ជាប់ Telegram"
+            className={`app-sidebar-nav-idle relative flex cursor-pointer items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition-colors duration-200 ${
+              collapsed ? 'justify-center' : ''
+            }`}
           >
             <Send className="h-5 w-5 shrink-0" />
-            <span className="truncate">ភ្ជាប់ Telegram</span>
-            <span className="ml-auto h-2 w-2 rounded-full bg-amber-300" />
+            {!collapsed && (
+              <>
+                <span className="truncate">ភ្ជាប់ Telegram</span>
+                <span className="ml-auto h-2 w-2 rounded-full bg-amber-300" />
+              </>
+            )}
+            {collapsed && <span className="absolute right-2 top-2 h-2 w-2 rounded-full bg-amber-300" />}
           </Link>
         )}
         <form action="/api/auth/signout" method="POST">
           <button
             type="submit"
-            className="app-sidebar-nav-idle flex w-full cursor-pointer items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition-colors duration-200"
+            title="ចាកចេញ"
+            className={`app-sidebar-nav-idle flex w-full cursor-pointer items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition-colors duration-200 ${
+              collapsed ? 'justify-center' : ''
+            }`}
           >
             <LogOut className="h-5 w-5 shrink-0" />
-            ចាកចេញ
+            {!collapsed && 'ចាកចេញ'}
           </button>
         </form>
       </div>

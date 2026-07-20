@@ -1,11 +1,55 @@
 'use server'
 
 import { createClient } from '@/lib/supabase/server'
+import { createAdminClient } from '@/lib/supabase/admin'
 import { getMemberHomePath } from '@/lib/auth/member'
+import { phonesMatch, normalizePhoneDigits } from '@/lib/phone'
 import type { ActionResult } from '@/app/actions/member'
 
-export async function signInMember(email: string, password: string): Promise<ActionResult> {
+const INVALID_CREDENTIALS_ERROR = 'អ៊ីមែល/លេខទូរស័ព្ទ ឬ ពាក្យសម្ងាត់មិនត្រឹមត្រូវ។'
+
+/**
+ * Registration never sets a phone number on the Supabase Auth user itself
+ * (only on the `members` table — see registerMember) — Supabase has no
+ * native phone/password sign-in path here. So a non-email identifier is
+ * resolved to the member's actual Auth email (real or the synthesized
+ * `<digits>@member.local` address from registration) via a service-role
+ * lookup, then signed in normally through the same email/password call.
+ */
+async function resolveAuthEmail(identifier: string): Promise<string | null> {
+  const normalized = normalizePhoneDigits(identifier)
+  if (!normalized) return null
+
+  const admin = createAdminClient()
+  const { data: candidates } = await admin
+    .from('members')
+    .select('auth_user_id, phone')
+    .not('phone', 'is', null)
+
+  const matches = (candidates ?? []).filter((m) => phonesMatch(m.phone, identifier))
+  // Require exactly one match — members.phone has no uniqueness constraint,
+  // so treat zero or multiple matches the same as "not found" rather than
+  // guessing, and never reveal which case it was.
+  if (matches.length !== 1 || !matches[0].auth_user_id) return null
+
+  const { data: userData, error } = await admin.auth.admin.getUserById(matches[0].auth_user_id)
+  if (error || !userData.user?.email) return null
+
+  return userData.user.email
+}
+
+export async function signInMember(identifier: string, password: string): Promise<ActionResult> {
   try {
+    const trimmed = identifier.trim()
+    if (!trimmed || !password) {
+      return { success: false, error: INVALID_CREDENTIALS_ERROR }
+    }
+
+    const email = trimmed.includes('@') ? trimmed : await resolveAuthEmail(trimmed)
+    if (!email) {
+      return { success: false, error: INVALID_CREDENTIALS_ERROR }
+    }
+
     const supabase = await createClient()
     const { data, error } = await supabase.auth.signInWithPassword({
       email,
@@ -13,7 +57,7 @@ export async function signInMember(email: string, password: string): Promise<Act
     })
 
     if (error) {
-      return { success: false, error: 'អ៊ីមែល ឬ ពាក្យសម្ងាត់មិនត្រឹមត្រូវ។' }
+      return { success: false, error: INVALID_CREDENTIALS_ERROR }
     }
 
     if (!data.user) {
