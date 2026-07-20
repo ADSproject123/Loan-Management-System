@@ -96,6 +96,7 @@ export type MemberDetailTabsProps = {
     workplace: string | null
     id_document_url: string | null
     resident_book_url: string | null
+    thumbprint_url?: string | null
     referee_id: string | null
     telegram_chat_id: string | null
     emergency_contacts: EmergencyContact[]
@@ -112,6 +113,8 @@ export type MemberDetailTabsProps = {
   loansCount: number
   idDocumentUrl: string | null
   residentBookUrl: string | null
+  thumbprintUrl?: string | null
+  refereeCount?: number
   loanInterest?: {
     assignedPlanId: string | null
     plans: LoanInterestPlan[]
@@ -156,6 +159,8 @@ export function MemberDetailTabs({
   loansCount,
   idDocumentUrl,
   residentBookUrl,
+  thumbprintUrl = null,
+  refereeCount = 0,
   loanInterest,
   savingInterest,
   memberCurrency,
@@ -438,8 +443,14 @@ export function MemberDetailTabs({
 
         {activeTab === 'documents' && (
           <div className="w-full space-y-6">
-            {isEditing && <MemberDocumentsEditForm memberId={member.id} onSaved={exitEditMode} />}
-            <div className="w-full">       
+            {isEditing && (
+              <MemberDocumentsEditForm
+                memberId={member.id}
+                requiresThumbprint={member.role === 'founder' || member.role === 'comember'}
+                onSaved={exitEditMode}
+              />
+            )}
+            <div className="w-full">
               <div className="flex w-full flex-col gap-6">
                 <DocumentPreview
                   label="អត្តសញ្ញាណប័ណ្ណ"
@@ -451,6 +462,13 @@ export function MemberDetailTabs({
                   storageKey={member.resident_book_url}
                   url={residentBookUrl}
                 />
+                {(member.role === 'founder' || member.role === 'comember') && (
+                  <DocumentPreview
+                    label="ស្នាមម្រាមដៃ"
+                    storageKey={member.thumbprint_url}
+                    url={thumbprintUrl}
+                  />
+                )}
               </div>
             </div>
           </div>
@@ -458,6 +476,10 @@ export function MemberDetailTabs({
 
         {activeTab === 'referee' && (
           <div className="w-full space-y-4">
+            <div className="rounded-xl border border-border bg-surface-muted/40 px-5 py-4">
+              <p className="text-sm font-semibold text-muted">ចំនួនសមាជិកបានជ្រើសរើសជាមេធានា</p>
+              <p className="mt-1 text-2xl font-bold text-foreground">{refereeCount} នាក់</p>
+            </div>
             {isEditing && (
               <MemberRefereeEditForm
                 memberId={member.id}

@@ -198,6 +198,8 @@ export function CreateMemberForm() {
   const [emergencyContacts, setEmergencyContacts] = useState<EmergencyContact[]>([])
   const [idDocument, setIdDocument] = useState<File | null>(null)
   const [residentBook, setResidentBook] = useState<File | null>(null)
+  const [thumbprint, setThumbprint] = useState<File | null>(null)
+  const requiresThumbprint = form.role === 'comember' || form.role === 'founder'
   const [pending, startTransition] = useTransition()
   const [createdMember, setCreatedMember] = useState<{
     name: string
@@ -227,11 +229,17 @@ export function CreateMemberForm() {
   }
 
   function handleSubmit() {
+    if (requiresThumbprint && !thumbprint) {
+      showError('សូមផ្ទុករូបភាពស្នាមម្រាមដៃ សម្រាប់សមាជិកស្នូល ឬ ស្ថាបនិក។')
+      return
+    }
+
     const payload = new FormData()
     Object.entries(form).forEach(([k, v]) => payload.set(k, v))
     payload.set('emergency_contacts', JSON.stringify(emergencyContacts))
     if (idDocument) payload.set('id_document', idDocument)
     if (residentBook) payload.set('resident_book', residentBook)
+    if (thumbprint) payload.set('thumbprint', thumbprint)
 
     startTransition(async () => {
       const result = await createMemberByAdmin(payload)
@@ -433,6 +441,9 @@ export function CreateMemberForm() {
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
             <FileUploadField label="អត្តសញ្ញាណប័ណ្ណ" file={idDocument} onChange={setIdDocument} disabled={pending} />
             <FileUploadField label="សៀវភៅគ្រួសារ/ស្នាក់នៅ" file={residentBook} onChange={setResidentBook} disabled={pending} optional />
+            {requiresThumbprint && (
+              <FileUploadField label="ស្នាមម្រាមដៃ" file={thumbprint} onChange={setThumbprint} disabled={pending} />
+            )}
           </div>
         </div>
       )}

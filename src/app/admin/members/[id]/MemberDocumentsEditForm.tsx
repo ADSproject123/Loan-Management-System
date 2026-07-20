@@ -9,6 +9,7 @@ import { useRegisterMemberEditForm } from './MemberEditModeContext'
 
 type MemberDocumentsEditFormProps = {
   memberId: string
+  requiresThumbprint?: boolean
   onSaved?: () => void
 }
 
@@ -71,17 +72,18 @@ function FileField({
   )
 }
 
-export function MemberDocumentsEditForm({ memberId, onSaved }: MemberDocumentsEditFormProps) {
+export function MemberDocumentsEditForm({ memberId, requiresThumbprint = false, onSaved }: MemberDocumentsEditFormProps) {
   const router = useRouter()
   const [pending, startTransition] = useTransition()
   const formRef = useRegisterMemberEditForm(pending)
   const [idDocument, setIdDocument] = useState<File | null>(null)
   const [residentBook, setResidentBook] = useState<File | null>(null)
+  const [thumbprint, setThumbprint] = useState<File | null>(null)
 
   function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault()
 
-    if (!idDocument && !residentBook) {
+    if (!idDocument && !residentBook && !thumbprint) {
       showError('សូមជ្រើសរើសឯកសារដើម្បីផ្ទុក។')
       return
     }
@@ -90,6 +92,7 @@ export function MemberDocumentsEditForm({ memberId, onSaved }: MemberDocumentsEd
     payload.set('id', memberId)
     if (idDocument) payload.set('id_document', idDocument)
     if (residentBook) payload.set('resident_book', residentBook)
+    if (thumbprint) payload.set('thumbprint', thumbprint)
 
     startTransition(async () => {
       const result = await updateMemberDocuments(payload)
@@ -100,6 +103,7 @@ export function MemberDocumentsEditForm({ memberId, onSaved }: MemberDocumentsEd
       showSuccess('បានផ្ទុកឯកសារថ្មី។')
       setIdDocument(null)
       setResidentBook(null)
+      setThumbprint(null)
       onSaved?.()
       router.refresh()
     })
@@ -128,6 +132,14 @@ export function MemberDocumentsEditForm({ memberId, onSaved }: MemberDocumentsEd
           disabled={pending}
           optional
         />
+        {requiresThumbprint && (
+          <FileField
+            label="ស្នាមម្រាមដៃ"
+            file={thumbprint}
+            onChange={setThumbprint}
+            disabled={pending}
+          />
+        )}
       </div>
     </form>
   )
