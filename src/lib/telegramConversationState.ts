@@ -30,6 +30,11 @@ export type PendingLoanRequest =
 // signed contract. The wizard state is long gone by the time this applies.
 export type PendingLoanSignature = { loanId: string }
 
+// Set on a referee's own chat right after they accept a loan online — they
+// must sign and return the contract themselves before it goes to the
+// requester. Independent of PendingLoanSignature (that one is requester-side).
+export type PendingRefereeSignature = { loanId: string; loanRefereeId: string }
+
 export type PendingWithdrawalRequest =
   | { step: 'amount' }
   | { step: 'reason'; amount: number }
@@ -40,6 +45,7 @@ const PAYMENT_FLOW = 'payment'
 const LOAN_REQUEST_FLOW = 'loan_request'
 const WITHDRAWAL_REQUEST_FLOW = 'withdrawal_request'
 const LOAN_SIGNATURE_FLOW = 'loan_signature'
+const REFEREE_SIGNATURE_FLOW = 'referee_signature'
 
 async function readState<T>(chatId: string, flow: string): Promise<T | null> {
   const admin = createAdminClient()
@@ -113,3 +119,11 @@ export const setPendingLoanSignature = (chatId: string, state: PendingLoanSignat
   writeState(chatId, LOAN_SIGNATURE_FLOW, state)
 export const clearPendingLoanSignature = (chatId: string) =>
   clearState(chatId, LOAN_SIGNATURE_FLOW)
+
+// Awaiting a referee's own signed contract, after they accepted online
+export const getPendingRefereeSignature = (chatId: string) =>
+  readState<PendingRefereeSignature>(chatId, REFEREE_SIGNATURE_FLOW)
+export const setPendingRefereeSignature = (chatId: string, state: PendingRefereeSignature) =>
+  writeState(chatId, REFEREE_SIGNATURE_FLOW, state)
+export const clearPendingRefereeSignature = (chatId: string) =>
+  clearState(chatId, REFEREE_SIGNATURE_FLOW)

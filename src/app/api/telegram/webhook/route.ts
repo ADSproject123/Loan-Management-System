@@ -78,6 +78,9 @@ import {
   tgLoanSignatureReminder,
   tgLoanSignedDocumentReceived,
   tgAdminSignedDocumentReceived,
+  tgRefereeSignatureReminder,
+  tgRefereeSignedDocumentReceived,
+  tgAdminRefereeSignedDocumentReceived,
   tgChatMessageForwarded,
   MEMBER_ROLE_LABEL,
   formatTelegramNotification,
@@ -96,6 +99,8 @@ import {
   clearPendingWithdrawalRequest,
   getPendingLoanSignature,
   clearPendingLoanSignature,
+  getPendingRefereeSignature,
+  clearPendingRefereeSignature,
 } from '@/lib/telegramConversationState'
 import {
   ROLES,
@@ -111,6 +116,7 @@ import {
   finalizeLoanRequest,
   processRefereeResponse,
   rejectAwaitingRefereeLoan,
+  recordRefereeSignedDocument,
 } from '@/lib/loanReferee'
 import type { SavingStatus, MemberRole } from '@/types/database'
 
@@ -813,6 +819,76 @@ async function handleSignedLoanDocument(
   await notifyAdmins(
     'ឯកសារកិច្ចសន្យាបានទទួល',
     tgAdminSignedDocumentReceived(memberKhmerName(member), fmtMoney(Number(loan.amount ?? 0))),
+    'loan_referee'
+  )
+}
+
+// A referee's own signed contract, sent back after they accepted a loan
+// online. Once every online-accepting referee on the loan has done this, the
+// contract is forwarded to the requester (see recordRefereeSignedDocument).
+async function handleSignedRefereeDocument(
+  chatId: string,
+  fileId: string,
+  fileMeta: { mime_type?: string; file_name?: string } | null
+): Promise<void> {
+  const pending = await getPendingRefereeSignature(chatId)
+  if (!pending) return
+
+  const member = await requireLinkedActiveMember(chatId)
+  if (!member) {
+    await clearPendingRefereeSignature(chatId)
+    return
+  }
+
+  const downloadUrl = await getTelegramFileDownloadUrl(fileId)
+  if (!downloadUrl) {
+    await sendTelegramMessage(chatId, tgErrorPhotoDownload())
+    return
+  }
+
+  let buf: Buffer
+  try {
+    const res = await fetch(downloadUrl)
+    if (!res.ok) throw new Error(`HTTP ${res.status}`)
+    buf = Buffer.from(await res.arrayBuffer())
+  } catch {
+    await sendTelegramMessage(chatId, tgErrorPhotoDownload())
+    return
+  }
+
+  const { ext, contentType } = fileMeta
+    ? extensionAndContentTypeForDocument(fileMeta)
+    : { ext: 'jpg', contentType: 'image/jpeg' }
+
+  let key: string
+  try {
+    key = await uploadBufferToR2('loan-documents', member.id, 'referee-contract', buf, ext, contentType)
+  } catch {
+    await sendTelegramMessage(chatId, tgErrorPhotoUpload())
+    return
+  }
+
+  const admin = createAdminClient()
+  const result = await recordRefereeSignedDocument(admin, {
+    loanRefereeId: pending.loanRefereeId,
+    respondingMemberId: member.id,
+    documentKey: key,
+  })
+
+  if (!result.ok) {
+    await sendTelegramMessage(chatId, tgErrorStorage())
+    return
+  }
+
+  await clearPendingRefereeSignature(chatId)
+  await sendTelegramMessageWithCommandButtons(chatId, tgRefereeSignedDocumentReceived())
+  await notifyAdmins(
+    'ឯកសារកិច្ចសន្យាមេធានាបានទទួល',
+    tgAdminRefereeSignedDocumentReceived({
+      refereeName: memberKhmerName(member),
+      memberName: result.requesterName,
+      amount: result.amountText,
+    }),
     'loan_referee'
   )
 }
@@ -1562,6 +1638,13 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ ok: true })
   }
 
+  // Same, but for a referee who accepted online and hasn't sent their own
+  // signed contract back yet.
+  if (text && !text.startsWith('/') && (await getPendingRefereeSignature(chatIdStr))) {
+    await sendTelegramMessage(chatIdStr, tgRefereeSignatureReminder())
+    return NextResponse.json({ ok: true })
+  }
+
   if (text.startsWith('/start')) {
     const token = text.slice('/start'.length).trim()
 
@@ -1579,6 +1662,7 @@ export async function POST(request: NextRequest) {
   const photo = message?.photo
   const doc = message?.document
   const awaitingSignature = await getPendingLoanSignature(chatIdStr)
+  const awaitingRefereeSignature = await getPendingRefereeSignature(chatIdStr)
 
   if (awaitingSignature && photo && photo.length > 0) {
     const largest = photo.reduce((a, b) => (a.file_size ?? 0) > (b.file_size ?? 0) ? a : b)
@@ -1587,6 +1671,15 @@ export async function POST(request: NextRequest) {
   }
   if (awaitingSignature && doc) {
     await handleSignedLoanDocument(chatIdStr, doc.file_id, doc)
+    return NextResponse.json({ ok: true })
+  }
+  if (awaitingRefereeSignature && photo && photo.length > 0) {
+    const largest = photo.reduce((a, b) => (a.file_size ?? 0) > (b.file_size ?? 0) ? a : b)
+    await handleSignedRefereeDocument(chatIdStr, largest.file_id, null)
+    return NextResponse.json({ ok: true })
+  }
+  if (awaitingRefereeSignature && doc) {
+    await handleSignedRefereeDocument(chatIdStr, doc.file_id, doc)
     return NextResponse.json({ ok: true })
   }
 
