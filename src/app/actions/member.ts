@@ -235,6 +235,51 @@ export async function registerMember(formData: FormData): Promise<RegisterResult
   }
 }
 
+export async function updateMemberProfile(formData: FormData): Promise<ActionResult> {
+  try {
+    const member = await requireActiveMember()
+
+    const phone = asString(formData, 'phone')
+    const dateOfBirth = asString(formData, 'date_of_birth')
+    const address = asString(formData, 'address')
+    const idNumber = asString(formData, 'id_number')
+    const residentBookNumber = asString(formData, 'resident_book_number')
+
+    if (!phone || !dateOfBirth || !idNumber) {
+      return { success: false, error: 'សូមបំពេញគ្រប់វាលទាំងអស់ដែលត្រូវការ។' }
+    }
+
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(dateOfBirth)) {
+      return { success: false, error: 'សូមបញ្ចូលថ្ងៃខែឆ្នាំកំណើតត្រឹមត្រូវ។' }
+    }
+
+    if (dateOfBirth > new Date().toISOString().slice(0, 10)) {
+      return { success: false, error: 'ថ្ងៃខែឆ្នាំកំណើតមិនអាចនៅពេលអនាគតបានទេ។' }
+    }
+
+    const admin = createAdminClient()
+    const { error } = await admin
+      .from('members')
+      .update({
+        phone,
+        date_of_birth: dateOfBirth,
+        address,
+        id_number: idNumber,
+        resident_book_number: residentBookNumber || null,
+      })
+      .eq('id', member.id)
+
+    if (error) throw error
+
+    revalidatePath('/dashboard/profile')
+    revalidatePath('/dashboard')
+    return { success: true }
+  } catch (error) {
+    const message = error instanceof Error ? error.message : 'មិនអាចរក្សាទុកព័ត៌មានផ្ទាល់ខ្លួនបានទេ។'
+    return { success: false, error: message }
+  }
+}
+
 /**
  * Polled by the registration screen (user not yet logged in) to detect when the
  * Telegram webhook has linked their chat. The webhook keeps the token in place
