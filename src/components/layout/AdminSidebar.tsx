@@ -3,7 +3,7 @@
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { useState } from 'react'
-import { BarChart3, ChevronDown, ChevronRight, LogOut } from 'lucide-react'
+import { BarChart3, ChevronDown, ChevronLeft, ChevronRight, LogOut } from 'lucide-react'
 import { NotificationBell } from '@/components/layout/NotificationBell'
 import {
   adminNav,
@@ -16,10 +16,14 @@ export function AdminSidebar({
   adminName,
   initialUnreadCount = 0,
   unreadMessageCount = 0,
+  collapsed = false,
+  onCollapsedChange,
 }: {
   adminName: string
   initialUnreadCount?: number
   unreadMessageCount?: number
+  collapsed?: boolean
+  onCollapsedChange?: (collapsed: boolean) => void
 }) {
   const pathname = usePathname()
   const [expandedItems, setExpandedItems] = useState<string[]>(() =>
@@ -32,17 +36,44 @@ export function AdminSidebar({
     )
   }
 
+  const handleCollapsedGroupClick = (label: string) => {
+    onCollapsedChange?.(false)
+    if (!expandedItems.includes(label)) {
+      setExpandedItems((prev) => [...prev, label])
+    }
+  }
+
   return (
-    <aside className="app-sidebar fixed inset-y-0 left-0 z-40 flex h-screen w-68 flex-col overflow-visible text-white">
+    <aside
+      className={`app-sidebar fixed inset-y-0 left-0 z-40 flex h-screen flex-col overflow-visible text-white transition-[width] duration-200 ${
+        collapsed ? 'w-20' : 'w-68'
+      }`}
+    >
+      {onCollapsedChange && (
+        <button
+          type="button"
+          onClick={() => onCollapsedChange(!collapsed)}
+          title={collapsed ? 'បើកម៉ឺនុយ' : 'បិទម៉ឺនុយ'}
+          aria-label={collapsed ? 'បើកម៉ឺនុយ' : 'បិទម៉ឺនុយ'}
+          className="absolute -right-3 top-6 z-50 grid h-6 w-6 place-items-center rounded-full bg-white text-brand-950 shadow-md ring-1 ring-black/10 transition hover:bg-brand-50"
+        >
+          {collapsed ? <ChevronRight className="h-3.5 w-3.5" /> : <ChevronLeft className="h-3.5 w-3.5" />}
+        </button>
+      )}
+
       <div className="border-b border-white/10 p-5">
-        <div className="flex items-center justify-between gap-3">
+        <div className={`flex items-center gap-3 ${collapsed ? 'justify-center' : 'justify-between'}`}>
           <Link
             href="/admin"
-            className="min-w-0 flex-1 rounded-xl transition-opacity hover:opacity-90"
+            className={`rounded-xl transition-opacity hover:opacity-90 ${collapsed ? '' : 'min-w-0 flex-1'}`}
           >
-            <p className="font-heading truncate text-lg font-bold leading-tight">អ្នកគ្រប់គ្រង</p>
+            {collapsed ? (
+              <BarChart3 className="h-6 w-6" />
+            ) : (
+              <p className="font-heading truncate text-lg font-bold leading-tight">អ្នកគ្រប់គ្រង</p>
+            )}
           </Link>
-          <NotificationBell initialUnreadCount={initialUnreadCount} variant="sidebar" />
+          {!collapsed && <NotificationBell initialUnreadCount={initialUnreadCount} variant="sidebar" />}
         </div>
       </div>
 
@@ -57,22 +88,25 @@ export function AdminSidebar({
               <div key={item.label}>
                 <button
                   type="button"
-                  onClick={() => toggleExpand(item.label)}
-                  className={`flex w-full cursor-pointer items-center justify-between rounded-xl px-3 py-2.5 text-sm font-medium transition-colors duration-200 ${
-                    isActive ? 'app-sidebar-nav-active' : 'app-sidebar-nav-idle'
-                  }`}
+                  onClick={() => (collapsed ? handleCollapsedGroupClick(item.label) : toggleExpand(item.label))}
+                  title={item.label}
+                  className={`flex w-full cursor-pointer items-center rounded-xl px-3 py-2.5 text-sm font-medium transition-colors duration-200 ${
+                    collapsed ? 'justify-center' : 'justify-between'
+                  } ${isActive ? 'app-sidebar-nav-active' : 'app-sidebar-nav-idle'}`}
                 >
-                  <div className="flex items-center gap-3">
+                  <div className={`flex items-center gap-3 ${collapsed ? '' : 'min-w-0'}`}>
                     <Icon className="h-5 w-5 shrink-0 opacity-90" />
-                    <span className="truncate">{item.label}</span>
+                    {!collapsed && <span className="truncate">{item.label}</span>}
                   </div>
-                  {isExpanded ? (
-                    <ChevronDown className="h-4 w-4 shrink-0 opacity-70" />
-                  ) : (
-                    <ChevronRight className="h-4 w-4 shrink-0 opacity-70" />
+                  {!collapsed && (
+                    isExpanded ? (
+                      <ChevronDown className="h-4 w-4 shrink-0 opacity-70" />
+                    ) : (
+                      <ChevronRight className="h-4 w-4 shrink-0 opacity-70" />
+                    )
                   )}
                 </button>
-                {isExpanded && (
+                {!collapsed && isExpanded && (
                   <div className="mt-1 space-y-0.5 border-l border-white/15 py-1 pl-3 ml-5">
                     {item.children.map((child) => (
                       <Link
@@ -99,13 +133,19 @@ export function AdminSidebar({
               key={item.href}
               href={item.href!}
               prefetch
+              title={item.label}
               className={`flex cursor-pointer items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition-colors duration-200 ${
-                isAdminParentActive(pathname, item) ? 'app-sidebar-nav-active' : 'app-sidebar-nav-idle'
-              }`}
+                collapsed ? 'justify-center' : ''
+              } ${isAdminParentActive(pathname, item) ? 'app-sidebar-nav-active' : 'app-sidebar-nav-idle'}`}
             >
-              <Icon className="h-5 w-5 shrink-0 opacity-90" />
-              <span className="min-w-0 flex-1 truncate">{item.label}</span>
-              {item.href === '/admin/messages' && unreadMessageCount > 0 && (
+              <div className="relative">
+                <Icon className="h-5 w-5 shrink-0 opacity-90" />
+                {collapsed && item.href === '/admin/messages' && unreadMessageCount > 0 && (
+                  <span className="absolute -right-1.5 -top-1.5 h-2 w-2 rounded-full bg-red-500" />
+                )}
+              </div>
+              {!collapsed && <span className="min-w-0 flex-1 truncate">{item.label}</span>}
+              {!collapsed && item.href === '/admin/messages' && unreadMessageCount > 0 && (
                 <span className="grid min-h-5 min-w-5 shrink-0 place-items-center rounded-full bg-red-500 px-1 text-[10px] font-bold text-white">
                   {unreadMessageCount > 9 ? '9+' : unreadMessageCount}
                 </span>
@@ -116,18 +156,22 @@ export function AdminSidebar({
       </nav>
 
       <div className="border-t border-white/10 p-4">
-        <div className="rounded-2xl bg-white/10 p-4 ring-1 ring-white/10 backdrop-blur-sm">
-          <div className="mb-2 flex items-center gap-2 text-brand-100/90">
-            <BarChart3 className="h-4 w-4" />
-            <span className="text-[10px] font-bold uppercase tracking-wider">ចូលជា</span>
-          </div>
-          <p className="truncate text-sm font-semibold text-white">{adminName}</p>
-          <div className="mt-3">
+        <div className={`rounded-2xl bg-white/10 ring-1 ring-white/10 backdrop-blur-sm ${collapsed ? 'p-2' : 'p-4'}`}>
+          {!collapsed && (
+            <>
+              <div className="mb-2 flex items-center gap-2 text-brand-100/90">
+                <BarChart3 className="h-4 w-4" />
+                <span className="text-[10px] font-bold uppercase tracking-wider">ចូលជា</span>
+              </div>
+              <p className="truncate text-sm font-semibold text-white">{adminName}</p>
+            </>
+          )}
+          <div className={collapsed ? '' : 'mt-3'}>
             <form action="/api/auth/signout" method="post">
               <button
                 type="submit"
                 title="ចាកចេញ"
-                className="inline-flex cursor-pointer items-center justify-center rounded-xl bg-white/10 p-2 text-brand-50 ring-1 ring-white/15 transition hover:bg-rose-500/30 hover:text-rose-200"
+                className="inline-flex w-full cursor-pointer items-center justify-center rounded-xl bg-white/10 p-2 text-brand-50 ring-1 ring-white/15 transition hover:bg-rose-500/30 hover:text-rose-200"
               >
                 <LogOut className="h-3.5 w-3.5" />
               </button>
