@@ -2,6 +2,7 @@ import Link from 'next/link'
 import { ArrowLeft } from 'lucide-react'
 import { requireActiveMember } from '@/lib/auth/member'
 import { ProfileForm } from './ProfileForm'
+import { ChangePasswordForm } from './ChangePasswordForm'
 
 export default async function ProfilePage() {
   const member = await requireActiveMember()
@@ -22,15 +23,18 @@ export default async function ProfilePage() {
         </p>
       </div>
 
-      <ProfileForm
-        member={{
-          phone: member.phone ?? '',
-          date_of_birth: member.date_of_birth ?? '',
-          address: member.address ?? '',
-          id_number: member.id_number ?? '',
-          resident_book_number: member.resident_book_number ?? '',
-        }}
-      />
+      <div className="space-y-6">
+        <ProfileForm
+          member={{
+            phone: member.phone ?? '',
+            date_of_birth: member.date_of_birth ?? '',
+            address: member.address ?? '',
+            id_number: member.id_number ?? '',
+            resident_book_number: member.resident_book_number ?? '',
+          }}
+        />
+        <ChangePasswordForm />
+      </div>
     </div>
   )
 }

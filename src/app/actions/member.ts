@@ -280,6 +280,60 @@ export async function updateMemberProfile(formData: FormData): Promise<ActionRes
   }
 }
 
+export async function changeMemberPassword(formData: FormData): Promise<ActionResult> {
+  try {
+    const member = await requireActiveMember()
+
+    const currentPassword = asString(formData, 'current_password')
+    const newPassword = asString(formData, 'new_password')
+    const confirmPassword = asString(formData, 'confirm_password')
+
+    if (!currentPassword || !newPassword || !confirmPassword) {
+      return { success: false, error: 'សូមបំពេញគ្រប់វាលទាំងអស់ដែលត្រូវការ។' }
+    }
+
+    if (newPassword.length < 8) {
+      return { success: false, error: 'ពាក្យសម្ងាត់ថ្មីត្រូវមានយ៉ាងតិច ៨ តួអក្សរ។' }
+    }
+
+    if (newPassword !== confirmPassword) {
+      return { success: false, error: 'ការបញ្ជាក់ពាក្យសម្ងាត់ថ្មីមិនត្រូវគ្នាទេ។' }
+    }
+
+    if (newPassword === currentPassword) {
+      return { success: false, error: 'ពាក្យសម្ងាត់ថ្មីត្រូវខុសពីពាក្យសម្ងាត់បច្ចុប្បន្ន។' }
+    }
+
+    if (!member.email) {
+      return { success: false, error: 'គណនីនេះមិនមានអ៊ីមែលភ្ជាប់ទេ។' }
+    }
+
+    const authUserId = getAuthUserId(member)
+    const admin = createAdminClient()
+
+    // Validate the current password by attempting a stateless sign-in with
+    // it (createAdminClient has persistSession:false, so this touches no
+    // cookies/session - it's purely a password check).
+    const { error: verifyError } = await admin.auth.signInWithPassword({
+      email: member.email,
+      password: currentPassword,
+    })
+    if (verifyError) {
+      return { success: false, error: 'ពាក្យសម្ងាត់បច្ចុប្បន្នមិនត្រឹមត្រូវ។' }
+    }
+
+    const { error: updateError } = await admin.auth.admin.updateUserById(authUserId, {
+      password: newPassword,
+    })
+    if (updateError) throw updateError
+
+    return { success: true }
+  } catch (error) {
+    const message = error instanceof Error ? error.message : 'មិនអាចប្តូរពាក្យសម្ងាត់បានទេ។'
+    return { success: false, error: message }
+  }
+}
+
 /**
  * Polled by the registration screen (user not yet logged in) to detect when the
  * Telegram webhook has linked their chat. The webhook keeps the token in place
