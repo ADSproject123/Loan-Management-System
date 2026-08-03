@@ -8,6 +8,7 @@ export const VERIFICATION_ACTIONS = [
   'saving_add',
   'capital_request',
   'loan_request',
+  'password_reset',
 ] as const
 
 export type VerificationAction = (typeof VERIFICATION_ACTIONS)[number]
@@ -21,6 +22,7 @@ const ACTION_LABELS: Record<VerificationAction, string> = {
   saving_add: 'ការដាក់សន្សំ',
   capital_request: 'ការស្នើសុំដើមទុន',
   loan_request: 'ការស្នើសុំកម្ជី',
+  password_reset: 'ការកំណត់ពាក្យសម្ងាត់ឡើងវិញ',
 }
 
 const CODE_TTL_MS = 5 * 60_000
